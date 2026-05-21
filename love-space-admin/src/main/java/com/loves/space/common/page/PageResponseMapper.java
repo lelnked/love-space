@@ -22,19 +22,19 @@ public final class PageResponseMapper {
      * @param <T>     目标元素类型
      */
     public static <S, T> PageResponse<T> map(Page<S> page, Function<S, T> mapper) {
-        List<T> items = page.getContent().stream().map(mapper).toList();
-        return new PageResponse<>(items, page.getNumber() + 1, page.getSize(), page.getTotalElements(), page.getTotalPages());
+        List<T> content = page.getContent().stream().map(mapper).toList();
+        return new PageResponse<>(content, page.getNumber() + 1, page.getSize(), page.getTotalElements(), page.getTotalPages());
     }
 
     /**
-     * 分页响应统一结构。
+     * 分页响应统一结构（与前端 Page&lt;T&gt; 契约一致）。
      *
-     * @param items      当前页元素
-     * @param page       当前页（1 基）
-     * @param size       每页大小
-     * @param total      总记录数
-     * @param totalPages 总页数
+     * @param content       当前页元素
+     * @param page          当前页（1 基）
+     * @param size          每页大小
+     * @param totalElements 总记录数
+     * @param totalPages    总页数
      */
-    public record PageResponse<T>(List<T> items, int page, int size, long total, int totalPages) {
+    public record PageResponse<T>(List<T> content, int page, int size, long totalElements, int totalPages) {
     }
 }

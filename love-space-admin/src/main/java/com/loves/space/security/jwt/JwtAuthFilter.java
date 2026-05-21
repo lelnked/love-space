@@ -56,7 +56,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             try {
                 Claims claims = tokenProvider.parse(token);
                 UUID userId = UUID.fromString(claims.getSubject());
-                String username = claims.get("uname", String.class);
+                String username = claims.get("username", String.class);
                 Role role = Role.valueOf(claims.get("role", String.class));
                 AdminUserDetails details = new AdminUserDetails(userId, username, "", true, role);
                 UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(

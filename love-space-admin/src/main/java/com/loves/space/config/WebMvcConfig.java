@@ -1,15 +1,12 @@
 package com.loves.space.config;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 /**
- * Web MVC 全局配置：CORS 放开运营前端跨域；统一 Jackson 时间序列化（ISO-8601 OffsetDateTime）。
+ * Web MVC 全局配置：CORS 放开运营前端跨域。
+ * <p>JSON 时间格式由 Spring Boot 4 Jackson 3 默认 auto-config 统一为 ISO-8601。
  */
 @Configuration
 public class WebMvcConfig implements WebMvcConfigurer {
@@ -25,16 +22,5 @@ public class WebMvcConfig implements WebMvcConfigurer {
                 .allowedHeaders("*")
                 .allowCredentials(true)
                 .maxAge(3600);
-    }
-
-    /**
-     * 显式注册 {@link JavaTimeModule}，并禁用时间戳数字格式（统一输出 ISO-8601 字符串）。
-     */
-    @Bean
-    public ObjectMapper objectMapper(Jackson2ObjectMapperBuilder builder) {
-        return builder
-                .modules(new JavaTimeModule())
-                .build()
-                .findAndRegisterModules();
     }
 }
