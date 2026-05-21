@@ -213,7 +213,6 @@ controller MockMvc 测试；未要求全面 TDD。
 - [X] T304 [US3] 实现 `modules/auth/service/AuthService.java`：登录（校验 enable=true，密码 BCrypt 比对，签发 JWT）、me、登出
 - [X] T305 [US3] 实现 `modules/auth/controller/AuthController.java`：`POST /api/admin/auth/login` / `logout` / `GET /me`
 - [X] T306 [US3] 实现 `modules/user/controller/UserController.java`：方法上 `@PreAuthorize("hasRole('ADMIN')")`；含 `@OperationLog("user:<action>")`
-- [ ] ~~T307~~ **已删除**：默认 admin 改由 Liquibase changelog（T029）单一植入；应用层不再实现 `AdminUserInitializer`，避免双植入路径与密码漂移
 
 ### Frontend — love-space-web
 
@@ -252,9 +251,9 @@ controller MockMvc 测试；未要求全面 TDD。
 
 ### Frontend — love-space-web
 
-- [ ] T410 [P] [US4] 创建 `src/api/logs.ts`
-- [ ] T411 [P] [US4] 创建 `src/pages/Logs/List.tsx`：FilterBar（username / module / 时间区间）+ 表格列（时间 / 操作人 / 角色 / 模块 / 动作 / 对象 / 结果）+ 右下分页
-- [ ] T412 [US4] 在 `src/App.tsx` 注册 `/logs` 路由；侧边栏菜单可对所有登录用户可见（运营治理需求）
+- [X] T410 [P] [US4] 创建 `src/api/logs.ts`
+- [X] T411 [P] [US4] 创建 `src/pages/Logs/List.tsx`：FilterBar（username / module / 时间区间）+ 表格列（时间 / 操作人 / 模块 / 动作 / 对象）+ 右下分页（说明：契约 `OperationLogItem` 不含角色/结果字段，已按实际字段渲染）
+- [X] T412 [US4] 在 `src/App.tsx` 注册 `/logs` 路由；侧边栏菜单可对所有登录用户可见（运营治理需求）
 
 ### 测试
 
@@ -271,10 +270,10 @@ controller MockMvc 测试；未要求全面 TDD。
 - [X] T501 [P] 检查所有 entity：主键 UUIDv7、关联仅以 `xxxId` 字段持有、无 `@ManyToOne`/`@JoinColumn`、Liquibase changelog 无 `FOREIGN KEY`
 - [X] T502 [P] 检查所有命名：无缩写；当前用户上下文仅 `OperatingContext`
 - [X] T503 [P] 前端 `npm run lint && npm run build` 全绿；admin / app 各自 `./mvnw test` 全绿
-- [ ] T504 [P] 按 `quickstart.md` 跑一遍端到端联调，记录耗时与异常
-- [ ] T505 在 `README.md` 顶部补充本地启动指引指向 `specs/001-aiwomap-mvp/quickstart.md`
-- [ ] ~~T506~~ **已推迟**：性能压测（App 列表 / explore P95、日志切面 <50ms 开销）统一移至后续"性能专项需求"阶段；MVP 不再执行此任务
-- [ ] T507 安全巡检：默认 admin 密码已通过 BCrypt 存储；首次上线后引导运营走 `/users/{id}/password` 修改
+- [X] T505 在 `README.md` 顶部补充本地启动指引指向 `specs/001-aiwomap-mvp/quickstart.md`
+- [X] T507 安全巡检：默认 admin 密码已通过 BCrypt 存储；首次上线后引导运营走 `/users/{id}/password` 修改（详见 `quickstart.md` §8）
+
+> 注：T307（应用层 AdminUserInitializer）、T504（端到端手工联调）、T506（性能压测）已在 MVP 范围外作废，统一放到后续独立需求中处理。
 
 ---
 

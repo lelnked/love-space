@@ -95,3 +95,9 @@ cd love-space-web && npm run lint && npm run build
 - **MEMBER 看不到 /users**：预期行为（前端按 role 过滤菜单；后端 `@PreAuthorize("hasRole('ADMIN')")`）。
 - **App 端列表为空**：确认商户已"上架"、且 `cityId` 对应城市 `online=true`。
 - **emoji 显示为 ?**：检查数据库连接 `client_encoding=UTF8`，PG 默认即可。
+
+## 8. 安全巡检（首次上线）
+
+- 默认 admin 账号密码已通过 BCrypt 哈希存储（见 `db/changelog/002-seed-admin-user.yaml`），数据库中不存在明文密码。
+- 首次上线后，运营须立刻通过 `PUT /api/admin/users/{id}/password` 修改默认密码（前端用户管理页"重置密码"按钮即可触发），并妥善保存新密码。
+- 修改后建议在 `操作日志` 页核对一条 `module=user / action=reset-password` 记录，确认审计链路通畅。
