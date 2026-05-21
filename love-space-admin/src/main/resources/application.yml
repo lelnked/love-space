@@ -1,0 +1,45 @@
+spring:
+  application:
+    name: love-space-admin
+  profiles:
+    active: dev
+  datasource:
+    url: ${ADMIN_DB_URL:jdbc:postgresql://localhost:5432/love_space}
+    username: ${ADMIN_DB_USERNAME:love_space}
+    password: ${ADMIN_DB_PASSWORD:love_space}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: false
+        jdbc:
+          time_zone: UTC
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+  mvc:
+    problemdetails:
+      enabled: true
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 22MB
+
+server:
+  port: 8080
+
+app:
+  jwt:
+    secret: ${ADMIN_JWT_SECRET:please-replace-with-a-256-bit-base64-secret-please-replace}
+    issuer: love-space-admin
+    expire-minutes: 720
+  storage:
+    local-root: ${ADMIN_STORAGE_ROOT:./uploads}
+  public-base-url: ${ADMIN_PUBLIC_BASE_URL:http://localhost:8080}
+
+logging:
+  level:
+    root: INFO
+    com.loves.space: INFO

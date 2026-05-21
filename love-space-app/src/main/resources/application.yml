@@ -1,0 +1,35 @@
+spring:
+  application:
+    name: love-space-app
+  profiles:
+    active: dev
+  datasource:
+    url: ${APP_DB_URL:jdbc:postgresql://localhost:5432/love_space}
+    username: ${APP_DB_USERNAME:love_space}
+    password: ${APP_DB_PASSWORD:love_space}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+  mvc:
+    problemdetails:
+      enabled: true
+
+server:
+  port: 8081
+
+app:
+  security:
+    api-keys: ${APP_SECURITY_API_KEYS:}
+
+logging:
+  level:
+    root: INFO
+    com.space.app: INFO

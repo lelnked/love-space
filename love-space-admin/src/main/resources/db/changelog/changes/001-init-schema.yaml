@@ -1,0 +1,263 @@
+# 爱女地图 MVP 初始 schema
+# 约束：所有表主键 uuid（应用层生成 UUIDv7）；统一审计列 created_at/updated_at；
+#       不创建任何 FOREIGN KEY 约束；列名 snake_case，字段名禁止缩写。
+databaseChangeLog:
+
+  - changeSet:
+      id: 001-create-user-table
+      author: love-space
+      changes:
+        - createTable:
+            tableName: user
+            columns:
+              - column: { name: id, type: uuid, constraints: { primaryKey: true, nullable: false } }
+              - column: { name: username, type: text, constraints: { nullable: false } }
+              - column: { name: password, type: text, constraints: { nullable: false } }
+              - column: { name: nickname, type: text }
+              - column: { name: role, type: text, constraints: { nullable: false } }
+              - column: { name: enable, type: boolean, defaultValueBoolean: true, constraints: { nullable: false } }
+              - column: { name: created_at, type: TIMESTAMPTZ, constraints: { nullable: false } }
+              - column: { name: updated_at, type: TIMESTAMPTZ }
+        - addUniqueConstraint:
+            tableName: user
+            columnNames: username
+            constraintName: ux_user_username
+        - createIndex:
+            tableName: user
+            indexName: ix_user_role_enable
+            columns:
+              - column: { name: role }
+              - column: { name: enable }
+        - sql:
+            sql: ALTER TABLE "user" ADD CONSTRAINT ck_user_role CHECK (role IN ('ADMIN','MEMBER'))
+
+  - changeSet:
+      id: 002-create-city-table
+      author: love-space
+      changes:
+        - createTable:
+            tableName: city
+            columns:
+              - column: { name: id, type: uuid, constraints: { primaryKey: true, nullable: false } }
+              - column: { name: chinese_name, type: text, constraints: { nullable: false } }
+              - column: { name: english_name, type: text, constraints: { nullable: false } }
+              - column: { name: chinese_province, type: text, constraints: { nullable: false } }
+              - column: { name: english_province, type: text, constraints: { nullable: false } }
+              - column: { name: background_image, type: text }
+              - column: { name: banner_sort_order, type: integer, defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: online, type: boolean, defaultValueBoolean: false, constraints: { nullable: false } }
+              - column: { name: created_at, type: TIMESTAMPTZ, constraints: { nullable: false } }
+              - column: { name: updated_at, type: TIMESTAMPTZ }
+        - addUniqueConstraint:
+            tableName: city
+            columnNames: chinese_name
+            constraintName: ux_city_chinese_name
+        - createIndex:
+            tableName: city
+            indexName: ix_city_online_banner_sort
+            columns:
+              - column: { name: online }
+              - column: { name: banner_sort_order }
+        - sql:
+            sql: ALTER TABLE city ADD CONSTRAINT ck_city_banner_sort_nonneg CHECK (banner_sort_order >= 0)
+
+  - changeSet:
+      id: 003-create-category-table
+      author: love-space
+      changes:
+        - createTable:
+            tableName: category
+            columns:
+              - column: { name: id, type: uuid, constraints: { primaryKey: true, nullable: false } }
+              - column: { name: name, type: text, constraints: { nullable: false } }
+              - column: { name: created_at, type: TIMESTAMPTZ, constraints: { nullable: false } }
+              - column: { name: updated_at, type: TIMESTAMPTZ }
+        - addUniqueConstraint:
+            tableName: category
+            columnNames: name
+            constraintName: ux_category_name
+
+  - changeSet:
+      id: 004-create-tag-table
+      author: love-space
+      changes:
+        - createTable:
+            tableName: tag
+            columns:
+              - column: { name: id, type: uuid, constraints: { primaryKey: true, nullable: false } }
+              - column: { name: name, type: text, constraints: { nullable: false } }
+              - column: { name: online, type: boolean, defaultValueBoolean: true, constraints: { nullable: false } }
+              - column: { name: created_at, type: TIMESTAMPTZ, constraints: { nullable: false } }
+              - column: { name: updated_at, type: TIMESTAMPTZ }
+        - addUniqueConstraint:
+            tableName: tag
+            columnNames: name
+            constraintName: ux_tag_name
+
+  - changeSet:
+      id: 005-create-merchant-table
+      author: love-space
+      changes:
+        - createTable:
+            tableName: merchant
+            columns:
+              - column: { name: id, type: uuid, constraints: { primaryKey: true, nullable: false } }
+              - column: { name: name, type: text, constraints: { nullable: false } }
+              - column: { name: logo, type: text, constraints: { nullable: false } }
+              - column: { name: address, type: text, constraints: { nullable: false } }
+              - column: { name: longitude, type: numeric(9,6) }
+              - column: { name: latitude, type: numeric(8,6) }
+              - column: { name: city_id, type: uuid, constraints: { nullable: false } }
+              - column: { name: category_id, type: uuid }
+              - column: { name: safety_environment_score, type: smallint, constraints: { nullable: false } }
+              - column: { name: business_rights_score, type: smallint, constraints: { nullable: false } }
+              - column: { name: experience_friendly_score, type: smallint, constraints: { nullable: false } }
+              - column: { name: social_contribution_score, type: smallint, constraints: { nullable: false } }
+              - column: { name: story, type: text }
+              - column: { name: weight, type: integer, defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: online, type: boolean, defaultValueBoolean: false, constraints: { nullable: false } }
+              - column: { name: created_at, type: TIMESTAMPTZ, constraints: { nullable: false } }
+              - column: { name: updated_at, type: TIMESTAMPTZ }
+        - createIndex:
+            tableName: merchant
+            indexName: ix_merchant_city_online_weight_created
+            columns:
+              - column: { name: city_id }
+              - column: { name: online }
+              - column: { name: weight, descending: true }
+              - column: { name: created_at, descending: true }
+        - createIndex:
+            tableName: merchant
+            indexName: ix_merchant_category
+            columns:
+              - column: { name: category_id }
+        - sql:
+            sql: |
+              ALTER TABLE merchant
+                ADD CONSTRAINT ck_merchant_score_safety CHECK (safety_environment_score BETWEEN 0 AND 30),
+                ADD CONSTRAINT ck_merchant_score_business CHECK (business_rights_score BETWEEN 0 AND 25),
+                ADD CONSTRAINT ck_merchant_score_experience CHECK (experience_friendly_score BETWEEN 0 AND 25),
+                ADD CONSTRAINT ck_merchant_score_social CHECK (social_contribution_score BETWEEN 0 AND 20)
+
+  - changeSet:
+      id: 006-create-merchant-image-table
+      author: love-space
+      changes:
+        - createTable:
+            tableName: merchant_image
+            columns:
+              - column: { name: id, type: uuid, constraints: { primaryKey: true, nullable: false } }
+              - column: { name: merchant_id, type: uuid, constraints: { nullable: false } }
+              - column: { name: url, type: text, constraints: { nullable: false } }
+              - column: { name: sort_order, type: integer, constraints: { nullable: false } }
+              - column: { name: created_at, type: TIMESTAMPTZ, constraints: { nullable: false } }
+              - column: { name: updated_at, type: TIMESTAMPTZ }
+        - createIndex:
+            tableName: merchant_image
+            indexName: ix_merchant_image_merchant_sort
+            columns:
+              - column: { name: merchant_id }
+              - column: { name: sort_order }
+
+  - changeSet:
+      id: 007-create-merchant-period-table
+      author: love-space
+      changes:
+        - createTable:
+            tableName: merchant_period
+            columns:
+              - column: { name: merchant_id, type: uuid, constraints: { nullable: false } }
+              - column: { name: period, type: text, constraints: { nullable: false } }
+        - addPrimaryKey:
+            tableName: merchant_period
+            columnNames: merchant_id, period
+            constraintName: pk_merchant_period
+        - createIndex:
+            tableName: merchant_period
+            indexName: ix_merchant_period_period_merchant
+            columns:
+              - column: { name: period }
+              - column: { name: merchant_id }
+        - sql:
+            sql: ALTER TABLE merchant_period ADD CONSTRAINT ck_merchant_period_value CHECK (period IN ('MENSTRUAL','FOLLICULAR','OVULATION','LUTEAL'))
+
+  - changeSet:
+      id: 008-create-merchant-tag-table
+      author: love-space
+      changes:
+        - createTable:
+            tableName: merchant_tag
+            columns:
+              - column: { name: merchant_id, type: uuid, constraints: { nullable: false } }
+              - column: { name: tag_id, type: uuid, constraints: { nullable: false } }
+              - column: { name: created_at, type: TIMESTAMPTZ, constraints: { nullable: false } }
+        - addPrimaryKey:
+            tableName: merchant_tag
+            columnNames: merchant_id, tag_id
+            constraintName: pk_merchant_tag
+        - createIndex:
+            tableName: merchant_tag
+            indexName: ix_merchant_tag_tag
+            columns:
+              - column: { name: tag_id }
+        - createIndex:
+            tableName: merchant_tag
+            indexName: ix_merchant_tag_merchant_created
+            columns:
+              - column: { name: merchant_id }
+              - column: { name: created_at }
+
+  - changeSet:
+      id: 009-create-merchant-review-table
+      author: love-space
+      changes:
+        - createTable:
+            tableName: merchant_review
+            columns:
+              - column: { name: id, type: uuid, constraints: { primaryKey: true, nullable: false } }
+              - column: { name: merchant_id, type: uuid, constraints: { nullable: false } }
+              - column: { name: nickname, type: text, constraints: { nullable: false } }
+              - column: { name: title, type: text, constraints: { nullable: false } }
+              - column: { name: content, type: text, constraints: { nullable: false } }
+              - column: { name: sort_order, type: integer, constraints: { nullable: false } }
+              - column: { name: created_at, type: TIMESTAMPTZ, constraints: { nullable: false } }
+              - column: { name: updated_at, type: TIMESTAMPTZ }
+        - createIndex:
+            tableName: merchant_review
+            indexName: ix_merchant_review_merchant_sort
+            columns:
+              - column: { name: merchant_id }
+              - column: { name: sort_order }
+
+  - changeSet:
+      id: 010-create-operation-log-table
+      author: love-space
+      changes:
+        - createTable:
+            tableName: operation_log
+            columns:
+              - column: { name: id, type: uuid, constraints: { primaryKey: true, nullable: false } }
+              - column: { name: user_id, type: uuid, constraints: { nullable: false } }
+              - column: { name: username, type: text, constraints: { nullable: false } }
+              - column: { name: module, type: text, constraints: { nullable: false } }
+              - column: { name: action, type: text, constraints: { nullable: false } }
+              - column: { name: target, type: text }
+              - column: { name: payload, type: jsonb }
+              - column: { name: created_at, type: TIMESTAMPTZ, constraints: { nullable: false } }
+        - createIndex:
+            tableName: operation_log
+            indexName: ix_operation_log_created
+            columns:
+              - column: { name: created_at, descending: true }
+        - createIndex:
+            tableName: operation_log
+            indexName: ix_operation_log_username_created
+            columns:
+              - column: { name: username }
+              - column: { name: created_at, descending: true }
+        - createIndex:
+            tableName: operation_log
+            indexName: ix_operation_log_module_created
+            columns:
+              - column: { name: module }
+              - column: { name: created_at, descending: true }

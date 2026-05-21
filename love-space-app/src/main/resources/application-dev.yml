@@ -1,0 +1,16 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/love_space
+    username: love_space
+    password: love_space
+  liquibase:
+    contexts: dev
+
+app:
+  security:
+    api-keys:
+      - dev-app-api-key-please-rotate
+
+logging:
+  level:
+    com.space.app: DEBUG

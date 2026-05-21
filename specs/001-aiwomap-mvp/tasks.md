@@ -34,12 +34,12 @@ controller MockMvc 测试；未要求全面 TDD。
 
 **Purpose**: 项目初始化、基础依赖、统一规范
 
-- [ ] T001 在 `love-space-admin/pom.xml` 增加依赖：`spring-boot-starter-web` / `data-jpa` / `security` / `validation`、`postgresql`、`liquibase-core`、`io.jsonwebtoken:jjwt-api/impl/jackson:0.12.x`、`com.github.f4b6a3:uuid-creator`、`lombok`、`springdoc-openapi-starter-webmvc-ui`（可选）
-- [ ] T002 在 `love-space-app/pom.xml` 增加依赖：`spring-boot-starter-web` / `data-jpa` / `security` / `validation`、`postgresql`、`liquibase-core`、`com.github.f4b6a3:uuid-creator`、`lombok`
-- [ ] T003 [P] 创建 `love-space-admin/src/main/resources/application.yml` 与 `application-dev.yml`，配置 PostgreSQL（端口 8080）、Liquibase `change-log=classpath:db/changelog/db.changelog-master.yaml`、JWT 密钥占位、`spring.mvc.problemdetails.enabled=true`
-- [ ] T004 [P] 创建 `love-space-app/src/main/resources/application.yml` 与 `application-dev.yml`，配置 PostgreSQL（端口 8081）、Liquibase 同上、`problemdetails.enabled=true`、`app.security.api-keys`（数组，dev 用占位 key，prod 通过环境变量 `APP_SECURITY_API_KEYS` 注入（Spring Boot relaxed binding 自动映射到 `app.security.api-keys`））
-- [ ] T005 [P] 在 `love-space-web/src/` 清理 TailAdmin 演示路由（保留 `AppLayout`、`SignIn`、布局/图标资源），更新 `package.json` 增加 `axios` 依赖
-- [ ] T006 [P] 创建 `.env.example` 与 `love-space-web/.env.local.example`：`VITE_ADMIN_API_BASE=http://localhost:8080`
+- [X] T001 在 `love-space-admin/pom.xml` 增加依赖：`spring-boot-starter-web` / `data-jpa` / `security` / `validation`、`postgresql`、`liquibase-core`、`io.jsonwebtoken:jjwt-api/impl/jackson:0.12.x`、`com.github.f4b6a3:uuid-creator`、`lombok`、`springdoc-openapi-starter-webmvc-ui`（可选）
+- [X] T002 在 `love-space-app/pom.xml` 增加依赖：`spring-boot-starter-web` / `data-jpa` / `security` / `validation`、`postgresql`、`liquibase-core`、`com.github.f4b6a3:uuid-creator`、`lombok`
+- [X] T003 [P] 创建 `love-space-admin/src/main/resources/application.yml` 与 `application-dev.yml`，配置 PostgreSQL（端口 8080）、Liquibase `change-log=classpath:db/changelog/db.changelog-master.yaml`、JWT 密钥占位、`spring.mvc.problemdetails.enabled=true`
+- [X] T004 [P] 创建 `love-space-app/src/main/resources/application.yml` 与 `application-dev.yml`，配置 PostgreSQL（端口 8081）、Liquibase 同上、`problemdetails.enabled=true`、`app.security.api-keys`（数组，dev 用占位 key，prod 通过环境变量 `APP_SECURITY_API_KEYS` 注入（Spring Boot relaxed binding 自动映射到 `app.security.api-keys`））
+- [X] T005 [P] 在 `love-space-web/src/` 清理 TailAdmin 演示路由（保留 `AppLayout`、`SignIn`、布局/图标资源），更新 `package.json` 增加 `axios` 依赖
+- [X] T006 [P] 创建 `.env.example` 与 `love-space-web/.env.local.example`：`VITE_ADMIN_API_BASE=http://localhost:8080`
 
 ---
 
@@ -51,55 +51,55 @@ controller MockMvc 测试；未要求全面 TDD。
 
 ### 后端：love-space-admin 公共基础
 
-- [ ] T010 创建 `love-space-admin/src/main/java/com/loves/space/common/enums/Role.java`、`EnableStatus.java`、`Period.java`（含中文 JavaDoc）
-- [ ] T011 [P] 创建 `common/exception/ValidationException.java`、`ResourceNotFoundException.java`（继承 `ErrorResponseException`）
-- [ ] T012 [P] 创建 `common/page/PageQuery.java`、`PageResponseMapper.java`（默认 size=20，可选 20/30）
-- [ ] T013 [P] 创建 `common/util/UuidV7Generator.java` 封装 `UuidCreator.getTimeOrderedEpoch()`
-- [ ] T014 创建 `BaseAuditEntity`（仅 `id` + `createdAt` + `updatedAt`，不含 createdBy/updatedBy）在 `common/entity/BaseAuditEntity.java`，使用 `@PrePersist` 调用 `UuidV7Generator`
-- [ ] T015 创建 `config/JpaConfig.java` 启用 JPA Auditing
-- [ ] T016 [P] 创建 `config/WebMvcConfig.java`（CORS + 全局 Jackson 配置）
-- [ ] T017 [P] 创建 `config/AsyncConfig.java` 暴露 `operationLogExecutor` 线程池
-- [ ] T018 创建 `security/OperatingContext.java` 暴露 `currentUserId()` / `currentUsername()` / `currentRole()`
-- [ ] T019 创建 `security/jwt/JwtTokenProvider.java`、`JwtAuthFilter.java`、`config/properties/JwtProperties.java`
-- [ ] T020 创建 `security/userdetails/AdminUserDetails.java`、`UserDetailsServiceImpl.java`
-- [ ] T021 创建 `security/handler/RestAuthenticationEntryPoint.java`、`RestAccessDeniedHandler.java`
-- [ ] T022 创建 `config/SecurityConfig.java`（`/api/admin/auth/login` permitAll，其余 authenticated，`/api/admin/users/**` `hasRole('ADMIN')`，启用 JWT 过滤器与 BCrypt `PasswordEncoder`）
-- [ ] T023 [P] 创建 `web/ApiExceptionHandler.java` 覆盖 `MethodArgumentNotValidException` 输出字段级 `errors[]`
-- [ ] T024 [P] 创建 `common/annotation/OperationLog.java` 注解
-- [ ] T025 创建 `infrastructure/log/OperationLogAspect.java`，通过 `@Async("operationLogExecutor")` 写入操作日志（依赖 OperatingContext + OperationLogService）
-- [ ] T026 创建 `infrastructure/storage/FileStorage.java` 接口与 `LocalFileStorage.java` 实现（写到本地 `uploads/`，返回 `${app.public-base-url}/uploads/<uuid>.<ext>`）
+- [X] T010 创建 `love-space-admin/src/main/java/com/loves/space/common/enums/Role.java`、`EnableStatus.java`、`Period.java`（含中文 JavaDoc）
+- [X] T011 [P] 创建 `common/exception/ValidationException.java`、`ResourceNotFoundException.java`（继承 `ErrorResponseException`）
+- [X] T012 [P] 创建 `common/page/PageQuery.java`、`PageResponseMapper.java`（默认 size=20，可选 20/30）
+- [X] T013 [P] 创建 `common/util/UuidV7Generator.java` 封装 `UuidCreator.getTimeOrderedEpoch()`
+- [X] T014 创建 `BaseAuditEntity`（仅 `id` + `createdAt` + `updatedAt`，不含 createdBy/updatedBy）在 `common/entity/BaseAuditEntity.java`，使用 `@PrePersist` 调用 `UuidV7Generator`
+- [X] T015 创建 `config/JpaConfig.java` 启用 JPA Auditing
+- [X] T016 [P] 创建 `config/WebMvcConfig.java`（CORS + 全局 Jackson 配置）
+- [X] T017 [P] 创建 `config/AsyncConfig.java` 暴露 `operationLogExecutor` 线程池
+- [X] T018 创建 `security/OperatingContext.java` 暴露 `currentUserId()` / `currentUsername()` / `currentRole()`
+- [X] T019 创建 `security/jwt/JwtTokenProvider.java`、`JwtAuthFilter.java`、`config/properties/JwtProperties.java`
+- [X] T020 创建 `security/userdetails/AdminUserDetails.java`、`UserDetailsServiceImpl.java`
+- [X] T021 创建 `security/handler/RestAuthenticationEntryPoint.java`、`RestAccessDeniedHandler.java`
+- [X] T022 创建 `config/SecurityConfig.java`（`/api/admin/auth/login` permitAll，其余 authenticated，`/api/admin/users/**` `hasRole('ADMIN')`，启用 JWT 过滤器与 BCrypt `PasswordEncoder`）
+- [X] T023 [P] 创建 `web/ApiExceptionHandler.java` 覆盖 `MethodArgumentNotValidException` 输出字段级 `errors[]`
+- [X] T024 [P] 创建 `common/annotation/OperationLog.java` 注解
+- [X] T025 创建 `infrastructure/log/OperationLogAspect.java`，通过 `@Async("operationLogExecutor")` 写入操作日志（依赖 OperatingContext + OperationLogService）
+- [X] T026 创建 `infrastructure/storage/FileStorage.java` 接口与 `LocalFileStorage.java` 实现（写到本地 `uploads/`，返回 `${app.public-base-url}/uploads/<uuid>.<ext>`）
 
 ### 后端：love-space-admin 数据库 changelog（Liquibase）
 
-- [ ] T027 创建 `love-space-admin/src/main/resources/db/changelog/db.changelog-master.yaml` 引入 `changes/001-init-schema.yaml`、`changes/002-seed-admin-user.yaml`
-- [ ] T028 创建 `changes/001-init-schema.yaml`：建表 `user`、`city`、`category`、`tag`、`merchant`、`merchant_image`、`merchant_period`、`merchant_tag`、`merchant_review`、`operation_log`；列遵循 data-model.md；**不创建 FOREIGN KEY**；UUIDv7 列类型 `uuid`；含 CHECK 约束（四维评分范围、role 枚举、period 枚举）；建索引（`city_online_weight_created`、`username_unique`、`city(online, banner_sort_order)` 等）
-- [ ] T029 创建 `changes/002-seed-admin-user.yaml`：使用 preCondition `sqlCheck` 判断不存在 `username='admin'` 时插入 admin 用户；password 列直接写入**预先离线生成的 BCrypt 哈希字符串**（明文 `8@y2eoRLyStM*UVU`，cost=10），role=ADMIN，enable=true；changelog 顶部以 YAML 注释保留生成命令（`htpasswd -bnBC 10 "" '8@y2eoRLyStM*UVU' | tr -d ':\n'` 或等价的 `BCryptPasswordEncoder`）以便轮换；此后默认 admin 仅由 Liquibase 这一条路径植入，**禁止再由应用代码插入**
+- [X] T027 创建 `love-space-admin/src/main/resources/db/changelog/db.changelog-master.yaml` 引入 `changes/001-init-schema.yaml`、`changes/002-seed-admin-user.yaml`
+- [X] T028 创建 `changes/001-init-schema.yaml`：建表 `user`、`city`、`category`、`tag`、`merchant`、`merchant_image`、`merchant_period`、`merchant_tag`、`merchant_review`、`operation_log`；列遵循 data-model.md；**不创建 FOREIGN KEY**；UUIDv7 列类型 `uuid`；含 CHECK 约束（四维评分范围、role 枚举、period 枚举）；建索引（`city_online_weight_created`、`username_unique`、`city(online, banner_sort_order)` 等）
+- [X] T029 创建 `changes/002-seed-admin-user.yaml`：使用 preCondition `sqlCheck` 判断不存在 `username='admin'` 时插入 admin 用户；password 列直接写入**预先离线生成的 BCrypt 哈希字符串**（明文 `8@y2eoRLyStM*UVU`，cost=10），role=ADMIN，enable=true；changelog 顶部以 YAML 注释保留生成命令（`htpasswd -bnBC 10 "" '8@y2eoRLyStM*UVU' | tr -d ':\n'` 或等价的 `BCryptPasswordEncoder`）以便轮换；此后默认 admin 仅由 Liquibase 这一条路径植入，**禁止再由应用代码插入**
 
 ### 后端：love-space-app 公共基础
 
-- [ ] T030 [P] 在 `love-space-app/src/main/java/com/space/app/common/` 下创建 `enums/Period.java`、`exception/ResourceNotFoundException.java`、`page/PageQuery.java`、`util/UuidV7Generator.java`、`entity/BaseAuditEntity.java`（仅 `id` + `createdAt` + `updatedAt`）
-- [ ] T031 [P] 创建 `config/SecurityConfig.java`：CORS + 无 session + 关闭表单登录；将自定义
+- [X] T030 [P] 在 `love-space-app/src/main/java/com/space/app/common/` 下创建 `enums/Period.java`、`exception/ResourceNotFoundException.java`、`page/PageQuery.java`、`util/UuidV7Generator.java`、`entity/BaseAuditEntity.java`（仅 `id` + `createdAt` + `updatedAt`）
+- [X] T031 [P] 创建 `config/SecurityConfig.java`：CORS + 无 session + 关闭表单登录；将自定义
   `ApiKeyAuthFilter` 注册到过滤器链；所有 `/api/app/**` 要求经过 API Key 校验；其他路径默认拒绝。
   同步创建 `WebMvcConfig.java`、`JpaConfig.java`。
-- [ ] T031a [P] 创建 `config/properties/ApiKeyProperties.java`：`@ConfigurationProperties("app.security")`
+- [X] T031a [P] 创建 `config/properties/ApiKeyProperties.java`：`@ConfigurationProperties("app.security")`
   暴露 `List<String> apiKeys`；`@PostConstruct` 校验非空否则抛 `IllegalStateException`。
-- [ ] T031b [P] 创建 `security/ApiKeyAuthFilter.java`（`OncePerRequestFilter`）：从 `X-API-Key` 头读取 key，
+- [X] T031b [P] 创建 `security/ApiKeyAuthFilter.java`（`OncePerRequestFilter`）：从 `X-API-Key` 头读取 key，
   使用 `MessageDigest.isEqual` 与白名单常量时间比较；命中则写入匿名 `PreAuthenticatedAuthenticationToken`
   到 SecurityContext；不命中写入 401 ProblemDetail（`Invalid or missing API key`），不区分缺失/不匹配。
   **失败时以 `WARN` 级别记录**：远端 IP、`X-API-Key` 头是否存在、请求路径、时间戳；若 key 存在则附 SHA-256 前
   6 个十六进制字符作为脱敏指纹；**严禁打印 key 明文或完整摘要**。中文 JavaDoc 描述方法、关键步骤与 HTTP 语义。
-- [ ] T032 [P] 创建 `web/ApiExceptionHandler.java`（覆盖字段级校验错误）
-- [ ] T033 love-space-app 的 Liquibase 配置 MUST **仅引用 `001-init-schema.yaml`（DDL），禁止引用 `002-seed-admin-user.yaml`**（admin 用户为 admin 端专属种子，app 端无用户表写入）：在 `love-space-app/src/main/resources/db/changelog/db.changelog-master.yaml` 中显式只 include `changes/001-init-schema.yaml`；文件内容与 admin 端保持字节一致（建议通过构建脚本同步或 CI 校验 hash），以便单库共享或独立部署时 schema 完全一致
+- [X] T032 [P] 创建 `web/ApiExceptionHandler.java`（覆盖字段级校验错误）
+- [X] T033 love-space-app 的 Liquibase 配置 MUST **仅引用 `001-init-schema.yaml`（DDL），禁止引用 `002-seed-admin-user.yaml`**（admin 用户为 admin 端专属种子，app 端无用户表写入）：在 `love-space-app/src/main/resources/db/changelog/db.changelog-master.yaml` 中显式只 include `changes/001-init-schema.yaml`；文件内容与 admin 端保持字节一致（建议通过构建脚本同步或 CI 校验 hash），以便单库共享或独立部署时 schema 完全一致
 
 ### 前端：love-space-web 公共基础
 
-- [ ] T034 [P] 创建 `love-space-web/src/api/client.ts`：axios 实例，拦截器附加 `Authorization: Bearer <token>`，401 自动跳转 `/signin`
-- [ ] T035 [P] 创建 `src/context/AuthContext.tsx`、`src/hooks/useAuth.ts`（持有 user / token / login / logout）
-- [ ] T036 [P] 创建公共组件 `src/components/filter/FilterBar.tsx`（Apply / Reset），接收 `fields` 配置与 `onApply` / `onReset`
-- [ ] T037 [P] 创建公共组件 `src/components/pagination/Pagination.tsx`（`support-tickets` 样式，size 选项 [20, 30]）
-- [ ] T038 [P] 创建 `src/components/user/UserMenu.tsx`（顶部当前用户 + 退出）
-- [ ] T039 在 `src/layout/AppLayout.tsx` 中接入 `AuthContext` 并按 `role` 过滤侧边栏（MEMBER 不显示 `/users`）
-- [ ] T040 在 `src/App.tsx` 重写路由：`/signin` 外的所有路由置于 `AppLayout` 下，未登录跳 `/signin`
+- [X] T034 [P] 创建 `love-space-web/src/api/client.ts`：axios 实例，拦截器附加 `Authorization: Bearer <token>`，401 自动跳转 `/signin`
+- [X] T035 [P] 创建 `src/context/AuthContext.tsx`、`src/hooks/useAuth.ts`（持有 user / token / login / logout）
+- [X] T036 [P] 创建公共组件 `src/components/filter/FilterBar.tsx`（Apply / Reset），接收 `fields` 配置与 `onApply` / `onReset`
+- [X] T037 [P] 创建公共组件 `src/components/pagination/Pagination.tsx`（`support-tickets` 样式，size 选项 [20, 30]）
+- [X] T038 [P] 创建 `src/components/user/UserMenu.tsx`（顶部当前用户 + 退出）
+- [X] T039 在 `src/layout/AppLayout.tsx` 中接入 `AuthContext` 并按 `role` 过滤侧边栏（MEMBER 不显示 `/users`）
+- [X] T040 在 `src/App.tsx` 重写路由：`/signin` 外的所有路由置于 `AppLayout` 下，未登录跳 `/signin`
 
 **Checkpoint**: 公共基础就绪，各用户故事可并行启动
 
