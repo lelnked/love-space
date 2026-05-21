@@ -16,7 +16,7 @@ export interface LoginRequest {
 
 export interface LoginResponse {
   token: string;
-  user: CurrentUser;
+  manager: CurrentUser;
 }
 
 export async function login(req: LoginRequest): Promise<LoginResponse> {

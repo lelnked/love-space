@@ -1,9 +1,9 @@
 package com.loves.space.modules.operationlog;
 
+import com.loves.space.modules.manager.entity.Manager;
+import com.loves.space.modules.manager.repository.ManagerRepository;
 import com.loves.space.modules.operationlog.entity.OperationLog;
 import com.loves.space.modules.operationlog.repository.OperationLogRepository;
-import com.loves.space.modules.user.entity.User;
-import com.loves.space.modules.user.repository.UserRepository;
 import com.loves.space.security.jwt.JwtTokenProvider;
 import com.loves.space.support.AbstractPostgresIntegrationTest;
 import org.junit.jupiter.api.BeforeEach;
@@ -37,7 +37,7 @@ class OperationLogControllerWebMvcTest extends AbstractPostgresIntegrationTest {
     private OperationLogRepository operationLogRepository;
 
     @Autowired
-    private UserRepository userRepository;
+    private ManagerRepository managerRepository;
 
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
@@ -50,13 +50,13 @@ class OperationLogControllerWebMvcTest extends AbstractPostgresIntegrationTest {
     @BeforeEach
     void setUp() {
         operationLogRepository.deleteAll();
-        User admin = userRepository.findByUsername("admin").orElseThrow();
+        Manager admin = managerRepository.findByUsername("admin").orElseThrow();
         token = jwtTokenProvider.issue(admin.getId(), admin.getUsername(), admin.getRole());
     }
 
     private void insertLog(String username, String module, String action, OffsetDateTime createdAt) {
         jdbcTemplate.update(
-                "INSERT INTO operation_log (id, user_id, username, module, action, target, payload, created_at)"
+                "INSERT INTO loves_operation_log (id, manager_id, username, module, action, target, payload, created_at)"
                         + " VALUES (?, ?, ?, ?, ?, NULL, NULL, ?)",
                 UUID.randomUUID(),
                 UUID.randomUUID(),
@@ -71,7 +71,7 @@ class OperationLogControllerWebMvcTest extends AbstractPostgresIntegrationTest {
     void filtersByUsernameAndModule() throws Exception {
         OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
         insertLog("admin", "city", "create", now);
-        insertLog("admin", "user", "create", now);
+        insertLog("admin", "manager", "create", now);
         insertLog("alice", "city", "update", now);
 
         mockMvc.perform(get("/api/admin/logs")

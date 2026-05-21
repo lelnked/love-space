@@ -1,8 +1,8 @@
 package com.loves.space.modules.auth.controller;
 
 import com.loves.space.common.enums.Role;
-import com.loves.space.modules.user.entity.User;
-import com.loves.space.modules.user.repository.UserRepository;
+import com.loves.space.modules.manager.entity.Manager;
+import com.loves.space.modules.manager.repository.ManagerRepository;
 import com.loves.space.support.AbstractPostgresIntegrationTest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,7 +23,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * <ul>
  *   <li>默认 admin 凭据登录返回 200 + 非空 token；</li>
  *   <li>错误密码返回 401；</li>
- *   <li>enable=false 用户即使密码正确也返回 401（不区分原因，防止账号枚举）。</li>
+ *   <li>enable=false 管理员即使密码正确也返回 401（不区分原因，防止账号枚举）。</li>
  * </ul>
  */
 @AutoConfigureMockMvc
@@ -33,7 +33,7 @@ class AuthControllerWebMvcTest extends AbstractPostgresIntegrationTest {
     private MockMvc mockMvc;
 
     @Autowired
-    private UserRepository userRepository;
+    private ManagerRepository managerRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -45,8 +45,8 @@ class AuthControllerWebMvcTest extends AbstractPostgresIntegrationTest {
                         .content("{\"username\":\"admin\",\"password\":\"8@y2eoRLyStM*UVU\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.token", notNullValue()))
-                .andExpect(jsonPath("$.user.username").value("admin"))
-                .andExpect(jsonPath("$.user.role").value("ADMIN"));
+                .andExpect(jsonPath("$.manager.username").value("admin"))
+                .andExpect(jsonPath("$.manager.role").value("ADMIN"));
     }
 
     @Test
@@ -58,16 +58,16 @@ class AuthControllerWebMvcTest extends AbstractPostgresIntegrationTest {
     }
 
     @Test
-    void disabledUserCannotLogin() throws Exception {
+    void disabledManagerCannotLogin() throws Exception {
         String username = "disabled_" + UUID.randomUUID().toString().substring(0, 8);
         String rawPassword = "CorrectPass123";
-        User user = new User();
-        user.setUsername(username);
-        user.setPassword(passwordEncoder.encode(rawPassword));
-        user.setNickname("已停用");
-        user.setRole(Role.MEMBER);
-        user.setEnable(false);
-        userRepository.save(user);
+        Manager manager = new Manager();
+        manager.setUsername(username);
+        manager.setPassword(passwordEncoder.encode(rawPassword));
+        manager.setNickname("已停用");
+        manager.setRole(Role.MEMBER);
+        manager.setEnable(false);
+        managerRepository.save(manager);
 
         mockMvc.perform(post("/api/admin/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)

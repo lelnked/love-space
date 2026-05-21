@@ -14,7 +14,7 @@ import java.util.UUID;
  * <p>按 {@code sortOrder} 升序展示。
  */
 @Entity
-@Table(name = "merchant_image")
+@Table(name = "loves_merchant_image")
 @Getter
 @Setter
 public class MerchantImage extends BaseAuditEntity {

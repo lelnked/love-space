@@ -277,6 +277,86 @@ controller MockMvc 测试；未要求全面 TDD。
 
 ---
 
+## Phase 8: 2026-05-21 增量澄清迁移（Manager 重命名 / `loves_` 表前缀 / Liquibase formatted-SQL / 不 pin 版本）
+
+> 来源：spec.md `### Session 2026-05-21` + plan.md "2026-05-21 增补"段。本批任务覆盖既有代码的迁移，序号
+> 从 T600 起以避免与原表冲突。**所有改动在同一个分支上连续进行；为避免双写期，新旧不并存——一次性切换**。
+
+### 8.1 前置准备
+
+- [ ] T600 备份当前 `love-space-admin` / `love-space-app` 工作树（建分支 `001-aiwomap-mvp-rename-baseline`），并 `./mvnw test` 确认现状全绿，作为回归基线
+- [ ] T601 [P] 整理"待重命名清单"快照到 `specs/001-aiwomap-mvp/migration-2026-05-21.md`，对照 plan.md §A 表逐项确认（包名 / 类名 / 路径 / 表名 / 字段名）
+
+### 8.2 Liquibase 迁移：YAML → formatted-SQL + `loves_` 表前缀（含 `Manager` 表名）
+
+> 注意：MVP 阶段假设尚无生产数据，可重置 schema；以下任务 **直接重写 changelog**，不做 in-place rename 迁移脚本。
+
+- [X] T610 删除 `love-space-admin/src/main/resources/db/changelog/changes/001-init-schema.yaml`
+- [X] T611 删除 `love-space-admin/src/main/resources/db/changelog/changes/002-seed-admin-user.yaml`
+- [X] T612 创建 `love-space-admin/src/main/resources/db/changelog/changes/001-init-schema.sql` formatted-SQL：顶部 `--liquibase formatted sql`；`--changeset loves:001-init-schema`；DDL 创建 `loves_manager` / `loves_city` / `loves_category` / `loves_tag` / `loves_merchant` / `loves_merchant_image` / `loves_merchant_period` / `loves_merchant_tag` / `loves_merchant_review` / `loves_operation_log`（列遵循 `data-model.md`；**无 FOREIGN KEY**；UUID 列 `uuid` 类型；CHECK 约束保留四维评分上限与枚举值；索引与原 yaml 等价）；`--rollback` 段含 `DROP TABLE ...`
+- [X] T613 创建 `love-space-admin/src/main/resources/db/changelog/changes/002-seed-admin-manager.sql` formatted-SQL：`--changeset loves:002-seed-admin-manager`；`--precondition-sql-check expectedResult:0 SELECT count(*) FROM loves_manager WHERE username='admin'`；`--onFail MARK_RAN`；`INSERT INTO loves_manager (...)` 写入 admin 账号（UUIDv7 hex + 预生成 BCrypt 哈希 cost=10）；顶部注释保留生成命令；`--rollback DELETE FROM loves_manager WHERE username='admin'`
+- [X] T614 改写 `love-space-admin/src/main/resources/db/changelog/db.changelog-master.yaml` 为 **include-only**
+- [X] T615 [P] 同步删除 `love-space-app/src/main/resources/db/changelog/changes/001-init-schema.yaml`，新增字节级等价的 `001-init-schema.sql`
+- [X] T616 [P] 改写 `love-space-app/src/main/resources/db/changelog/db.changelog-master.yaml` 为 include-only
+- [X] T617 [P] 在 `love-space-admin/pom.xml`、`love-space-app/pom.xml` 中移除 `<liquibase.version>` 显式 pin
+- [ ] T618 在干净 PostgreSQL 实例上执行 `./mvnw spring-boot:run`（admin），观察 Liquibase 日志显示 `001-init-schema executed` 与 `002-seed-admin-manager executed`，并通过 `psql` 校验所有表均以 `loves_` 开头、`loves_manager` 内有 1 条 admin 记录（**待 Java 重命名完成后再启动**）
+- [ ] T619 [P] 同上在干净 PG 上启动 `love-space-app`，确认 master 仅执行 `001-init-schema`（**待 app 端 `@Table` 改造完成后再启动**）
+
+### 8.3 love-space-admin 后端：`user/` → `manager/` 全链路重命名
+
+> 顺序：先包路径与类名，再字段引用，最后 Security / Spring 配置 / 审计字段。每步后 `./mvnw -DskipTests=false test` 应在编译通过基础上再修复测试。
+
+- [X] T630 `git mv love-space-admin/src/main/java/com/loves/space/modules/user love-space-admin/src/main/java/com/loves/space/modules/manager`；同步搬移 `src/test/java/com/loves/space/modules/user` → `.../modules/manager`
+- [X] T631 修改 `modules/manager` 内全部 Java 文件的 `package com.loves.space.modules.user;` → `package com.loves.space.modules.manager;`
+- [X] T632 [P] 类重命名（Refactor → Rename Class 或全局替换 + 编译验证）：`User` → `Manager`、`UserEntity` → `ManagerEntity`（若存在）、`UserRepository` → `ManagerRepository`、`UserService` → `ManagerService`、`UserServiceImpl` → `ManagerServiceImpl`（若存在）、`UserController` → `ManagerController`、`UserMapper` → `ManagerMapper`、`UserDto` / `UserItem` / `UserDetailResponse` / `UserUpsertRequest` 等 → `Manager*` 同名
+- [X] T633 `@Entity` `Manager` 类追加 `@Table(name = "loves_manager")` 显式标注；删除任何隐式表名映射
+- [X] T634 `ManagerRepository`：所有 `findByUsername` / `existsByUsername` JPQL / Specification 字段保持不变（实体字段未改）；删除任何写死 `"user"` 表名的 nativeQuery
+- [X] T635 `ManagerController`：`@RequestMapping("/api/admin/users")` → `@RequestMapping("/api/admin/managers")`；`@OperationLog("user:<action>")` 改 `"manager:<action>"`
+- [X] T636 [P] `modules/auth`：登录响应 DTO 字段 `user` → `manager`；`AuthController` / `AuthService` 内类型 `User` → `Manager` 引用全部更新
+- [X] T637 [P] `config/SecurityConfig.java`：`/api/admin/users/**` `hasRole('ADMIN')` 规则 → `/api/admin/managers/**`；UserDetailsService 实现类（若引用 `User`）改为 `Manager` 类型
+- [X] T638 [P] `security/userdetails`：`UserDetailsService` 实现内部加载 `User` 改 `Manager`；若类名为 `LovesUserDetailsService` 保持类名不变（与 Spring Security 接口名对齐），仅替换泛型 / 字段类型；**`OperatingContext` 类名保持不变**（依据 memory feedback）
+- [X] T639 修改 `OperationLogEntity` / `OperationLog` 字段 `userId` → `managerId`（含 getter/setter、JPA `@Column(name="manager_id")`）；`OperationLogRepository` / `OperationLogService` 内字段引用同步；日志切面记录 module/action 时仍写 `"manager"` 模块名
+- [X] T640 [P] 全仓库搜索剩余字符串：`grep -rn "modules\.user\|UserService\|UserRepository\|UserController\|UserEntity\|/api/admin/users\|user_id\b\|userId\b" love-space-admin/src` 确认零命中
+- [X] T641 修复编译：`./mvnw -pl love-space-admin compile` 通过；再 `./mvnw -pl love-space-admin test` 通过（含 `ManagerServiceTest`、`ManagerControllerSecurityTest` 重命名后的用例）
+
+### 8.4 love-space-admin 测试更新
+
+- [X] T650 [P] `ManagerServiceTest.java`（原 `UserServiceTest`）：断言 `role=ADMIN` 传参仍落 MEMBER；`existsByUsername` 唯一性冲突
+- [X] T651 [P] `ManagerControllerSecurityTest.java`：MEMBER 访问 `/api/admin/managers` 返回 403；ADMIN 访问 200
+- [X] T652 [P] `AuthControllerTest`（如存在）：登录响应体顶层字段断言 `manager.{id,username,role}` 而非 `user`
+- [X] T653 [P] `OperationLogTest`：日志条目 `managerId` 字段持久化与查询；`module=manager` 过滤
+
+### 8.5 love-space-app 后端：表 `loves_*` 同步
+
+> app 端原本没有 User/Manager 实体（无用户系统），主要工作是表名前缀。
+
+- [X] T660 [P] `love-space-app/src/main/java/com/space/app/modules/city/entity/CityEntity.java` 追加 `@Table(name="loves_city")`
+- [X] T661 [P] `MerchantEntity` 追加 `@Table(name="loves_merchant")`；同包内的 `MerchantImage` / `MerchantPeriod` / `MerchantTag` / `MerchantReview` 各自 `@Table(name="loves_merchant_image" | "loves_merchant_period" | "loves_merchant_tag" | "loves_merchant_review")`
+- [X] T662 [P] `TagEntity` 追加 `@Table(name="loves_tag")`；`CategoryEntity`（若存在）追加 `@Table(name="loves_category")`
+- [X] T663 全仓库搜索 nativeQuery 中的旧表名：`grep -rn "FROM user\b\|FROM city\b\|FROM merchant\b\|FROM tag\b\|FROM category\b\|FROM operation_log\b" love-space-app/src love-space-admin/src` 全部改为 `loves_*`；零命中即可
+- [X] T664 `./mvnw -pl love-space-app test` 通过（Testcontainers PostgreSQL 启动后 schema 与 entity `@Table` 完全对齐）
+
+### 8.6 love-space-web 前端：`Users/` → `Managers/` 全链路重命名
+
+- [X] T670 `git mv love-space-web/src/pages/Users love-space-web/src/pages/Managers`；同步搬移 `src/api/users.ts` → `src/api/managers.ts`
+- [X] T671 修改 `src/App.tsx`（或路由配置）：`/users` → `/managers`、`/users/create` → `/managers/create`；`<Users*/>` 组件 import 路径与名称同步改为 `Managers*`
+- [X] T672 [P] 修改侧边栏菜单（`layout/AppLayout.tsx` 或独立 `Sidebar`）：菜单项 label "用户管理" → "Manager 管理"；菜单 route `/users` → `/managers`；按角色过滤逻辑保持
+- [X] T673 [P] `src/api/managers.ts`：所有 endpoint `/api/admin/users*` → `/api/admin/managers*`；TS 类型 `User` / `UserItem` / `UserDetailResponse` → `Manager*`
+- [X] T674 [P] `src/context/OperatingUserContext.tsx` → `OperatingManagerContext.tsx`（git mv + 内部类型 / Provider 名称同步）；所有引用 import 更新
+- [X] T675 [P] 顶部用户菜单 `UserMenu` 组件**保留组件名**（与外部 UI library 概念对齐），但内部字段 `user.nickname` → `manager.nickname`；展示文案"用户"→"Manager"
+- [X] T676 [P] 登录页 / `AuthContext`：登录响应解构 `manager` 字段（旧字段 `user` 已变）；`localStorage` key 若曾用 `currentUser` 可保留 key 名以减少升级面，但变量名 / 类型改为 `currentManager`
+- [X] T677 全仓库搜索：`grep -rn "/api/admin/users\|src/pages/Users\|api/users\|OperatingUserContext\|UserItem\|UserDetailResponse" love-space-web/src` 零命中
+- [X] T678 `npm run lint && npm run build` 全绿
+
+### 8.7 文档同步与回归
+
+- [X] T690 更新 `love-space-admin/README.md`（若存在）与 `love-space-app/README.md`：admin 启动日志变化、表前缀、Manager 重命名要点
+- [X] T691 [P] 复读 `specs/001-aiwomap-mvp/quickstart.md` 全文，按真实启动结果对齐 API 路径 / changelog 文件名（quickstart 已在 plan 阶段更新，T691 仅做一次最终走查）
+- [X] T692 [P] 在 `CLAUDE.md` 项目层 README 性质章节追加一条"运营 Manager 命名约定"提示（避免新成员误称 user）
+- [ ] T693 端到端回归：按 quickstart §5 联调最小路径走通一次（admin 登录 → 建城市 → 建标签 → 建商户 → App 端 4 个接口验证），全部成功后将本阶段所有 task 勾选完成
+
+---
+
 ## Dependencies & Execution Order
 
 ### Phase Dependencies
@@ -348,6 +428,22 @@ Task: "T119 ExploreControllerWebMvcTest"
 3. US2 (Admin 内容管理) → 运营自助生产内容
 4. US3 (账号管理) → 多人协作上线
 5. US4 (操作日志) → 治理 / 审计能力
+
+### Phase 8 内部依赖（2026-05-21 迁移）
+
+```text
+8.1 (T600-T601)
+  └─> 8.2 Liquibase 重写 (T610-T619)
+        ├─> 8.3 admin 重命名 (T630-T641)
+        │     └─> 8.4 admin 测试 (T650-T653)
+        ├─> 8.5 app 表名 (T660-T664)
+        └─> 8.6 web 重命名 (T670-T678)
+              └─> 8.7 文档与回归 (T690-T693)
+```
+
+- 8.2 是硬阻塞：表名 / 字段名变化必须先在 Liquibase 落地，否则 8.3 / 8.5 的 `@Entity` 改完跑 Testcontainers 会 schema 不匹配。
+- 8.3 / 8.5 / 8.6 三块对**不同代码库**改动，T630 / T660 / T670 完成（包/目录搬移落盘）后可由不同开发并行推进。
+- T693 端到端回归是 Phase 8 的 acceptance gate，未通过不得提交合并到 main。
 
 ### Parallel Team Strategy
 

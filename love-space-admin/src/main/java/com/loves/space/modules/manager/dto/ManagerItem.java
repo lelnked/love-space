@@ -1,10 +1,10 @@
-package com.loves.space.modules.user.dto;
+package com.loves.space.modules.manager.dto;
 
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
 /**
- * 运营用户列表项。
+ * 运营管理员列表项。
  *
  * @param id        主键
  * @param username  登录用户名
@@ -13,7 +13,7 @@ import java.util.UUID;
  * @param enable    启用状态
  * @param createdAt 创建时间
  */
-public record UserItem(
+public record ManagerItem(
         UUID id,
         String username,
         String nickname,

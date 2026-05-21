@@ -16,17 +16,17 @@ import java.util.UUID;
 @Component
 public class OperatingContext {
 
-    /** 返回当前登录用户的 UUID 主键；未登录时返回 empty。 */
-    public Optional<UUID> currentUserId() {
-        return currentDetails().map(AdminUserDetails::getUserId);
+    /** 返回当前登录管理员的 UUID 主键；未登录时返回 empty。 */
+    public Optional<UUID> currentManagerId() {
+        return currentDetails().map(AdminUserDetails::getManagerId);
     }
 
-    /** 返回当前登录用户名；未登录时返回 empty。 */
+    /** 返回当前登录管理员用户名；未登录时返回 empty。 */
     public Optional<String> currentUsername() {
         return currentDetails().map(AdminUserDetails::getUsername);
     }
 
-    /** 返回当前登录用户角色；未登录时返回 empty。 */
+    /** 返回当前登录管理员角色；未登录时返回 empty。 */
     public Optional<Role> currentRole() {
         return currentDetails().map(AdminUserDetails::getRole);
     }

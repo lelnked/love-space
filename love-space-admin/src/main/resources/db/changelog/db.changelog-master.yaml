@@ -1,7 +1,8 @@
 # 运营后台数据库变更主入口
-# 子 changelog 按顺序 include；schema 文件需在 admin / app 两端字节一致
+# 仅 include 列表，不内联 changeSet；实际 changeset 全部为 Liquibase formatted-SQL 文件
+# 子文件需与 love-space-app 端 001-init-schema.sql 字节一致（建议 CI 校验 sha256 hash）
 databaseChangeLog:
   - include:
-      file: db/changelog/changes/001-init-schema.yaml
+      file: db/changelog/changes/001-init-schema.sql
   - include:
-      file: db/changelog/changes/002-seed-admin-user.yaml
+      file: db/changelog/changes/002-seed-admin-manager.sql

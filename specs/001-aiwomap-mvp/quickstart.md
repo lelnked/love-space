@@ -25,13 +25,15 @@ cd love-space-admin
 LS_DB_USER=postgres LS_DB_PASSWORD=postgres ./mvnw spring-boot:run
 ```
 
-启动日志中出现 Liquibase `002-seed-admin-user.yaml :: seed-admin executed` 即代表默认账号已植入：
+启动日志中出现 Liquibase `002-seed-admin-manager.sql :: 002-seed-admin-manager executed` 即代表默认账号已植入
+`loves_manager` 表：
 
 - 用户名：`admin`
 - 初始密码：`8@y2eoRLyStM*UVU`（首次登录后通过"重置密码"接口修改）
 
-Liquibase 自动执行 `db/changelog/db.changelog-master.yaml`（含 `001-init-schema.yaml` /
-`002-seed-admin-user.yaml`）。
+Liquibase 自动执行 `db/changelog/db.changelog-master.yaml`（仅 include；实际 changeset 为 formatted-SQL：
+`changes/001-init-schema.sql`、`changes/002-seed-admin-manager.sql`）。所有业务表均带 `loves_` 前缀。
+Liquibase 版本不显式 pin，由 Spring Boot 4.0.6 starter 携带的默认版本决定。
 
 ## 3. 启动 love-space-app
 
@@ -92,12 +94,14 @@ cd love-space-web && npm run lint && npm run build
 ## 7. 常见问题
 
 - **登录 401**：检查 token 是否在 `Authorization: Bearer ...` 头中；token 默认 8 小时过期。
-- **MEMBER 看不到 /users**：预期行为（前端按 role 过滤菜单；后端 `@PreAuthorize("hasRole('ADMIN')")`）。
+- **MEMBER 看不到 /managers**：预期行为（前端按 role 过滤菜单；后端 `@PreAuthorize("hasRole('ADMIN')")`）。
 - **App 端列表为空**：确认商户已"上架"、且 `cityId` 对应城市 `online=true`。
 - **emoji 显示为 ?**：检查数据库连接 `client_encoding=UTF8`，PG 默认即可。
 
 ## 8. 安全巡检（首次上线）
 
-- 默认 admin 账号密码已通过 BCrypt 哈希存储（见 `db/changelog/002-seed-admin-user.yaml`），数据库中不存在明文密码。
-- 首次上线后，运营须立刻通过 `PUT /api/admin/users/{id}/password` 修改默认密码（前端用户管理页"重置密码"按钮即可触发），并妥善保存新密码。
-- 修改后建议在 `操作日志` 页核对一条 `module=user / action=reset-password` 记录，确认审计链路通畅。
+- 默认 admin 账号密码已通过 BCrypt 哈希存储（见 `db/changelog/changes/002-seed-admin-manager.sql`），
+  `loves_manager` 表中不存在明文密码。
+- 首次上线后，运营须立刻通过 `PUT /api/admin/managers/{id}/password` 修改默认密码（前端 Manager 管理页
+  "重置密码"按钮即可触发），并妥善保存新密码。
+- 修改后建议在 `操作日志` 页核对一条 `module=manager / action=reset-password` 记录，确认审计链路通畅。

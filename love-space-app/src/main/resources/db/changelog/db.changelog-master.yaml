@@ -1,6 +1,6 @@
 # 移动端后端 Liquibase 主入口
-# MUST 仅引用 001-init-schema.yaml（DDL），禁止引用 002-seed-admin-user.yaml
-# 文件内容与 love-space-admin 端**字节一致**（建议通过 CI 校验 sha256 hash）
+# MUST 仅引用 001-init-schema.sql（DDL），禁止引用 002-seed-admin-manager.sql
+# 文件内容与 love-space-admin 端 001-init-schema.sql 字节一致（建议 CI 校验 sha256 hash）
 databaseChangeLog:
   - include:
-      file: db/changelog/changes/001-init-schema.yaml
+      file: db/changelog/changes/001-init-schema.sql

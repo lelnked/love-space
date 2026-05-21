@@ -1,9 +1,9 @@
 package com.loves.space.modules.operationlog;
 
+import com.loves.space.modules.manager.entity.Manager;
+import com.loves.space.modules.manager.repository.ManagerRepository;
 import com.loves.space.modules.operationlog.entity.OperationLog;
 import com.loves.space.modules.operationlog.repository.OperationLogRepository;
-import com.loves.space.modules.user.entity.User;
-import com.loves.space.modules.user.repository.UserRepository;
 import com.loves.space.security.jwt.JwtTokenProvider;
 import com.loves.space.support.AbstractPostgresIntegrationTest;
 import org.junit.jupiter.api.Test;
@@ -35,7 +35,7 @@ class OperationLogAspectIT extends AbstractPostgresIntegrationTest {
     private OperationLogRepository operationLogRepository;
 
     @Autowired
-    private UserRepository userRepository;
+    private ManagerRepository managerRepository;
 
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
@@ -44,7 +44,7 @@ class OperationLogAspectIT extends AbstractPostgresIntegrationTest {
     void writesOperationLogAsynchronouslyAfterCityCreate() throws Exception {
         operationLogRepository.deleteAll();
 
-        User admin = userRepository.findByUsername("admin").orElseThrow();
+        Manager admin = managerRepository.findByUsername("admin").orElseThrow();
         String token = jwtTokenProvider.issue(admin.getId(), admin.getUsername(), admin.getRole());
 
         String suffix = UUID.randomUUID().toString().substring(0, 6);

@@ -1,7 +1,7 @@
 # Contract — love-space-admin（运营后台 API）
 
 > Base URL：`/api/admin`
-> 鉴权：除 `/auth/login` 外，全部需要 `Authorization: Bearer <JWT>`；`/users/**` 额外要求 `ROLE_ADMIN`。
+> 鉴权：除 `/auth/login` 外，全部需要 `Authorization: Bearer <JWT>`；`/managers/**` 额外要求 `ROLE_ADMIN`。
 > 成功响应：直接返回业务对象 / `Page<T>` / 204；失败响应：RFC 7807 `ProblemDetail`，字段级校验失败附 `errors[]`。
 
 ## 1. 通用模型
@@ -29,7 +29,7 @@
   "title": "Validation Failed",
   "status": 400,
   "detail": "username 已存在",
-  "instance": "/api/admin/users",
+  "instance": "/api/admin/managers",
   "errors": [
     {"field": "username", "message": "不能为空"}
   ]
@@ -42,7 +42,7 @@
 
 ### POST `/auth/login`
 - Request: `{ "username": "...", "password": "..." }`
-- Response 200: `{ "token": "<JWT>", "user": { "id":"...", "username":"...", "nickname":"...", "role":"ADMIN|MEMBER" } }`
+- Response 200: `{ "token": "<JWT>", "manager": { "id":"...", "username":"...", "nickname":"...", "role":"ADMIN|MEMBER" } }`
 - 401：用户名/密码错误；用户已停用。
 
 ### POST `/auth/logout`
@@ -53,25 +53,25 @@
 
 ---
 
-## 3. Users（仅 ROLE_ADMIN）
+## 3. Managers（仅 ROLE_ADMIN）
 
-### GET `/users` —— 分页 + 过滤
+### GET `/managers` —— 分页 + 过滤
 - Query：`username`（模糊）、`role`（ADMIN|MEMBER）、`enable`（true|false）、
   `createdAtFrom` / `createdAtTo`、`page`、`size`
-- Response 200：`Page<UserItem>`，`UserItem` 含 id / username / nickname / role / enable / createdAt。
+- Response 200：`Page<ManagerItem>`，`ManagerItem` 含 id / username / nickname / role / enable / createdAt。
 
-### POST `/users`
+### POST `/managers`
 - Request：`{ "username":"...", "password":"...", "nickname":"..." }`
 - 服务端 **强制** role=MEMBER（忽略请求中 role）。
-- Response 201：`UserDetailResponse`。
+- Response 201：`ManagerDetailResponse`。
 
-### GET `/users/{id}`
-- Response 200：`UserDetailResponse`。
+### GET `/managers/{id}`
+- Response 200：`ManagerDetailResponse`。
 
-### PUT `/users/{id}/enable` / `/users/{id}/disable`
+### PUT `/managers/{id}/enable` / `/managers/{id}/disable`
 - 无请求体。Response 204。
 
-### PUT `/users/{id}/password`
+### PUT `/managers/{id}/password`
 - Request：`{ "newPassword": "..." }` —— BCrypt 后写库。
 - Response 204。
 
@@ -180,7 +180,7 @@
 | 204 | 无返回体的成功操作（启停 / 排序 / 重置密码） |
 | 400 | 校验失败（含字段级错误） |
 | 401 | 未登录 / token 过期 |
-| 403 | 权限不足（如 MEMBER 访问 /users） |
+| 403 | 权限不足（如 MEMBER 访问 /managers） |
 | 404 | 资源不存在 |
 | 409 | 唯一性冲突（用户名 / 城市名 / 标签名 / 分类名） |
 | 413 | 文件超大（可由网关或应用层返回） |

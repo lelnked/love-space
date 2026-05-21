@@ -12,7 +12,7 @@ import lombok.Setter;
  * <p>App 端只读；列名 snake_case，所有字段全名（无缩写）。
  */
 @Entity
-@Table(name = "city")
+@Table(name = "loves_city")
 @Getter
 @Setter
 public class City extends BaseAuditEntity {

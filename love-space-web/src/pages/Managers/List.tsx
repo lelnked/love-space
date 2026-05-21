@@ -4,13 +4,13 @@ import { AxiosError } from "axios";
 import FilterBar, { FilterField, FilterValues } from "../../components/filter/FilterBar";
 import Pagination from "../../components/pagination/Pagination";
 import {
-  disableUser,
-  enableUser,
-  pageUsers,
+  disableManager,
+  enableManager,
+  pageManagers,
   resetPassword,
-  UserItem,
-  UserQuery,
-} from "../../api/users";
+  ManagerItem,
+  ManagerQuery,
+} from "../../api/managers";
 
 const FILTER_FIELDS: FilterField[] = [
   { name: "username", label: "用户名", type: "text", placeholder: "模糊匹配" },
@@ -44,8 +44,8 @@ function toIsoEnd(date: string): string {
   return new Date(`${date}T23:59:59`).toISOString();
 }
 
-function buildQuery(filters: FilterValues, page: number, size: number): UserQuery {
-  const q: UserQuery = { page, size };
+function buildQuery(filters: FilterValues, page: number, size: number): ManagerQuery {
+  const q: ManagerQuery = { page, size };
   if (filters.username) q.username = filters.username;
   if (filters.role === "ADMIN" || filters.role === "MEMBER") q.role = filters.role;
   if (filters.enable === "true") q.enable = true;
@@ -63,11 +63,11 @@ function formatDateTime(value: string): string {
   }
 }
 
-export default function UserList() {
+export default function ManagerList() {
   const [filters, setFilters] = useState<FilterValues>({});
   const [page, setPage] = useState(1);
   const [size, setSize] = useState(20);
-  const [items, setItems] = useState<UserItem[]>([]);
+  const [items, setItems] = useState<ManagerItem[]>([]);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -77,7 +77,7 @@ export default function UserList() {
     setLoading(true);
     setError(null);
     try {
-      const data = await pageUsers(buildQuery(filters, page, size));
+      const data = await pageManagers(buildQuery(filters, page, size));
       setItems(data.content);
       setTotal(data.totalElements);
       setTotalPages(data.totalPages);
@@ -103,10 +103,10 @@ export default function UserList() {
     setPage(1);
   };
 
-  const handleToggleEnable = async (item: UserItem) => {
+  const handleToggleEnable = async (item: ManagerItem) => {
     try {
-      if (item.enable) await disableUser(item.id);
-      else await enableUser(item.id);
+      if (item.enable) await disableManager(item.id);
+      else await enableManager(item.id);
       await load();
     } catch (err) {
       const ax = err as AxiosError<{ detail?: string }>;
@@ -114,8 +114,8 @@ export default function UserList() {
     }
   };
 
-  const handleResetPassword = async (item: UserItem) => {
-    const next = window.prompt(`为用户 ${item.username} 输入新密码（≥8 位）：`);
+  const handleResetPassword = async (item: ManagerItem) => {
+    const next = window.prompt(`为管理员 ${item.username} 输入新密码（≥8 位）：`);
     if (!next) return;
     if (next.length < 8) {
       alert("密码至少 8 位");
@@ -133,12 +133,12 @@ export default function UserList() {
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-xl font-semibold text-gray-800 dark:text-white/90">用户管理</h1>
+        <h1 className="text-xl font-semibold text-gray-800 dark:text-white/90">管理员管理</h1>
         <Link
-          to="/users/create"
+          to="/managers/create"
           className="px-4 py-2 text-sm rounded bg-brand-500 text-white hover:bg-brand-600"
         >
-          新增用户
+          新增管理员
         </Link>
       </div>
 

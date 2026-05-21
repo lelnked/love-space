@@ -6,8 +6,8 @@ import { ScrollToTop } from "./components/common/ScrollToTop";
 import Home from "./pages/Dashboard/Home";
 import { AuthProvider } from "./context/AuthContext";
 import RequireAuth from "./components/auth/RequireAuth";
-import UserList from "./pages/Users/List";
-import UserCreate from "./pages/Users/Create";
+import ManagerList from "./pages/Managers/List";
+import ManagerCreate from "./pages/Managers/Create";
 import CityList from "./pages/Cities/List";
 import CityForm from "./pages/Cities/Form";
 import CategoryList from "./pages/Categories/List";
@@ -32,8 +32,8 @@ export default function App() {
             }
           >
             <Route index path="/" element={<Home />} />
-            <Route path="/users" element={<UserList />} />
-            <Route path="/users/create" element={<UserCreate />} />
+            <Route path="/managers" element={<ManagerList />} />
+            <Route path="/managers/create" element={<ManagerCreate />} />
             <Route path="/cities" element={<CityList />} />
             <Route path="/cities/create" element={<CityForm />} />
             <Route path="/cities/:id/edit" element={<CityForm />} />

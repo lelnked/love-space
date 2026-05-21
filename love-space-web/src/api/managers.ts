@@ -9,7 +9,7 @@ export interface Page<T> {
   totalPages: number;
 }
 
-export interface UserItem {
+export interface ManagerItem {
   id: string;
   username: string;
   nickname?: string | null;
@@ -18,11 +18,11 @@ export interface UserItem {
   createdAt: string;
 }
 
-export interface UserDetail extends UserItem {
+export interface ManagerDetail extends ManagerItem {
   updatedAt?: string;
 }
 
-export interface UserQuery {
+export interface ManagerQuery {
   username?: string;
   role?: Role | "";
   enable?: boolean | "";
@@ -32,7 +32,7 @@ export interface UserQuery {
   size?: number;
 }
 
-export interface UserCreateRequest {
+export interface ManagerCreateRequest {
   username: string;
   password: string;
   nickname?: string;
@@ -42,7 +42,7 @@ export interface PasswordResetRequest {
   newPassword: string;
 }
 
-function buildParams(query: UserQuery): Record<string, string | number | boolean> {
+function buildParams(query: ManagerQuery): Record<string, string | number | boolean> {
   const params: Record<string, string | number | boolean> = {};
   if (query.username) params.username = query.username;
   if (query.role) params.role = query.role;
@@ -54,31 +54,31 @@ function buildParams(query: UserQuery): Record<string, string | number | boolean
   return params;
 }
 
-export async function pageUsers(query: UserQuery): Promise<Page<UserItem>> {
-  const { data } = await apiClient.get<Page<UserItem>>("/api/admin/users", {
+export async function pageManagers(query: ManagerQuery): Promise<Page<ManagerItem>> {
+  const { data } = await apiClient.get<Page<ManagerItem>>("/api/admin/managers", {
     params: buildParams(query),
   });
   return data;
 }
 
-export async function createUser(req: UserCreateRequest): Promise<UserDetail> {
-  const { data } = await apiClient.post<UserDetail>("/api/admin/users", req);
+export async function createManager(req: ManagerCreateRequest): Promise<ManagerDetail> {
+  const { data } = await apiClient.post<ManagerDetail>("/api/admin/managers", req);
   return data;
 }
 
-export async function getUser(id: string): Promise<UserDetail> {
-  const { data } = await apiClient.get<UserDetail>(`/api/admin/users/${id}`);
+export async function getManager(id: string): Promise<ManagerDetail> {
+  const { data } = await apiClient.get<ManagerDetail>(`/api/admin/managers/${id}`);
   return data;
 }
 
-export async function enableUser(id: string): Promise<void> {
-  await apiClient.put<void>(`/api/admin/users/${id}/enable`);
+export async function enableManager(id: string): Promise<void> {
+  await apiClient.put<void>(`/api/admin/managers/${id}/enable`);
 }
 
-export async function disableUser(id: string): Promise<void> {
-  await apiClient.put<void>(`/api/admin/users/${id}/disable`);
+export async function disableManager(id: string): Promise<void> {
+  await apiClient.put<void>(`/api/admin/managers/${id}/disable`);
 }
 
 export async function resetPassword(id: string, req: PasswordResetRequest): Promise<void> {
-  await apiClient.put<void>(`/api/admin/users/${id}/password`, req);
+  await apiClient.put<void>(`/api/admin/managers/${id}/password`, req);
 }

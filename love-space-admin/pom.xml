@@ -29,8 +29,7 @@
     <properties>
         <java.version>25</java.version>
         <testcontainers.version>1.20.4</testcontainers.version>
-        <!-- Spring Boot 4.0 默认 Liquibase 5.0.x；为兼容现有 changelog 语法暂回退到 4.31.1 -->
-        <liquibase.version>4.31.1</liquibase.version>
+        <!-- Liquibase 版本不显式 pin，由 Spring Boot 4.0.6 spring-boot-starter-liquibase 默认携带 -->
     </properties>
 
     <dependencyManagement>

@@ -14,7 +14,7 @@ import lombok.Setter;
  * <p>无外键；列名 snake_case；字段名不缩写。
  */
 @Entity
-@Table(name = "city", uniqueConstraints = @UniqueConstraint(name = "ux_city_chinese_name", columnNames = "chinese_name"))
+@Table(name = "loves_city", uniqueConstraints = @UniqueConstraint(name = "ux_loves_city_chinese_name", columnNames = "chinese_name"))
 @Getter
 @Setter
 public class City extends BaseAuditEntity {

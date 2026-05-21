@@ -42,6 +42,23 @@
 - Q: love-space-app 的 Liquibase 是否执行 admin 种子？ → A: 否，app 端 `db.changelog-master.yaml` **仅 include
   `001-init-schema.yaml`**；admin 用户种子是 admin 端专属。
 
+### Session 2026-05-21
+
+- Q: admin 项目的"用户"实体重命名范围？ → A: **全链路改名**：后端实体 `User` → `Manager`、DB 表 `loves_manager`、
+  API 路径 `/api/admin/users` → `/api/admin/managers`、前端路由 `/users` → `/managers`；**`role` 枚举值
+  `ADMIN/MEMBER` 保持不变**（角色仍是角色，不是身份概念）。原文档中所有"运营用户 / 用户管理"概念性表述统一改为
+  "运营 Manager / Manager 管理"。
+- Q: Liquibase changelog 的脚本与 master 格式？ → A: **master 保留 YAML** (`db.changelog-master.yaml`)，但 master
+  内**仅做 include 列表**、不再内联 `changeSet`；实际表结构 / 种子数据全部改用**纯原生 SQL 文件**（如
+  `001-init-schema.sql`、`002-seed-admin-manager.sql`），用 Liquibase formatted-SQL 头
+  (`--liquibase formatted sql` + `--changeset author:id`) 控制幂等与回滚。
+- Q: 所有数据库表必须加 `loves_` 前缀，命名形态？ → A: **单数 + snake_case**，与实体类一一对应：
+  `loves_manager` / `loves_city` / `loves_category` / `loves_tag` / `loves_merchant` / `loves_merchant_image` /
+  `loves_merchant_period` / `loves_merchant_tag` / `loves_merchant_review` / `loves_operation_log`。两个后端
+  (`love-space-admin` / `love-space-app`) 共用同一套前缀规范。
+- Q: Liquibase 版本选择？ → A: **不显式 pin 版本**，由 Spring Boot 4.0.6 BOM 默认 starter
+  (`spring-boot-starter-liquibase`) 携带的版本决定，避免手动维护版本号漂移。
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - 移动端用户在城市内浏览爱女商户 (Priority: P1)
@@ -73,7 +90,7 @@
 
 ### User Story 2 - 运营人员管理城市 / 标签 / 商户内容 (Priority: P1)
 
-运营人员（Admin 或 Member 角色）登录运营后台，对城市、爱女标签、商户进行新增 / 编辑 / 上下架 / 排序 / 权重维护，
+运营 Manager（ADMIN 或 MEMBER 角色）登录运营后台，对城市、爱女标签、商户进行新增 / 编辑 / 上下架 / 排序 / 权重维护，
 并按需上传图片、维护用户评价与商户故事。所有列表页统一带 Apply / Reset 筛选与右下角分页器（默认 20，可切 30）。
 
 **Why this priority**: App 端的内容完全依赖运营录入。无后台，移动端只能显示空数据。
@@ -98,25 +115,25 @@
 
 ---
 
-### User Story 3 - 系统管理员管理运营账号 (Priority: P2)
+### User Story 3 - 系统管理员管理运营 Manager 账号 (Priority: P2)
 
-只有 Admin 角色用户可见"用户管理"入口，能分页 / 过滤查看运营用户、新建 Member 账号、启用 / 停用账号、
-重置密码。新建用户接口在后端强制 `role=Member`，前端 UI 也不暴露角色选择。
+只有 ADMIN 角色 Manager 可见"Manager 管理"入口，能分页 / 过滤查看运营 Manager、新建 MEMBER 账号、启用 / 停用账号、
+重置密码。新建 Manager 接口在后端强制 `role=MEMBER`，前端 UI 也不暴露角色选择。
 
 **Why this priority**: 没有它，多人协作时只能共用初始 admin 账号；但单人运营场景下 P1+P2 即可承载内容生产，
 故定 P2。
 
-**Independent Test**: 用初始 admin 账号登录 → 进入 `/users` 列表 → 创建一个新用户（无论前端是否传 role=ADMIN，
-后端最终落库为 MEMBER）→ 该用户能登录但看不到 `/users` 菜单 → admin 停用该用户 → 该用户再次登录失败。
+**Independent Test**: 用初始 admin 账号登录 → 进入 `/managers` 列表 → 创建一个新 Manager（无论前端是否传 role=ADMIN，
+后端最终落库为 MEMBER）→ 该 Manager 能登录但看不到 `/managers` 菜单 → admin 停用该 Manager → 该 Manager 再次登录失败。
 
 **Acceptance Scenarios**:
 
-1. **Given** 当前登录用户角色为 MEMBER，**When** 访问 `/users` 列表或 `/api/admin/users`，**Then** 前端菜单不展示
-   且后端返回 403 / 拒绝。
-2. **Given** 管理员调用新建用户接口并显式传 `role=ADMIN`，**When** 后端持久化，**Then** 实际 role 仍为 MEMBER。
+1. **Given** 当前登录 Manager 角色为 MEMBER，**When** 访问 `/managers` 列表或 `/api/admin/managers`，**Then** 前端
+   菜单不展示且后端返回 403 / 拒绝。
+2. **Given** 管理员调用新建 Manager 接口并显式传 `role=ADMIN`，**When** 后端持久化，**Then** 实际 role 仍为 MEMBER。
 3. **Given** 默认 admin 账号配置（username=admin, password=`8@y2eoRLyStM*UVU`, role=ADMIN, enable=true），
-   **When** 系统首次启动，**Then** 数据库中存在该账号，且密码以 BCrypt 形式存储。
-4. **Given** 一个已停用的用户，**When** 该用户尝试登录，**Then** 登录失败并提示账号已停用。
+   **When** 系统首次启动，**Then** `loves_manager` 表中存在该账号，且密码以 BCrypt 形式存储。
+4. **Given** 一个已停用的 Manager，**When** 该 Manager 尝试登录，**Then** 登录失败并提示账号已停用。
 
 ---
 
@@ -163,7 +180,8 @@ action、target、payload、createdAt），即使其余日志为空也能通过�
 - **FR-001**: 系统 MUST 提供运营后台与移动端两套相互独立的 API 入口，路径前缀分别为 `/api/admin/**` 与
   `/api/app/**`，互不混用。
 - **FR-002**: 系统 MUST 对所有运营后台接口（除登录）启用登录态校验；未登录访问返回 401。
-- **FR-003**: 系统 MUST 对"用户管理"相关接口强制要求 `ROLE_ADMIN`；其他角色访问返回 403。
+- **FR-003**: 系统 MUST 对"Manager 管理"相关接口（`/api/admin/managers/**`）强制要求 `ROLE_ADMIN`；其他角色
+  访问返回 403。
 - **FR-004**: 系统 MUST 在管理端写操作完成后异步记录操作日志，记录至少包含操作人、所属模块、动作、目标对象、时间。
 - **FR-005**: 系统 MUST 对失败请求返回符合 RFC 7807 的 ProblemDetail 响应；成功响应直接返回业务对象，不再包装。
 - **FR-006**: 列表类管理端接口 MUST 支持分页（默认 20，可切换 20 / 30）与筛选（Apply / Reset 语义），分页器
@@ -200,12 +218,13 @@ action、target、payload、createdAt），即使其余日志为空也能通过�
 
 - **FR-020**: 系统 MUST 提供 `POST /api/admin/auth/login`、`POST /api/admin/auth/logout`、
   `GET /api/admin/auth/me` 三个鉴权接口。
-- **FR-021**: 系统 MUST 在数据库初始化（Liquibase changelog `002-seed-admin-user.yaml`）阶段植入默认 admin 账号
+- **FR-021**: 系统 MUST 在数据库初始化（Liquibase formatted-SQL changelog `002-seed-admin-manager.sql`，
+  通过 `db.changelog-master.yaml` include 引入）阶段植入默认 admin 账号到 `loves_manager` 表
   （username=`admin`，密码=`8@y2eoRLyStM*UVU`，role=ADMIN，enable=true，密码以**预生成的 BCrypt 哈希字符串**
-  直接写入，cost=10）；changelog MUST 使用 `preConditions` 在 `username='admin'` 已存在时跳过以保证幂等；
-  应用层代码 MUST NOT 再二次创建该账号（避免双植入路径）。
-- **FR-022**: 系统 MUST 提供运营用户管理接口（仅 ADMIN）：分页列表（按 username 模糊 / role / 启用状态 / 创建时间
-  过滤）、新建（强制 role=MEMBER）、详情、启用、停用、重置密码。
+  直接写入，cost=10）；changeset MUST 使用 `--precondition-sql-check` 在 `username='admin'` 已存在时跳过以保证
+  幂等；应用层代码 MUST NOT 再二次创建该账号（避免双植入路径）。
+- **FR-022**: 系统 MUST 提供运营 Manager 管理接口 `/api/admin/managers/**`（仅 ADMIN）：分页列表
+  （按 username 模糊 / role / 启用状态 / 创建时间过滤）、新建（强制 role=MEMBER）、详情、启用、停用、重置密码。
 - **FR-023**: 系统 MUST 在城市管理中支持：分页列表（名称 / 上下线过滤，**默认按 `createdAt DESC` 排序**）、
   新增（名称不重复）、编辑、删除、上线 / 下线、维护 `bannerSortOrder`（`>=0`；`>0` 即作为 explore banner，
   数值越小越靠前）。**`bannerSortOrder` 不影响城市列表排序，仅影响 banner 展示**。
@@ -224,40 +243,48 @@ action、target、payload、createdAt），即使其余日志为空也能通过�
 
 #### 运营后台前端（love-space-web）
 
-- **FR-040**: 前端 MUST 替换 TailAdmin 演示路由，按需提供：`/signin`、`/users`、`/users/create`、`/cities`、
+- **FR-040**: 前端 MUST 替换 TailAdmin 演示路由，按需提供：`/signin`、`/managers`、`/managers/create`、`/cities`、
   `/cities/create`、`/cities/:id/edit`、`/categories`、`/tags`、`/merchants`、`/merchants/create`、
   `/merchants/:id/edit`、`/logs`。
-- **FR-041**: 前端 MUST 根据当前登录用户角色过滤侧边栏菜单：MEMBER 不展示"用户管理"入口。
-- **FR-042**: 前端新增用户表单 MUST 锁定 role=MEMBER 且不暴露角色选择控件。
+- **FR-041**: 前端 MUST 根据当前登录 Manager 角色过滤侧边栏菜单：MEMBER 不展示"Manager 管理"入口。
+- **FR-042**: 前端新增 Manager 表单 MUST 锁定 role=MEMBER 且不暴露角色选择控件。
 - **FR-043**: 所有列表页 MUST 在顶部提供 Apply / Reset 两个按钮控制筛选区，分页器统一使用 `support-tickets` 组件
   样式并放置在表格右下角。
 - **FR-044**: 商户表单 MUST 按以下分区展示：基础信息 / 图片（多图 + logo）/ 周期 + 分类 + 城市 / 地址 + 坐标 /
   标签 / 四维评分 / 用户评价（动态列表，支持 emoji）/ 故事 / 权重 / 上下架。
-- **FR-045**: 前端 MUST 提供顶部用户菜单展示当前用户与"退出"操作。
+- **FR-045**: 前端 MUST 提供顶部用户菜单展示当前 Manager 与"退出"操作。
 
 #### 数据 / 关键业务规则
 
 - **FR-050**: 商户排序规则 MUST 为 `weight DESC, createdAt DESC`，应用于 App 列表与 admin 列表默认排序。
 - **FR-051**: 删除分类 MUST 在 service 层联动下架该分类下所有商户。
 - **FR-052**: 标签下架 MUST 在 App 端商户视图中隐藏该标签，且不影响商户的上下架状态。
-- **FR-053**: 用户密码 MUST 使用 BCrypt 单向哈希存储；登录时通过哈希比对完成校验。
+- **FR-053**: Manager 密码 MUST 使用 BCrypt 单向哈希存储；登录时通过哈希比对完成校验。
+- **FR-055**: 数据库表名 MUST 统一加 `loves_` 前缀，单数 + snake_case 形态，与实体类一一对应（如 `Manager` →
+  `loves_manager`、`MerchantImage` → `loves_merchant_image`）。两个后端 (admin / app) 共用该命名约定。
+- **FR-056**: Liquibase changelog MUST 以 `db.changelog-master.yaml` 作为入口，但 master 仅包含 `<include>` 列表
+  不内联 `changeSet`；实际表结构与种子数据脚本 MUST 使用 Liquibase formatted-SQL 文件
+  (`--liquibase formatted sql` 头 + `--changeset author:id`)，禁止用 YAML/XML 描述 changeSet 内容。
+- **FR-057**: 项目 MUST NOT 显式 pin Liquibase 版本，由 Spring Boot 4.0.6 `spring-boot-starter-liquibase` BOM
+  默认版本决定。
 - **FR-054**: 接口 MUST 在校验失败时返回字段级错误信息（field + message 列表），便于前端表单逐字段提示。
 
 ### Key Entities *(include if feature involves data)*
 
-- **User（运营用户）**：username（唯一）、password（BCrypt）、nickname、role（ADMIN/MEMBER）、enable、createdAt。
-- **City（城市）**：chineseName、englishName、chineseProvince、englishProvince、backgroundImage、bannerSortOrder
-  （`>=0`；`>0` 表示参与 explore banner 展示）、online、createdAt。
-- **Category（分类，MVP 预留）**：name、createdAt（无 sortOrder，列表按创建时间倒序）。
-- **Tag（爱女标签）**：name（不重名，≤6 汉字）、online、createdAt。
-- **Merchant（商户）**：name（≤15 汉字）、logo、address、longitude、latitude、cityId、categoryId、
-  safetyEnvironmentScore、businessRightsScore、experienceFriendlyScore、socialContributionScore、
+- **Manager（运营 Manager，表 `loves_manager`）**：username（唯一）、password（BCrypt）、nickname、
+  role（ADMIN/MEMBER）、enable、createdAt。
+- **City（城市，表 `loves_city`）**：chineseName、englishName、chineseProvince、englishProvince、backgroundImage、
+  bannerSortOrder（`>=0`；`>0` 表示参与 explore banner 展示）、online、createdAt。
+- **Category（分类，MVP 预留，表 `loves_category`）**：name、createdAt（无 sortOrder，列表按创建时间倒序）。
+- **Tag（爱女标签，表 `loves_tag`）**：name（不重名，≤6 汉字）、online、createdAt。
+- **Merchant（商户，表 `loves_merchant`）**：name（≤15 汉字）、logo、address、longitude、latitude、cityId、
+  categoryId、safetyEnvironmentScore、businessRightsScore、experienceFriendlyScore、socialContributionScore、
   story（≤5000 字）、weight、online、createdAt；关联多张图片、多个推荐周期、多个标签、多条评价。
-- **MerchantImage（商户图片）**：merchantId、url、sortOrder。
-- **MerchantPeriod（商户推荐周期）**：merchantId、period（月经期 / 卵泡期 / 排卵期 / 黄体期）。
-- **MerchantTag（商户标签关联）**：merchantId、tagId。
-- **MerchantReview（用户评价）**：merchantId、nickname、title、content（支持 emoji）、sortOrder。
-- **OperationLog（操作日志）**：userId、username、module、action、target、payload、createdAt。
+- **MerchantImage（商户图片，表 `loves_merchant_image`）**：merchantId、url、sortOrder。
+- **MerchantPeriod（商户推荐周期，表 `loves_merchant_period`）**：merchantId、period（月经期 / 卵泡期 / 排卵期 / 黄体期）。
+- **MerchantTag（商户标签关联，表 `loves_merchant_tag`）**：merchantId、tagId。
+- **MerchantReview（用户评价，表 `loves_merchant_review`）**：merchantId、nickname、title、content（支持 emoji）、sortOrder。
+- **OperationLog（操作日志，表 `loves_operation_log`）**：managerId、username、module、action、target、payload、createdAt。
 
 > 通用审计：所有实体含 createdAt / updatedAt（不记录 createdBy / updatedBy）。引用关系仅以对方主键
 > ID 字段持有，不在数据库层创建外键约束（依据 constitution 原则 II）。
@@ -272,8 +299,9 @@ action、target、payload、createdAt），即使其余日志为空也能通过�
   故事、评价）"的全流程，平均耗时 ≤10 分钟，错误率 <10%。
 - **SC-003**: 当某商户的四维原始分变化时，App 端在下一次详情请求中返回的百分制分值与新原始分严格一致（按规则
   四舍五入到整数），偏差率为 0。
-- **SC-004**: 用户管理入口对 MEMBER 角色用户在前端不可见、在后端 100% 被拒绝；安全验证用例通过率 100%。
-- **SC-005**: 初次启动后，默认 admin 账号在 100% 启动场景下被创建且仅创建一次（重复启动不重复写入或重置）。
+- **SC-004**: Manager 管理入口对 MEMBER 角色 Manager 在前端不可见、在后端 100% 被拒绝；安全验证用例通过率 100%。
+- **SC-005**: 初次启动后，默认 admin 账号（`loves_manager` 表）在 100% 启动场景下被创建且仅创建一次
+  （重复启动不重复写入或重置）。
 - **SC-006**: 管理后台关键写操作（增 / 改 / 删 / 上下线 / 重置密码）在操作完成后，对应操作日志可查率 ≥99%。
   > 性能门槛"日志写入对原操作 P95 延迟影响 <50ms"**推迟到性能专项需求阶段**再行验收，MVP 不阻塞。
 - **SC-007**: 当用户评价含 emoji（含组合 emoji）时，后端存取与 App 端展示均保持字符完整，丢失率为 0。
@@ -292,5 +320,7 @@ action、target、payload、createdAt），即使其余日志为空也能通过�
 - 多语言：城市名称同时维护中英文与省份中英文，前端及 App 端展示策略遵循各自的国际化方案；本规格不约束语言切换 UI。
 - 移动端版本：本规格不约束 iOS / Android 客户端实现细节，仅约定 App 后端契约。
 - 所有时间戳以 UTC 存储，前端按用户时区渲染；管理后台筛选输入按用户本地时区解析。
-- 数据库为 PostgreSQL；不创建外键约束（依据 constitution）；ID 使用 UUIDv7。数据库迁移使用 Liquibase。
+- 数据库为 PostgreSQL；不创建外键约束（依据 constitution）；ID 使用 UUIDv7。数据库迁移使用 Liquibase
+  （由 Spring Boot 4.0.6 starter 携带的默认版本，不显式 pin），changelog 入口为 `db.changelog-master.yaml`
+  仅 include，实际脚本采用 formatted-SQL；所有表带 `loves_` 前缀（单数 snake_case）。
 - 默认 admin 账号密码 `8@y2eoRLyStM*UVU` 仅用于环境初始化，首次上线后由运营自行通过"重置密码"接口修改。

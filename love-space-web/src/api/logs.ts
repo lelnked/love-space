@@ -1,5 +1,5 @@
 import { apiClient } from "./client";
-import type { Page } from "./users";
+import type { Page } from "./managers";
 
 export interface OperationLogItem {
   id: string;

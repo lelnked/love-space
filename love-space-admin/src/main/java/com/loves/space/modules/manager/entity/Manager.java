@@ -1,4 +1,4 @@
-package com.loves.space.modules.user.entity;
+package com.loves.space.modules.manager.entity;
 
 import com.loves.space.common.entity.BaseAuditEntity;
 import com.loves.space.common.enums.Role;
@@ -12,16 +12,16 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
- * 运营用户实体。
- * <p>表名 {@code "user"}（注意为 PostgreSQL 关键字，统一通过引号转义）；
- * 字段全部不缩写（依据 constitution v1.0.1 原则 III）。
+ * 运营管理员实体。
+ * <p>表名 {@code loves_manager}；字段全部不缩写（依据 constitution v1.0.1 原则 III）。
+ * 角色枚举仍保留 {@code ADMIN/MEMBER}（per 2026-05-21 澄清 Q1：仅类型/路径改名，角色枚举不变）。
  */
 @Getter
 @Setter
 @NoArgsConstructor
 @Entity
-@Table(name = "\"user\"")
-public class User extends BaseAuditEntity {
+@Table(name = "loves_manager")
+public class Manager extends BaseAuditEntity {
 
     /** 登录用户名（唯一）。 */
     @Column(name = "username", nullable = false, unique = true)

@@ -21,7 +21,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
  * 运营后台 Spring Security 配置。
  * <ul>
  *   <li>登录接口 {@code /api/admin/auth/login} 与静态资源 permitAll；</li>
- *   <li>用户管理 {@code /api/admin/users/**} 仅 ADMIN 角色；</li>
+ *   <li>管理员管理 {@code /api/admin/managers/**} 仅 ADMIN 角色；</li>
  *   <li>其余 {@code /api/admin/**} 需登录；</li>
  *   <li>启用 JWT 过滤器、关闭 CSRF、无状态会话；</li>
  *   <li>BCrypt 作为密码编码器；启用方法级 {@code @PreAuthorize}。</li>
@@ -56,7 +56,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/admin/auth/login").permitAll()
                         .requestMatchers("/uploads/**", "/error").permitAll()
-                        .requestMatchers("/api/admin/users/**").hasRole("ADMIN")
+                        .requestMatchers("/api/admin/managers/**").hasRole("ADMIN")
                         .requestMatchers("/api/admin/**").authenticated()
                         .anyRequest().denyAll())
                 .exceptionHandling(eh -> eh

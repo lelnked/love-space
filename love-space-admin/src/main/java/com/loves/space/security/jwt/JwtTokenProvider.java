@@ -16,7 +16,7 @@ import java.util.UUID;
 
 /**
  * JWT 签发与解析工具：HS256 + 配置侧密钥。
- * <p>Token claims：{@code sub=用户主键UUID}，{@code uname=用户名}，{@code role=角色枚举}。
+ * <p>Token claims：{@code sub=管理员主键UUID}，{@code uname=用户名}，{@code role=角色枚举}。
  */
 @Component
 public class JwtTokenProvider {
@@ -35,17 +35,17 @@ public class JwtTokenProvider {
     /**
      * 签发 JWT。
      *
-     * @param userId   用户主键
-     * @param username 用户名
-     * @param role     用户角色
+     * @param managerId 管理员主键
+     * @param username  用户名
+     * @param role      角色
      * @return 紧凑序列化的 JWT 字符串
      */
-    public String issue(UUID userId, String username, Role role) {
+    public String issue(UUID managerId, String username, Role role) {
         Instant now = Instant.now();
         Instant exp = now.plus(properties.expireMinutes() == null ? 720 : properties.expireMinutes(), ChronoUnit.MINUTES);
         return Jwts.builder()
                 .issuer(properties.issuer())
-                .subject(userId.toString())
+                .subject(managerId.toString())
                 .claim("username", username)
                 .claim("role", role.name())
                 .issuedAt(Date.from(now))

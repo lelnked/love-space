@@ -14,7 +14,7 @@ import java.util.UUID;
  * <p>由后台维护用于在 App 端展示；客户端固定五星，不取后台评分。
  */
 @Entity
-@Table(name = "merchant_review")
+@Table(name = "loves_merchant_review")
 @Getter
 @Setter
 public class MerchantReview extends BaseAuditEntity {

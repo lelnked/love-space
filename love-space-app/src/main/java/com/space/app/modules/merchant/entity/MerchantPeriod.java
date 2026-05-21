@@ -18,7 +18,7 @@ import java.util.UUID;
  * <p>复合主键 (merchant_id, period)；用于 App 端按周期筛选商户。
  */
 @Entity
-@Table(name = "merchant_period")
+@Table(name = "loves_merchant_period")
 @IdClass(MerchantPeriodId.class)
 @Getter
 @Setter

@@ -1,13 +1,13 @@
-package com.loves.space.modules.user.controller;
+package com.loves.space.modules.manager.controller;
 
 import com.loves.space.common.annotation.OperationLog;
 import com.loves.space.common.page.PageResponseMapper.PageResponse;
-import com.loves.space.modules.user.dto.PasswordResetRequest;
-import com.loves.space.modules.user.dto.UserCreateRequest;
-import com.loves.space.modules.user.dto.UserDetailResponse;
-import com.loves.space.modules.user.dto.UserItem;
-import com.loves.space.modules.user.dto.UserQuery;
-import com.loves.space.modules.user.service.UserService;
+import com.loves.space.modules.manager.dto.ManagerCreateRequest;
+import com.loves.space.modules.manager.dto.ManagerDetailResponse;
+import com.loves.space.modules.manager.dto.ManagerItem;
+import com.loves.space.modules.manager.dto.ManagerQuery;
+import com.loves.space.modules.manager.dto.PasswordResetRequest;
+import com.loves.space.modules.manager.service.ManagerService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -25,23 +25,23 @@ import java.time.OffsetDateTime;
 import java.util.UUID;
 
 /**
- * 运营用户管理 Controller。
+ * 运营管理员管理 Controller。
  * <p>整类要求 {@code ROLE_ADMIN}；安全过滤已在 SecurityConfig 中通过 path matcher 保证，
  * 这里额外加 {@link PreAuthorize} 作为方法级二道防线。
  */
 @RestController
-@RequestMapping("/api/admin/users")
+@RequestMapping("/api/admin/managers")
 @PreAuthorize("hasRole('ADMIN')")
-public class UserController {
+public class ManagerController {
 
-    private final UserService userService;
+    private final ManagerService managerService;
 
-    public UserController(UserService userService) {
-        this.userService = userService;
+    public ManagerController(ManagerService managerService) {
+        this.managerService = managerService;
     }
 
     /**
-     * 分页查询运营用户。
+     * 分页查询运营管理员。
      *
      * @param username       用户名模糊（可空）
      * @param role           角色精确（可空）
@@ -53,7 +53,7 @@ public class UserController {
      * @return 分页结果
      */
     @GetMapping
-    public PageResponse<UserItem> list(
+    public PageResponse<ManagerItem> list(
             @RequestParam(required = false) String username,
             @RequestParam(required = false) String role,
             @RequestParam(required = false) Boolean enable,
@@ -61,54 +61,54 @@ public class UserController {
             @RequestParam(required = false) OffsetDateTime createdAtTo,
             @RequestParam(required = false) Integer page,
             @RequestParam(required = false) Integer size) {
-        return userService.page(new UserQuery(username, role, enable, createdAtFrom, createdAtTo, page, size));
+        return managerService.page(new ManagerQuery(username, role, enable, createdAtFrom, createdAtTo, page, size));
     }
 
     /**
-     * 创建运营用户；服务端强制 role=MEMBER。
+     * 创建运营管理员；服务端强制 role=MEMBER。
      *
      * @param request 创建请求
-     * @return 新用户详情
+     * @return 新管理员详情
      */
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    @OperationLog("user:create")
-    public UserDetailResponse create(@Valid @RequestBody UserCreateRequest request) {
-        return userService.create(request);
+    @OperationLog("manager:create")
+    public ManagerDetailResponse create(@Valid @RequestBody ManagerCreateRequest request) {
+        return managerService.create(request);
     }
 
-    /** 查询用户详情。 */
+    /** 查询管理员详情。 */
     @GetMapping("/{id}")
-    public UserDetailResponse get(@PathVariable UUID id) {
-        return userService.get(id);
+    public ManagerDetailResponse get(@PathVariable UUID id) {
+        return managerService.get(id);
     }
 
-    /** 启用用户。 */
+    /** 启用管理员。 */
     @PutMapping("/{id}/enable")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @OperationLog("user:enable")
+    @OperationLog("manager:enable")
     public void enable(@PathVariable UUID id) {
-        userService.setEnable(id, true);
+        managerService.setEnable(id, true);
     }
 
-    /** 停用用户。 */
+    /** 停用管理员。 */
     @PutMapping("/{id}/disable")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @OperationLog("user:disable")
+    @OperationLog("manager:disable")
     public void disable(@PathVariable UUID id) {
-        userService.setEnable(id, false);
+        managerService.setEnable(id, false);
     }
 
     /**
-     * 重置用户密码：服务端再做 BCrypt 哈希。
+     * 重置管理员密码：服务端再做 BCrypt 哈希。
      *
-     * @param id      用户主键
+     * @param id      管理员主键
      * @param request 含新明文密码
      */
     @PutMapping("/{id}/password")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @OperationLog("user:reset-password")
+    @OperationLog("manager:reset-password")
     public void resetPassword(@PathVariable UUID id, @Valid @RequestBody PasswordResetRequest request) {
-        userService.resetPassword(id, request);
+        managerService.resetPassword(id, request);
     }
 }

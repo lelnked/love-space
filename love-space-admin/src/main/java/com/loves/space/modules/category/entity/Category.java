@@ -13,7 +13,7 @@ import lombok.Setter;
  * <p>仅含名称（唯一）与审计列；不维护排序与上架状态。
  */
 @Entity
-@Table(name = "category", uniqueConstraints = @UniqueConstraint(name = "ux_category_name", columnNames = "name"))
+@Table(name = "loves_category", uniqueConstraints = @UniqueConstraint(name = "ux_loves_category_name", columnNames = "name"))
 @Getter
 @Setter
 public class Category extends BaseAuditEntity {

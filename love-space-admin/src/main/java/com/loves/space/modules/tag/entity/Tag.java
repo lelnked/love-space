@@ -13,7 +13,7 @@ import lombok.Setter;
  * <p>名称唯一；下架标签不影响商户本身的上架状态，仅在 App 详情中隐藏。
  */
 @Entity
-@Table(name = "tag", uniqueConstraints = @UniqueConstraint(name = "ux_tag_name", columnNames = "name"))
+@Table(name = "loves_tag", uniqueConstraints = @UniqueConstraint(name = "ux_loves_tag_name", columnNames = "name"))
 @Getter
 @Setter
 public class Tag extends BaseAuditEntity {

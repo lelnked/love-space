@@ -1,9 +1,9 @@
-package com.loves.space.modules.user.dto;
+package com.loves.space.modules.manager.dto;
 
 import java.time.OffsetDateTime;
 
 /**
- * 运营用户列表查询参数。
+ * 运营管理员列表查询参数。
  *
  * @param username        用户名模糊（可空）
  * @param role            角色精确匹配（ADMIN / MEMBER，可空）
@@ -13,7 +13,7 @@ import java.time.OffsetDateTime;
  * @param page            页码（1 基，可空）
  * @param size            每页大小（可空）
  */
-public record UserQuery(
+public record ManagerQuery(
         String username,
         String role,
         Boolean enable,

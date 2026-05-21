@@ -11,9 +11,11 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * 运营后台用户 Spring Security 视图。
+ * 运营后台管理员 Spring Security 视图。
+ * <p>类名保留 {@code AdminUserDetails} 以贴合 Spring Security {@code UserDetails} 接口语义；
+ * 内部主键字段对齐领域名 {@code managerId}。
  *
- * @param userId          用户主键 UUID
+ * @param managerId       管理员主键 UUID
  * @param username        用户名
  * @param hashedPassword  BCrypt 哈希密码（仅登录密码比对时使用，JWT 解析路径下为空字符串）
  * @param enabled         是否启用（停用账号无法登录）
@@ -22,14 +24,14 @@ import java.util.UUID;
 @Getter
 public final class AdminUserDetails implements UserDetails {
 
-    private final UUID userId;
+    private final UUID managerId;
     private final String username;
     private final String hashedPassword;
     private final boolean enabled;
     private final Role role;
 
-    public AdminUserDetails(UUID userId, String username, String hashedPassword, boolean enabled, Role role) {
-        this.userId = userId;
+    public AdminUserDetails(UUID managerId, String username, String hashedPassword, boolean enabled, Role role) {
+        this.managerId = managerId;
         this.username = username;
         this.hashedPassword = hashedPassword;
         this.enabled = enabled;

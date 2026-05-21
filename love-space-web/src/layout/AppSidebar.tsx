@@ -44,8 +44,8 @@ const navItems: NavItem[] = [
   },
   {
     icon: <UserCircleIcon />,
-    name: "用户管理",
-    path: "/users",
+    name: "管理员管理",
+    path: "/managers",
   },
   {
     icon: <ListIcon />,
@@ -118,7 +118,7 @@ const AppSidebar: React.FC = () => {
   const location = useLocation();
   const { user } = useAuth();
   const visibleNavItems = useMemo<NavItem[]>(
-    () => navItems.filter((item) => item.path !== "/users" || user?.role === "ADMIN"),
+    () => navItems.filter((item) => item.path !== "/managers" || user?.role === "ADMIN"),
     [user?.role],
   );
 

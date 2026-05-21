@@ -20,12 +20,12 @@ import java.util.UUID;
 
 /**
  * 操作日志实体。
- * <p>对应表 {@code operation_log}（见 db/changelog 001-init-schema 中 010-create-operation-log-table）。
+ * <p>对应表 {@code loves_operation_log}（见 db/changelog 001-init-schema 中创建表语句）。
  * <p>由 {@code OperationLogAspect} 在被 {@code @OperationLog} 注解的方法成功执行后异步写入。
  * <p>表只含 {@code created_at}，不含 {@code updated_at}，因此本实体不继承 {@code BaseAuditEntity}。
  */
 @Entity
-@Table(name = "operation_log")
+@Table(name = "loves_operation_log")
 @EntityListeners(AuditingEntityListener.class)
 @Getter
 @Setter
@@ -37,15 +37,15 @@ public class OperationLog {
     @Column(name = "id", columnDefinition = "uuid", updatable = false, nullable = false)
     private UUID id;
 
-    /** 操作者用户主键，非空。 */
-    @Column(name = "user_id", nullable = false)
-    private UUID userId;
+    /** 操作者管理员主键，非空。 */
+    @Column(name = "manager_id", nullable = false)
+    private UUID managerId;
 
     /** 操作者用户名（冗余存储以便归档后仍可读）。 */
     @Column(name = "username", nullable = false)
     private String username;
 
-    /** 模块标识，例如 {@code city}、{@code user}、{@code merchant}。 */
+    /** 模块标识，例如 {@code city}、{@code manager}、{@code merchant}。 */
     @Column(name = "module", nullable = false)
     private String module;
 

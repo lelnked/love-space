@@ -26,7 +26,7 @@ import java.util.regex.Pattern;
  * {@link OperationLogService#asyncSave} 异步落库。
  * <p>关键约束：
  * <ul>
- *   <li>未登录（无 userId）时跳过落库（{@code user_id} 列 NOT NULL）；</li>
+ *   <li>未登录（无 managerId）时跳过落库（{@code manager_id} 列 NOT NULL）；</li>
  *   <li>payload 序列化中对键名匹配 {@code (?i)password|secret|token} 的字段做脱敏，值替换为 {@code [REDACTED]}；</li>
  *   <li>序列化或落库异常一律 WARN，不向上抛出，不影响主业务返回；</li>
  *   <li>方法抛异常时不落日志（保持原有行为）。</li>
@@ -68,9 +68,9 @@ public class OperationLogAspect {
     public Object around(ProceedingJoinPoint pjp, OperationLog operationLog) throws Throwable {
         Object result = pjp.proceed();
         try {
-            UUID userId = operatingContext.currentUserId().orElse(null);
-            if (userId == null) {
-                // user_id NOT NULL：缺失上下文时不写日志（例如 /auth/login 前阶段）
+            UUID managerId = operatingContext.currentManagerId().orElse(null);
+            if (managerId == null) {
+                // manager_id NOT NULL：缺失上下文时不写日志（例如 /auth/login 前阶段）
                 return result;
             }
             String username = operatingContext.currentUsername().orElse(null);
@@ -83,7 +83,7 @@ public class OperationLogAspect {
             String target = extractTarget(args);
             String payloadJson = extractPayloadJson(args);
 
-            operationLogService.asyncSave(userId, username, module, action, target, payloadJson);
+            operationLogService.asyncSave(managerId, username, module, action, target, payloadJson);
         } catch (Exception e) {
             // 任何切面侧异常都不影响主业务
             log.warn("operation log dispatch failed", e);

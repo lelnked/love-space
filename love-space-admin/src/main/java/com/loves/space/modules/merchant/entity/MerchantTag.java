@@ -19,7 +19,7 @@ import java.util.UUID;
  * <p>复合主键 (merchant_id, tag_id)，仅审计 {@code created_at}（NOT NULL，无 updated_at）。
  */
 @Entity
-@Table(name = "merchant_tag")
+@Table(name = "loves_merchant_tag")
 @IdClass(MerchantTagId.class)
 @EntityListeners(AuditingEntityListener.class)
 @Getter

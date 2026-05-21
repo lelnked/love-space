@@ -1,6 +1,6 @@
-package com.loves.space.modules.user.repository;
+package com.loves.space.modules.manager.repository;
 
-import com.loves.space.modules.user.entity.User;
+import com.loves.space.modules.manager.entity.Manager;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
@@ -8,12 +8,12 @@ import java.util.Optional;
 import java.util.UUID;
 
 /**
- * 运营用户仓储。
+ * 运营管理员仓储。
  */
-public interface UserRepository extends JpaRepository<User, UUID>, JpaSpecificationExecutor<User> {
+public interface ManagerRepository extends JpaRepository<Manager, UUID>, JpaSpecificationExecutor<Manager> {
 
     /** 按用户名查询（用于登录与唯一性校验）。 */
-    Optional<User> findByUsername(String username);
+    Optional<Manager> findByUsername(String username);
 
     /** 用户名唯一性快速判断。 */
     boolean existsByUsername(String username);

@@ -16,7 +16,7 @@ import java.util.UUID;
  * 应用层校验上限，DB CHECK 约束兜底。无外键，仅保存关联 ID。
  */
 @Entity
-@Table(name = "merchant")
+@Table(name = "loves_merchant")
 @Getter
 @Setter
 public class Merchant extends BaseAuditEntity {

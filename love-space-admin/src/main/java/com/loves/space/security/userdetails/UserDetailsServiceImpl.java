@@ -1,7 +1,7 @@
 package com.loves.space.security.userdetails;
 
-import com.loves.space.modules.user.entity.User;
-import com.loves.space.modules.user.repository.UserRepository;
+import com.loves.space.modules.manager.entity.Manager;
+import com.loves.space.modules.manager.repository.ManagerRepository;
 import org.jspecify.annotations.NullMarked;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -12,14 +12,15 @@ import org.springframework.stereotype.Service;
  * Spring Security 用户加载实现。
  * <p>登录路径使用此服务从数据库按用户名加载 {@link AdminUserDetails}，
  * 包含 BCrypt 哈希以便 {@code DaoAuthenticationProvider} 比对。
+ * <p>类名保留 {@code UserDetailsServiceImpl} 以贴合 Spring Security {@code UserDetailsService} 接口语义。
  */
 @Service
 public class UserDetailsServiceImpl implements UserDetailsService {
 
-    private final UserRepository userRepository;
+    private final ManagerRepository managerRepository;
 
-    public UserDetailsServiceImpl(UserRepository userRepository) {
-        this.userRepository = userRepository;
+    public UserDetailsServiceImpl(ManagerRepository managerRepository) {
+        this.managerRepository = managerRepository;
     }
 
     /**
@@ -30,8 +31,8 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     @NullMarked
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("用户不存在：" + username));
-        return new AdminUserDetails(user.getId(), user.getUsername(), user.getPassword(), user.isEnable(), user.getRole());
+        Manager manager = managerRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("管理员不存在：" + username));
+        return new AdminUserDetails(manager.getId(), manager.getUsername(), manager.getPassword(), manager.isEnable(), manager.getRole());
     }
 }

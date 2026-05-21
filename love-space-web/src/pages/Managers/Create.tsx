@@ -4,14 +4,14 @@ import { AxiosError } from "axios";
 import Label from "../../components/form/Label";
 import Input from "../../components/form/input/InputField";
 import Button from "../../components/ui/button/Button";
-import { createUser } from "../../api/users";
+import { createManager } from "../../api/managers";
 
 interface FieldError {
   field: string;
   message: string;
 }
 
-export default function UserCreate() {
+export default function ManagerCreate() {
   const navigate = useNavigate();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -37,12 +37,12 @@ export default function UserCreate() {
 
     setSubmitting(true);
     try {
-      await createUser({
+      await createManager({
         username: username.trim(),
         password,
         nickname: nickname.trim() || undefined,
       });
-      navigate("/users", { replace: true });
+      navigate("/managers", { replace: true });
     } catch (err) {
       const ax = err as AxiosError<{ detail?: string; errors?: FieldError[] }>;
       const data = ax.response?.data;
@@ -60,7 +60,7 @@ export default function UserCreate() {
   return (
     <div>
       <h1 className="text-xl font-semibold text-gray-800 dark:text-white/90 mb-4">
-        新增用户
+        新增管理员
       </h1>
 
       <form onSubmit={handleSubmit} className="max-w-lg space-y-5">
@@ -111,7 +111,7 @@ export default function UserCreate() {
           </Button>
           <button
             type="button"
-            onClick={() => navigate("/users")}
+            onClick={() => navigate("/managers")}
             disabled={submitting}
             className="px-4 py-3 text-sm rounded-lg bg-white text-gray-700 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-400 dark:ring-gray-700"
           >

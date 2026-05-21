@@ -44,7 +44,7 @@ public class OperationLogService {
      * 异步保存一条操作日志。
      * <p>必须为 {@code public} 且由 Spring 代理调用（不能在同类内自调用），否则 {@code @Async} 不生效。
      *
-     * @param userId      操作者用户主键
+     * @param managerId   操作者管理员主键
      * @param username    操作者用户名
      * @param module      模块标识
      * @param action      动作标识
@@ -53,11 +53,11 @@ public class OperationLogService {
      */
     @Async("operationLogExecutor")
     @Transactional
-    public void asyncSave(UUID userId, String username, String module, String action,
+    public void asyncSave(UUID managerId, String username, String module, String action,
                           String target, String payloadJson) {
         try {
             OperationLog entity = new OperationLog();
-            entity.setUserId(userId);
+            entity.setManagerId(managerId);
             entity.setUsername(username);
             entity.setModule(module);
             entity.setAction(action);

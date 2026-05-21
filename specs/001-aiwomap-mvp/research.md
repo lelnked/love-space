@@ -32,15 +32,21 @@
 
 ## 4. 数据库迁移
 
-- **Decision**: 采用 **Liquibase**（按 Clarifications 2026-05-20 决议）。结构如下：
-  - 入口：`src/main/resources/db/changelog/db.changelog-master.yaml`
-  - 子文件：`changes/001-init-schema.yaml`、`changes/002-seed-admin-user.yaml`
-  - Spring Boot 自动配置：`spring.liquibase.change-log=classpath:db/changelog/db.changelog-master.yaml`。
-- **Rationale**: 与用户明确决议一致；YAML changelog 与 Java 25 / Spring Boot 4 兼容良好；
-  支持 rollback / contexts / preconditions，便于运营 / 灰度场景。
+- **Decision**: 采用 **Liquibase**（Clarifications 2026-05-20）+ **formatted-SQL changeset**（Clarifications
+  2026-05-21）。结构如下：
+  - 入口：`src/main/resources/db/changelog/db.changelog-master.yaml`，**仅 `<include>` 列表，不内联 changeSet**
+  - 子文件：`changes/001-init-schema.sql`、`changes/002-seed-admin-manager.sql`，每个文件顶部带
+    `--liquibase formatted sql`，每个 changeset 标注 `--changeset author:id` 与 `--rollback ...`
+  - Spring Boot 自动配置：`spring.liquibase.change-log=classpath:db/changelog/db.changelog-master.yaml`
+  - 所有 DDL 创建的表名带 `loves_` 前缀（单数 snake_case）
+  - Liquibase 版本：**不显式 pin**，由 `spring-boot-starter-liquibase`（Spring Boot 4.0.6 BOM）默认版本提供
+- **Rationale**: 与用户多次明确决议一致；formatted-SQL 让 DDL 直接可读、DBA 友好；master 退化为 include 列表
+  避免双语法（YAML changeSet vs. SQL）混淆；不 pin 版本可随 Spring Boot 升级自动跟进 Liquibase 修复。
 - **Alternatives considered**:
-  - Flyway：曾在初稿中选用，但用户在 clarification 中明确改为 Liquibase，已弃用。
-  - 纯 JPA `ddl-auto=update`：违反生产规范，弃用。
+  - YAML / XML changeSet（含表结构内联）：可读性差、DBA 不友好，已弃用。
+  - Flyway：用户已明确改为 Liquibase。
+  - 纯 JPA `ddl-auto=update`：违反生产规范。
+  - 显式 pin Liquibase 版本：增加维护负担，已弃用。
 
 ## 5. 操作日志异步落库
 

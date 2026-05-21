@@ -16,7 +16,7 @@ import java.util.UUID;
  * 客户端展示百分制（在 service 层换算）。无外键约束，仅保存关联 ID。
  */
 @Entity
-@Table(name = "merchant")
+@Table(name = "loves_merchant")
 @Getter
 @Setter
 public class Merchant extends BaseAuditEntity {

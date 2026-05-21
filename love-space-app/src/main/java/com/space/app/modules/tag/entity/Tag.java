@@ -12,7 +12,7 @@ import lombok.Setter;
  * <p>下架标签不在 App 详情中展示，但不影响商户本身的上架状态。
  */
 @Entity
-@Table(name = "tag")
+@Table(name = "loves_tag")
 @Getter
 @Setter
 public class Tag extends BaseAuditEntity {

@@ -1,7 +1,10 @@
 # Phase 1 Data Model — 爱女地图 MVP
 
 > 数据库：PostgreSQL 16；主键统一 UUIDv7（`uuid` 类型），由应用层 `@PrePersist` 赋值。
-> 迁移工具：**Liquibase**（按 Clarifications 2026-05-20 决议）。
+> 迁移工具：**Liquibase**（按 Clarifications 2026-05-20 决议）；**所有 changeset 使用 Liquibase formatted-SQL
+> 文件**（master `db.changelog-master.yaml` 仅 include 列表）；Liquibase 版本不显式 pin，由
+> `spring-boot-starter-liquibase`（Spring Boot 4.0.6 BOM）默认携带。
+> **所有数据库表统一加 `loves_` 前缀**（单数 + snake_case），admin / app 两个后端共用同一套物理表名。
 > **不创建任何 `FOREIGN KEY` 约束**；引用关系仅以 `xxxId UUID` 字段持有，引用完整性由 service 层校验。
 > 列名 `snake_case`；字段名禁止缩写。所有表仅保留时间审计列：
 > `created_at TIMESTAMPTZ NOT NULL`、`updated_at TIMESTAMPTZ`；
@@ -17,7 +20,7 @@
 
 ## 实体清单
 
-### 1. User（运营用户）—— admin 后端
+### 1. Manager（运营 Manager）—— admin 后端，表 `loves_manager`
 
 | 列 | 类型 | 约束 |
 |---|---|---|
@@ -31,7 +34,7 @@
 
 索引：`UNIQUE(username)`；`INDEX(role, enable)` 用于列表过滤。
 
-### 2. City（城市）—— admin / app 共享表
+### 2. City（城市）—— admin / app 共享表 `loves_city`
 
 | 列 | 类型 | 约束 |
 |---|---|---|
@@ -52,7 +55,7 @@
 
 **列表排序**：admin 城市列表页按 `created_at DESC` 排序，**不**使用 `banner_sort_order` 作为列表排序键。
 
-### 3. Category（分类）—— MVP 预留
+### 3. Category（分类）—— MVP 预留，表 `loves_category`
 
 | 列 | 类型 | 约束 |
 |---|---|---|
@@ -62,7 +65,7 @@
 列表排序：按 `created_at DESC`。
 删除规则：删除分类时，service 层将 `merchant.category_id = ?` 的商户 `online = false`。
 
-### 4. Tag（爱女标签）
+### 4. Tag（爱女标签）—— 表 `loves_tag`
 
 | 列 | 类型 | 约束 |
 |---|---|---|
@@ -72,7 +75,7 @@
 
 列表排序：按 `created_at DESC`。
 
-### 5. Merchant（商户）
+### 5. Merchant（商户）—— 表 `loves_merchant`
 
 | 列 | 类型 | 约束 |
 |---|---|---|
@@ -95,7 +98,7 @@
 索引：`INDEX(city_id, online, weight DESC, created_at DESC)`；
 `INDEX(category_id)`；CHECK 约束保证四维评分在各自上限内。
 
-### 6. MerchantImage（商户图片）
+### 6. MerchantImage（商户图片）—— 表 `loves_merchant_image`
 
 | 列 | 类型 | 约束 |
 |---|---|---|
@@ -106,7 +109,7 @@
 
 索引：`INDEX(merchant_id, sort_order)`。
 
-### 7. MerchantPeriod（商户推荐周期，多对多枚举）
+### 7. MerchantPeriod（商户推荐周期，多对多枚举）—— 表 `loves_merchant_period`
 
 | 列 | 类型 | 约束 |
 |---|---|---|
@@ -115,7 +118,7 @@
 
 PK：`(merchant_id, period)`；索引 `INDEX(period, merchant_id)`。
 
-### 8. MerchantTag（商户—标签关联）
+### 8. MerchantTag（商户—标签关联）—— 表 `loves_merchant_tag`
 
 | 列 | 类型 | 约束 |
 |---|---|---|
@@ -125,7 +128,7 @@ PK：`(merchant_id, period)`；索引 `INDEX(period, merchant_id)`。
 
 PK：`(merchant_id, tag_id)`；索引 `INDEX(tag_id)`、`INDEX(merchant_id, created_at)`。
 
-### 9. MerchantReview（用户评价）
+### 9. MerchantReview（用户评价）—— 表 `loves_merchant_review`
 
 | 列 | 类型 | 约束 |
 |---|---|---|
@@ -138,12 +141,12 @@ PK：`(merchant_id, tag_id)`；索引 `INDEX(tag_id)`、`INDEX(merchant_id, crea
 
 索引：`INDEX(merchant_id, sort_order)`。
 
-### 10. OperationLog（操作日志）
+### 10. OperationLog（操作日志）—— 表 `loves_operation_log`
 
 | 列 | 类型 | 约束 |
 |---|---|---|
 | id | uuid | PK |
-| user_id | uuid | NOT NULL（无 FK，可能为系统） |
+| manager_id | uuid | NOT NULL（无 FK，可能为系统） |
 | username | text | NOT NULL（冗余便于查询） |
 | module | text | NOT NULL |
 | action | text | NOT NULL |
@@ -169,4 +172,4 @@ PK：`(merchant_id, tag_id)`；索引 `INDEX(tag_id)`、`INDEX(merchant_id, crea
 - **City**: `online ∈ {true, false}`；切换由 admin 控制。
 - **Tag**: `online ∈ {true, false}`；下架不联动商户。
 - **Merchant**: `online ∈ {true, false}`；初始 false；分类删除 → 强制 false。
-- **User**: `enable ∈ {true, false}`；停用后不可登录。
+- **Manager**: `enable ∈ {true, false}`；停用后不可登录。
