@@ -23,6 +23,14 @@ public class ExploreController {
         this.exploreService = exploreService;
     }
 
+    /**
+     * 获取探索页内容（城市选择 + Banner 列表）。
+     *
+     * <p>成功返回 200 与 {@link ExploreResponse}；当 {@code cityId} 缺省时由服务端选取最近一个上架城市；
+     * 当目标城市无上架 Banner 时返回 {@code empty=true}。
+     *
+     * @param cityId 可选城市 ID；为空则由服务端兜底选择
+     */
     @GetMapping
     public ExploreResponse explore(@RequestParam(value = "cityId", required = false) UUID cityId) {
         return exploreService.explore(cityId);
