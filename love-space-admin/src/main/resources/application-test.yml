@@ -1,0 +1,21 @@
+# 测试 / 联调环境：连接 docker 容器 lan_test_postgres（宿主机端口 25432）
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:25432/love_space
+    username: iris
+    password: iris
+  jpa:
+    properties:
+      hibernate:
+        format_sql: true
+  liquibase:
+    contexts: dev
+
+app:
+  jwt:
+    secret: test-only-jwt-secret-please-change-in-production-32+bytes!!!
+  public-base-url: http://localhost:8080
+
+logging:
+  level:
+    com.loves.space: DEBUG
