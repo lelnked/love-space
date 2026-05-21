@@ -1,5 +1,6 @@
 package com.loves.space.security.handler;
 
+import org.jspecify.annotations.NonNull;
 import tools.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -25,7 +26,7 @@ public class RestAccessDeniedHandler implements AccessDeniedHandler {
     }
 
     @Override
-    public void handle(HttpServletRequest request, HttpServletResponse response, AccessDeniedException ex) throws IOException {
+    public void handle(HttpServletRequest request, HttpServletResponse response, @NonNull AccessDeniedException ex) throws IOException {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, "权限不足");
         problem.setInstance(java.net.URI.create(request.getRequestURI()));
         response.setStatus(HttpStatus.FORBIDDEN.value());

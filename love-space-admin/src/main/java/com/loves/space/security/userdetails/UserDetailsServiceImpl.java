@@ -2,6 +2,7 @@ package com.loves.space.security.userdetails;
 
 import com.loves.space.modules.user.entity.User;
 import com.loves.space.modules.user.repository.UserRepository;
+import org.jspecify.annotations.NullMarked;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -26,6 +27,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
      * @return 包含 BCrypt 哈希密码的 {@link AdminUserDetails}
      * @throws UsernameNotFoundException 用户不存在
      */
+    @NullMarked
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         User user = userRepository.findByUsername(username)
