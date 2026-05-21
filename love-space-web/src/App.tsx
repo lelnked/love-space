@@ -6,6 +6,14 @@ import { ScrollToTop } from "./components/common/ScrollToTop";
 import Home from "./pages/Dashboard/Home";
 import { AuthProvider } from "./context/AuthContext";
 import RequireAuth from "./components/auth/RequireAuth";
+import UserList from "./pages/Users/List";
+import UserCreate from "./pages/Users/Create";
+import CityList from "./pages/Cities/List";
+import CityForm from "./pages/Cities/Form";
+import CategoryList from "./pages/Categories/List";
+import TagList from "./pages/Tags/List";
+import MerchantList from "./pages/Merchants/List";
+import MerchantForm from "./pages/Merchants/Form";
 
 export default function App() {
   return (
@@ -23,6 +31,16 @@ export default function App() {
             }
           >
             <Route index path="/" element={<Home />} />
+            <Route path="/users" element={<UserList />} />
+            <Route path="/users/create" element={<UserCreate />} />
+            <Route path="/cities" element={<CityList />} />
+            <Route path="/cities/create" element={<CityForm />} />
+            <Route path="/cities/:id/edit" element={<CityForm />} />
+            <Route path="/categories" element={<CategoryList />} />
+            <Route path="/tags" element={<TagList />} />
+            <Route path="/merchants" element={<MerchantList />} />
+            <Route path="/merchants/create" element={<MerchantForm />} />
+            <Route path="/merchants/:id/edit" element={<MerchantForm />} />
           </Route>
 
           <Route path="/signup" element={<Navigate to="/signin" replace />} />

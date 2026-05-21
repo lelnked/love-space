@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation } from "react-router";
 
 // Assume these icons are imported from an icon library
@@ -16,6 +16,7 @@ import {
   UserCircleIcon,
 } from "../icons";
 import { useSidebar } from "../context/SidebarContext";
+import { useAuth } from "../hooks/useAuth";
 import SidebarWidget from "./SidebarWidget";
 
 type NavItem = {
@@ -40,6 +41,21 @@ const navItems: NavItem[] = [
     icon: <UserCircleIcon />,
     name: "User Profile",
     path: "/profile",
+  },
+  {
+    icon: <UserCircleIcon />,
+    name: "用户管理",
+    path: "/users",
+  },
+  {
+    icon: <ListIcon />,
+    name: "内容管理",
+    subItems: [
+      { name: "城市", path: "/cities", pro: false },
+      { name: "分类", path: "/categories", pro: false },
+      { name: "标签", path: "/tags", pro: false },
+      { name: "商户", path: "/merchants", pro: false },
+    ],
   },
   {
     name: "Forms",
@@ -95,6 +111,11 @@ const othersItems: NavItem[] = [
 const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
   const location = useLocation();
+  const { user } = useAuth();
+  const visibleNavItems = useMemo<NavItem[]>(
+    () => navItems.filter((item) => item.path !== "/users" || user?.role === "ADMIN"),
+    [user?.role],
+  );
 
   const [openSubmenu, setOpenSubmenu] = useState<{
     type: "main" | "others";
@@ -114,7 +135,7 @@ const AppSidebar: React.FC = () => {
   useEffect(() => {
     let submenuMatched = false;
     ["main", "others"].forEach((menuType) => {
-      const items = menuType === "main" ? navItems : othersItems;
+      const items = menuType === "main" ? visibleNavItems : othersItems;
       items.forEach((nav, index) => {
         if (nav.subItems) {
           nav.subItems.forEach((subItem) => {
@@ -133,7 +154,7 @@ const AppSidebar: React.FC = () => {
     if (!submenuMatched) {
       setOpenSubmenu(null);
     }
-  }, [location, isActive]);
+  }, [location, isActive, visibleNavItems]);
 
   useEffect(() => {
     if (openSubmenu !== null) {
@@ -348,7 +369,7 @@ const AppSidebar: React.FC = () => {
                   <HorizontaLDots className="size-6" />
                 )}
               </h2>
-              {renderMenuItems(navItems, "main")}
+              {renderMenuItems(visibleNavItems, "main")}
             </div>
             <div className="">
               <h2

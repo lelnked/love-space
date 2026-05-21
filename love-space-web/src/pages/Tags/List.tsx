@@ -1,0 +1,273 @@
+import { useCallback, useEffect, useState } from "react";
+import { AxiosError } from "axios";
+import FilterBar, { FilterField, FilterValues } from "../../components/filter/FilterBar";
+import {
+  createTag,
+  deleteTag,
+  listTags,
+  setTagOnline,
+  TagItem,
+  TagQuery,
+  updateTag,
+} from "../../api/tags";
+
+const FILTER_FIELDS: FilterField[] = [
+  { name: "name", label: "名称", type: "text", placeholder: "模糊匹配" },
+  {
+    name: "online",
+    label: "状态",
+    type: "select",
+    options: [
+      { label: "已上架", value: "true" },
+      { label: "未上架", value: "false" },
+    ],
+  },
+];
+
+function formatDateTime(value: string): string {
+  try {
+    return new Date(value).toLocaleString("zh-CN", { hour12: false });
+  } catch {
+    return value;
+  }
+}
+
+function buildQuery(filters: FilterValues): TagQuery {
+  const q: TagQuery = {};
+  if (filters.name) q.name = filters.name;
+  if (filters.online === "true") q.online = true;
+  else if (filters.online === "false") q.online = false;
+  return q;
+}
+
+/** code-point 长度（emoji / 中文均按 1 计）。 */
+function codePointLength(s: string): number {
+  return Array.from(s).length;
+}
+
+export default function TagList() {
+  const [filters, setFilters] = useState<FilterValues>({});
+  const [items, setItems] = useState<TagItem[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [newName, setNewName] = useState("");
+  const [creating, setCreating] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState("");
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await listTags(buildQuery(filters));
+      setItems(data);
+    } catch (err) {
+      const ax = err as AxiosError<{ detail?: string }>;
+      setError(ax.response?.data?.detail ?? "加载失败");
+    } finally {
+      setLoading(false);
+    }
+  }, [filters]);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  const handleCreate = async () => {
+    const name = newName.trim();
+    if (!name) {
+      alert("请输入标签名称");
+      return;
+    }
+    if (codePointLength(name) > 6) {
+      alert("标签名称最多 6 个字符");
+      return;
+    }
+    setCreating(true);
+    try {
+      await createTag({ name });
+      setNewName("");
+      await load();
+    } catch (err) {
+      const ax = err as AxiosError<{ detail?: string }>;
+      alert(ax.response?.data?.detail ?? "创建失败");
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  const startEdit = (it: TagItem) => {
+    setEditingId(it.id);
+    setEditingName(it.name);
+  };
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditingName("");
+  };
+  const saveEdit = async (it: TagItem) => {
+    const name = editingName.trim();
+    if (!name) return;
+    if (codePointLength(name) > 6) {
+      alert("标签名称最多 6 个字符");
+      return;
+    }
+    try {
+      await updateTag(it.id, { name });
+      cancelEdit();
+      await load();
+    } catch (err) {
+      const ax = err as AxiosError<{ detail?: string }>;
+      alert(ax.response?.data?.detail ?? "保存失败");
+    }
+  };
+
+  const handleToggleOnline = async (it: TagItem) => {
+    try {
+      await setTagOnline(it.id, !it.online);
+      await load();
+    } catch (err) {
+      const ax = err as AxiosError<{ detail?: string }>;
+      alert(ax.response?.data?.detail ?? "操作失败");
+    }
+  };
+
+  const handleDelete = async (it: TagItem) => {
+    if (!window.confirm(`确认删除标签「${it.name}」？`)) return;
+    try {
+      await deleteTag(it.id);
+      await load();
+    } catch (err) {
+      const ax = err as AxiosError<{ detail?: string }>;
+      alert(ax.response?.data?.detail ?? "删除失败");
+    }
+  };
+
+  return (
+    <div>
+      <h1 className="text-xl font-semibold text-gray-800 dark:text-white/90 mb-4">标签管理</h1>
+
+      <div className="flex items-center gap-2 mb-4">
+        <input
+          type="text"
+          placeholder="新增标签名称（≤6 字符）"
+          value={newName}
+          onChange={(e) => setNewName(e.target.value)}
+          className="border rounded px-3 py-2 text-sm min-w-[240px]"
+        />
+        <button
+          type="button"
+          onClick={handleCreate}
+          disabled={creating}
+          className="px-4 py-2 text-sm rounded bg-brand-500 text-white hover:bg-brand-600 disabled:opacity-50"
+        >
+          {creating ? "提交中..." : "新增"}
+        </button>
+      </div>
+
+      <FilterBar
+        fields={FILTER_FIELDS}
+        initialValues={filters}
+        onApply={(v) => setFilters(v)}
+        onReset={() => setFilters({})}
+      />
+
+      {error && <div className="text-error-500 text-sm mb-2">{error}</div>}
+
+      <div className="overflow-x-auto bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800">
+        <table className="w-full text-sm">
+          <thead className="bg-gray-50 dark:bg-gray-800 text-left text-gray-500">
+            <tr>
+              <th className="px-4 py-3">名称</th>
+              <th className="px-4 py-3">上架</th>
+              <th className="px-4 py-3">创建时间</th>
+              <th className="px-4 py-3">操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            {loading && (
+              <tr>
+                <td colSpan={4} className="px-4 py-6 text-center text-gray-500">
+                  加载中...
+                </td>
+              </tr>
+            )}
+            {!loading && items.length === 0 && (
+              <tr>
+                <td colSpan={4} className="px-4 py-6 text-center text-gray-500">
+                  暂无数据
+                </td>
+              </tr>
+            )}
+            {!loading &&
+              items.map((it) => (
+                <tr key={it.id} className="border-t border-gray-100 dark:border-gray-800">
+                  <td className="px-4 py-3 text-gray-800 dark:text-white/90">
+                    {editingId === it.id ? (
+                      <input
+                        type="text"
+                        value={editingName}
+                        onChange={(e) => setEditingName(e.target.value)}
+                        className="border rounded px-2 py-1 text-sm"
+                      />
+                    ) : (
+                      it.name
+                    )}
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className={it.online ? "text-success-500" : "text-gray-400"}>
+                      {it.online ? "已上架" : "未上架"}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">{formatDateTime(it.createdAt)}</td>
+                  <td className="px-4 py-3 space-x-2">
+                    {editingId === it.id ? (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => saveEdit(it)}
+                          className="px-3 py-1 text-xs rounded bg-brand-500 text-white hover:bg-brand-600"
+                        >
+                          保存
+                        </button>
+                        <button
+                          type="button"
+                          onClick={cancelEdit}
+                          className="px-3 py-1 text-xs rounded border border-gray-300 hover:bg-gray-50"
+                        >
+                          取消
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => handleToggleOnline(it)}
+                          className="px-3 py-1 text-xs rounded border border-gray-300 hover:bg-gray-50"
+                        >
+                          {it.online ? "下架" : "上架"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => startEdit(it)}
+                          className="px-3 py-1 text-xs rounded border border-gray-300 hover:bg-gray-50"
+                        >
+                          编辑
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(it)}
+                          className="px-3 py-1 text-xs rounded border border-error-300 text-error-500 hover:bg-error-50"
+                        >
+                          删除
+                        </button>
+                      </>
+                    )}
+                  </td>
+                </tr>
+              ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
