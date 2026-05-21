@@ -1,6 +1,6 @@
 package com.space.app.security;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import com.space.app.config.properties.ApiKeyProperties;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

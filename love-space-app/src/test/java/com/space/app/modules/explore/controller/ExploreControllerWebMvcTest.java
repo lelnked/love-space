@@ -23,7 +23,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * 在 admin 侧用例（{@code BannerSortAdminToAppIT}）中通过共享 Testcontainers DB 覆盖。
  */
 @AutoConfigureMockMvc
-@Disabled("阻塞于 Liquibase YAML 解析（Spring Boot 4 + Liquibase 4.31/5.0 对现有 changelog 报 \"Unexpected node: 6\"）；待 changelog 兼容性修复后再启用")
 class ExploreControllerWebMvcTest extends AbstractPostgresIntegrationTest {
 
     @Autowired

@@ -1,7 +1,7 @@
 package com.space.app.modules.merchant.controller;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 import com.space.app.common.enums.Period;
 import com.space.app.modules.city.entity.City;
 import com.space.app.modules.city.repository.CityRepository;
@@ -33,7 +33,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * 覆盖列表筛选 / 空状态 / 详情结构 / 百分制评分。
  */
 @AutoConfigureMockMvc
-@Disabled("阻塞于 Liquibase YAML 解析（Spring Boot 4 + Liquibase 4.31/5.0 对现有 changelog 报 \"Unexpected node: 6\"）；待 changelog 兼容性修复后再启用")
 class MerchantControllerWebMvcTest extends AbstractPostgresIntegrationTest {
 
     @Autowired

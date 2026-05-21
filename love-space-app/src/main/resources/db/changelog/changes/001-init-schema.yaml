@@ -105,8 +105,8 @@ databaseChangeLog:
               - column: { name: name, type: text, constraints: { nullable: false } }
               - column: { name: logo, type: text, constraints: { nullable: false } }
               - column: { name: address, type: text, constraints: { nullable: false } }
-              - column: { name: longitude, type: numeric(9,6) }
-              - column: { name: latitude, type: numeric(8,6) }
+              - column: { name: longitude, type: "numeric(9,6)" }
+              - column: { name: latitude, type: "numeric(8,6)" }
               - column: { name: city_id, type: uuid, constraints: { nullable: false } }
               - column: { name: category_id, type: uuid }
               - column: { name: safety_environment_score, type: smallint, constraints: { nullable: false } }

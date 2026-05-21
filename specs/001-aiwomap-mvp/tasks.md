@@ -134,8 +134,8 @@ controller MockMvc 测试；未要求全面 TDD。
 ### 测试 — love-space-app
 
 - [X] T117 [P] [US1] `love-space-app/src/test/java/com/space/app/modules/merchant/service/ScoreCalculatorTest.java`：覆盖 24/20/20/16 → 80/80/80/80/level 8；边界 0/上限值；非法负数抛 IllegalArgumentException
-- [X] T118 [P] [US1] `MerchantControllerWebMvcTest.java`：MockMvc + Testcontainers Postgres，验证列表筛选、空状态、详情返回结构与百分制（已编写；当前 `@Disabled`，阻塞于 Spring Boot 4 + Liquibase 现有 changelog 解析 `Unexpected node: 6`，待后续单独修复）
-- [X] T119 [P] [US1] `ExploreControllerWebMvcTest.java`：验证（a）所有城市 `bannerSortOrder=0` 时 `banners=[]` 且 `empty=true`；（b）`bannerSortOrder>0` 但 `online=false` 的城市不进入 banner；（c）多 banner 按 `bannerSortOrder` 升序返回；（d）城市不存在时仍 200 返回空 banner；（e）**端到端验证**：先经 admin API 创建城市并 `PUT /api/admin/cities/{id}/banner-sort` 后，app `/api/app/explore` 立即反映新顺序（通过 Testcontainers 共享单库实例覆盖 admin → app 数据流向）。注：(a)–(d) 已编写但 `@Disabled`（Liquibase changelog 解析阻塞）；(e) 跨模块端到端用例延后至 admin 侧 `BannerSortAdminToAppIT`
+- [X] T118 [P] [US1] `MerchantControllerWebMvcTest.java`：MockMvc + Testcontainers Postgres，验证列表筛选、空状态、详情返回结构与百分制
+- [X] T119 [P] [US1] `ExploreControllerWebMvcTest.java`：验证（a）所有城市 `bannerSortOrder=0` 时 `banners=[]` 且 `empty=true`；（b）`bannerSortOrder>0` 但 `online=false` 的城市不进入 banner；（c）多 banner 按 `bannerSortOrder` 升序返回；（d）城市不存在时仍 200 返回空 banner；（e）**端到端验证**：先经 admin API 创建城市并 `PUT /api/admin/cities/{id}/banner-sort` 后，app `/api/app/explore` 立即反映新顺序（通过 Testcontainers 共享单库实例覆盖 admin → app 数据流向）。注：(e) 跨模块端到端用例延后至 admin 侧 `BannerSortAdminToAppIT`
 - [X] T119a [P] [US1] `ApiKeyAuthFilterTest.java`：覆盖（a）缺失 `X-API-Key` 返回 401；（b）错误 key 返回 401；
   （c）正确 key 放行并续走 controller；（d）`apiKeys` 为空时应用启动失败（`ApplicationContextRunner` 验证）。
 
