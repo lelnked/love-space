@@ -151,48 +151,48 @@ controller MockMvc 测试；未要求全面 TDD。
 
 ### Backend — love-space-admin entities & repositories
 
-- [ ] T200 [P] [US2] 创建 entity `modules/city/entity/City.java`（继承 BaseAuditEntity，字段不缩写，中文 JavaDoc）
-- [ ] T201 [P] [US2] 创建 entity `modules/category/entity/Category.java`
-- [ ] T202 [P] [US2] 创建 entity `modules/tag/entity/Tag.java`
-- [ ] T203 [P] [US2] 创建 entity `modules/merchant/entity/Merchant.java`、`MerchantImage.java`、`MerchantPeriod.java`、`MerchantTag.java`、`MerchantReview.java`
-- [ ] T204 [P] [US2] 创建对应 repositories（CityRepository、CategoryRepository、TagRepository、MerchantRepository + 4 个商户子表 Repository），含分页 + 过滤的 Specification 工厂
+- [X] T200 [P] [US2] 创建 entity `modules/city/entity/City.java`（继承 BaseAuditEntity，字段不缩写，中文 JavaDoc）
+- [X] T201 [P] [US2] 创建 entity `modules/category/entity/Category.java`
+- [X] T202 [P] [US2] 创建 entity `modules/tag/entity/Tag.java`
+- [X] T203 [P] [US2] 创建 entity `modules/merchant/entity/Merchant.java`、`MerchantImage.java`、`MerchantPeriod.java`、`MerchantTag.java`、`MerchantReview.java`
+- [X] T204 [P] [US2] 创建对应 repositories（CityRepository、CategoryRepository、TagRepository、MerchantRepository + 4 个商户子表 Repository），含分页 + 过滤的 Specification 工厂
 
 ### Backend — love-space-admin DTO + service + controller
 
-- [ ] T210 [P] [US2] 创建 city DTO：`CityCreateRequest`、`CityUpdateRequest`、`CityQuery`、`CityItemResponse`、`CityDetailResponse`、`CityBannerSortRequest`（`bannerSortOrder>0` 自动参与 explore banner，无独立 banner DTO；负数返回 400）
-- [ ] T211 [P] [US2] 创建 category DTO：`CategoryUpsertRequest`、`CategoryItemResponse`（分类列表按 `createdAt DESC`，不再维护 sortOrder）
-- [ ] T212 [P] [US2] 创建 tag DTO：`TagUpsertRequest`、`TagQuery`、`TagItemResponse`
-- [ ] T213 [P] [US2] 创建 merchant DTO：`MerchantUpsertRequest`（含 reviews / tagIds / images / recommendedPeriods 等，按 contracts/admin-api.md）、`MerchantQuery`、`MerchantAdminItem`、`MerchantDetailResponse`、`ReviewUpsertItem`
-- [ ] T214 [P] [US2] 创建 file DTO：`FileUploadResponse`
-- [ ] T215 [US2] 实现 `modules/city/service/CityService.java`（CRUD + 上下线 + 唯一性校验：chineseName 重复抛 ValidationException；列表默认按 `createdAt DESC`；`bannerSortOrder` 仅服务于 explore banner：`>0` 即作为 banner 并按该数值升序，`=0` 不参与，负数拒绝；不影响列表排序）
-- [ ] T216 [US2] 实现 `modules/category/service/CategoryService.java`（CRUD；列表按 `createdAt DESC`，不再维护 sortOrder；删除时联动 `merchantService.offlineByCategoryId(categoryId)`）
-- [ ] T217 [US2] 实现 `modules/tag/service/TagService.java`（CRUD + 上下架；名称 ≤6 汉字、不重名；列表按 `createdAt DESC`）
-- [ ] T218 [US2] 实现 `modules/merchant/service/MerchantService.java`：upsert（事务内同步更新 merchant + images + periods + tags + reviews）、列表（按 cityId / categoryId / period / online / name 模糊 + 分页 + 排序 weight DESC, createdAt DESC）、详情、删除、上架/下架、`offlineByCategoryId`；校验 name ≤15 汉字、images ≥1、四维评分上限、story ≤5000 字
-- [ ] T219 [US2] 实现 `modules/file/service/FileService.java`（单图 ≤20MB；**MIME 白名单 `image/png`、`image/jpeg`、`image/webp`**，同时校验文件首字节 magic number 防止伪造扩展名；命中其他类型抛 `ValidationException` 返回 400；调用 `FileStorage`）
-- [ ] T220 [US2] 实现 `modules/city/controller/CityController.java`：含 `PUT /cities/{id}/banner-sort`（body `{ "bannerSortOrder": <int >= 0> }`）；所有写操作打 `@OperationLog("city:<action>")`
-- [ ] T221 [US2] 实现 `modules/category/controller/CategoryController.java`
-- [ ] T222 [US2] 实现 `modules/tag/controller/TagController.java`
-- [ ] T223 [US2] 实现 `modules/merchant/controller/MerchantController.java`
-- [ ] T224 [US2] 实现 `modules/file/controller/FileController.java`：`POST /api/admin/files/upload`
+- [X] T210 [P] [US2] 创建 city DTO：`CityCreateRequest`、`CityUpdateRequest`、`CityQuery`、`CityItemResponse`、`CityDetailResponse`、`CityBannerSortRequest`（`bannerSortOrder>0` 自动参与 explore banner，无独立 banner DTO；负数返回 400）
+- [X] T211 [P] [US2] 创建 category DTO：`CategoryUpsertRequest`、`CategoryItemResponse`（分类列表按 `createdAt DESC`，不再维护 sortOrder）
+- [X] T212 [P] [US2] 创建 tag DTO：`TagUpsertRequest`、`TagQuery`、`TagItemResponse`
+- [X] T213 [P] [US2] 创建 merchant DTO：`MerchantUpsertRequest`（含 reviews / tagIds / images / recommendedPeriods 等，按 contracts/admin-api.md）、`MerchantQuery`、`MerchantAdminItem`、`MerchantDetailResponse`、`ReviewUpsertItem`
+- [X] T214 [P] [US2] 创建 file DTO：`FileUploadResponse`
+- [X] T215 [US2] 实现 `modules/city/service/CityService.java`（CRUD + 上下线 + 唯一性校验：chineseName 重复抛 ValidationException；列表默认按 `createdAt DESC`；`bannerSortOrder` 仅服务于 explore banner：`>0` 即作为 banner 并按该数值升序，`=0` 不参与，负数拒绝；不影响列表排序）
+- [X] T216 [US2] 实现 `modules/category/service/CategoryService.java`（CRUD；列表按 `createdAt DESC`，不再维护 sortOrder；删除时联动 `merchantService.offlineByCategoryId(categoryId)`）
+- [X] T217 [US2] 实现 `modules/tag/service/TagService.java`（CRUD + 上下架；名称 ≤6 汉字、不重名；列表按 `createdAt DESC`）
+- [X] T218 [US2] 实现 `modules/merchant/service/MerchantService.java`：upsert（事务内同步更新 merchant + images + periods + tags + reviews）、列表（按 cityId / categoryId / period / online / name 模糊 + 分页 + 排序 weight DESC, createdAt DESC）、详情、删除、上架/下架、`offlineByCategoryId`；校验 name ≤15 汉字、images ≥1、四维评分上限、story ≤5000 字
+- [X] T219 [US2] 实现 `modules/file/service/FileService.java`（单图 ≤20MB；**MIME 白名单 `image/png`、`image/jpeg`、`image/webp`**，同时校验文件首字节 magic number 防止伪造扩展名；命中其他类型抛 `ValidationException` 返回 400；调用 `FileStorage`）
+- [X] T220 [US2] 实现 `modules/city/controller/CityController.java`：含 `PUT /cities/{id}/banner-sort`（body `{ "bannerSortOrder": <int >= 0> }`）；所有写操作打 `@OperationLog("city:<action>")`
+- [X] T221 [US2] 实现 `modules/category/controller/CategoryController.java`
+- [X] T222 [US2] 实现 `modules/tag/controller/TagController.java`
+- [X] T223 [US2] 实现 `modules/merchant/controller/MerchantController.java`
+- [X] T224 [US2] 实现 `modules/file/controller/FileController.java`：`POST /api/admin/files/upload`
 
 ### Frontend — love-space-web
 
-- [ ] T230 [P] [US2] 创建 `src/api/cities.ts`、`categories.ts`、`tags.ts`、`merchants.ts`、`files.ts` 客户端
-- [ ] T231 [P] [US2] 创建 `src/pages/Cities/List.tsx`（FilterBar + 表格 + 右下分页 + 上下线 / 排序 / 删除按钮）
-- [ ] T232 [P] [US2] 创建 `src/pages/Cities/Form.tsx`（创建 / 编辑共用）；`bannerSortOrder` 字段旁标注"`>0` 时自动作为 explore banner 展示，数值越小越靠前；`=0` 则不参与 banner；不影响城市列表排序"
-- [ ] T233 [P] [US2] 创建 `src/pages/Categories/List.tsx`（含 inline 创建 / 排序 / 删除二次确认提示"会下架关联商户"）
-- [ ] T234 [P] [US2] 创建 `src/pages/Tags/List.tsx`（含 inline 创建 + 上下架）
-- [ ] T235 [P] [US2] 创建 `src/pages/Merchants/List.tsx`（FilterBar：name / cityId / categoryId / period / online；分页器右下）
-- [ ] T236 [US2] 创建 `src/pages/Merchants/Form.tsx`：按 spec FR-044 分区（基础信息 / 图片+logo / 周期+分类+城市 / 地址+坐标 / 标签 / 四维评分 / 评价动态列表支持 emoji / 故事 / 权重 / 上下架）
-- [ ] T237 [US2] 在 `src/App.tsx` 中注册路由：`/cities`、`/cities/create`、`/cities/:id/edit`、`/categories`、`/tags`、`/merchants`、`/merchants/create`、`/merchants/:id/edit`
-- [ ] T238 [US2] 在 `AppLayout` 侧边栏中追加菜单条目（所有角色可见）
+- [X] T230 [P] [US2] 创建 `src/api/cities.ts`、`categories.ts`、`tags.ts`、`merchants.ts`、`files.ts` 客户端
+- [X] T231 [P] [US2] 创建 `src/pages/Cities/List.tsx`（FilterBar + 表格 + 右下分页 + 上下线 / 排序 / 删除按钮）
+- [X] T232 [P] [US2] 创建 `src/pages/Cities/Form.tsx`（创建 / 编辑共用）；`bannerSortOrder` 字段旁标注"`>0` 时自动作为 explore banner 展示，数值越小越靠前；`=0` 则不参与 banner；不影响城市列表排序"
+- [X] T233 [P] [US2] 创建 `src/pages/Categories/List.tsx`（含 inline 创建 / 排序 / 删除二次确认提示"会下架关联商户"）
+- [X] T234 [P] [US2] 创建 `src/pages/Tags/List.tsx`（含 inline 创建 + 上下架）
+- [X] T235 [P] [US2] 创建 `src/pages/Merchants/List.tsx`（FilterBar：name / cityId / categoryId / period / online；分页器右下）
+- [X] T236 [US2] 创建 `src/pages/Merchants/Form.tsx`：按 spec FR-044 分区（基础信息 / 图片+logo / 周期+分类+城市 / 地址+坐标 / 标签 / 四维评分 / 评价动态列表支持 emoji / 故事 / 权重 / 上下架）
+- [X] T237 [US2] 在 `src/App.tsx` 中注册路由：`/cities`、`/cities/create`、`/cities/:id/edit`、`/categories`、`/tags`、`/merchants`、`/merchants/create`、`/merchants/:id/edit`
+- [X] T238 [US2] 在 `AppLayout` 侧边栏中追加菜单条目（所有角色可见）
 
 ### 测试 — love-space-admin
 
-- [ ] T240 [P] [US2] `MerchantServiceTest.java`：name 长度 / 四维分上限 / images ≥1 / story 长度校验；删除分类后该分类下商户 online=false
-- [ ] T241 [P] [US2] `CategoryServiceTest.java`：删除联动下架
-- [ ] T242 [P] [US2] `TagServiceTest.java`：标签下架后 App 端不返回该标签（通过 admin TagRepository + app Tag 视图断言；或在 app 模块测试覆盖）
-- [ ] T243 [P] [US2] `FileServiceTest.java`：>20MB 拒绝、非白名单 MIME 拒绝
+- [X] T240 [P] [US2] `MerchantServiceTest.java`：name 长度 / 四维分上限 / images ≥1 / story 长度校验；删除分类后该分类下商户 online=false
+- [X] T241 [P] [US2] `CategoryServiceTest.java`：删除联动下架
+- [X] T242 [P] [US2] `TagServiceTest.java`：标签下架后 App 端不返回该标签（通过 admin TagRepository + app Tag 视图断言；或在 app 模块测试覆盖）
+- [X] T243 [P] [US2] `FileServiceTest.java`：>20MB 拒绝、非白名单 MIME 拒绝
 
 **Checkpoint**: 运营人员可独立完成全套内容生产
 
@@ -206,29 +206,29 @@ controller MockMvc 测试；未要求全面 TDD。
 
 ### Backend — love-space-admin
 
-- [ ] T300 [P] [US3] 创建 entity `modules/user/entity/User.java`（中文 JavaDoc；字段：username 唯一、password BCrypt、nickname、role、enable）
-- [ ] T301 [P] [US3] 创建 `modules/user/repository/UserRepository.java`（`findByUsername`、`existsByUsername`，Specification 支持过滤）
-- [ ] T302 [P] [US3] 创建 DTO：`UserCreateRequest`、`UserDetailResponse`、`UserItem`、`UserQuery`、`PasswordResetRequest`、`LoginRequest`、`LoginResponse`、`CurrentUserResponse`
-- [ ] T303 [US3] 实现 `modules/user/service/UserService.java`：分页 + 过滤（username 模糊 / role / enable / createdAt 区间）；创建强制 role=MEMBER；启停；重置密码（BCrypt）；查询；`existsByUsername` 唯一性
-- [ ] T304 [US3] 实现 `modules/auth/service/AuthService.java`：登录（校验 enable=true，密码 BCrypt 比对，签发 JWT）、me、登出
-- [ ] T305 [US3] 实现 `modules/auth/controller/AuthController.java`：`POST /api/admin/auth/login` / `logout` / `GET /me`
-- [ ] T306 [US3] 实现 `modules/user/controller/UserController.java`：方法上 `@PreAuthorize("hasRole('ADMIN')")`；含 `@OperationLog("user:<action>")`
+- [X] T300 [P] [US3] 创建 entity `modules/user/entity/User.java`（中文 JavaDoc；字段：username 唯一、password BCrypt、nickname、role、enable）
+- [X] T301 [P] [US3] 创建 `modules/user/repository/UserRepository.java`（`findByUsername`、`existsByUsername`，Specification 支持过滤）
+- [X] T302 [P] [US3] 创建 DTO：`UserCreateRequest`、`UserDetailResponse`、`UserItem`、`UserQuery`、`PasswordResetRequest`、`LoginRequest`、`LoginResponse`、`CurrentUserResponse`
+- [X] T303 [US3] 实现 `modules/user/service/UserService.java`：分页 + 过滤（username 模糊 / role / enable / createdAt 区间）；创建强制 role=MEMBER；启停；重置密码（BCrypt）；查询；`existsByUsername` 唯一性
+- [X] T304 [US3] 实现 `modules/auth/service/AuthService.java`：登录（校验 enable=true，密码 BCrypt 比对，签发 JWT）、me、登出
+- [X] T305 [US3] 实现 `modules/auth/controller/AuthController.java`：`POST /api/admin/auth/login` / `logout` / `GET /me`
+- [X] T306 [US3] 实现 `modules/user/controller/UserController.java`：方法上 `@PreAuthorize("hasRole('ADMIN')")`；含 `@OperationLog("user:<action>")`
 - [ ] ~~T307~~ **已删除**：默认 admin 改由 Liquibase changelog（T029）单一植入；应用层不再实现 `AdminUserInitializer`，避免双植入路径与密码漂移
 
 ### Frontend — love-space-web
 
-- [ ] T310 [P] [US3] 创建 `src/api/auth.ts`、`src/api/users.ts`
-- [ ] T311 [US3] 完成 `src/pages/SignIn.tsx`：调用 `auth.login`，保存 token + user 到 AuthContext，跳转到首页
-- [ ] T312 [US3] 创建 `src/pages/Users/List.tsx`：FilterBar（username 模糊 / role / enable / createdAt 区间）+ 表格 + 启停 / 重置密码按钮 + 右下分页
-- [ ] T313 [US3] 创建 `src/pages/Users/Create.tsx`：表单字段 username / password / nickname；**UI 不暴露 role 选择**
-- [ ] T314 [US3] 在 `src/App.tsx` 注册路由 `/users`、`/users/create`；`AppLayout` 侧边栏中 `/users` 入口仅当 `role==='ADMIN'` 时显示
+- [X] T310 [P] [US3] 创建 `src/api/auth.ts`、`src/api/users.ts`
+- [X] T311 [US3] 完成 `src/pages/SignIn.tsx`：调用 `auth.login`，保存 token + user 到 AuthContext，跳转到首页
+- [X] T312 [US3] 创建 `src/pages/Users/List.tsx`：FilterBar（username 模糊 / role / enable / createdAt 区间）+ 表格 + 启停 / 重置密码按钮 + 右下分页
+- [X] T313 [US3] 创建 `src/pages/Users/Create.tsx`：表单字段 username / password / nickname；**UI 不暴露 role 选择**
+- [X] T314 [US3] 在 `src/App.tsx` 注册路由 `/users`、`/users/create`；`AppLayout` 侧边栏中 `/users` 入口仅当 `role==='ADMIN'` 时显示
 
 ### 测试
 
-- [ ] T315 [P] [US3] `UserServiceTest.java`：传 role=ADMIN 仍存为 MEMBER；username 唯一冲突抛 ValidationException
-- [ ] T316 [P] [US3] `AdminSeedLiquibaseIT.java`：基于 Testcontainers PG 启动 Liquibase，断言 `user` 表存在一条 `username='admin'`、role=ADMIN、enable=true，且 `password` 列以 `$2` 开头的 BCrypt 串；重复执行 changelog 不再插入第二行
-- [ ] T317 [P] [US3] `AuthControllerWebMvcTest.java`：错误密码 401；enable=false 用户登录被拒
-- [ ] T318 [P] [US3] `UserControllerSecurityTest.java`：MEMBER 访问 `/api/admin/users` 返回 403
+- [X] T315 [P] [US3] `UserServiceTest.java`：传 role=ADMIN 仍存为 MEMBER；username 唯一冲突抛 ValidationException
+- [X] T316 [P] [US3] `AdminSeedLiquibaseIT.java`：基于 Testcontainers PG 启动 Liquibase，断言 `user` 表存在一条 `username='admin'`、role=ADMIN、enable=true，且 `password` 列以 `$2` 开头的 BCrypt 串；重复执行 changelog 不再插入第二行
+- [X] T317 [P] [US3] `AuthControllerWebMvcTest.java`：错误密码 401；enable=false 用户登录被拒
+- [X] T318 [P] [US3] `UserControllerSecurityTest.java`：MEMBER 访问 `/api/admin/users` 返回 403
 
 **Checkpoint**: 多人协作账号体系闭环
 
@@ -242,13 +242,13 @@ controller MockMvc 测试；未要求全面 TDD。
 
 ### Backend — love-space-admin
 
-- [ ] T400 [P] [US4] 创建 entity `modules/operationlog/entity/OperationLog.java`（payload jsonb；中文 JavaDoc）
-- [ ] T401 [P] [US4] 创建 repository `OperationLogRepository`（Specification 支持 username / module / createdAt 区间）
-- [ ] T402 [P] [US4] 创建 DTO：`OperationLogItem`、`OperationLogQuery`
-- [ ] T403 [US4] 实现 `modules/operationlog/service/OperationLogService.java`：`asyncSave(...)`、`pageQuery(query)`
-- [ ] T404 [US4] 将 T025 中的 `OperationLogAspect` 接入 `OperationLogService.asyncSave`，从 `OperatingContext` 取操作人；payload 序列化时剔除敏感字段（如 password）
-- [ ] T405 [US4] 在所有写 controller（city / category / tag / merchant / user）方法上补全 `@OperationLog("module:action")` 注解（若 US2 / US3 未完整加，此处统一巡检）
-- [ ] T406 [US4] 实现 `modules/operationlog/controller/OperationLogController.java`：`GET /api/admin/logs`
+- [X] T400 [P] [US4] 创建 entity `modules/operationlog/entity/OperationLog.java`（payload jsonb；中文 JavaDoc）
+- [X] T401 [P] [US4] 创建 repository `OperationLogRepository`（Specification 支持 username / module / createdAt 区间）
+- [X] T402 [P] [US4] 创建 DTO：`OperationLogItem`、`OperationLogQuery`
+- [X] T403 [US4] 实现 `modules/operationlog/service/OperationLogService.java`：`asyncSave(...)`、`pageQuery(query)`
+- [X] T404 [US4] 将 T025 中的 `OperationLogAspect` 接入 `OperationLogService.asyncSave`，从 `OperatingContext` 取操作人；payload 序列化时剔除敏感字段（如 password）
+- [X] T405 [US4] 在所有写 controller（city / category / tag / merchant / user）方法上补全 `@OperationLog("module:action")` 注解（若 US2 / US3 未完整加，此处统一巡检）
+- [X] T406 [US4] 实现 `modules/operationlog/controller/OperationLogController.java`：`GET /api/admin/logs`
 
 ### Frontend — love-space-web
 
@@ -258,8 +258,8 @@ controller MockMvc 测试；未要求全面 TDD。
 
 ### 测试
 
-- [ ] T415 [P] [US4] `OperationLogAspectIT.java`：触发一次 city create，断言日志条目最终被异步写入（轮询 100ms × 20）
-- [ ] T416 [P] [US4] `OperationLogControllerWebMvcTest.java`：按 username / module / 区间筛选返回正确条数
+- [X] T415 [P] [US4] `OperationLogAspectIT.java`：触发一次 city create，断言日志条目最终被异步写入（轮询 100ms × 20）
+- [X] T416 [P] [US4] `OperationLogControllerWebMvcTest.java`：按 username / module / 区间筛选返回正确条数
 
 **Checkpoint**: 所有 4 个用户故事独立可用
 
@@ -267,10 +267,10 @@ controller MockMvc 测试；未要求全面 TDD。
 
 ## Phase 7: Polish & Cross-Cutting Concerns
 
-- [ ] T500 [P] 在 `love-space-admin` 与 `love-space-app` 所有 entity / DTO / controller 巡检中文 JavaDoc 完整性（方法、关键步骤、字段、Controller 方法 HTTP 语义）
-- [ ] T501 [P] 检查所有 entity：主键 UUIDv7、关联仅以 `xxxId` 字段持有、无 `@ManyToOne`/`@JoinColumn`、Liquibase changelog 无 `FOREIGN KEY`
-- [ ] T502 [P] 检查所有命名：无缩写；当前用户上下文仅 `OperatingContext`
-- [ ] T503 [P] 前端 `npm run lint && npm run build` 全绿；admin / app 各自 `./mvnw test` 全绿
+- [X] T500 [P] 在 `love-space-admin` 与 `love-space-app` 所有 entity / DTO / controller 巡检中文 JavaDoc 完整性（方法、关键步骤、字段、Controller 方法 HTTP 语义）
+- [X] T501 [P] 检查所有 entity：主键 UUIDv7、关联仅以 `xxxId` 字段持有、无 `@ManyToOne`/`@JoinColumn`、Liquibase changelog 无 `FOREIGN KEY`
+- [X] T502 [P] 检查所有命名：无缩写；当前用户上下文仅 `OperatingContext`
+- [X] T503 [P] 前端 `npm run lint && npm run build` 全绿；admin / app 各自 `./mvnw test` 全绿
 - [ ] T504 [P] 按 `quickstart.md` 跑一遍端到端联调，记录耗时与异常
 - [ ] T505 在 `README.md` 顶部补充本地启动指引指向 `specs/001-aiwomap-mvp/quickstart.md`
 - [ ] ~~T506~~ **已推迟**：性能压测（App 列表 / explore P95、日志切面 <50ms 开销）统一移至后续"性能专项需求"阶段；MVP 不再执行此任务
