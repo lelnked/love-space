@@ -49,14 +49,28 @@ const navItems: NavItem[] = [
   },
   {
     icon: <ListIcon />,
-    name: "内容管理",
-    subItems: [
-      { name: "城市", path: "/cities", pro: false },
-      { name: "Banner", path: "/banners", pro: false },
-      { name: "分类", path: "/categories", pro: false },
-      { name: "标签", path: "/tags", pro: false },
-      { name: "商户", path: "/merchants", pro: false },
-    ],
+    name: "城市管理",
+    path: "/cities",
+  },
+  {
+    icon: <ListIcon />,
+    name: "Banner管理",
+    path: "/banners",
+  },
+  {
+    icon: <ListIcon />,
+    name: "分类管理",
+    path: "/categories",
+  },
+  {
+    icon: <ListIcon />,
+    name: "标签管理",
+    path: "/tags",
+  },
+  {
+    icon: <ListIcon />,
+    name: "商户管理",
+    path: "/merchants",
   },
   {
     icon: <ListIcon />,

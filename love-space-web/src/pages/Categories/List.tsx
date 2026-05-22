@@ -1,5 +1,19 @@
-import { useCallback, useEffect, useState } from "react";
+import { FormEvent, useCallback, useEffect, useState } from "react";
 import { AxiosError } from "axios";
+import PageMeta from "../../components/common/PageMeta";
+import ComponentCard from "../../components/common/ComponentCard";
+import Alert from "../../components/ui/alert/Alert";
+import Button from "../../components/ui/button/Button";
+import { Modal } from "../../components/ui/modal";
+import Label from "../../components/form/Label";
+import Input from "../../components/form/input/InputField";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHeader,
+  TableRow,
+} from "../../components/ui/table";
 import {
   CategoryItem,
   createCategory,
@@ -7,6 +21,11 @@ import {
   listCategories,
   updateCategory,
 } from "../../api/categories";
+
+interface FieldError {
+  field: string;
+  message: string;
+}
 
 function formatDateTime(value: string): string {
   try {
@@ -20,17 +39,20 @@ export default function CategoryList() {
   const [items, setItems] = useState<CategoryItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [newName, setNewName] = useState("");
-  const [creating, setCreating] = useState(false);
+
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState<"create" | "edit">("create");
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editingName, setEditingName] = useState("");
+  const [formName, setFormName] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [formFieldErrors, setFormFieldErrors] = useState<Record<string, string>>({});
 
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
       const data = await listCategories();
-      // 按 createdAt DESC 排序
       const sorted = [...data].sort((a, b) =>
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
       );
@@ -47,48 +69,60 @@ export default function CategoryList() {
     void load();
   }, [load]);
 
-  const handleCreate = async () => {
-    const name = newName.trim();
-    if (!name) {
-      alert("请输入分类名称");
-      return;
-    }
-    setCreating(true);
-    try {
-      await createCategory({ name });
-      setNewName("");
-      await load();
-    } catch (err) {
-      const ax = err as AxiosError<{ detail?: string }>;
-      alert(ax.response?.data?.detail ?? "创建失败");
-    } finally {
-      setCreating(false);
-    }
-  };
-
-  const startEdit = (it: CategoryItem) => {
-    setEditingId(it.id);
-    setEditingName(it.name);
-  };
-
-  const cancelEdit = () => {
+  const openCreate = () => {
+    setModalMode("create");
     setEditingId(null);
-    setEditingName("");
+    setFormName("");
+    setFormError(null);
+    setFormFieldErrors({});
+    setModalOpen(true);
   };
 
-  const saveEdit = async (it: CategoryItem) => {
-    const name = editingName.trim();
+  const openEdit = (it: CategoryItem) => {
+    setModalMode("edit");
+    setEditingId(it.id);
+    setFormName(it.name);
+    setFormError(null);
+    setFormFieldErrors({});
+    setModalOpen(true);
+  };
+
+  const closeModal = () => {
+    if (submitting) return;
+    setModalOpen(false);
+  };
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (submitting) return;
+    setFormError(null);
+    setFormFieldErrors({});
+    const name = formName.trim();
     if (!name) {
-      alert("名称不能为空");
+      setFormFieldErrors({ name: "名称不能为空" });
       return;
     }
+    setSubmitting(true);
     try {
-      await updateCategory(it.id, { name });
-      cancelEdit();
+      if (modalMode === "edit") {
+        if (!editingId) throw new Error("缺少目标分类");
+        await updateCategory(editingId, { name });
+      } else {
+        await createCategory({ name });
+      }
+      setModalOpen(false);
       await load();
     } catch (err) {
-      const ax = err as AxiosError<{ detail?: string }>;
-      alert(ax.response?.data?.detail ?? "保存失败");
+      const ax = err as AxiosError<{ detail?: string; errors?: FieldError[] }>;
+      const data = ax.response?.data;
+      if (data?.errors?.length) {
+        const map: Record<string, string> = {};
+        for (const fe of data.errors) map[fe.field] = fe.message;
+        setFormFieldErrors(map);
+      }
+      setFormError(data?.detail ?? (modalMode === "edit" ? "保存失败" : "创建失败"));
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -99,118 +133,137 @@ export default function CategoryList() {
       await load();
     } catch (err) {
       const ax = err as AxiosError<{ detail?: string }>;
-      alert(ax.response?.data?.detail ?? "删除失败");
+      setError(ax.response?.data?.detail ?? "删除失败");
     }
   };
 
   return (
-    <div>
-      <h1 className="text-xl font-semibold text-gray-800 dark:text-white/90 mb-4">分类管理</h1>
-
-      <div className="flex items-center gap-2 mb-4">
-        <input
-          type="text"
-          placeholder="新增分类名称（≤30 字符）"
-          value={newName}
-          onChange={(e) => setNewName(e.target.value)}
-          maxLength={30}
-          className="border rounded px-3 py-2 text-sm min-w-[260px]"
-        />
+    <>
+      <PageMeta title="分类管理 | Love Space Admin" description="分类列表与管理" />
+      <div className="flex items-center justify-end mb-6">
         <button
           type="button"
-          onClick={handleCreate}
-          disabled={creating}
-          className="px-4 py-2 text-sm rounded bg-brand-500 text-white hover:bg-brand-600 disabled:opacity-50"
+          onClick={openCreate}
+          className="px-4 py-2 text-sm rounded-lg bg-brand-500 text-white hover:bg-brand-600"
         >
-          {creating ? "提交中..." : "新增"}
+          新增分类
         </button>
       </div>
+      <div className="space-y-6">
+        <ComponentCard title="分类列表">
+          {error && (
+            <Alert variant="error" title="操作失败" message={error} showLink={false} />
+          )}
 
-      {error && <div className="text-error-500 text-sm mb-2">{error}</div>}
+          <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
+            <div className="max-w-full overflow-x-auto">
+              <Table>
+                <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
+                  <TableRow>
+                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
+                      名称
+                    </TableCell>
+                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
+                      创建时间
+                    </TableCell>
+                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
+                      操作
+                    </TableCell>
+                  </TableRow>
+                </TableHeader>
 
-      <div className="overflow-x-auto bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800">
-        <table className="w-full text-sm">
-          <thead className="bg-gray-50 dark:bg-gray-800 text-left text-gray-500">
-            <tr>
-              <th className="px-4 py-3">名称</th>
-              <th className="px-4 py-3">创建时间</th>
-              <th className="px-4 py-3">操作</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading && (
-              <tr>
-                <td colSpan={3} className="px-4 py-6 text-center text-gray-500">
-                  加载中...
-                </td>
-              </tr>
-            )}
-            {!loading && items.length === 0 && (
-              <tr>
-                <td colSpan={3} className="px-4 py-6 text-center text-gray-500">
-                  暂无数据
-                </td>
-              </tr>
-            )}
-            {!loading &&
-              items.map((it) => (
-                <tr key={it.id} className="border-t border-gray-100 dark:border-gray-800">
-                  <td className="px-4 py-3 text-gray-800 dark:text-white/90">
-                    {editingId === it.id ? (
-                      <input
-                        type="text"
-                        value={editingName}
-                        onChange={(e) => setEditingName(e.target.value)}
-                        maxLength={30}
-                        className="border rounded px-2 py-1 text-sm"
-                      />
-                    ) : (
-                      it.name
-                    )}
-                  </td>
-                  <td className="px-4 py-3">{formatDateTime(it.createdAt)}</td>
-                  <td className="px-4 py-3 space-x-2">
-                    {editingId === it.id ? (
-                      <>
-                        <button
-                          type="button"
-                          onClick={() => saveEdit(it)}
-                          className="px-3 py-1 text-xs rounded bg-brand-500 text-white hover:bg-brand-600"
-                        >
-                          保存
-                        </button>
-                        <button
-                          type="button"
-                          onClick={cancelEdit}
-                          className="px-3 py-1 text-xs rounded border border-gray-300 hover:bg-gray-50"
-                        >
-                          取消
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        <button
-                          type="button"
-                          onClick={() => startEdit(it)}
-                          className="px-3 py-1 text-xs rounded border border-gray-300 hover:bg-gray-50"
-                        >
-                          编辑
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDelete(it)}
-                          className="px-3 py-1 text-xs rounded border border-error-300 text-error-500 hover:bg-error-50"
-                        >
-                          删除
-                        </button>
-                      </>
-                    )}
-                  </td>
-                </tr>
-              ))}
-          </tbody>
-        </table>
+                <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
+                  {loading && (
+                    <TableRow>
+                      <TableCell className="px-5 py-6 text-center text-gray-500 text-theme-sm dark:text-gray-400">
+                        加载中...
+                      </TableCell>
+                    </TableRow>
+                  )}
+                  {!loading && items.length === 0 && (
+                    <TableRow>
+                      <TableCell className="px-5 py-6 text-center text-gray-500 text-theme-sm dark:text-gray-400">
+                        暂无数据
+                      </TableCell>
+                    </TableRow>
+                  )}
+                  {!loading &&
+                    items.map((it) => (
+                      <TableRow key={it.id}>
+                        <TableCell className="px-5 py-4 sm:px-6 text-start font-medium text-gray-800 text-theme-sm dark:text-white/90">
+                          {it.name}
+                        </TableCell>
+                        <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                          {formatDateTime(it.createdAt)}
+                        </TableCell>
+                        <TableCell className="px-4 py-3 text-start text-theme-sm">
+                          <div className="flex gap-2">
+                            <Button size="sm" variant="primary" onClick={() => openEdit(it)}>
+                              编辑
+                            </Button>
+                            <Button size="sm" variant="primary" onClick={() => handleDelete(it)}>
+                              删除
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                </TableBody>
+              </Table>
+            </div>
+          </div>
+        </ComponentCard>
       </div>
-    </div>
+
+      <Modal
+        isOpen={modalOpen}
+        onClose={closeModal}
+        showBackdrop={false}
+        className="max-w-[520px] m-4 -translate-y-[100px] shadow-2xl ring-1 ring-gray-200 dark:ring-gray-800"
+      >
+        <div className="relative w-full rounded-3xl bg-white p-6 dark:bg-gray-900 lg:p-8">
+          <h4 className="mb-5 text-xl font-semibold text-gray-800 dark:text-white/90">
+            {modalMode === "edit" ? "编辑分类" : "新增分类"}
+          </h4>
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div>
+              <Label>
+                名称 <span className="text-error-500">*</span>
+              </Label>
+              <Input
+                placeholder="分类名称（≤30 字符）"
+                value={formName}
+                onChange={(e) => setFormName(e.target.value.slice(0, 30))}
+                error={Boolean(formFieldErrors.name)}
+                hint={formFieldErrors.name}
+              />
+            </div>
+
+            {formError && (
+              <Alert
+                variant="error"
+                title={modalMode === "edit" ? "保存失败" : "创建失败"}
+                message={formError}
+                showLink={false}
+              />
+            )}
+
+            <div className="flex justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={closeModal}
+                disabled={submitting}
+                className="px-4 py-3 text-sm rounded-lg bg-white text-gray-700 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-400 dark:ring-gray-700"
+              >
+                取消
+              </button>
+              <Button size="sm" disabled={submitting}>
+                {submitting ? "提交中..." : modalMode === "edit" ? "保存" : "创建"}
+              </Button>
+            </div>
+          </form>
+        </div>
+      </Modal>
+    </>
   );
 }

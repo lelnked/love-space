@@ -1,9 +1,24 @@
-import { useCallback, useEffect, useState } from "react";
-import { Link } from "react-router";
+import { FormEvent, useCallback, useEffect, useState } from "react";
 import { AxiosError } from "axios";
 import FilterBar, { FilterField, FilterValues } from "../../components/filter/FilterBar";
 import Pagination from "../../components/pagination/Pagination";
+import { Modal } from "../../components/ui/modal";
+import Label from "../../components/form/Label";
+import Input from "../../components/form/input/InputField";
+import Button from "../../components/ui/button/Button";
+import PageMeta from "../../components/common/PageMeta";
+import ComponentCard from "../../components/common/ComponentCard";
+import Badge from "../../components/ui/badge/Badge";
+import Alert from "../../components/ui/alert/Alert";
 import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHeader,
+  TableRow,
+} from "../../components/ui/table";
+import {
+  createManager,
   disableManager,
   enableManager,
   pageManagers,
@@ -11,6 +26,11 @@ import {
   ManagerItem,
   ManagerQuery,
 } from "../../api/managers";
+
+interface FieldError {
+  field: string;
+  message: string;
+}
 
 const FILTER_FIELDS: FilterField[] = [
   { name: "username", label: "用户名", type: "text", placeholder: "模糊匹配" },
@@ -32,17 +52,7 @@ const FILTER_FIELDS: FilterField[] = [
       { label: "停用", value: "false" },
     ],
   },
-  { name: "createdAtFrom", label: "创建时间起", type: "date" },
-  { name: "createdAtTo", label: "创建时间止", type: "date" },
 ];
-
-function toIsoStart(date: string): string {
-  return new Date(`${date}T00:00:00`).toISOString();
-}
-
-function toIsoEnd(date: string): string {
-  return new Date(`${date}T23:59:59`).toISOString();
-}
 
 function buildQuery(filters: FilterValues, page: number, size: number): ManagerQuery {
   const q: ManagerQuery = { page, size };
@@ -50,8 +60,6 @@ function buildQuery(filters: FilterValues, page: number, size: number): ManagerQ
   if (filters.role === "ADMIN" || filters.role === "MEMBER") q.role = filters.role;
   if (filters.enable === "true") q.enable = true;
   else if (filters.enable === "false") q.enable = false;
-  if (filters.createdAtFrom) q.createdAtFrom = toIsoStart(filters.createdAtFrom);
-  if (filters.createdAtTo) q.createdAtTo = toIsoEnd(filters.createdAtTo);
   return q;
 }
 
@@ -72,6 +80,16 @@ export default function ManagerList() {
   const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const [createOpen, setCreateOpen] = useState(false);
+  const [modalMode, setModalMode] = useState<"create" | "reset">("create");
+  const [resetTargetId, setResetTargetId] = useState<string | null>(null);
+  const [createUsername, setCreateUsername] = useState("");
+  const [createPassword, setCreatePassword] = useState("");
+  const [createNickname, setCreateNickname] = useState("");
+  const [createSubmitting, setCreateSubmitting] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
+  const [createFieldErrors, setCreateFieldErrors] = useState<Record<string, string>>({});
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -110,124 +128,274 @@ export default function ManagerList() {
       await load();
     } catch (err) {
       const ax = err as AxiosError<{ detail?: string }>;
-      alert(ax.response?.data?.detail ?? "操作失败");
+      setError(ax.response?.data?.detail ?? "操作失败");
     }
   };
 
-  const handleResetPassword = async (item: ManagerItem) => {
-    const next = window.prompt(`为管理员 ${item.username} 输入新密码（≥8 位）：`);
-    if (!next) return;
-    if (next.length < 8) {
-      alert("密码至少 8 位");
+  const handleResetPassword = (item: ManagerItem) => {
+    setModalMode("reset");
+    setResetTargetId(item.id);
+    setCreateUsername(item.username);
+    setCreateNickname(item.nickname ?? "");
+    setCreatePassword("");
+    setCreateError(null);
+    setCreateFieldErrors({});
+    setCreateOpen(true);
+  };
+
+  const openCreate = () => {
+    setModalMode("create");
+    setResetTargetId(null);
+    setCreateUsername("");
+    setCreatePassword("");
+    setCreateNickname("");
+    setCreateError(null);
+    setCreateFieldErrors({});
+    setCreateOpen(true);
+  };
+
+  const closeCreate = () => {
+    if (createSubmitting) return;
+    setCreateOpen(false);
+  };
+
+  const handleCreateSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (createSubmitting) return;
+    setCreateError(null);
+    setCreateFieldErrors({});
+
+    if (createPassword.length < 8) {
+      setCreateFieldErrors({ password: "密码至少 8 位" });
       return;
     }
+    if (modalMode === "create" && !createUsername.trim()) {
+      setCreateFieldErrors({ username: "用户名不能为空" });
+      return;
+    }
+
+    setCreateSubmitting(true);
     try {
-      await resetPassword(item.id, { newPassword: next });
-      alert("密码已重置");
+      if (modalMode === "reset") {
+        if (resetTargetId == null) throw new Error("缺少目标管理员");
+        await resetPassword(resetTargetId, { newPassword: createPassword });
+      } else {
+        await createManager({
+          username: createUsername.trim(),
+          password: createPassword,
+          nickname: createNickname.trim() || undefined,
+        });
+      }
+      setCreateOpen(false);
+      await load();
     } catch (err) {
-      const ax = err as AxiosError<{ detail?: string }>;
-      alert(ax.response?.data?.detail ?? "重置失败");
+      const ax = err as AxiosError<{ detail?: string; errors?: FieldError[] }>;
+      const data = ax.response?.data;
+      if (data?.errors?.length) {
+        const map: Record<string, string> = {};
+        for (const fe of data.errors) map[fe.field] = fe.message;
+        setCreateFieldErrors(map);
+      }
+      setCreateError(data?.detail ?? (modalMode === "reset" ? "重置失败" : "创建失败"));
+    } finally {
+      setCreateSubmitting(false);
     }
   };
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-xl font-semibold text-gray-800 dark:text-white/90">管理员管理</h1>
-        <Link
-          to="/managers/create"
-          className="px-4 py-2 text-sm rounded bg-brand-500 text-white hover:bg-brand-600"
+    <>
+      <PageMeta title="管理员管理 | Love Space Admin" description="管理员账号列表与管理" />
+      <div className="flex items-center justify-end mb-6">
+        <button
+          type="button"
+          onClick={openCreate}
+          className="px-4 py-2 text-sm rounded-lg bg-brand-500 text-white hover:bg-brand-600"
         >
           新增管理员
-        </Link>
+        </button>
+      </div>
+      <div className="space-y-6">
+        <ComponentCard title="管理员列表">
+          <FilterBar
+            fields={FILTER_FIELDS}
+            initialValues={filters}
+            onApply={handleApply}
+            onReset={handleReset}
+          />
+
+          {error && (
+            <Alert variant="error" title="操作失败" message={error} showLink={false} />
+          )}
+
+          <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
+            <div className="max-w-full overflow-x-auto">
+              <Table>
+                <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
+                  <TableRow>
+                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
+                      用户名
+                    </TableCell>
+                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
+                      昵称
+                    </TableCell>
+                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
+                      角色
+                    </TableCell>
+                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
+                      状态
+                    </TableCell>
+                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
+                      创建时间
+                    </TableCell>
+                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
+                      操作
+                    </TableCell>
+                  </TableRow>
+                </TableHeader>
+
+                <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
+                  {loading && (
+                    <TableRow>
+                      <TableCell className="px-5 py-6 text-center text-gray-500 text-theme-sm dark:text-gray-400">
+                        <div className="col-span-6">加载中...</div>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                  {!loading && items.length === 0 && (
+                    <TableRow>
+                      <TableCell className="px-5 py-6 text-center text-gray-500 text-theme-sm dark:text-gray-400">
+                        <div className="col-span-6">暂无数据</div>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                  {!loading &&
+                    items.map((it) => (
+                      <TableRow key={it.id}>
+                        <TableCell className="px-5 py-4 sm:px-6 text-start font-medium text-gray-800 text-theme-sm dark:text-white/90">
+                          {it.username}
+                        </TableCell>
+                        <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                          {it.nickname ?? "-"}
+                        </TableCell>
+                        <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                          {it.role === "ADMIN" ? "管理员" : "成员"}
+                        </TableCell>
+                        <TableCell className="px-4 py-3 text-start text-theme-sm">
+                          <Badge size="sm" color={it.enable ? "success" : "error"}>
+                            {it.enable ? "启用" : "停用"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                          {formatDateTime(it.createdAt)}
+                        </TableCell>
+                        <TableCell className="px-4 py-3 text-start text-theme-sm">
+                          <div className="flex gap-2">
+                            <Button size="sm" variant="primary" onClick={() => handleToggleEnable(it)}>
+                              {it.enable ? "停用" : "启用"}
+                            </Button>
+                            <Button size="sm" variant="primary" onClick={() => handleResetPassword(it)}>
+                              重置密码
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                </TableBody>
+              </Table>
+            </div>
+          </div>
+
+          <Pagination
+            page={page}
+            size={size}
+            total={total}
+            totalPages={totalPages}
+            onChange={({ page: nextPage, size: nextSize }) => {
+              setPage(nextPage);
+              setSize(nextSize);
+            }}
+          />
+        </ComponentCard>
       </div>
 
-      <FilterBar
-        fields={FILTER_FIELDS}
-        initialValues={filters}
-        onApply={handleApply}
-        onReset={handleReset}
-      />
+      <Modal
+        isOpen={createOpen}
+        onClose={closeCreate}
+        showBackdrop={false}
+        className="max-w-[520px] m-4 -translate-y-[100px] shadow-2xl ring-1 ring-gray-200 dark:ring-gray-800"
+      >
+        <div className="relative w-full rounded-3xl bg-white p-6 dark:bg-gray-900 lg:p-8">
+          <h4 className="mb-5 text-xl font-semibold text-gray-800 dark:text-white/90">
+            {modalMode === "reset" ? "重置密码" : "新增管理员"}
+          </h4>
+          <form onSubmit={handleCreateSubmit} className="space-y-5">
+            <div>
+              <Label>
+                用户名 <span className="text-error-500">*</span>
+              </Label>
+              <Input
+                placeholder="登录用户名"
+                value={createUsername}
+                onChange={(e) => setCreateUsername(e.target.value)}
+                disabled={modalMode === "reset"}
+                error={Boolean(createFieldErrors.username)}
+                hint={createFieldErrors.username}
+              />
+            </div>
+            <div>
+              <Label>
+                密码 <span className="text-error-500">*</span>
+              </Label>
+              <Input
+                type="password"
+                placeholder="至少 8 位"
+                value={createPassword}
+                onChange={(e) => setCreatePassword(e.target.value)}
+                error={Boolean(createFieldErrors.password)}
+                hint={createFieldErrors.password}
+              />
+            </div>
+            <div>
+              <Label>昵称</Label>
+              <Input
+                placeholder="可选"
+                value={createNickname}
+                onChange={(e) => setCreateNickname(e.target.value)}
+                disabled={modalMode === "reset"}
+                error={Boolean(createFieldErrors.nickname)}
+                hint={createFieldErrors.nickname}
+              />
+            </div>
 
-      {error && <div className="text-error-500 text-sm mb-2">{error}</div>}
-
-      <div className="overflow-x-auto bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800">
-        <table className="w-full text-sm">
-          <thead className="bg-gray-50 dark:bg-gray-800 text-left text-gray-500">
-            <tr>
-              <th className="px-4 py-3">用户名</th>
-              <th className="px-4 py-3">昵称</th>
-              <th className="px-4 py-3">角色</th>
-              <th className="px-4 py-3">状态</th>
-              <th className="px-4 py-3">创建时间</th>
-              <th className="px-4 py-3">操作</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading && (
-              <tr>
-                <td colSpan={6} className="px-4 py-6 text-center text-gray-500">
-                  加载中...
-                </td>
-              </tr>
+            {createError && (
+              <Alert
+                variant="error"
+                title={modalMode === "reset" ? "重置失败" : "创建失败"}
+                message={createError}
+                showLink={false}
+              />
             )}
-            {!loading && items.length === 0 && (
-              <tr>
-                <td colSpan={6} className="px-4 py-6 text-center text-gray-500">
-                  暂无数据
-                </td>
-              </tr>
-            )}
-            {!loading &&
-              items.map((it) => (
-                <tr key={it.id} className="border-t border-gray-100 dark:border-gray-800">
-                  <td className="px-4 py-3 text-gray-800 dark:text-white/90">{it.username}</td>
-                  <td className="px-4 py-3">{it.nickname ?? "-"}</td>
-                  <td className="px-4 py-3">{it.role === "ADMIN" ? "管理员" : "成员"}</td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={
-                        it.enable
-                          ? "text-success-500"
-                          : "text-gray-400"
-                      }
-                    >
-                      {it.enable ? "启用" : "停用"}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">{formatDateTime(it.createdAt)}</td>
-                  <td className="px-4 py-3 space-x-2">
-                    <button
-                      type="button"
-                      onClick={() => handleToggleEnable(it)}
-                      className="px-3 py-1 text-xs rounded border border-gray-300 hover:bg-gray-50"
-                    >
-                      {it.enable ? "停用" : "启用"}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleResetPassword(it)}
-                      className="px-3 py-1 text-xs rounded border border-gray-300 hover:bg-gray-50"
-                    >
-                      重置密码
-                    </button>
-                  </td>
-                </tr>
-              ))}
-          </tbody>
-        </table>
-      </div>
 
-      <Pagination
-        page={page}
-        size={size}
-        total={total}
-        totalPages={totalPages}
-        onChange={({ page: nextPage, size: nextSize }) => {
-          setPage(nextPage);
-          setSize(nextSize);
-        }}
-      />
-    </div>
+            <div className="flex justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={closeCreate}
+                disabled={createSubmitting}
+                className="px-4 py-3 text-sm rounded-lg bg-white text-gray-700 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-400 dark:ring-gray-700"
+              >
+                取消
+              </button>
+              <Button size="sm" disabled={createSubmitting}>
+                {createSubmitting
+                  ? "提交中..."
+                  : modalMode === "reset"
+                  ? "重置"
+                  : "创建"}
+              </Button>
+            </div>
+          </form>
+        </div>
+      </Modal>
+    </>
   );
 }

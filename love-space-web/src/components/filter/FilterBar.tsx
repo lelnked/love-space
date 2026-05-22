@@ -68,7 +68,7 @@ export default function FilterBar({ fields, initialValues, onApply, onReset, rig
           )}
         </div>
       ))}
-      <div className="flex gap-2 ml-auto">
+      <div className="flex gap-2">
         {rightSlot}
         <button
           type="button"

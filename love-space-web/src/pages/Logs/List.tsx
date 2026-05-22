@@ -2,6 +2,16 @@ import { useCallback, useEffect, useState } from "react";
 import { AxiosError } from "axios";
 import FilterBar, { FilterField, FilterValues } from "../../components/filter/FilterBar";
 import Pagination from "../../components/pagination/Pagination";
+import PageMeta from "../../components/common/PageMeta";
+import ComponentCard from "../../components/common/ComponentCard";
+import Alert from "../../components/ui/alert/Alert";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHeader,
+  TableRow,
+} from "../../components/ui/table";
 import { OperationLogItem, OperationLogQuery, pageOperationLogs } from "../../api/logs";
 
 const MODULE_OPTIONS = [
@@ -86,72 +96,96 @@ export default function LogList() {
   };
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-xl font-semibold text-gray-800 dark:text-white/90">操作日志</h1>
+    <>
+      <PageMeta title="操作日志 | Love Space Admin" description="后台操作日志" />
+      <div className="space-y-6">
+        <ComponentCard title="操作日志">
+          <FilterBar
+            fields={FILTER_FIELDS}
+            initialValues={filters}
+            onApply={handleApply}
+            onReset={handleReset}
+          />
+
+          {error && (
+            <Alert variant="error" title="操作失败" message={error} showLink={false} />
+          )}
+
+          <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
+            <div className="max-w-full overflow-x-auto">
+              <Table>
+                <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
+                  <TableRow>
+                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
+                      时间
+                    </TableCell>
+                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
+                      操作人
+                    </TableCell>
+                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
+                      模块
+                    </TableCell>
+                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
+                      动作
+                    </TableCell>
+                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
+                      对象
+                    </TableCell>
+                  </TableRow>
+                </TableHeader>
+
+                <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
+                  {loading && (
+                    <TableRow>
+                      <TableCell className="px-5 py-6 text-center text-gray-500 text-theme-sm dark:text-gray-400">
+                        加载中...
+                      </TableCell>
+                    </TableRow>
+                  )}
+                  {!loading && items.length === 0 && (
+                    <TableRow>
+                      <TableCell className="px-5 py-6 text-center text-gray-500 text-theme-sm dark:text-gray-400">
+                        暂无数据
+                      </TableCell>
+                    </TableRow>
+                  )}
+                  {!loading &&
+                    items.map((it) => (
+                      <TableRow key={it.id}>
+                        <TableCell className="px-5 py-4 sm:px-6 text-start font-medium text-gray-800 text-theme-sm dark:text-white/90">
+                          {formatDateTime(it.createdAt)}
+                        </TableCell>
+                        <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                          {it.username}
+                        </TableCell>
+                        <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                          {it.module}
+                        </TableCell>
+                        <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                          {it.action}
+                        </TableCell>
+                        <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                          {it.target ?? "-"}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                </TableBody>
+              </Table>
+            </div>
+          </div>
+
+          <Pagination
+            page={page}
+            size={size}
+            total={total}
+            totalPages={totalPages}
+            onChange={({ page: nextPage, size: nextSize }) => {
+              setPage(nextPage);
+              setSize(nextSize);
+            }}
+          />
+        </ComponentCard>
       </div>
-
-      <FilterBar
-        fields={FILTER_FIELDS}
-        initialValues={filters}
-        onApply={handleApply}
-        onReset={handleReset}
-      />
-
-      {error && <div className="text-error-500 text-sm mb-2">{error}</div>}
-
-      <div className="overflow-x-auto bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800">
-        <table className="w-full text-sm">
-          <thead className="bg-gray-50 dark:bg-gray-800 text-left text-gray-500">
-            <tr>
-              <th className="px-4 py-3">时间</th>
-              <th className="px-4 py-3">操作人</th>
-              <th className="px-4 py-3">模块</th>
-              <th className="px-4 py-3">动作</th>
-              <th className="px-4 py-3">对象</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading && (
-              <tr>
-                <td colSpan={5} className="px-4 py-6 text-center text-gray-500">
-                  加载中...
-                </td>
-              </tr>
-            )}
-            {!loading && items.length === 0 && (
-              <tr>
-                <td colSpan={5} className="px-4 py-6 text-center text-gray-500">
-                  暂无数据
-                </td>
-              </tr>
-            )}
-            {!loading &&
-              items.map((it) => (
-                <tr key={it.id} className="border-t border-gray-100 dark:border-gray-800">
-                  <td className="px-4 py-3 text-gray-800 dark:text-white/90">
-                    {formatDateTime(it.createdAt)}
-                  </td>
-                  <td className="px-4 py-3">{it.username}</td>
-                  <td className="px-4 py-3">{it.module}</td>
-                  <td className="px-4 py-3">{it.action}</td>
-                  <td className="px-4 py-3">{it.target ?? "-"}</td>
-                </tr>
-              ))}
-          </tbody>
-        </table>
-      </div>
-
-      <Pagination
-        page={page}
-        size={size}
-        total={total}
-        totalPages={totalPages}
-        onChange={({ page: nextPage, size: nextSize }) => {
-          setPage(nextPage);
-          setSize(nextSize);
-        }}
-      />
-    </div>
+    </>
   );
 }

@@ -7,7 +7,6 @@ import Home from "./pages/Dashboard/Home";
 import { AuthProvider } from "./context/AuthContext";
 import RequireAuth from "./components/auth/RequireAuth";
 import ManagerList from "./pages/Managers/List";
-import ManagerCreate from "./pages/Managers/Create";
 import CityList from "./pages/Cities/List";
 import CityForm from "./pages/Cities/Form";
 import BannerList from "./pages/Banners/BannerList";
@@ -35,7 +34,6 @@ export default function App() {
           >
             <Route index path="/" element={<Home />} />
             <Route path="/managers" element={<ManagerList />} />
-            <Route path="/managers/create" element={<ManagerCreate />} />
             <Route path="/cities" element={<CityList />} />
             <Route path="/cities/create" element={<CityForm />} />
             <Route path="/cities/:id/edit" element={<CityForm />} />

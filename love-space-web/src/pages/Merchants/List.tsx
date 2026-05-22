@@ -3,6 +3,18 @@ import { Link } from "react-router";
 import { AxiosError } from "axios";
 import FilterBar, { FilterField, FilterValues } from "../../components/filter/FilterBar";
 import Pagination from "../../components/pagination/Pagination";
+import PageMeta from "../../components/common/PageMeta";
+import ComponentCard from "../../components/common/ComponentCard";
+import Badge from "../../components/ui/badge/Badge";
+import Alert from "../../components/ui/alert/Alert";
+import Button from "../../components/ui/button/Button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHeader,
+  TableRow,
+} from "../../components/ui/table";
 import {
   deleteMerchant,
   getMerchant,
@@ -47,7 +59,6 @@ export default function MerchantList() {
   const [categories, setCategories] = useState<CategoryItem[]>([]);
   const [scoreCache, setScoreCache] = useState<Record<string, number | null>>({});
 
-  // 预加载城市 / 分类（用于筛选项 + 列表展示）
   useEffect(() => {
     void listCities().then(setCities).catch(() => undefined);
     void listCategories().then(setCategories).catch(() => undefined);
@@ -104,7 +115,6 @@ export default function MerchantList() {
       setItems(data.content);
       setTotal(data.totalElements);
       setTotalPages(data.totalPages);
-      // 拉取每行的安全环境分（列表项不带，调用 detail）
       setScoreCache({});
       const next: Record<string, number | null> = {};
       await Promise.all(
@@ -145,7 +155,7 @@ export default function MerchantList() {
       await load();
     } catch (err) {
       const ax = err as AxiosError<{ detail?: string }>;
-      alert(ax.response?.data?.detail ?? "操作失败");
+      setError(ax.response?.data?.detail ?? "操作失败");
     }
   };
 
@@ -156,120 +166,143 @@ export default function MerchantList() {
       await load();
     } catch (err) {
       const ax = err as AxiosError<{ detail?: string }>;
-      alert(ax.response?.data?.detail ?? "删除失败");
+      setError(ax.response?.data?.detail ?? "删除失败");
     }
   };
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-xl font-semibold text-gray-800 dark:text-white/90">商户管理</h1>
+    <>
+      <PageMeta title="商户管理 | Love Space Admin" description="商户列表与管理" />
+      <div className="flex items-center justify-end mb-6">
         <Link
           to="/merchants/create"
-          className="px-4 py-2 text-sm rounded bg-brand-500 text-white hover:bg-brand-600"
+          className="px-4 py-2 text-sm rounded-lg bg-brand-500 text-white hover:bg-brand-600"
         >
           新增商户
         </Link>
       </div>
+      <div className="space-y-6">
+        <ComponentCard title="商户列表">
+          <FilterBar
+            fields={filterFields}
+            initialValues={filters}
+            onApply={handleApply}
+            onReset={handleReset}
+          />
 
-      <FilterBar
-        fields={filterFields}
-        initialValues={filters}
-        onApply={handleApply}
-        onReset={handleReset}
-      />
+          {error && (
+            <Alert variant="error" title="操作失败" message={error} showLink={false} />
+          )}
 
-      {error && <div className="text-error-500 text-sm mb-2">{error}</div>}
+          <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
+            <div className="max-w-full overflow-x-auto">
+              <Table>
+                <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
+                  <TableRow>
+                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
+                      名称
+                    </TableCell>
+                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
+                      城市
+                    </TableCell>
+                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
+                      分类
+                    </TableCell>
+                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
+                      上架
+                    </TableCell>
+                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
+                      权重
+                    </TableCell>
+                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
+                      安全环境分
+                    </TableCell>
+                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
+                      创建时间
+                    </TableCell>
+                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
+                      操作
+                    </TableCell>
+                  </TableRow>
+                </TableHeader>
 
-      <div className="overflow-x-auto bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800">
-        <table className="w-full text-sm">
-          <thead className="bg-gray-50 dark:bg-gray-800 text-left text-gray-500">
-            <tr>
-              <th className="px-4 py-3">名称</th>
-              <th className="px-4 py-3">城市</th>
-              <th className="px-4 py-3">分类</th>
-              <th className="px-4 py-3">上架</th>
-              <th className="px-4 py-3">权重</th>
-              <th className="px-4 py-3">安全环境分</th>
-              <th className="px-4 py-3">创建时间</th>
-              <th className="px-4 py-3">操作</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading && (
-              <tr>
-                <td colSpan={8} className="px-4 py-6 text-center text-gray-500">
-                  加载中...
-                </td>
-              </tr>
-            )}
-            {!loading && items.length === 0 && (
-              <tr>
-                <td colSpan={8} className="px-4 py-6 text-center text-gray-500">
-                  暂无数据
-                </td>
-              </tr>
-            )}
-            {!loading &&
-              items.map((it) => (
-                <tr key={it.id} className="border-t border-gray-100 dark:border-gray-800">
-                  <td className="px-4 py-3 text-gray-800 dark:text-white/90">{it.name}</td>
-                  <td className="px-4 py-3">{cityName[it.cityId] ?? "-"}</td>
-                  <td className="px-4 py-3">
-                    {it.categoryId ? categoryName[it.categoryId] ?? "-" : "-"}
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className={it.online ? "text-success-500" : "text-gray-400"}>
-                      {it.online ? "已上架" : "未上架"}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">{it.weight}</td>
-                  <td className="px-4 py-3">
-                    {scoreCache[it.id] === undefined
-                      ? "-"
-                      : scoreCache[it.id] === null
-                        ? "-"
-                        : scoreCache[it.id]}
-                  </td>
-                  <td className="px-4 py-3">{formatDateTime(it.createdAt)}</td>
-                  <td className="px-4 py-3 space-x-2">
-                    <Link
-                      to={`/merchants/${it.id}/edit`}
-                      className="px-3 py-1 text-xs rounded border border-gray-300 hover:bg-gray-50"
-                    >
-                      编辑
-                    </Link>
-                    <button
-                      type="button"
-                      onClick={() => handleToggleOnline(it)}
-                      className="px-3 py-1 text-xs rounded border border-gray-300 hover:bg-gray-50"
-                    >
-                      {it.online ? "下架" : "上架"}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleDelete(it)}
-                      className="px-3 py-1 text-xs rounded border border-error-300 text-error-500 hover:bg-error-50"
-                    >
-                      删除
-                    </button>
-                  </td>
-                </tr>
-              ))}
-          </tbody>
-        </table>
+                <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
+                  {loading && (
+                    <TableRow>
+                      <TableCell className="px-5 py-6 text-center text-gray-500 text-theme-sm dark:text-gray-400">
+                        加载中...
+                      </TableCell>
+                    </TableRow>
+                  )}
+                  {!loading && items.length === 0 && (
+                    <TableRow>
+                      <TableCell className="px-5 py-6 text-center text-gray-500 text-theme-sm dark:text-gray-400">
+                        暂无数据
+                      </TableCell>
+                    </TableRow>
+                  )}
+                  {!loading &&
+                    items.map((it) => (
+                      <TableRow key={it.id}>
+                        <TableCell className="px-5 py-4 sm:px-6 text-start font-medium text-gray-800 text-theme-sm dark:text-white/90">
+                          {it.name}
+                        </TableCell>
+                        <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                          {cityName[it.cityId] ?? "-"}
+                        </TableCell>
+                        <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                          {it.categoryId ? categoryName[it.categoryId] ?? "-" : "-"}
+                        </TableCell>
+                        <TableCell className="px-4 py-3 text-start text-theme-sm">
+                          <Badge size="sm" color={it.online ? "success" : "error"}>
+                            {it.online ? "已上架" : "未上架"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                          {it.weight}
+                        </TableCell>
+                        <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                          {scoreCache[it.id] === undefined
+                            ? "-"
+                            : scoreCache[it.id] === null
+                              ? "-"
+                              : scoreCache[it.id]}
+                        </TableCell>
+                        <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                          {formatDateTime(it.createdAt)}
+                        </TableCell>
+                        <TableCell className="px-4 py-3 text-start text-theme-sm">
+                          <div className="flex gap-2">
+                            <Link to={`/merchants/${it.id}/edit`}>
+                              <Button size="sm" variant="primary">编辑</Button>
+                            </Link>
+                            <Button size="sm" variant="primary" onClick={() => handleToggleOnline(it)}>
+                              {it.online ? "下架" : "上架"}
+                            </Button>
+                            <Button size="sm" variant="primary" onClick={() => handleDelete(it)}>
+                              删除
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                </TableBody>
+              </Table>
+            </div>
+          </div>
+
+          <Pagination
+            page={page}
+            size={size}
+            total={total}
+            totalPages={totalPages}
+            onChange={({ page: nextPage, size: nextSize }) => {
+              setPage(nextPage);
+              setSize(nextSize);
+            }}
+          />
+        </ComponentCard>
       </div>
-
-      <Pagination
-        page={page}
-        size={size}
-        total={total}
-        totalPages={totalPages}
-        onChange={({ page: nextPage, size: nextSize }) => {
-          setPage(nextPage);
-          setSize(nextSize);
-        }}
-      />
-    </div>
+    </>
   );
 }

@@ -27,9 +27,11 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Banner 服务（运营后台）：CRUD、列表分页查询、上下架切换。
@@ -100,11 +102,12 @@ public class BannerService {
      */
     @Transactional(readOnly = true)
     public PageResponse<BannerListItemResponse> pageList(BannerQuery query, PageQuery pageQuery) {
-        Specification<Banner> spec = Specification.allOf(
+        List<Specification<Banner>> specs = Stream.of(
                 BannerSpecifications.nameContains(query.keyword()),
                 BannerSpecifications.hasType(query.type()),
                 BannerSpecifications.onlineEquals(query.online())
-        );
+        ).filter(Objects::nonNull).toList();
+        Specification<Banner> spec = Specification.allOf(specs);
         Pageable pageable = pageQuery.toPageable(Sort.by(Sort.Direction.DESC, Banner_.UPDATED_AT));
         Page<Banner> page = bannerRepository.findAll(spec, pageable);
         Map<UUID, String> cityNames = batchLoadCityNames(page.getContent());
