@@ -35,11 +35,6 @@ public class CityService {
         return cityRepository.findByIdAndOnlineTrue(id);
     }
 
-    /** 取一个默认城市：最近一个上架的（用于 explore 缺省 cityId 场景）。 */
-    public Optional<City> latestOnline() {
-        return cityRepository.findAllByOnlineTrueOrderByCreatedAtDesc().stream().findFirst();
-    }
-
     /** 实体到列表项 DTO 的映射。 */
     public static CityItemResponse toItem(City city) {
         return new CityItemResponse(
@@ -48,7 +43,6 @@ public class CityService {
                 city.getEnglishName(),
                 city.getChineseProvince(),
                 city.getEnglishProvince(),
-                city.getBackgroundImage(),
-                city.getBannerSortOrder());
+                city.getBackgroundImage());
     }
 }

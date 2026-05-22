@@ -10,6 +10,8 @@ import ManagerList from "./pages/Managers/List";
 import ManagerCreate from "./pages/Managers/Create";
 import CityList from "./pages/Cities/List";
 import CityForm from "./pages/Cities/Form";
+import BannerList from "./pages/Banners/BannerList";
+import BannerForm from "./pages/Banners/BannerForm";
 import CategoryList from "./pages/Categories/List";
 import TagList from "./pages/Tags/List";
 import MerchantList from "./pages/Merchants/List";
@@ -37,6 +39,9 @@ export default function App() {
             <Route path="/cities" element={<CityList />} />
             <Route path="/cities/create" element={<CityForm />} />
             <Route path="/cities/:id/edit" element={<CityForm />} />
+            <Route path="/banners" element={<BannerList />} />
+            <Route path="/banners/new" element={<BannerForm />} />
+            <Route path="/banners/:id/edit" element={<BannerForm />} />
             <Route path="/categories" element={<CategoryList />} />
             <Route path="/tags" element={<TagList />} />
             <Route path="/merchants" element={<MerchantList />} />

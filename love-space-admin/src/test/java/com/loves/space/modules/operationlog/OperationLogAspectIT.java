@@ -54,7 +54,6 @@ class OperationLogAspectIT extends AbstractPostgresIntegrationTest {
                 + "\"englishName\":\"TestCity_" + suffix + "\","
                 + "\"chineseProvince\":\"测试省\","
                 + "\"englishProvince\":\"TestProvince\","
-                + "\"bannerSortOrder\":0,"
                 + "\"online\":false"
                 + "}";
 

@@ -68,5 +68,5 @@ Lombok is enabled with annotation processing wired into the compiler plugin — 
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan:
-`specs/001-aiwomap-mvp/plan.md`
+`specs/002-banner-module/plan.md`
 <!-- SPECKIT END -->

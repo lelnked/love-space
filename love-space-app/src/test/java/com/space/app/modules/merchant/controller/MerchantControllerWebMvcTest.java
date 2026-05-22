@@ -67,7 +67,6 @@ class MerchantControllerWebMvcTest extends AbstractPostgresIntegrationTest {
         city.setChineseProvince("上海");
         city.setEnglishProvince("Shanghai");
         city.setBackgroundImage("https://example.com/bg.png");
-        city.setBannerSortOrder(1);
         city.setOnline(true);
         cityRepository.save(city);
         cityId = city.getId();

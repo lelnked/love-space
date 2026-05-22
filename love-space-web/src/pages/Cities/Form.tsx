@@ -27,7 +27,6 @@ export default function CityForm() {
   const [chineseProvince, setChineseProvince] = useState("");
   const [englishProvince, setEnglishProvince] = useState("");
   const [backgroundImage, setBackgroundImage] = useState("");
-  const [bannerSortOrder, setBannerSortOrder] = useState<number>(0);
   const [online, setOnline] = useState(false);
 
   const [loading, setLoading] = useState(false);
@@ -46,7 +45,6 @@ export default function CityForm() {
         setChineseProvince(d.chineseProvince);
         setEnglishProvince(d.englishProvince);
         setBackgroundImage(d.backgroundImage ?? "");
-        setBannerSortOrder(d.bannerSortOrder ?? 0);
         setOnline(d.online);
       })
       .catch((err: AxiosError<{ detail?: string }>) => {
@@ -82,9 +80,6 @@ export default function CityForm() {
     if (!englishName.trim()) errs.englishName = "英文名不能为空";
     if (!chineseProvince.trim()) errs.chineseProvince = "中文省份不能为空";
     if (!englishProvince.trim()) errs.englishProvince = "英文省份不能为空";
-    if (!Number.isInteger(bannerSortOrder) || bannerSortOrder < 0) {
-      errs.bannerSortOrder = "必须为非负整数";
-    }
     if (Object.keys(errs).length > 0) {
       setFieldErrors(errs);
       return;
@@ -96,7 +91,6 @@ export default function CityForm() {
       chineseProvince: chineseProvince.trim(),
       englishProvince: englishProvince.trim(),
       backgroundImage: backgroundImage.trim() || null,
-      bannerSortOrder,
       online,
     };
 
@@ -191,19 +185,6 @@ export default function CityForm() {
                 className="mt-2 h-32 object-cover rounded border"
               />
             )}
-          </div>
-          <div>
-            <Label>Banner 排序权重</Label>
-            <Input
-              type="number"
-              value={String(bannerSortOrder)}
-              onChange={(e) => setBannerSortOrder(Number(e.target.value))}
-              error={Boolean(fieldErrors.bannerSortOrder)}
-              hint={fieldErrors.bannerSortOrder}
-            />
-            <p className="mt-1 text-xs text-gray-500">
-              {">"}0 时自动作为 explore banner 展示，数值越小越靠前；=0 则不参与 banner；不影响城市列表排序
-            </p>
           </div>
           <div>
             <label className="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">

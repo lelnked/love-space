@@ -37,10 +37,6 @@ public class City extends BaseAuditEntity {
     @Column(name = "background_image")
     private String backgroundImage;
 
-    /** banner 排序权重；&gt;0 表示参与首页 banner 轮播，按升序展示。 */
-    @Column(name = "banner_sort_order", nullable = false)
-    private Integer bannerSortOrder;
-
     /** 是否上架（仅上架城市对 App 可见）。 */
     @Column(name = "online", nullable = false)
     private Boolean online;

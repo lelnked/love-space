@@ -1,23 +1,28 @@
 <!--
 Sync Impact Report
-- Version change: 1.0.0 → 1.0.1
-- Bump rationale: PATCH —— 在原则 I "中文 JavaDoc 注释强制" 中显式扩写
-  "API 接收数据 / 返回数据（请求 DTO、响应 VO、统一响应包装类、错误码字段）的中文 JavaDoc
-  要求"。属于对既有规则的澄清/细化，未新增原则、未改变向后兼容性。
+- Version change: 1.0.1 → 1.1.0
+- Bump rationale: MINOR —— 新增原则 VI "类型安全 JPA 查询（JPA Metamodel 强制）"，
+  并在"技术与工具栈约束"中加入 hibernate-jpamodelgen 依赖与生成产物要求。
+  属于增加新原则与显著扩展指导，未删除/重定义既有原则，向后兼容（旧 Specification
+  代码 MUST 迁移到 Metamodel）。
 - Modified principles:
-  - I. 中文 JavaDoc 注释强制 — 子条目"实体字段"扩写为"实体字段 & API 入参/出参字段"，
-    新增 controller 方法级 JavaDoc 必须描述请求体、响应体、HTTP 语义的显式要求。
-- Added sections: 无
+  - 无既有原则被重命名或重定义；新增 VI. 类型安全 JPA 查询（JPA Metamodel 强制）。
+- Added sections:
+  - Core Principles → VI. 类型安全 JPA 查询（JPA Metamodel 强制）
+  - 技术与工具栈约束 → hibernate-jpamodelgen 条目
+  - 开发工作流 / 代码评审清单中新增 (f) Specification 查询使用 metamodel 检查项
 - Removed sections: 无
 - Templates requiring updates:
-  - ✅ .specify/templates/plan-template.md — 无结构性变化。
-  - ✅ .specify/templates/spec-template.md — 无需调整。
-  - ✅ .specify/templates/tasks-template.md — 任务生成时应将 "API 请求/响应 DTO 字段
-    JavaDoc" 纳入注释校验项。
-  - ⚠ love-space-admin / love-space-app: 现有/新增 controller、Request DTO、Response VO
-    MUST 按本次澄清补齐中文 JavaDoc。
+  - ✅ .specify/templates/plan-template.md — Constitution Check 段为占位，无具体条目需调整。
+  - ✅ .specify/templates/spec-template.md — 无需调整（实现细节不进入 spec）。
+  - ✅ .specify/templates/tasks-template.md — 任务生成时应在 backend 任务中产出
+    "启用 hibernate-jpamodelgen 注解处理器 + 改写既有 Specification" 任务类型；当前模板为
+    占位生成，无具体条目需修改。
+  - ⚠ love-space-admin / love-space-app: 现有 `pom.xml` 需新增 hibernate-jpamodelgen 注解
+    处理器配置；现有任何使用字符串字段名（如 `root.get("name")`）的 Specification/Criteria
+    查询 MUST 迁移到 `Banner_.name` 等生成的 metamodel 引用。
 - Deferred TODOs: 无。
-- 历史 1.0.0 → 现 1.0.1，原始批准日期 2026-05-20 保持不变。
+- 原始批准日期 2026-05-20 保持不变；本次修订日期 2026-05-22。
 -->
 
 # love-space Constitution
@@ -97,12 +102,40 @@ Java 25 移动端后端）。所有代码评审、计划文档、任务生成与
 
 **Rationale**: 工作区跨语言、跨子项目，统一"本地能跑通"的硬要求是协作的最小公约数。
 
+### VI. 类型安全 JPA 查询（JPA Metamodel 强制）（NON-NEGOTIABLE）
+
+- 两个后端 MUST 启用 `hibernate-jpamodelgen` 注解处理器，由编译期生成 JPA static metamodel
+  类（例如 `Banner_`、`City_`），生成产物路径 MUST 是 `target/generated-sources/annotations/`
+  并被 IDE 与构建系统识别为源码。
+- 任何基于 JPA Criteria API 的查询代码（包括 Spring Data JPA `Specification`、`CriteriaBuilder`
+  手写查询、`EntityGraph` 路径字符串等）MUST 通过生成的 metamodel 引用属性，例如
+  `root.get(Banner_.name)`、`root.get(Banner_.online)`。
+- MUST NOT 在 Specification / Criteria 查询中使用属性名的常量字符串字面量（如
+  `root.get("name")`、`Sort.by("createdAt")` 在 Specification 上下文中的等价用法），无论字符串
+  是直接量还是抽取成 `private static final String` 常量；常量字符串与 metamodel 等价的做法
+  同样 MUST NOT 使用。
+- 排序 / 分页 / `Specification.where(...)` 的字段引用 MUST 使用 metamodel 暴露的
+  `SingularAttribute` / `PluralAttribute` / `MapAttribute`；遗留代码 MUST 在触达时即时迁移。
+- JPQL / HQL 命名查询（如 `@Query("select b from Banner b where b.name = :name")`）不受本原则
+  约束，因为字段名由 Hibernate 语法验证；但仍 SHOULD 优先使用 Criteria + metamodel 的写法以
+  获得编译期检查。
+- 评审 MUST 拒绝任何在 Specification / Criteria 查询中出现的实体属性名字符串字面量。
+
+**Rationale**: 字符串属性名在重命名 / 删除字段时静默失效，错误只能在运行期通过 SQL 解析异常
+暴露；metamodel 让字段引用具备编译期类型检查，重构安全且 IDE 可跳转。本宪法第 III 条要求字段
+使用完整命名后字段名变更概率上升，更需 metamodel 保护。
+
 ## 技术与工具栈约束
 
 - **语言版本**：Java 25（两个后端 pom.xml `<java.version>25</java.version>`）；TypeScript
   + React 19；Node 18+（推荐 20+）。
 - **后端框架**：Spring Boot 4.0.6，依赖 Spring Web MVC、Spring Data JPA、Spring Security、
   PostgreSQL Driver、Lombok。引入新依赖 MUST 在 PR 说明中给出理由。
+- **JPA Metamodel 生成器**：两个后端 `pom.xml` MUST 引入
+  `org.hibernate.orm:hibernate-jpamodelgen` 作为 `annotationProcessorPaths` 中的注解处理器
+  （而非普通 compile 依赖），版本随 Spring Boot 4 默认管理；生成的 `*_` metamodel 类
+  MUST NOT 被提交到版本库，但 IDE（IntelliJ / Eclipse）MUST 将
+  `target/generated-sources/annotations/` 标记为生成源根。
 - **前端框架**：Vite 6、Tailwind CSS v4（CSS 配置，不使用 `tailwind.config.js`）、react-router v7。
 - **数据库**：PostgreSQL。迁移脚本（若未来引入 Flyway / Liquibase）MUST 不含外键约束。
 - **ID 生成**：使用 UUIDv7 生成工具（如 `com.github.f4b6a3:uuid-creator` 或等价实现）；
@@ -116,11 +149,12 @@ Java 25 移动端后端）。所有代码评审、计划文档、任务生成与
 - 分支策略：主分支 `main`；功能开发 MUST 在 `###-feature-name` 风格的分支上进行（由
   `/speckit-git-feature` 创建）。
 - 规格驱动：新功能 MUST 走 `/speckit-specify` → `/speckit-plan` → `/speckit-tasks` →
-  `/speckit-implement` 流程；`Constitution Check` 阶段 MUST 逐条对照本宪法五项原则与"技术
+  `/speckit-implement` 流程；`Constitution Check` 阶段 MUST 逐条对照本宪法六项原则与"技术
   与工具栈约束"。
 - 代码评审：每个 PR MUST 检查 (a) 中文 JavaDoc 完整性、(b) 主键为 UUIDv7、(c) DDL/JPA 无外键、
-  (d) 字段命名无缩写、(e) `OperatingContext` 命名一致。任何违反 MUST 在合入前修复或在
-  Complexity Tracking 中显式说明豁免理由。
+  (d) 字段命名无缩写、(e) `OperatingContext` 命名一致、(f) Specification/Criteria 查询全部使用
+  `*_` metamodel，无字段名字符串字面量。任何违反 MUST 在合入前修复或在 Complexity Tracking
+  中显式说明豁免理由。
 
 ## Governance
 
@@ -134,4 +168,4 @@ Java 25 移动端后端）。所有代码评审、计划文档、任务生成与
   环节 MUST 验证本宪法条款；任何例外 MUST 在 plan 的 Complexity Tracking 中记录。
 - **运行时指引**：详细的代码库结构与命令在 `CLAUDE.md` 中维护；本宪法仅规定不可让步的原则。
 
-**Version**: 1.0.1 | **Ratified**: 2026-05-20 | **Last Amended**: 2026-05-20
+**Version**: 1.1.0 | **Ratified**: 2026-05-20 | **Last Amended**: 2026-05-22

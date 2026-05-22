@@ -17,11 +17,4 @@ public interface CityRepository extends JpaRepository<City, UUID> {
 
     /** 按 ID 查询且仅当上架时返回。 */
     Optional<City> findByIdAndOnlineTrue(UUID id);
-
-    /**
-     * 首页 banner 数据源：上架 + bannerSortOrder &gt; threshold，按 bannerSortOrder 升序。
-     *
-     * @param threshold 起算阈值（一般传 0，仅取 &gt;0 的）
-     */
-    List<City> findAllByOnlineTrueAndBannerSortOrderGreaterThanOrderByBannerSortOrderAsc(int threshold);
 }

@@ -7,7 +7,6 @@ export interface CityItem {
   chineseProvince: string;
   englishProvince: string;
   backgroundImage: string | null;
-  bannerSortOrder: number;
   online: boolean;
   createdAt: string;
   updatedAt: string;
@@ -26,7 +25,6 @@ export interface CityUpsertRequest {
   chineseProvince: string;
   englishProvince: string;
   backgroundImage?: string | null;
-  bannerSortOrder?: number;
   online?: boolean;
 }
 
@@ -42,6 +40,10 @@ export async function listCities(query: CityQuery = {}): Promise<CityItem[]> {
     params: buildParams(query),
   });
   return data;
+}
+
+export async function listOnlineCities(name?: string): Promise<CityItem[]> {
+  return listCities({ online: true, name });
 }
 
 export async function getCity(id: string): Promise<CityDetail> {
@@ -65,13 +67,5 @@ export async function deleteCity(id: string): Promise<void> {
 
 export async function setCityOnline(id: string, online: boolean): Promise<CityDetail> {
   const { data } = await apiClient.put<CityDetail>(`/api/admin/cities/${id}/online`, { online });
-  return data;
-}
-
-export async function setCityBannerSort(id: string, bannerSortOrder: number): Promise<CityDetail> {
-  const { data } = await apiClient.put<CityDetail>(
-    `/api/admin/cities/${id}/banner-sort`,
-    { bannerSortOrder },
-  );
   return data;
 }

@@ -7,7 +7,6 @@ import {
   CityQuery,
   deleteCity,
   listCities,
-  setCityBannerSort,
   setCityOnline,
 } from "../../api/cities";
 
@@ -74,26 +73,6 @@ export default function CityList() {
     }
   };
 
-  const handleEditBannerSort = async (item: CityItem) => {
-    const input = window.prompt(
-      `请输入新的 banner 排序权重（>=0，>0 时参与首页 banner 轮播）：`,
-      String(item.bannerSortOrder ?? 0),
-    );
-    if (input === null) return;
-    const next = Number(input);
-    if (!Number.isInteger(next) || next < 0) {
-      alert("请输入非负整数");
-      return;
-    }
-    try {
-      await setCityBannerSort(item.id, next);
-      await load();
-    } catch (err) {
-      const ax = err as AxiosError<{ detail?: string }>;
-      alert(ax.response?.data?.detail ?? "操作失败");
-    }
-  };
-
   const handleDelete = async (item: CityItem) => {
     if (!window.confirm(`确认删除城市「${item.chineseName}」？`)) return;
     try {
@@ -134,7 +113,6 @@ export default function CityList() {
               <th className="px-4 py-3">英文名</th>
               <th className="px-4 py-3">中文省份</th>
               <th className="px-4 py-3">上架</th>
-              <th className="px-4 py-3">Banner 排序</th>
               <th className="px-4 py-3">创建时间</th>
               <th className="px-4 py-3">操作</th>
             </tr>
@@ -142,14 +120,14 @@ export default function CityList() {
           <tbody>
             {loading && (
               <tr>
-                <td colSpan={7} className="px-4 py-6 text-center text-gray-500">
+                <td colSpan={6} className="px-4 py-6 text-center text-gray-500">
                   加载中...
                 </td>
               </tr>
             )}
             {!loading && items.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-4 py-6 text-center text-gray-500">
+                <td colSpan={6} className="px-4 py-6 text-center text-gray-500">
                   暂无数据
                 </td>
               </tr>
@@ -165,7 +143,6 @@ export default function CityList() {
                       {it.online ? "已上架" : "未上架"}
                     </span>
                   </td>
-                  <td className="px-4 py-3">{it.bannerSortOrder}</td>
                   <td className="px-4 py-3">{formatDateTime(it.createdAt)}</td>
                   <td className="px-4 py-3 space-x-2">
                     <Link
@@ -180,13 +157,6 @@ export default function CityList() {
                       className="px-3 py-1 text-xs rounded border border-gray-300 hover:bg-gray-50"
                     >
                       {it.online ? "下架" : "上架"}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleEditBannerSort(it)}
-                      className="px-3 py-1 text-xs rounded border border-gray-300 hover:bg-gray-50"
-                    >
-                      Banner 排序
                     </button>
                     <button
                       type="button"

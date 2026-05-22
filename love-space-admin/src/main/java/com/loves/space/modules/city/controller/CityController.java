@@ -2,7 +2,6 @@ package com.loves.space.modules.city.controller;
 
 import com.loves.space.common.annotation.OperationLog;
 import com.loves.space.common.dto.OnlineStatusRequest;
-import com.loves.space.modules.city.dto.CityBannerSortRequest;
 import com.loves.space.modules.city.dto.CityCreateRequest;
 import com.loves.space.modules.city.dto.CityDetailResponse;
 import com.loves.space.modules.city.dto.CityItemResponse;
@@ -39,9 +38,8 @@ public class CityController {
     /**
      * 查询城市列表。
      *
-     * @param online 上架状态过滤
-     * @param name   中文名模糊
-     * @return 列表项
+     * @param online 上架状态过滤（可空）
+     * @param name   中文名模糊（可空）
      */
     @GetMapping
     public List<CityItemResponse> list(@RequestParam(required = false) Boolean online,
@@ -83,13 +81,5 @@ public class CityController {
     public CityDetailResponse setOnline(@PathVariable UUID id,
                                        @Valid @RequestBody OnlineStatusRequest request) {
         return cityService.setOnline(id, request.online());
-    }
-
-    /** 设置 banner 排序权重。 */
-    @PutMapping("/{id}/banner-sort")
-    @OperationLog("city:set-banner-sort")
-    public CityDetailResponse setBannerSort(@PathVariable UUID id,
-                                           @Valid @RequestBody CityBannerSortRequest request) {
-        return cityService.setBannerSort(id, request.bannerSortOrder());
     }
 }

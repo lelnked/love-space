@@ -8,8 +8,11 @@ import com.loves.space.modules.city.dto.CityItemResponse;
 import com.loves.space.modules.city.dto.CityQuery;
 import com.loves.space.modules.city.dto.CityUpdateRequest;
 import com.loves.space.modules.city.entity.City;
+import com.loves.space.modules.city.entity.City_;
+import com.loves.space.modules.city.event.CityOnlineChangedEvent;
 import com.loves.space.modules.city.repository.CityRepository;
 import jakarta.persistence.criteria.Predicate;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -21,21 +24,23 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * 城市服务（运营后台）：CRUD、上架切换、banner 排序。
+ * 城市服务（运营后台）：CRUD、上架切换。
  */
 @Service
 @Transactional
 public class CityService {
 
     private final CityRepository cityRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
-    public CityService(CityRepository cityRepository) {
+    public CityService(CityRepository cityRepository, ApplicationEventPublisher eventPublisher) {
         this.cityRepository = cityRepository;
+        this.eventPublisher = eventPublisher;
     }
 
     /**
      * 创建城市。
-     * <p>校验：中文名唯一；bannerSortOrder ≥ 0。
+     * <p>校验：中文名唯一。
      */
     public CityDetailResponse create(CityCreateRequest request) {
         if (cityRepository.existsByChineseName(request.chineseName())) {
@@ -56,37 +61,35 @@ public class CityService {
         if (cityRepository.existsByChineseNameAndIdNot(request.chineseName(), id)) {
             throw new ValidationException("城市中文名已存在：" + request.chineseName());
         }
+        boolean previousOnline = city.isOnline();
         city.setChineseName(request.chineseName());
         city.setEnglishName(request.englishName());
         city.setChineseProvince(request.chineseProvince());
         city.setEnglishProvince(request.englishProvince());
         city.setBackgroundImage(request.backgroundImage());
-        if (request.bannerSortOrder() != null) {
-            if (request.bannerSortOrder() < 0) {
-                throw new ValidationException("bannerSortOrder 必须 ≥ 0");
-            }
-            city.setBannerSortOrder(request.bannerSortOrder());
-        }
         if (request.online() != null) {
             city.setOnline(request.online());
+        }
+        if (previousOnline != city.isOnline()) {
+            eventPublisher.publishEvent(new CityOnlineChangedEvent(id, previousOnline, city.isOnline()));
         }
         return toDetail(city);
     }
 
-    /** 列表查询：按 createdAt DESC 排序。 */
+    /** 列表查询：按 createdAt DESC 排序。通过 {@code City_} metamodel 引用属性（宪法 VI）。 */
     @Transactional(readOnly = true)
     public List<CityItemResponse> list(CityQuery query) {
         Specification<City> spec = (root, cq, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
             if (query.online() != null) {
-                predicates.add(cb.equal(root.get("online"), query.online()));
+                predicates.add(cb.equal(root.get(City_.online), query.online()));
             }
             if (StringUtils.hasText(query.name())) {
-                predicates.add(cb.like(root.get("chineseName"), "%" + query.name() + "%"));
+                predicates.add(cb.like(root.get(City_.chineseName), "%" + query.name() + "%"));
             }
             return cb.and(predicates.toArray(new Predicate[0]));
         };
-        return cityRepository.findAll(spec, Sort.by(Sort.Direction.DESC, "createdAt"))
+        return cityRepository.findAll(spec, Sort.by(Sort.Direction.DESC, City_.CREATED_AT))
                 .stream().map(CityService::toItem).toList();
     }
 
@@ -98,22 +101,19 @@ public class CityService {
         return toDetail(city);
     }
 
-    /** 切换上下架状态。 */
+    /**
+     * 切换上下架状态。
+     * <p>仅当状态真正发生变化时发布 {@link CityOnlineChangedEvent}，由
+     * {@code BannerEventListener} 在事务提交后批量同步关联 CITY banner。
+     */
     public CityDetailResponse setOnline(UUID id, boolean online) {
         City city = cityRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("城市不存在：" + id));
+        boolean previousOnline = city.isOnline();
         city.setOnline(online);
-        return toDetail(city);
-    }
-
-    /** 设置 banner 排序权重；&lt; 0 拒绝。 */
-    public CityDetailResponse setBannerSort(UUID id, int bannerSortOrder) {
-        if (bannerSortOrder < 0) {
-            throw new ValidationException("bannerSortOrder 必须 ≥ 0");
+        if (previousOnline != online) {
+            eventPublisher.publishEvent(new CityOnlineChangedEvent(id, previousOnline, online));
         }
-        City city = cityRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("城市不存在：" + id));
-        city.setBannerSortOrder(bannerSortOrder);
         return toDetail(city);
     }
 
@@ -132,7 +132,6 @@ public class CityService {
         city.setChineseProvince(request.chineseProvince());
         city.setEnglishProvince(request.englishProvince());
         city.setBackgroundImage(request.backgroundImage());
-        city.setBannerSortOrder(request.bannerSortOrder() == null ? 0 : request.bannerSortOrder());
         city.setOnline(request.online() != null && request.online());
     }
 
@@ -145,7 +144,6 @@ public class CityService {
                 city.getChineseProvince(),
                 city.getEnglishProvince(),
                 city.getBackgroundImage(),
-                city.getBannerSortOrder(),
                 city.isOnline(),
                 city.getCreatedAt(),
                 city.getUpdatedAt());
@@ -160,7 +158,6 @@ public class CityService {
                 city.getChineseProvince(),
                 city.getEnglishProvince(),
                 city.getBackgroundImage(),
-                city.getBannerSortOrder(),
                 city.isOnline(),
                 city.getCreatedAt(),
                 city.getUpdatedAt());
