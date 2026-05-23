@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router";
 import { AxiosError } from "axios";
 import Label from "../../components/form/Label";
 import Input from "../../components/form/input/InputField";
+import Switch from "../../components/form/switch/Switch";
 import Button from "../../components/ui/button/Button";
 import {
   CityUpsertRequest,
@@ -185,14 +186,12 @@ export default function CityForm() {
             )}
           </div>
           <div>
-            <label className="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
-              <input
-                type="checkbox"
-                checked={online}
-                onChange={(e) => setOnline(e.target.checked)}
-              />
-              上架
-            </label>
+            <Label>上架</Label>
+            <Switch
+              label={online ? "已上架" : "未上架"}
+              defaultChecked={online}
+              onChange={setOnline}
+            />
           </div>
 
           {error && <div className="text-error-500 text-sm">{error}</div>}
