@@ -1,7 +1,6 @@
 package com.loves.space.modules.merchant.dto;
 
 import com.loves.space.common.enums.Period;
-import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -14,7 +13,7 @@ import java.util.UUID;
 
 /**
  * 商户创建/更新请求（upsert）。
- * <p>主记录与 tag/review 子表在 service 层一次性写入；images / periods 现已内联在主表。
+ * <p>主记录与 tag 子表在 service 层一次性写入；images / periods 现已内联在主表；评价由独立 controller 维护。
  *
  * @param name                    商户名称（≤ 15 个字符）
  * @param logo                    商户 LOGO URL
@@ -33,7 +32,6 @@ import java.util.UUID;
  * @param periods                 推荐生理周期列表（可空，service 视为空集合）
  * @param tagIds                  关联标签 ID 列表（可空）
  * @param images                  商户图片 URL 列表（至少 1 张，按数组顺序展示）
- * @param reviews                 商户评价列表（可空）
  */
 public record MerchantUpsertRequest(
         @NotBlank String name,
@@ -56,7 +54,6 @@ public record MerchantUpsertRequest(
         List<Period> periods,
         List<UUID> tagIds,
         List<@NotBlank @Pattern(regexp = "^(images|bound)/[\\w-]+\\.(png|jpg|webp)$",
-                message = "images 仅接受 OSS objectKey（images/<id>.<ext> 或 bound/<id>.<ext>）") String> images,
-        @Valid List<ReviewUpsertItem> reviews
+                message = "images 仅接受 OSS objectKey（images/<id>.<ext> 或 bound/<id>.<ext>）") String> images
 ) {
 }

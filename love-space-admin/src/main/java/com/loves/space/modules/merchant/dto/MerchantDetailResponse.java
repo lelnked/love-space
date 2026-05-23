@@ -29,7 +29,6 @@ import java.util.UUID;
  * @param periods                 推荐生理周期列表
  * @param tagIds                  关联标签 ID 列表
  * @param images                  图片 URL 列表（按数组顺序展示）
- * @param reviews                 评价列表（按 sortOrder 升序）
  * @param createdAt               创建时间
  * @param updatedAt               更新时间
  */
@@ -52,20 +51,7 @@ public record MerchantDetailResponse(
         List<Period> periods,
         List<UUID> tagIds,
         List<ImageResponse> images,
-        List<ReviewItem> reviews,
         OffsetDateTime createdAt,
         OffsetDateTime updatedAt
 ) {
-
-    /**
-     * 商户评价详情项。
-     *
-     * @param id        评价 ID
-     * @param nickname  评价昵称
-     * @param title     评价标题
-     * @param content   评价内容
-     * @param sortOrder 排序序号
-     */
-    public record ReviewItem(UUID id, String nickname, String title, String content, Integer sortOrder) {
-    }
 }

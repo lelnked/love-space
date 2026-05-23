@@ -8,7 +8,6 @@ import {
   createMerchant,
   getMerchant,
   MerchantUpsertRequest,
-  MerchantUpsertReview,
   updateMerchant,
 } from "../../api/merchants";
 import { CityItem, listCities } from "../../api/cities";
@@ -28,13 +27,6 @@ interface ImageRow {
   objectKey: string;
   /** 用于预览的访问 URL（编辑回填用签名 URL，新上传用本地 blob URL）。 */
   previewUrl: string;
-}
-
-interface ReviewRow {
-  nickname: string;
-  title: string;
-  content: string;
-  sortOrder: number;
 }
 
 export default function MerchantForm() {
@@ -62,8 +54,6 @@ export default function MerchantForm() {
   const [businessRightsScore, setBusinessRightsScore] = useState<number>(0);
   const [experienceFriendlyScore, setExperienceFriendlyScore] = useState<number>(0);
   const [socialContributionScore, setSocialContributionScore] = useState<number>(0);
-  // 评价
-  const [reviews, setReviews] = useState<ReviewRow[]>([]);
   // 故事
   const [story, setStory] = useState("");
   // 权重+上下架
@@ -108,14 +98,6 @@ export default function MerchantForm() {
         setBusinessRightsScore(d.businessRightsScore);
         setExperienceFriendlyScore(d.experienceFriendlyScore);
         setSocialContributionScore(d.socialContributionScore);
-        setReviews(
-          d.reviews.map((r) => ({
-            nickname: r.nickname,
-            title: r.title,
-            content: r.content,
-            sortOrder: r.sortOrder,
-          })),
-        );
         setStory(d.story ?? "");
         setWeight(d.weight);
         setOnline(d.online);
@@ -167,16 +149,6 @@ export default function MerchantForm() {
   const removeImage = (index: number) =>
     setImages((prev) => prev.filter((_, i) => i !== index));
 
-  const addReview = () =>
-    setReviews((prev) => [
-      ...prev,
-      { nickname: "", title: "", content: "", sortOrder: prev.length },
-    ]);
-  const removeReview = (index: number) =>
-    setReviews((prev) => prev.filter((_, i) => i !== index));
-  const updateReview = (index: number, patch: Partial<ReviewRow>) =>
-    setReviews((prev) => prev.map((it, i) => (i === index ? { ...it, ...patch } : it)));
-
   const togglePeriod = (p: Period) =>
     setPeriods((prev) =>
       prev.includes(p) ? prev.filter((x) => x !== p) : [...prev, p],
@@ -202,11 +174,6 @@ export default function MerchantForm() {
     images.forEach((im, i) => {
       if (!im.objectKey.trim()) errs[`images.${i}.url`] = "请上传图片";
     });
-    reviews.forEach((r, i) => {
-      if (!r.nickname.trim()) errs[`reviews.${i}.nickname`] = "昵称不能为空";
-      if (!r.title.trim()) errs[`reviews.${i}.title`] = "标题不能为空";
-      if (!r.content.trim()) errs[`reviews.${i}.content`] = "内容不能为空";
-    });
     if (story.length > 5000) errs.story = "故事最多 5000 字";
     if (Object.keys(errs).length > 0) {
       setFieldErrors(errs);
@@ -231,12 +198,6 @@ export default function MerchantForm() {
       periods,
       tagIds,
       images: images.map((it) => it.objectKey.trim()),
-      reviews: reviews.map<MerchantUpsertReview>((r) => ({
-        nickname: r.nickname,
-        title: r.title,
-        content: r.content,
-        sortOrder: Number(r.sortOrder) || 0,
-      })),
     };
 
     setSubmitting(true);
@@ -532,73 +493,6 @@ export default function MerchantForm() {
                   max="20"
                 />
               </div>
-            </div>
-          </fieldset>
-
-          {/* 6. 评价 */}
-          <fieldset className={sectionClass}>
-            <legend className={sectionTitleClass}>评价列表（支持 emoji）</legend>
-            <div className="flex justify-end mb-2">
-              <button
-                type="button"
-                onClick={addReview}
-                className="px-3 py-1 text-xs rounded border border-gray-300 hover:bg-gray-50"
-              >
-                添加评价
-              </button>
-            </div>
-            <div className="space-y-3">
-              {reviews.map((r, i) => (
-                <div
-                  key={i}
-                  className="border border-gray-100 dark:border-gray-800 rounded p-3 space-y-2"
-                >
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-                    <Input
-                      placeholder="昵称"
-                      value={r.nickname}
-                      onChange={(e) => updateReview(i, { nickname: e.target.value })}
-                      error={Boolean(fieldErrors[`reviews.${i}.nickname`])}
-                      hint={fieldErrors[`reviews.${i}.nickname`]}
-                    />
-                    <Input
-                      placeholder="标题"
-                      value={r.title}
-                      onChange={(e) => updateReview(i, { title: e.target.value })}
-                      error={Boolean(fieldErrors[`reviews.${i}.title`])}
-                      hint={fieldErrors[`reviews.${i}.title`]}
-                    />
-                    <Input
-                      type="number"
-                      placeholder="排序"
-                      value={String(r.sortOrder)}
-                      onChange={(e) =>
-                        updateReview(i, { sortOrder: Number(e.target.value) })
-                      }
-                    />
-                  </div>
-                  <textarea
-                    placeholder="内容（支持 emoji）"
-                    value={r.content}
-                    onChange={(e) => updateReview(i, { content: e.target.value })}
-                    className="border rounded px-3 py-2 text-sm w-full min-h-[80px]"
-                  />
-                  {fieldErrors[`reviews.${i}.content`] && (
-                    <div className="text-error-500 text-xs">
-                      {fieldErrors[`reviews.${i}.content`]}
-                    </div>
-                  )}
-                  <div className="text-right">
-                    <button
-                      type="button"
-                      onClick={() => removeReview(i)}
-                      className="px-3 py-1 text-xs rounded border border-error-300 text-error-500 hover:bg-error-50"
-                    >
-                      删除
-                    </button>
-                  </div>
-                </div>
-              ))}
             </div>
           </fieldset>
 

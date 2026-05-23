@@ -15,14 +15,6 @@ export interface MerchantItem {
   updatedAt: string;
 }
 
-export interface MerchantReview {
-  id?: string;
-  nickname: string;
-  title: string;
-  content: string;
-  sortOrder: number;
-}
-
 export interface MerchantDetail {
   id: string;
   name: string;
@@ -42,7 +34,6 @@ export interface MerchantDetail {
   periods: Period[];
   tagIds: string[];
   images: ImageResponse[];
-  reviews: MerchantReview[];
   createdAt: string;
   updatedAt: string;
 }
@@ -55,13 +46,6 @@ export interface MerchantQuery {
   name?: string;
   page?: number;
   size?: number;
-}
-
-export interface MerchantUpsertReview {
-  nickname: string;
-  title: string;
-  content: string;
-  sortOrder: number;
 }
 
 export interface MerchantUpsertRequest {
@@ -82,7 +66,6 @@ export interface MerchantUpsertRequest {
   periods?: Period[];
   tagIds?: string[];
   images: string[];
-  reviews?: MerchantUpsertReview[];
 }
 
 function buildParams(query: MerchantQuery): Record<string, string | number | boolean> {

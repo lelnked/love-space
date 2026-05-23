@@ -13,9 +13,7 @@ import com.loves.space.modules.merchant.dto.MerchantAdminItem;
 import com.loves.space.modules.merchant.dto.MerchantDetailResponse;
 import com.loves.space.modules.merchant.dto.MerchantQuery;
 import com.loves.space.modules.merchant.dto.MerchantUpsertRequest;
-import com.loves.space.modules.merchant.dto.ReviewUpsertItem;
 import com.loves.space.modules.merchant.entity.Merchant;
-import com.loves.space.modules.merchant.entity.MerchantReview;
 import com.loves.space.modules.merchant.entity.MerchantTag;
 import com.loves.space.modules.merchant.repository.MerchantRepository;
 import com.loves.space.modules.merchant.repository.MerchantReviewRepository;
@@ -31,14 +29,14 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 /**
- * 商户服务（运营后台）：upsert（主记录 + tag/review 子表整体替换）、列表、详情、删除、上下架切换、按分类批量下架。
- * <p>images / periods 已内联在 {@link Merchant} 主表（jsonb 数组），不再有独立子表。
+ * 商户服务（运营后台）：upsert（主记录 + tag 子表整体替换）、列表、详情、删除、上下架切换、按分类批量下架。
+ * <p>images / periods 已内联在 {@link Merchant} 主表（jsonb 数组）。评价由独立 controller 维护，
+ * 这里仅在删除商户时清理评价子表，避免脏数据。
  */
 @Service
 @RequiredArgsConstructor
@@ -58,7 +56,7 @@ public class MerchantService {
 
     /**
      * 创建或更新商户。
-     * <p>同一事务内：保存主记录（含 images/periods 内联数组）→ 删除并重建 tag / review 子表。
+     * <p>同一事务内：保存主记录（含 images/periods 内联数组）→ 删除并重建 tag 子表。
      *
      * @param id      商户 ID；为 null 表示新建
      * @param request 商户输入
@@ -103,18 +101,6 @@ public class MerchantService {
             merchantTagRepository.save(tag);
         }
 
-        merchantReviewRepository.deleteAllByMerchantId(merchantId);
-        List<ReviewUpsertItem> reviews = request.reviews() == null ? List.of() : request.reviews();
-        for (ReviewUpsertItem item : reviews) {
-            MerchantReview review = new MerchantReview();
-            review.setMerchantId(merchantId);
-            review.setNickname(item.nickname());
-            review.setTitle(item.title());
-            review.setContent(item.content());
-            review.setSortOrder(item.sortOrder());
-            merchantReviewRepository.save(review);
-        }
-
         return detail(merchantId);
     }
 
@@ -153,13 +139,6 @@ public class MerchantService {
                 .map(MerchantTag::getTagId)
                 .toList();
 
-        List<MerchantDetailResponse.ReviewItem> reviews = merchantReviewRepository
-                .findAllByMerchantIdOrderBySortOrderAsc(id).stream()
-                .sorted(Comparator.comparing(MerchantReview::getSortOrder))
-                .map(r -> new MerchantDetailResponse.ReviewItem(
-                        r.getId(), r.getNickname(), r.getTitle(), r.getContent(), r.getSortOrder()))
-                .toList();
-
         return new MerchantDetailResponse(
                 merchant.getId(),
                 merchant.getName(),
@@ -179,7 +158,6 @@ public class MerchantService {
                 toPeriods(merchant.getPeriods()),
                 tagIds,
                 ImageResponses.fromList(merchant.getImages(), imageUrlSigner),
-                reviews,
                 merchant.getCreatedAt(),
                 merchant.getUpdatedAt());
     }

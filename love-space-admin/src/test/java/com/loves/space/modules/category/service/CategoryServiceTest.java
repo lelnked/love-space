@@ -66,8 +66,7 @@ class CategoryServiceTest extends AbstractPostgresIntegrationTest {
                 (short) 20, (short) 15, (short) 15, (short) 10,
                 null, 0, true,
                 List.of(), List.of(),
-                List.of("https://example.com/1.png"),
-                List.of()
+                List.of("https://example.com/1.png")
         );
         MerchantDetailResponse merchant = merchantService.upsert(null, request);
         assertThat(merchantRepository.findById(merchant.id()).orElseThrow().isOnline()).isTrue();

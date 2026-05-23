@@ -106,8 +106,7 @@ class MerchantReadIT extends AbstractPostgresIntegrationTest {
                 true,
                 List.of(Period.OVULATION),
                 List.of(),
-                List.of("images/a.png", "images/b.png"),
-                List.of()
+                List.of("images/a.png", "images/b.png")
         );
         String createBody = objectMapper.writeValueAsString(request);
 
