@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
 import { AxiosError } from "axios";
 import FilterBar, { FilterField, FilterValues } from "../../components/filter/FilterBar";
+import Pagination from "../../components/pagination/Pagination";
 import PageMeta from "../../components/common/PageMeta";
 import ComponentCard from "../../components/common/ComponentCard";
 import Badge from "../../components/ui/badge/Badge";
@@ -56,6 +57,19 @@ export default function CityList() {
   const [items, setItems] = useState<CityItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [size, setSize] = useState(20);
+
+  const total = items.length;
+  const totalPages = Math.max(1, Math.ceil(total / size));
+  const pagedItems = useMemo(
+    () => items.slice((page - 1) * size, page * size),
+    [items, page, size],
+  );
+
+  useEffect(() => {
+    if (page > totalPages) setPage(totalPages);
+  }, [page, totalPages]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -112,8 +126,14 @@ export default function CityList() {
           <FilterBar
             fields={FILTER_FIELDS}
             initialValues={filters}
-            onApply={(v) => setFilters(v)}
-            onReset={() => setFilters({})}
+            onApply={(v) => {
+              setFilters(v);
+              setPage(1);
+            }}
+            onReset={() => {
+              setFilters({});
+              setPage(1);
+            }}
           />
 
           {error && (
@@ -154,7 +174,7 @@ export default function CityList() {
                       </TableCell>
                     </TableRow>
                   )}
-                  {!loading && items.length === 0 && (
+                  {!loading && pagedItems.length === 0 && (
                     <TableRow>
                       <TableCell className="px-5 py-6 text-center text-gray-500 text-theme-sm dark:text-gray-400">
                         暂无数据
@@ -162,7 +182,7 @@ export default function CityList() {
                     </TableRow>
                   )}
                   {!loading &&
-                    items.map((it) => (
+                    pagedItems.map((it) => (
                       <TableRow key={it.id}>
                         <TableCell className="px-5 py-4 sm:px-6 text-start font-medium text-gray-800 text-theme-sm dark:text-white/90">
                           {it.chineseName}
@@ -200,6 +220,17 @@ export default function CityList() {
               </Table>
             </div>
           </div>
+
+          <Pagination
+            page={page}
+            size={size}
+            total={total}
+            totalPages={totalPages}
+            onChange={({ page: nextPage, size: nextSize }) => {
+              setPage(nextPage);
+              setSize(nextSize);
+            }}
+          />
         </ComponentCard>
       </div>
     </>

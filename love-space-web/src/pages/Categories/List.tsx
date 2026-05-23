@@ -1,5 +1,6 @@
-import { FormEvent, useCallback, useEffect, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { AxiosError } from "axios";
+import Pagination from "../../components/pagination/Pagination";
 import PageMeta from "../../components/common/PageMeta";
 import ComponentCard from "../../components/common/ComponentCard";
 import Alert from "../../components/ui/alert/Alert";
@@ -39,6 +40,19 @@ export default function CategoryList() {
   const [items, setItems] = useState<CategoryItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [size, setSize] = useState(20);
+
+  const total = items.length;
+  const totalPages = Math.max(1, Math.ceil(total / size));
+  const pagedItems = useMemo(
+    () => items.slice((page - 1) * size, page * size),
+    [items, page, size],
+  );
+
+  useEffect(() => {
+    if (page > totalPages) setPage(totalPages);
+  }, [page, totalPages]);
 
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"create" | "edit">("create");
@@ -180,7 +194,7 @@ export default function CategoryList() {
                       </TableCell>
                     </TableRow>
                   )}
-                  {!loading && items.length === 0 && (
+                  {!loading && pagedItems.length === 0 && (
                     <TableRow>
                       <TableCell className="px-5 py-6 text-center text-gray-500 text-theme-sm dark:text-gray-400">
                         暂无数据
@@ -188,7 +202,7 @@ export default function CategoryList() {
                     </TableRow>
                   )}
                   {!loading &&
-                    items.map((it) => (
+                    pagedItems.map((it) => (
                       <TableRow key={it.id}>
                         <TableCell className="px-5 py-4 sm:px-6 text-start font-medium text-gray-800 text-theme-sm dark:text-white/90">
                           {it.name}
@@ -212,6 +226,17 @@ export default function CategoryList() {
               </Table>
             </div>
           </div>
+
+          <Pagination
+            page={page}
+            size={size}
+            total={total}
+            totalPages={totalPages}
+            onChange={({ page: nextPage, size: nextSize }) => {
+              setPage(nextPage);
+              setSize(nextSize);
+            }}
+          />
         </ComponentCard>
       </div>
 

@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { AxiosError } from "axios";
 import FilterBar, { FilterField, FilterValues } from "../../components/filter/FilterBar";
+import Pagination from "../../components/pagination/Pagination";
 import {
   createTag,
   deleteTag,
@@ -54,6 +55,19 @@ export default function TagList() {
   const [creating, setCreating] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState("");
+  const [page, setPage] = useState(1);
+  const [size, setSize] = useState(20);
+
+  const total = items.length;
+  const totalPages = Math.max(1, Math.ceil(total / size));
+  const pagedItems = useMemo(
+    () => items.slice((page - 1) * size, page * size),
+    [items, page, size],
+  );
+
+  useEffect(() => {
+    if (page > totalPages) setPage(totalPages);
+  }, [page, totalPages]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -167,8 +181,14 @@ export default function TagList() {
       <FilterBar
         fields={FILTER_FIELDS}
         initialValues={filters}
-        onApply={(v) => setFilters(v)}
-        onReset={() => setFilters({})}
+        onApply={(v) => {
+          setFilters(v);
+          setPage(1);
+        }}
+        onReset={() => {
+          setFilters({});
+          setPage(1);
+        }}
       />
 
       {error && <div className="text-error-500 text-sm mb-2">{error}</div>}
@@ -191,7 +211,7 @@ export default function TagList() {
                 </td>
               </tr>
             )}
-            {!loading && items.length === 0 && (
+            {!loading && pagedItems.length === 0 && (
               <tr>
                 <td colSpan={4} className="px-4 py-6 text-center text-gray-500">
                   暂无数据
@@ -199,7 +219,7 @@ export default function TagList() {
               </tr>
             )}
             {!loading &&
-              items.map((it) => (
+              pagedItems.map((it) => (
                 <tr key={it.id} className="border-t border-gray-100 dark:border-gray-800">
                   <td className="px-4 py-3 text-gray-800 dark:text-white/90">
                     {editingId === it.id ? (
@@ -267,6 +287,16 @@ export default function TagList() {
               ))}
           </tbody>
         </table>
+        <Pagination
+          page={page}
+          size={size}
+          total={total}
+          totalPages={totalPages}
+          onChange={({ page: nextPage, size: nextSize }) => {
+            setPage(nextPage);
+            setSize(nextSize);
+          }}
+        />
       </div>
     </div>
   );
