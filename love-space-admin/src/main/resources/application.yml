@@ -36,7 +36,24 @@ app:
     issuer: love-space-admin
     expire-minutes: 720
   storage:
-    local-root: ${ADMIN_STORAGE_ROOT:./uploads}
+    oss:
+      endpoint: ${ALIYUN_OSS_ENDPOINT:}
+      bucket: ${ALIYUN_OSS_BUCKET:}
+      region: ${ALIYUN_OSS_REGION:}
+      access-key-id: ${ALIYUN_OSS_ACCESS_KEY_ID:}
+      access-key-secret: ${ALIYUN_OSS_ACCESS_KEY_SECRET:}
+      upload-key-prefix: ${ALIYUN_OSS_UPLOAD_KEY_PREFIX:images}
+      bound-key-prefix: ${ALIYUN_OSS_BOUND_KEY_PREFIX:bound}
+      url-expiration-seconds: ${ALIYUN_OSS_URL_EXPIRATION_SECONDS:1800}
+      max-image-bytes: ${ALIYUN_OSS_MAX_IMAGE_BYTES:20971520}
+    sts:
+      endpoint: ${ALIYUN_STS_ENDPOINT:}
+      region-id: ${ALIYUN_STS_REGION_ID:}
+      role-arn: ${ALIYUN_STS_ROLE_ARN:}
+      role-session-name: ${ALIYUN_STS_ROLE_SESSION_NAME:love-space-admin}
+      duration-seconds: ${ALIYUN_STS_DURATION_SECONDS:900}
+      access-key-id: ${ALIYUN_STS_ACCESS_KEY_ID:}
+      access-key-secret: ${ALIYUN_STS_ACCESS_KEY_SECRET:}
   public-base-url: ${ADMIN_PUBLIC_BASE_URL:http://localhost:8080}
 
 logging:

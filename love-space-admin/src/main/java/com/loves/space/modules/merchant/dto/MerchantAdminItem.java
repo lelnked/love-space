@@ -1,5 +1,7 @@
 package com.loves.space.modules.merchant.dto;
 
+import com.loves.space.common.dto.ImageResponse;
+
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
@@ -20,7 +22,7 @@ import java.util.UUID;
 public record MerchantAdminItem(
         UUID id,
         String name,
-        String logo,
+        ImageResponse logo,
         String address,
         UUID cityId,
         UUID categoryId,

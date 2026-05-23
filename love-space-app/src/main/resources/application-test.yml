@@ -11,6 +11,14 @@ app:
   security:
     api-keys:
       - test-app-api-key-please-rotate
+  storage:
+    oss:
+      endpoint: https://oss-test.example.com
+      bucket: love-space-test
+      region: cn-test
+      access-key-id: test-oss-ak
+      access-key-secret: test-oss-sk
+      url-expiration-seconds: 1800
 
 logging:
   level:

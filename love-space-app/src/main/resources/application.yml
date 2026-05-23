@@ -28,6 +28,14 @@ server:
 app:
   security:
     api-keys: ${APP_SECURITY_API_KEYS:}
+  storage:
+    oss:
+      endpoint: ${ALIYUN_OSS_ENDPOINT:}
+      bucket: ${ALIYUN_OSS_BUCKET:}
+      region: ${ALIYUN_OSS_REGION:}
+      access-key-id: ${ALIYUN_OSS_ACCESS_KEY_ID:}
+      access-key-secret: ${ALIYUN_OSS_ACCESS_KEY_SECRET:}
+      url-expiration-seconds: ${ALIYUN_OSS_URL_EXPIRATION_SECONDS:1800}
 
 logging:
   level:

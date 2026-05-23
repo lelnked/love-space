@@ -15,6 +15,9 @@ import com.loves.space.modules.banner.entity.BannerType;
 import com.loves.space.modules.banner.entity.Banner_;
 import com.loves.space.modules.banner.repository.BannerRepository;
 import com.loves.space.modules.banner.repository.BannerSpecifications;
+import com.loves.space.common.util.ImageResponses;
+import com.loves.space.infrastructure.storage.ImageUrlSigner;
+import com.loves.space.infrastructure.storage.ObjectKeyValidator;
 import com.loves.space.modules.city.entity.City;
 import com.loves.space.modules.city.repository.CityRepository;
 import org.springframework.data.domain.Page;
@@ -43,10 +46,17 @@ public class BannerService {
 
     private final BannerRepository bannerRepository;
     private final CityRepository cityRepository;
+    private final ObjectKeyValidator objectKeyValidator;
+    private final ImageUrlSigner imageUrlSigner;
 
-    public BannerService(BannerRepository bannerRepository, CityRepository cityRepository) {
+    public BannerService(BannerRepository bannerRepository,
+                         CityRepository cityRepository,
+                         ObjectKeyValidator objectKeyValidator,
+                         ImageUrlSigner imageUrlSigner) {
         this.bannerRepository = bannerRepository;
         this.cityRepository = cityRepository;
+        this.objectKeyValidator = objectKeyValidator;
+        this.imageUrlSigner = imageUrlSigner;
     }
 
     /**
@@ -57,7 +67,7 @@ public class BannerService {
         Banner banner = new Banner();
         banner.setName(request.name());
         banner.setType(request.type());
-        banner.setImageUrls(List.copyOf(request.imageUrls()));
+        banner.setImageUrls(bindImageObjectKeys(request.imageUrls()));
         banner.setLinkedEntityId(request.linkedEntityId());
         banner.setOnline(false);
         Banner saved = bannerRepository.save(banner);
@@ -76,7 +86,7 @@ public class BannerService {
         validateLink(request.type(), request.linkedEntityId());
         banner.setName(request.name());
         banner.setType(request.type());
-        banner.setImageUrls(List.copyOf(request.imageUrls()));
+        banner.setImageUrls(bindImageObjectKeys(request.imageUrls()));
         banner.setLinkedEntityId(request.linkedEntityId());
         return toDetail(banner, lookupCityName(banner));
     }
@@ -132,6 +142,13 @@ public class BannerService {
         return toDetail(banner, lookupCityName(banner));
     }
 
+    /** 把请求中的 objectKey 列表逐项校验，并把 images/* 绑定为 bound/*。 */
+    private List<String> bindImageObjectKeys(List<String> rawObjectKeys) {
+        return rawObjectKeys.stream()
+                .map(objectKeyValidator::validateAndBind)
+                .toList();
+    }
+
     /** 校验 {@code linkedEntityId} 存在性与类型一致性。 */
     private void validateLink(BannerType type, UUID linkedEntityId) {
         if (type == BannerType.CITY) {
@@ -167,12 +184,12 @@ public class BannerService {
         return result;
     }
 
-    private static BannerListItemResponse toItem(Banner banner, String linkedCityName) {
+    private BannerListItemResponse toItem(Banner banner, String linkedCityName) {
         return new BannerListItemResponse(
                 banner.getId(),
                 banner.getName(),
                 banner.getType(),
-                banner.getImageUrls(),
+                ImageResponses.fromList(banner.getImageUrls(), imageUrlSigner),
                 banner.getLinkedEntityId(),
                 linkedCityName,
                 banner.isOnline(),
@@ -181,12 +198,12 @@ public class BannerService {
         );
     }
 
-    private static BannerDetailResponse toDetail(Banner banner, String linkedCityName) {
+    private BannerDetailResponse toDetail(Banner banner, String linkedCityName) {
         return new BannerDetailResponse(
                 banner.getId(),
                 banner.getName(),
                 banner.getType(),
-                banner.getImageUrls(),
+                ImageResponses.fromList(banner.getImageUrls(), imageUrlSigner),
                 banner.getLinkedEntityId(),
                 linkedCityName,
                 banner.isOnline(),

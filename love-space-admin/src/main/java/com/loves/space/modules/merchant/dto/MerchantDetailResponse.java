@@ -1,5 +1,6 @@
 package com.loves.space.modules.merchant.dto;
 
+import com.loves.space.common.dto.ImageResponse;
 import com.loves.space.common.enums.Period;
 
 import java.math.BigDecimal;
@@ -35,7 +36,7 @@ import java.util.UUID;
 public record MerchantDetailResponse(
         UUID id,
         String name,
-        String logo,
+        ImageResponse logo,
         String address,
         BigDecimal longitude,
         BigDecimal latitude,
@@ -50,7 +51,7 @@ public record MerchantDetailResponse(
         boolean online,
         List<Period> periods,
         List<UUID> tagIds,
-        List<String> images,
+        List<ImageResponse> images,
         List<ReviewItem> reviews,
         OffsetDateTime createdAt,
         OffsetDateTime updatedAt

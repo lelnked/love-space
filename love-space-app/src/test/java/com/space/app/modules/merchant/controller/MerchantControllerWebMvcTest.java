@@ -6,9 +6,7 @@ import com.space.app.common.enums.Period;
 import com.space.app.modules.city.entity.City;
 import com.space.app.modules.city.repository.CityRepository;
 import com.space.app.modules.merchant.entity.Merchant;
-import com.space.app.modules.merchant.entity.MerchantPeriod;
 import com.space.app.modules.merchant.entity.MerchantTag;
-import com.space.app.modules.merchant.repository.MerchantPeriodRepository;
 import com.space.app.modules.merchant.repository.MerchantRepository;
 import com.space.app.modules.merchant.repository.MerchantTagRepository;
 import com.space.app.modules.tag.entity.Tag;
@@ -44,8 +42,6 @@ class MerchantControllerWebMvcTest extends AbstractPostgresIntegrationTest {
     @Autowired
     private MerchantRepository merchantRepository;
     @Autowired
-    private MerchantPeriodRepository merchantPeriodRepository;
-    @Autowired
     private MerchantTagRepository merchantTagRepository;
     @Autowired
     private TagRepository tagRepository;
@@ -56,7 +52,6 @@ class MerchantControllerWebMvcTest extends AbstractPostgresIntegrationTest {
     @BeforeEach
     void seed() {
         merchantTagRepository.deleteAll();
-        merchantPeriodRepository.deleteAll();
         merchantRepository.deleteAll();
         tagRepository.deleteAll();
         cityRepository.deleteAll();
@@ -88,18 +83,15 @@ class MerchantControllerWebMvcTest extends AbstractPostgresIntegrationTest {
         merchant.setStory("一段温暖的故事");
         merchant.setWeight(10);
         merchant.setOnline(true);
+        merchant.getPeriods().add(Period.OVULATION.name());
         merchantRepository.save(merchant);
         merchantId = merchant.getId();
 
         MerchantTag rel = new MerchantTag();
+        rel.setId(UUID.randomUUID());
         rel.setMerchantId(merchantId);
         rel.setTagId(tag.getId());
         merchantTagRepository.save(rel);
-
-        MerchantPeriod period = new MerchantPeriod();
-        period.setMerchantId(merchantId);
-        period.setPeriod(Period.OVULATION);
-        merchantPeriodRepository.save(period);
     }
 
     @Test

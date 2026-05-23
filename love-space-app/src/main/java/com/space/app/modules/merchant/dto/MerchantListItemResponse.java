@@ -1,5 +1,7 @@
 package com.space.app.modules.merchant.dto;
 
+import com.space.app.common.dto.ImageResponse;
+
 import java.util.List;
 import java.util.UUID;
 
@@ -17,7 +19,7 @@ import java.util.UUID;
 public record MerchantListItemResponse(
         UUID id,
         String name,
-        String logo,
+        ImageResponse logo,
         String address,
         List<TagItemResponse> tags,
         ScoreView scores,

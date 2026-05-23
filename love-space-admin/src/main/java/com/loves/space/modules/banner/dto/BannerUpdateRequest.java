@@ -5,6 +5,7 @@ import com.loves.space.modules.banner.entity.BannerType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 import java.util.List;
@@ -18,7 +19,8 @@ import java.util.UUID;
 public record BannerUpdateRequest(
         @NotBlank @Size(max = 128) String name,
         @NotNull BannerType type,
-        @NotEmpty List<@NotBlank String> imageUrls,
+        @NotEmpty List<@NotBlank @Pattern(regexp = "^(images|bound)/[\\w-]+\\.(png|jpg|webp)$",
+                message = "imageUrls 仅接受 OSS objectKey（images/<id>.<ext> 或 bound/<id>.<ext>）") String> imageUrls,
         @JsonProperty("link") @NotNull UUID linkedEntityId,
         /** 仅为捕获非法字段使用：JSON 中若显式传入会被 service 抛错；正常请求不传。 */
         Boolean online

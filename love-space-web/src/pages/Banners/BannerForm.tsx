@@ -30,7 +30,8 @@ export default function BannerForm() {
 
   const [name, setName] = useState("");
   const [type, setType] = useState<BannerType>("CITY");
-  const [imageUrls, setImageUrls] = useState<string[]>([]);
+  const [imageKeys, setImageKeys] = useState<string[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [link, setLink] = useState<string>("");
 
   const [loading, setLoading] = useState(false);
@@ -46,7 +47,8 @@ export default function BannerForm() {
       .then((d) => {
         setName(d.name);
         setType(d.type);
-        setImageUrls(d.imageUrls);
+        setImageKeys(d.imageUrls.map((im) => im.id));
+        setImagePreviews(d.imageUrls.map((im) => im.url));
         setLink(d.link);
       })
       .catch((err: AxiosError<{ detail?: string }>) => {
@@ -60,8 +62,9 @@ export default function BannerForm() {
     if (!file) return;
     setUploading(true);
     try {
-      const { url } = await uploadFile(file);
-      setImageUrls((prev) => [...prev, url]);
+      const { url: objectKey } = await uploadFile(file);
+      setImageKeys((prev) => [...prev, objectKey]);
+      setImagePreviews((prev) => [...prev, URL.createObjectURL(file)]);
     } catch (err) {
       const ax = err as AxiosError<{ detail?: string }>;
       alert(ax.response?.data?.detail ?? "上传失败");
@@ -72,7 +75,8 @@ export default function BannerForm() {
   };
 
   const removeImage = (idx: number) => {
-    setImageUrls((prev) => prev.filter((_, i) => i !== idx));
+    setImageKeys((prev) => prev.filter((_, i) => i !== idx));
+    setImagePreviews((prev) => prev.filter((_, i) => i !== idx));
   };
 
   const handleSubmit = async (e: FormEvent) => {
@@ -83,7 +87,7 @@ export default function BannerForm() {
 
     const errs: Record<string, string> = {};
     if (!name.trim()) errs.name = "名称不能为空";
-    if (imageUrls.length === 0) errs.imageUrls = "至少上传 1 张图片";
+    if (imageKeys.length === 0) errs.imageUrls = "至少上传 1 张图片";
     if (!link) errs.link = "请选择关联城市";
     if (Object.keys(errs).length > 0) {
       setFieldErrors(errs);
@@ -93,7 +97,7 @@ export default function BannerForm() {
     const payload: BannerUpsertRequest = {
       name: name.trim(),
       type,
-      imageUrls,
+      imageUrls: imageKeys,
       link,
     };
 
@@ -177,9 +181,9 @@ export default function BannerForm() {
               <p className="mt-1 text-xs text-error-500">{fieldErrors.imageUrls}</p>
             )}
             <div className="mt-2 flex flex-wrap gap-3">
-              {imageUrls.map((url, idx) => (
-                <div key={`${url}-${idx}`} className="relative">
-                  <img src={url} alt={`图片 ${idx + 1}`} className="h-24 w-24 object-cover rounded border" />
+              {imageKeys.map((key, idx) => (
+                <div key={`${key}-${idx}`} className="relative">
+                  <img src={imagePreviews[idx]} alt={`图片 ${idx + 1}`} className="h-24 w-24 object-cover rounded border" />
                   <button
                     type="button"
                     onClick={() => removeImage(idx)}

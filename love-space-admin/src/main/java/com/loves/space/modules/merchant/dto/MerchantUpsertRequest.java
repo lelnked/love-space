@@ -6,6 +6,7 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -36,7 +37,10 @@ import java.util.UUID;
  */
 public record MerchantUpsertRequest(
         @NotBlank String name,
-        @NotBlank String logo,
+        @NotBlank
+        @Pattern(regexp = "^(images|bound)/[\\w-]+\\.(png|jpg|webp)$",
+                message = "logo 仅接受 OSS objectKey（images/<id>.<ext> 或 bound/<id>.<ext>）")
+        String logo,
         @NotBlank String address,
         BigDecimal longitude,
         BigDecimal latitude,
@@ -51,7 +55,8 @@ public record MerchantUpsertRequest(
         Boolean online,
         List<Period> periods,
         List<UUID> tagIds,
-        List<@NotBlank String> images,
+        List<@NotBlank @Pattern(regexp = "^(images|bound)/[\\w-]+\\.(png|jpg|webp)$",
+                message = "images 仅接受 OSS objectKey（images/<id>.<ext> 或 bound/<id>.<ext>）") String> images,
         @Valid List<ReviewUpsertItem> reviews
 ) {
 }

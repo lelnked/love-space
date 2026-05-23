@@ -1,6 +1,7 @@
 package com.loves.space.modules.banner.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.loves.space.common.dto.ImageResponse;
 import com.loves.space.modules.banner.entity.BannerType;
 
 import java.time.OffsetDateTime;
@@ -14,7 +15,7 @@ public record BannerDetailResponse(
         UUID id,
         String name,
         BannerType type,
-        List<String> imageUrls,
+        List<ImageResponse> imageUrls,
         @JsonProperty("link") UUID linkedEntityId,
         String linkedCityName,
         boolean online,

@@ -26,7 +26,8 @@ export default function CityForm() {
   const [englishName, setEnglishName] = useState("");
   const [chineseProvince, setChineseProvince] = useState("");
   const [englishProvince, setEnglishProvince] = useState("");
-  const [backgroundImage, setBackgroundImage] = useState("");
+  const [backgroundImageKey, setBackgroundImageKey] = useState("");
+  const [backgroundImagePreview, setBackgroundImagePreview] = useState("");
   const [online, setOnline] = useState(false);
 
   const [loading, setLoading] = useState(false);
@@ -44,7 +45,8 @@ export default function CityForm() {
         setEnglishName(d.englishName);
         setChineseProvince(d.chineseProvince);
         setEnglishProvince(d.englishProvince);
-        setBackgroundImage(d.backgroundImage ?? "");
+        setBackgroundImageKey(d.backgroundImage?.id ?? "");
+        setBackgroundImagePreview(d.backgroundImage?.url ?? "");
         setOnline(d.online);
       })
       .catch((err: AxiosError<{ detail?: string }>) => {
@@ -59,7 +61,8 @@ export default function CityForm() {
     setUploading(true);
     try {
       const { url } = await uploadFile(file);
-      setBackgroundImage(url);
+      setBackgroundImageKey(url);
+      setBackgroundImagePreview(URL.createObjectURL(file));
     } catch (err) {
       const ax = err as AxiosError<{ detail?: string }>;
       alert(ax.response?.data?.detail ?? "上传失败");
@@ -90,7 +93,7 @@ export default function CityForm() {
       englishName: englishName.trim(),
       chineseProvince: chineseProvince.trim(),
       englishProvince: englishProvince.trim(),
-      backgroundImage: backgroundImage.trim() || null,
+      backgroundImage: backgroundImageKey.trim() || null,
       online,
     };
 
@@ -168,19 +171,14 @@ export default function CityForm() {
             />
           </div>
           <div>
-            <Label>背景图 URL</Label>
-            <Input
-              placeholder="可手动填入 URL，或下方上传"
-              value={backgroundImage}
-              onChange={(e) => setBackgroundImage(e.target.value)}
-            />
-            <div className="mt-2 flex items-center gap-2 text-xs text-gray-500">
+            <Label>背景图</Label>
+            <div className="flex items-center gap-2 text-xs text-gray-500">
               <input type="file" accept="image/*" onChange={handleUpload} disabled={uploading} />
               {uploading && <span>上传中...</span>}
             </div>
-            {backgroundImage && (
+            {backgroundImagePreview && (
               <img
-                src={backgroundImage}
+                src={backgroundImagePreview}
                 alt="背景图"
                 className="mt-2 h-32 object-cover rounded border"
               />

@@ -7,7 +7,6 @@ import Button from "../../components/ui/button/Button";
 import {
   createMerchant,
   getMerchant,
-  MerchantUpsertImage,
   MerchantUpsertRequest,
   MerchantUpsertReview,
   updateMerchant,
@@ -24,8 +23,10 @@ interface FieldError {
 }
 
 interface ImageRow {
-  url: string;
-  sortOrder: number;
+  /** OSS object key（提交给后端的图片标识）。 */
+  objectKey: string;
+  /** 用于预览的访问 URL（编辑回填用签名 URL，新上传用本地 blob URL）。 */
+  previewUrl: string;
 }
 
 interface ReviewRow {
@@ -45,11 +46,12 @@ export default function MerchantForm() {
   const [address, setAddress] = useState("");
   const [longitude, setLongitude] = useState("");
   const [latitude, setLatitude] = useState("");
-  // 图片
-  const [logo, setLogo] = useState("");
+  // 图片：logo 用 objectKey + 预览 URL；images 用 ImageRow 列表
+  const [logoKey, setLogoKey] = useState("");
+  const [logoPreview, setLogoPreview] = useState("");
   const [images, setImages] = useState<ImageRow[]>([]);
   // 周期+分类+城市
-  const [recommendedPeriods, setRecommendedPeriods] = useState<Period[]>([]);
+  const [periods, setPeriods] = useState<Period[]>([]);
   const [categoryId, setCategoryId] = useState("");
   const [cityId, setCityId] = useState("");
   // 标签
@@ -94,9 +96,10 @@ export default function MerchantForm() {
         setAddress(d.address);
         setLongitude(d.longitude !== null && d.longitude !== undefined ? String(d.longitude) : "");
         setLatitude(d.latitude !== null && d.latitude !== undefined ? String(d.latitude) : "");
-        setLogo(d.logo);
-        setImages(d.images.map((im) => ({ url: im.url, sortOrder: im.sortOrder })));
-        setRecommendedPeriods(d.recommendedPeriods);
+        setLogoKey(d.logo?.id ?? "");
+        setLogoPreview(d.logo?.url ?? "");
+        setImages(d.images.map((im) => ({ objectKey: im.id, previewUrl: im.url })));
+        setPeriods(d.periods);
         setCategoryId(d.categoryId ?? "");
         setCityId(d.cityId);
         setTagIds(d.tagIds);
@@ -127,8 +130,9 @@ export default function MerchantForm() {
     if (!file) return;
     setUploadingLogo(true);
     try {
-      const { url } = await uploadFile(file);
-      setLogo(url);
+      const { url: objectKey } = await uploadFile(file);
+      setLogoKey(objectKey);
+      setLogoPreview(URL.createObjectURL(file));
     } catch (err) {
       const ax = err as AxiosError<{ detail?: string }>;
       alert(ax.response?.data?.detail ?? "上传失败");
@@ -143,8 +147,11 @@ export default function MerchantForm() {
     if (!file) return;
     setUploadingImageIndex(index);
     try {
-      const { url } = await uploadFile(file);
-      setImages((prev) => prev.map((it, i) => (i === index ? { ...it, url } : it)));
+      const { url: objectKey } = await uploadFile(file);
+      const blobUrl = URL.createObjectURL(file);
+      setImages((prev) =>
+        prev.map((it, i) => (i === index ? { objectKey, previewUrl: blobUrl } : it)),
+      );
     } catch (err) {
       const ax = err as AxiosError<{ detail?: string }>;
       alert(ax.response?.data?.detail ?? "上传失败");
@@ -155,11 +162,9 @@ export default function MerchantForm() {
   };
 
   const addImage = () =>
-    setImages((prev) => [...prev, { url: "", sortOrder: prev.length }]);
+    setImages((prev) => [...prev, { objectKey: "", previewUrl: "" }]);
   const removeImage = (index: number) =>
     setImages((prev) => prev.filter((_, i) => i !== index));
-  const updateImage = (index: number, patch: Partial<ImageRow>) =>
-    setImages((prev) => prev.map((it, i) => (i === index ? { ...it, ...patch } : it)));
 
   const addReview = () =>
     setReviews((prev) => [
@@ -172,7 +177,7 @@ export default function MerchantForm() {
     setReviews((prev) => prev.map((it, i) => (i === index ? { ...it, ...patch } : it)));
 
   const togglePeriod = (p: Period) =>
-    setRecommendedPeriods((prev) =>
+    setPeriods((prev) =>
       prev.includes(p) ? prev.filter((x) => x !== p) : [...prev, p],
     );
 
@@ -190,12 +195,12 @@ export default function MerchantForm() {
     const errs: Record<string, string> = {};
     if (!name.trim()) errs.name = "名称不能为空";
     else if (Array.from(name.trim()).length > 15) errs.name = "名称最多 15 个字符";
-    if (!logo.trim()) errs.logo = "请上传或填写 LOGO URL";
+    if (!logoKey.trim()) errs.logo = "请上传 LOGO";
     if (!address.trim()) errs.address = "地址不能为空";
     if (!cityId) errs.cityId = "请选择城市";
     if (images.length === 0) errs.images = "至少上传 1 张图片";
     images.forEach((im, i) => {
-      if (!im.url.trim()) errs[`images.${i}.url`] = "图片 URL 不能为空";
+      if (!im.objectKey.trim()) errs[`images.${i}.url`] = "请上传图片";
     });
     reviews.forEach((r, i) => {
       if (!r.nickname.trim()) errs[`reviews.${i}.nickname`] = "昵称不能为空";
@@ -210,7 +215,7 @@ export default function MerchantForm() {
 
     const payload: MerchantUpsertRequest = {
       name: name.trim(),
-      logo: logo.trim(),
+      logo: logoKey.trim(),
       address: address.trim(),
       longitude: longitude === "" ? null : longitude,
       latitude: latitude === "" ? null : latitude,
@@ -223,12 +228,9 @@ export default function MerchantForm() {
       story: story.trim() || null,
       weight,
       online,
-      recommendedPeriods,
+      periods,
       tagIds,
-      images: images.map<MerchantUpsertImage>((it) => ({
-        url: it.url.trim(),
-        sortOrder: Number(it.sortOrder) || 0,
-      })),
+      images: images.map((it) => it.objectKey.trim()),
       reviews: reviews.map<MerchantUpsertReview>((r) => ({
         nickname: r.nickname,
         title: r.title,
@@ -323,14 +325,7 @@ export default function MerchantForm() {
               <Label>
                 LOGO <span className="text-error-500">*</span>
               </Label>
-              <Input
-                placeholder="LOGO URL"
-                value={logo}
-                onChange={(e) => setLogo(e.target.value)}
-                error={Boolean(fieldErrors.logo)}
-                hint={fieldErrors.logo}
-              />
-              <div className="mt-2 flex items-center gap-2 text-xs text-gray-500">
+              <div className="flex items-center gap-2 text-xs text-gray-500">
                 <input
                   type="file"
                   accept="image/*"
@@ -339,8 +334,15 @@ export default function MerchantForm() {
                 />
                 {uploadingLogo && <span>上传中...</span>}
               </div>
-              {logo && (
-                <img src={logo} alt="logo" className="mt-2 h-20 object-cover rounded border" />
+              {fieldErrors.logo && (
+                <div className="text-error-500 text-xs mt-1">{fieldErrors.logo}</div>
+              )}
+              {logoPreview && (
+                <img
+                  src={logoPreview}
+                  alt="logo"
+                  className="mt-2 h-20 object-cover rounded border"
+                />
               )}
             </div>
 
@@ -364,15 +366,8 @@ export default function MerchantForm() {
                     key={i}
                     className="grid grid-cols-1 md:grid-cols-12 gap-2 items-center border border-gray-100 dark:border-gray-800 rounded p-3"
                   >
-                    <div className="md:col-span-7">
-                      <Input
-                        placeholder="图片 URL"
-                        value={im.url}
-                        onChange={(e) => updateImage(i, { url: e.target.value })}
-                        error={Boolean(fieldErrors[`images.${i}.url`])}
-                        hint={fieldErrors[`images.${i}.url`]}
-                      />
-                      <div className="mt-1 flex items-center gap-2 text-xs text-gray-500">
+                    <div className="md:col-span-8">
+                      <div className="flex items-center gap-2 text-xs text-gray-500">
                         <input
                           type="file"
                           accept="image/*"
@@ -381,16 +376,20 @@ export default function MerchantForm() {
                         />
                         {uploadingImageIndex === i && <span>上传中...</span>}
                       </div>
+                      {fieldErrors[`images.${i}.url`] && (
+                        <div className="text-error-500 text-xs mt-1">
+                          {fieldErrors[`images.${i}.url`]}
+                        </div>
+                      )}
                     </div>
-                    <div className="md:col-span-3">
-                      <Input
-                        type="number"
-                        placeholder="排序"
-                        value={String(im.sortOrder)}
-                        onChange={(e) =>
-                          updateImage(i, { sortOrder: Number(e.target.value) })
-                        }
-                      />
+                    <div className="md:col-span-2">
+                      {im.previewUrl && (
+                        <img
+                          src={im.previewUrl}
+                          alt={`图片 ${i + 1}`}
+                          className="h-16 w-16 object-cover rounded border"
+                        />
+                      )}
                     </div>
                     <div className="md:col-span-2 text-right">
                       <button
@@ -417,7 +416,7 @@ export default function MerchantForm() {
                   <label key={p} className="inline-flex items-center gap-1 text-sm">
                     <input
                       type="checkbox"
-                      checked={recommendedPeriods.includes(p)}
+                      checked={periods.includes(p)}
                       onChange={() => togglePeriod(p)}
                     />
                     {PERIOD_LABEL[p]}

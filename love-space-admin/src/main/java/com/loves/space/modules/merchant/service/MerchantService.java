@@ -6,6 +6,9 @@ import com.loves.space.common.exception.ValidationException;
 import com.loves.space.common.page.PageQuery;
 import com.loves.space.common.page.PageResponseMapper;
 import com.loves.space.common.page.PageResponseMapper.PageResponse;
+import com.loves.space.common.util.ImageResponses;
+import com.loves.space.infrastructure.storage.ImageUrlSigner;
+import com.loves.space.infrastructure.storage.ObjectKeyValidator;
 import com.loves.space.modules.merchant.dto.MerchantAdminItem;
 import com.loves.space.modules.merchant.dto.MerchantDetailResponse;
 import com.loves.space.modules.merchant.dto.MerchantQuery;
@@ -50,6 +53,8 @@ public class MerchantService {
     private final MerchantRepository merchantRepository;
     private final MerchantTagRepository merchantTagRepository;
     private final MerchantReviewRepository merchantReviewRepository;
+    private final ObjectKeyValidator objectKeyValidator;
+    private final ImageUrlSigner imageUrlSigner;
 
     /**
      * 创建或更新商户。
@@ -68,7 +73,7 @@ public class MerchantService {
                         .orElseThrow(() -> new ResourceNotFoundException("商户不存在：" + id));
 
         merchant.setName(request.name());
-        merchant.setLogo(request.logo());
+        merchant.setLogo(objectKeyValidator.validateAndBind(request.logo()));
         merchant.setAddress(request.address());
         merchant.setLongitude(request.longitude());
         merchant.setLatitude(request.latitude());
@@ -81,7 +86,8 @@ public class MerchantService {
         merchant.setStory(request.story());
         merchant.setWeight(request.weight() == null ? 0 : request.weight());
         merchant.setOnline(request.online() != null && request.online());
-        merchant.setImages(new ArrayList<>(request.images()));
+        merchant.setImages(new ArrayList<>(request.images().stream()
+                .map(objectKeyValidator::validateAndBind).toList()));
         merchant.setPeriods(toPeriodNames(request.periods()));
 
         Merchant saved = merchantRepository.save(merchant);
@@ -134,7 +140,7 @@ public class MerchantService {
         Pageable pageable = new PageQuery(query.page(), query.size())
                 .toPageable(Sort.by(Sort.Order.desc("weight"), Sort.Order.desc("createdAt")));
         Page<Merchant> page = merchantRepository.findAll(spec, pageable);
-        return PageResponseMapper.map(page, MerchantService::toAdminItem);
+        return PageResponseMapper.map(page, this::toAdminItem);
     }
 
     /** 商户详情。 */
@@ -157,7 +163,7 @@ public class MerchantService {
         return new MerchantDetailResponse(
                 merchant.getId(),
                 merchant.getName(),
-                merchant.getLogo(),
+                ImageResponses.from(merchant.getLogo(), imageUrlSigner),
                 merchant.getAddress(),
                 merchant.getLongitude(),
                 merchant.getLatitude(),
@@ -172,7 +178,7 @@ public class MerchantService {
                 merchant.isOnline(),
                 toPeriods(merchant.getPeriods()),
                 tagIds,
-                merchant.getImages() == null ? List.of() : List.copyOf(merchant.getImages()),
+                ImageResponses.fromList(merchant.getImages(), imageUrlSigner),
                 reviews,
                 merchant.getCreatedAt(),
                 merchant.getUpdatedAt());
@@ -254,11 +260,11 @@ public class MerchantService {
     }
 
     /** 实体到列表项。 */
-    private static MerchantAdminItem toAdminItem(Merchant m) {
+    private MerchantAdminItem toAdminItem(Merchant m) {
         return new MerchantAdminItem(
                 m.getId(),
                 m.getName(),
-                m.getLogo(),
+                ImageResponses.from(m.getLogo(), imageUrlSigner),
                 m.getAddress(),
                 m.getCityId(),
                 m.getCategoryId(),

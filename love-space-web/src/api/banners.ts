@@ -1,5 +1,6 @@
 import { apiClient } from "./client";
 import type { Page } from "./managers";
+import type { ImageResponse } from "../types/image";
 
 export type BannerType = "CITY";
 
@@ -7,7 +8,7 @@ export interface BannerListItem {
   id: string;
   name: string;
   type: BannerType;
-  imageUrls: string[];
+  imageUrls: ImageResponse[];
   link: string;
   linkedCityName: string | null;
   online: boolean;

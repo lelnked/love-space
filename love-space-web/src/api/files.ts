@@ -1,17 +1,11 @@
-import { apiClient } from "./client";
+import { uploadToOss } from "../lib/ossUpload";
 
 export interface FileUploadResponse {
+  /** OSS objectKey（典型 `images/<uuidv7>.<ext>`），后端创建/更新时作为 imageUrls 入库。 */
   url: string;
 }
 
-/** 上传单文件（multipart 字段名 file），返回可访问 URL。 */
 export async function uploadFile(file: File): Promise<FileUploadResponse> {
-  const form = new FormData();
-  form.append("file", file);
-  const { data } = await apiClient.post<FileUploadResponse>(
-    "/api/admin/files/upload",
-    form,
-    { headers: { "Content-Type": "multipart/form-data" } },
-  );
-  return data;
+  const objectKey = await uploadToOss(file);
+  return { url: objectKey };
 }

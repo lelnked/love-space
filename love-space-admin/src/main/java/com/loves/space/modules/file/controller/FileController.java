@@ -1,16 +1,19 @@
 package com.loves.space.modules.file.controller;
 
 import com.loves.space.common.annotation.OperationLog;
-import com.loves.space.modules.file.dto.FileUploadResponse;
+import com.loves.space.modules.file.dto.UploadCredentialRequest;
+import com.loves.space.modules.file.dto.UploadCredentialResponse;
 import com.loves.space.modules.file.service.FileService;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
 
 /**
- * 文件上传 Controller（运营后台）。
+ * 文件上传凭证 Controller（运营后台）。
+ *
+ * <p>不再提供服务端代理上传；前端拿到凭证后直传 OSS。
  */
 @RestController
 @RequestMapping("/api/admin/files")
@@ -23,14 +26,11 @@ public class FileController {
     }
 
     /**
-     * 单文件上传：multipart 表单字段名 {@code file}。
-     *
-     * @param file 上传文件
-     * @return URL 响应
+     * 申请 OSS 直传凭证。
      */
-    @PostMapping("/upload")
-    @OperationLog("file:upload")
-    public FileUploadResponse upload(@RequestPart("file") MultipartFile file) {
-        return fileService.upload(file);
+    @PostMapping("/upload-credentials")
+    @OperationLog("file:upload-credentials")
+    public UploadCredentialResponse issueUploadCredential(@Valid @RequestBody UploadCredentialRequest request) {
+        return fileService.issueUploadCredential(request);
     }
 }

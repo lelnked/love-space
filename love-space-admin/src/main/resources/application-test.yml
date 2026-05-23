@@ -17,6 +17,25 @@ spring:
 app:
   jwt:
     secret: test-only-jwt-secret-please-change-in-production-32+bytes!!!
+  storage:
+    oss:
+      endpoint: https://oss-test.example.com
+      bucket: love-space-test
+      region: cn-test
+      access-key-id: test-oss-ak
+      access-key-secret: test-oss-sk
+      upload-key-prefix: images
+      bound-key-prefix: bound
+      url-expiration-seconds: 1800
+      max-image-bytes: 20971520
+    sts:
+      endpoint: https://sts-test.example.com
+      region-id: cn-test
+      role-arn: acs:ram::000000000000:role/test-role
+      role-session-name: love-space-admin-test
+      duration-seconds: 900
+      access-key-id: test-sts-ak
+      access-key-secret: test-sts-sk
   public-base-url: http://localhost:8080
 
 logging:

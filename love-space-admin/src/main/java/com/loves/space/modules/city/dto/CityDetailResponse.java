@@ -1,5 +1,7 @@
 package com.loves.space.modules.city.dto;
 
+import com.loves.space.common.dto.ImageResponse;
+
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
@@ -22,7 +24,7 @@ public record CityDetailResponse(
         String englishName,
         String chineseProvince,
         String englishProvince,
-        String backgroundImage,
+        ImageResponse backgroundImage,
         boolean online,
         OffsetDateTime createdAt,
         OffsetDateTime updatedAt

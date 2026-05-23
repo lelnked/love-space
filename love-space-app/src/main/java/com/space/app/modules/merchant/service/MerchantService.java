@@ -3,15 +3,14 @@ package com.space.app.modules.merchant.service;
 import com.space.app.common.enums.Period;
 import com.space.app.common.exception.ResourceNotFoundException;
 import com.space.app.common.page.PageQuery;
+import com.space.app.common.util.ImageResponses;
+import com.space.app.infrastructure.storage.ImageUrlSigner;
 import com.space.app.modules.merchant.dto.MerchantDetailResponse;
 import com.space.app.modules.merchant.dto.MerchantListItemResponse;
 import com.space.app.modules.merchant.dto.ReviewItemResponse;
 import com.space.app.modules.merchant.dto.TagItemResponse;
 import com.space.app.modules.merchant.entity.Merchant;
-import com.space.app.modules.merchant.entity.MerchantPeriod;
 import com.space.app.modules.merchant.entity.MerchantTag;
-import com.space.app.modules.merchant.repository.MerchantImageRepository;
-import com.space.app.modules.merchant.repository.MerchantPeriodRepository;
 import com.space.app.modules.merchant.repository.MerchantRepository;
 import com.space.app.modules.merchant.repository.MerchantReviewRepository;
 import com.space.app.modules.merchant.repository.MerchantTagRepository;
@@ -42,32 +41,30 @@ import java.util.stream.Collectors;
 public class MerchantService {
 
     private final MerchantRepository merchantRepository;
-    private final MerchantImageRepository merchantImageRepository;
-    private final MerchantPeriodRepository merchantPeriodRepository;
     private final MerchantTagRepository merchantTagRepository;
     private final MerchantReviewRepository merchantReviewRepository;
     private final TagRepository tagRepository;
     private final ScoreCalculator scoreCalculator;
+    private final ImageUrlSigner imageUrlSigner;
 
     public MerchantService(MerchantRepository merchantRepository,
-                           MerchantImageRepository merchantImageRepository,
-                           MerchantPeriodRepository merchantPeriodRepository,
                            MerchantTagRepository merchantTagRepository,
                            MerchantReviewRepository merchantReviewRepository,
                            TagRepository tagRepository,
-                           ScoreCalculator scoreCalculator) {
+                           ScoreCalculator scoreCalculator,
+                           ImageUrlSigner imageUrlSigner) {
         this.merchantRepository = merchantRepository;
-        this.merchantImageRepository = merchantImageRepository;
-        this.merchantPeriodRepository = merchantPeriodRepository;
         this.merchantTagRepository = merchantTagRepository;
         this.merchantReviewRepository = merchantReviewRepository;
         this.tagRepository = tagRepository;
         this.scoreCalculator = scoreCalculator;
+        this.imageUrlSigner = imageUrlSigner;
     }
 
     /** 商户列表分页查询。 */
     public Page<MerchantListItemResponse> search(UUID cityId, Period period, UUID categoryId, PageQuery pageQuery) {
-        Pageable pageable = pageQuery.toPageable(Sort.by(Sort.Order.desc("weight"), Sort.Order.desc("createdAt")));
+        // 排序在 native SQL 中硬编码（weight DESC, created_at DESC），此处传入未排序 Pageable
+        Pageable pageable = pageQuery.toPageable(Sort.unsorted());
         Page<Merchant> page = merchantRepository.searchOnline(cityId, period, categoryId, pageable);
 
         // 批量取标签关联与上架标签，避免 N+1
@@ -92,7 +89,7 @@ public class MerchantService {
         return page.map(m -> new MerchantListItemResponse(
                 m.getId(),
                 m.getName(),
-                m.getLogo(),
+                ImageResponses.from(m.getLogo(), imageUrlSigner),
                 m.getAddress(),
                 tagsByMerchant.getOrDefault(m.getId(), List.of()),
                 scoreCalculator.toScoreView(
@@ -112,12 +109,10 @@ public class MerchantService {
         Merchant merchant = merchantRepository.findByIdAndOnlineTrue(id)
                 .orElseThrow(() -> new ResourceNotFoundException("merchant not found: " + id));
 
-        List<String> images = merchantImageRepository.findAllByMerchantIdOrderBySortOrderAsc(id).stream()
-                .map(img -> img.getUrl())
-                .toList();
+        List<String> images = List.copyOf(merchant.getImages());
 
-        List<Period> periods = merchantPeriodRepository.findAllByMerchantId(id).stream()
-                .map(MerchantPeriod::getPeriod)
+        List<Period> periods = merchant.getPeriods().stream()
+                .map(Period::valueOf)
                 .sorted(Comparator.comparingInt(Enum::ordinal))
                 .toList();
 
@@ -136,8 +131,8 @@ public class MerchantService {
         return new MerchantDetailResponse(
                 merchant.getId(),
                 merchant.getName(),
-                merchant.getLogo(),
-                images,
+                ImageResponses.from(merchant.getLogo(), imageUrlSigner),
+                ImageResponses.fromList(images, imageUrlSigner),
                 merchant.getAddress(),
                 merchant.getLongitude(),
                 merchant.getLatitude(),

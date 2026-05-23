@@ -2,6 +2,9 @@ package com.loves.space.modules.city.service;
 
 import com.loves.space.common.exception.ResourceNotFoundException;
 import com.loves.space.common.exception.ValidationException;
+import com.loves.space.common.util.ImageResponses;
+import com.loves.space.infrastructure.storage.ImageUrlSigner;
+import com.loves.space.infrastructure.storage.ObjectKeyValidator;
 import com.loves.space.modules.city.dto.CityCreateRequest;
 import com.loves.space.modules.city.dto.CityDetailResponse;
 import com.loves.space.modules.city.dto.CityItemResponse;
@@ -32,10 +35,25 @@ public class CityService {
 
     private final CityRepository cityRepository;
     private final ApplicationEventPublisher eventPublisher;
+    private final ObjectKeyValidator objectKeyValidator;
+    private final ImageUrlSigner imageUrlSigner;
 
-    public CityService(CityRepository cityRepository, ApplicationEventPublisher eventPublisher) {
+    public CityService(CityRepository cityRepository,
+                       ApplicationEventPublisher eventPublisher,
+                       ObjectKeyValidator objectKeyValidator,
+                       ImageUrlSigner imageUrlSigner) {
         this.cityRepository = cityRepository;
         this.eventPublisher = eventPublisher;
+        this.objectKeyValidator = objectKeyValidator;
+        this.imageUrlSigner = imageUrlSigner;
+    }
+
+    /** 可空 backgroundImage：null/blank 直接返回 null，否则 validateAndBind。 */
+    private String bindBackgroundImage(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return null;
+        }
+        return objectKeyValidator.validateAndBind(raw);
     }
 
     /**
@@ -47,7 +65,7 @@ public class CityService {
             throw new ValidationException("城市中文名已存在：" + request.chineseName());
         }
         City city = new City();
-        applyCreate(city, request);
+        applyCreate(city, request, bindBackgroundImage(request.backgroundImage()));
         City saved = cityRepository.save(city);
         return toDetail(saved);
     }
@@ -66,7 +84,7 @@ public class CityService {
         city.setEnglishName(request.englishName());
         city.setChineseProvince(request.chineseProvince());
         city.setEnglishProvince(request.englishProvince());
-        city.setBackgroundImage(request.backgroundImage());
+        city.setBackgroundImage(bindBackgroundImage(request.backgroundImage()));
         if (request.online() != null) {
             city.setOnline(request.online());
         }
@@ -90,7 +108,7 @@ public class CityService {
             return cb.and(predicates.toArray(new Predicate[0]));
         };
         return cityRepository.findAll(spec, Sort.by(Sort.Direction.DESC, City_.CREATED_AT))
-                .stream().map(CityService::toItem).toList();
+                .stream().map(this::toItem).toList();
     }
 
     /** 查询单个城市详情；不存在抛 404。 */
@@ -125,39 +143,39 @@ public class CityService {
         cityRepository.deleteById(id);
     }
 
-    /** 创建场景下把请求体字段拷贝到实体。 */
-    private static void applyCreate(City city, CityCreateRequest request) {
+    /** 创建场景下把请求体字段拷贝到实体；backgroundImage 已 validateAndBind。 */
+    private static void applyCreate(City city, CityCreateRequest request, String boundBackgroundImage) {
         city.setChineseName(request.chineseName());
         city.setEnglishName(request.englishName());
         city.setChineseProvince(request.chineseProvince());
         city.setEnglishProvince(request.englishProvince());
-        city.setBackgroundImage(request.backgroundImage());
+        city.setBackgroundImage(boundBackgroundImage);
         city.setOnline(request.online() != null && request.online());
     }
 
     /** 实体到列表项。 */
-    private static CityItemResponse toItem(City city) {
+    private CityItemResponse toItem(City city) {
         return new CityItemResponse(
                 city.getId(),
                 city.getChineseName(),
                 city.getEnglishName(),
                 city.getChineseProvince(),
                 city.getEnglishProvince(),
-                city.getBackgroundImage(),
+                ImageResponses.from(city.getBackgroundImage(), imageUrlSigner),
                 city.isOnline(),
                 city.getCreatedAt(),
                 city.getUpdatedAt());
     }
 
     /** 实体到详情。 */
-    private static CityDetailResponse toDetail(City city) {
+    private CityDetailResponse toDetail(City city) {
         return new CityDetailResponse(
                 city.getId(),
                 city.getChineseName(),
                 city.getEnglishName(),
                 city.getChineseProvince(),
                 city.getEnglishProvince(),
-                city.getBackgroundImage(),
+                ImageResponses.from(city.getBackgroundImage(), imageUrlSigner),
                 city.isOnline(),
                 city.getCreatedAt(),
                 city.getUpdatedAt());

@@ -1,4 +1,5 @@
 import { apiClient } from "./client";
+import type { ImageResponse } from "../types/image";
 
 export interface CityItem {
   id: string;
@@ -6,7 +7,7 @@ export interface CityItem {
   englishName: string;
   chineseProvince: string;
   englishProvince: string;
-  backgroundImage: string | null;
+  backgroundImage: ImageResponse | null;
   online: boolean;
   createdAt: string;
   updatedAt: string;

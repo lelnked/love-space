@@ -1,5 +1,7 @@
 package com.loves.space.modules.category.service;
 
+import com.loves.space.infrastructure.storage.ImageUrlSigner;
+import com.loves.space.infrastructure.storage.ObjectKeyValidator;
 import com.loves.space.modules.category.dto.CategoryItemResponse;
 import com.loves.space.modules.category.dto.CategoryUpsertRequest;
 import com.loves.space.modules.merchant.dto.MerchantDetailResponse;
@@ -7,13 +9,17 @@ import com.loves.space.modules.merchant.dto.MerchantUpsertRequest;
 import com.loves.space.modules.merchant.repository.MerchantRepository;
 import com.loves.space.modules.merchant.service.MerchantService;
 import com.loves.space.support.AbstractPostgresIntegrationTest;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
 
 /**
  * {@link CategoryService} 集成测试：删除分类前会触发同分类商户批量下架。
@@ -26,6 +32,23 @@ class CategoryServiceTest extends AbstractPostgresIntegrationTest {
     private MerchantService merchantService;
     @Autowired
     private MerchantRepository merchantRepository;
+
+    @MockitoBean
+    private ObjectKeyValidator objectKeyValidator;
+
+    @MockitoBean
+    private ImageUrlSigner imageUrlSigner;
+
+    @BeforeEach
+    void stubStorage() {
+        when(objectKeyValidator.validateAndBind(anyString()))
+                .thenAnswer(inv -> {
+                    String key = inv.getArgument(0);
+                    return key.startsWith("images/") ? "bound/" + key.substring("images/".length()) : key;
+                });
+        when(imageUrlSigner.sign(anyString()))
+                .thenAnswer(inv -> "https://signed.example.com/" + inv.getArgument(0));
+    }
 
     @Test
     void deleteCategoryOfflinesItsMerchants() {

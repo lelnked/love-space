@@ -23,20 +23,32 @@ public interface MerchantRepository extends JpaRepository<Merchant, UUID> {
 
     /**
      * 按 cityId + 可选 period + 可选 categoryId 过滤的上架商户分页。
+     * <p>periods 已内联为 jsonb 字符串数组列；period 命中通过 {@code jsonb @> '["NAME"]'::jsonb} 判断。
      */
-    @Query("""
-            select m from Merchant m
+    @Query(value = """
+            select * from loves_merchant m
             where m.online = true
-              and m.cityId = :cityId
-              and (:categoryId is null or m.categoryId = :categoryId)
-              and (:period is null or exists (
-                    select 1 from MerchantPeriod mp
-                    where mp.merchantId = m.id and mp.period = :period))
-            """)
-    Page<Merchant> searchOnline(@Param("cityId") UUID cityId,
-                                @Param("period") Period period,
-                                @Param("categoryId") UUID categoryId,
-                                Pageable pageable);
+              and m.city_id = :cityId
+              and (cast(:categoryId as uuid) is null or m.category_id = cast(:categoryId as uuid))
+              and (:periodName is null or m.periods @> jsonb_build_array(cast(:periodName as text)))
+            order by m.weight desc, m.created_at desc
+            """,
+            countQuery = """
+            select count(*) from loves_merchant m
+            where m.online = true
+              and m.city_id = :cityId
+              and (cast(:categoryId as uuid) is null or m.category_id = cast(:categoryId as uuid))
+              and (:periodName is null or m.periods @> jsonb_build_array(cast(:periodName as text)))
+            """,
+            nativeQuery = true)
+    Page<Merchant> searchOnlineNative(@Param("cityId") UUID cityId,
+                                      @Param("periodName") String periodName,
+                                      @Param("categoryId") UUID categoryId,
+                                      Pageable pageable);
+
+    default Page<Merchant> searchOnline(UUID cityId, Period period, UUID categoryId, Pageable pageable) {
+        return searchOnlineNative(cityId, period == null ? null : period.name(), categoryId, pageable);
+    }
 
     /** 按 ID 查询且仅当上架时返回。 */
     Optional<Merchant> findByIdAndOnlineTrue(UUID id);

@@ -1,7 +1,6 @@
 package com.space.app.modules.merchant.repository;
 
 import com.space.app.modules.merchant.entity.MerchantTag;
-import com.space.app.modules.merchant.entity.MerchantTagId;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Collection;
@@ -11,7 +10,7 @@ import java.util.UUID;
 /**
  * 商户-标签关联 Repository。
  */
-public interface MerchantTagRepository extends JpaRepository<MerchantTag, MerchantTagId> {
+public interface MerchantTagRepository extends JpaRepository<MerchantTag, UUID> {
 
     /** 按商户 ID 查询全部 tag 关联。 */
     List<MerchantTag> findAllByMerchantId(UUID merchantId);

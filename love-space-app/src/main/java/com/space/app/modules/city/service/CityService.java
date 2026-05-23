@@ -1,5 +1,7 @@
 package com.space.app.modules.city.service;
 
+import com.space.app.common.util.ImageResponses;
+import com.space.app.infrastructure.storage.ImageUrlSigner;
 import com.space.app.modules.city.dto.CityItemResponse;
 import com.space.app.modules.city.entity.City;
 import com.space.app.modules.city.repository.CityRepository;
@@ -18,15 +20,17 @@ import java.util.UUID;
 public class CityService {
 
     private final CityRepository cityRepository;
+    private final ImageUrlSigner imageUrlSigner;
 
-    public CityService(CityRepository cityRepository) {
+    public CityService(CityRepository cityRepository, ImageUrlSigner imageUrlSigner) {
         this.cityRepository = cityRepository;
+        this.imageUrlSigner = imageUrlSigner;
     }
 
     /** 列表：上架城市，按 createdAt 倒序。 */
     public List<CityItemResponse> listOnline() {
         return cityRepository.findAllByOnlineTrueOrderByCreatedAtDesc().stream()
-                .map(CityService::toItem)
+                .map(this::toItem)
                 .toList();
     }
 
@@ -36,13 +40,13 @@ public class CityService {
     }
 
     /** 实体到列表项 DTO 的映射。 */
-    public static CityItemResponse toItem(City city) {
+    public CityItemResponse toItem(City city) {
         return new CityItemResponse(
                 city.getId(),
                 city.getChineseName(),
                 city.getEnglishName(),
                 city.getChineseProvince(),
                 city.getEnglishProvince(),
-                city.getBackgroundImage());
+                ImageResponses.from(city.getBackgroundImage(), imageUrlSigner));
     }
 }

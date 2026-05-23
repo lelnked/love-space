@@ -1,5 +1,7 @@
 package com.space.app.modules.city.dto;
 
+import com.space.app.common.dto.ImageResponse;
+
 import java.util.UUID;
 
 /**
@@ -18,6 +20,6 @@ public record CityItemResponse(
         String englishName,
         String chineseProvince,
         String englishProvince,
-        String backgroundImage
+        ImageResponse backgroundImage
 ) {
 }

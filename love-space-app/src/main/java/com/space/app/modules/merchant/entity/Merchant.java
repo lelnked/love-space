@@ -6,8 +6,12 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -48,6 +52,16 @@ public class Merchant extends BaseAuditEntity {
     /** 所属分类 ID（无 FK），可空。 */
     @Column(name = "category_id")
     private UUID categoryId;
+
+    /** 商户图片 URL 列表（按顺序展示），以 PostgreSQL jsonb 字符串数组形式存储。 */
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "images", nullable = false, columnDefinition = "jsonb")
+    private List<String> images = new ArrayList<>();
+
+    /** 推荐生理周期列表（Period 枚举名），以 PostgreSQL jsonb 字符串数组形式存储。 */
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "periods", nullable = false, columnDefinition = "jsonb")
+    private List<String> periods = new ArrayList<>();
 
     /** 安全环境原始分（满分 30）。 */
     @Column(name = "safety_environment_score", nullable = false)

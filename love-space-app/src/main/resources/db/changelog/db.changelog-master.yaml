@@ -8,3 +8,5 @@ databaseChangeLog:
       file: db/changelog/changes/003-create-loves-banner.sql
   - include:
       file: db/changelog/changes/004-drop-city-banner-sort-order.sql
+  - include:
+      file: db/changelog/changes/005-refactor-merchant-children.sql

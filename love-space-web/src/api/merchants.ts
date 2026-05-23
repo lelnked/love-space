@@ -1,10 +1,11 @@
 import { apiClient } from "./client";
 import type { Page, Period } from "./types";
+import type { ImageResponse } from "../types/image";
 
 export interface MerchantItem {
   id: string;
   name: string;
-  logo: string;
+  logo: ImageResponse | null;
   address: string;
   cityId: string;
   categoryId: string | null;
@@ -12,12 +13,6 @@ export interface MerchantItem {
   online: boolean;
   createdAt: string;
   updatedAt: string;
-}
-
-export interface MerchantImage {
-  id?: string;
-  url: string;
-  sortOrder: number;
 }
 
 export interface MerchantReview {
@@ -31,7 +26,7 @@ export interface MerchantReview {
 export interface MerchantDetail {
   id: string;
   name: string;
-  logo: string;
+  logo: ImageResponse | null;
   address: string;
   longitude: string | number | null;
   latitude: string | number | null;
@@ -44,9 +39,9 @@ export interface MerchantDetail {
   story: string | null;
   weight: number;
   online: boolean;
-  recommendedPeriods: Period[];
+  periods: Period[];
   tagIds: string[];
-  images: MerchantImage[];
+  images: ImageResponse[];
   reviews: MerchantReview[];
   createdAt: string;
   updatedAt: string;
@@ -60,11 +55,6 @@ export interface MerchantQuery {
   name?: string;
   page?: number;
   size?: number;
-}
-
-export interface MerchantUpsertImage {
-  url: string;
-  sortOrder: number;
 }
 
 export interface MerchantUpsertReview {
@@ -89,9 +79,9 @@ export interface MerchantUpsertRequest {
   story?: string | null;
   weight?: number;
   online?: boolean;
-  recommendedPeriods?: Period[];
+  periods?: Period[];
   tagIds?: string[];
-  images: MerchantUpsertImage[];
+  images: string[];
   reviews?: MerchantUpsertReview[];
 }
 

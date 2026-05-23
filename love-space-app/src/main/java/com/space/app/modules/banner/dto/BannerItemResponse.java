@@ -1,5 +1,6 @@
 package com.space.app.modules.banner.dto;
 
+import com.space.app.common.dto.ImageResponse;
 import com.space.app.modules.banner.entity.BannerType;
 
 import java.util.List;
@@ -26,7 +27,7 @@ public record BannerItemResponse(
         UUID id,
         String name,
         BannerType type,
-        List<String> image,
+        List<ImageResponse> image,
         Map<String, Object> data
 ) {
 }

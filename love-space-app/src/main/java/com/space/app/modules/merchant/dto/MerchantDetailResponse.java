@@ -1,5 +1,6 @@
 package com.space.app.modules.merchant.dto;
 
+import com.space.app.common.dto.ImageResponse;
 import com.space.app.common.enums.Period;
 
 import java.math.BigDecimal;
@@ -26,8 +27,8 @@ import java.util.UUID;
 public record MerchantDetailResponse(
         UUID id,
         String name,
-        String logo,
-        List<String> images,
+        ImageResponse logo,
+        List<ImageResponse> images,
         String address,
         BigDecimal longitude,
         BigDecimal latitude,

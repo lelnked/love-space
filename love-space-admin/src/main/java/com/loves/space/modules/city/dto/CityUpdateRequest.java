@@ -1,6 +1,7 @@
 package com.loves.space.modules.city.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 /**
@@ -18,6 +19,8 @@ public record CityUpdateRequest(
         @NotBlank @Size(max = 100) String englishName,
         @NotBlank @Size(max = 50) String chineseProvince,
         @NotBlank @Size(max = 100) String englishProvince,
+        @Pattern(regexp = "^(images|bound)/[\\w-]+\\.(png|jpg|webp)$",
+                message = "backgroundImage 仅接受 OSS objectKey（images/<id>.<ext> 或 bound/<id>.<ext>）")
         String backgroundImage,
         Boolean online
 ) {

@@ -1,5 +1,7 @@
 package com.space.app.modules.banner.service;
 
+import com.space.app.common.util.ImageResponses;
+import com.space.app.infrastructure.storage.ImageUrlSigner;
 import com.space.app.modules.banner.dto.BannerItemResponse;
 import com.space.app.modules.banner.entity.Banner;
 import com.space.app.modules.banner.entity.BannerType;
@@ -40,10 +42,14 @@ public class BannerQueryService {
 
     private final BannerRepository bannerRepository;
     private final CityRepository cityRepository;
+    private final ImageUrlSigner imageUrlSigner;
 
-    public BannerQueryService(BannerRepository bannerRepository, CityRepository cityRepository) {
+    public BannerQueryService(BannerRepository bannerRepository,
+                              CityRepository cityRepository,
+                              ImageUrlSigner imageUrlSigner) {
         this.bannerRepository = bannerRepository;
         this.cityRepository = cityRepository;
+        this.imageUrlSigner = imageUrlSigner;
     }
 
     /**
@@ -73,9 +79,9 @@ public class BannerQueryService {
                 Map<String, Object> data = new LinkedHashMap<>();
                 data.put("id", city.getId());
                 data.put("name", city.getChineseName());
-                result.add(new BannerItemResponse(b.getId(), b.getName(), b.getType(), b.getImageUrls(), data));
+                result.add(new BannerItemResponse(b.getId(), b.getName(), b.getType(), ImageResponses.fromList(b.getImageUrls(), imageUrlSigner), data));
             } else {
-                result.add(new BannerItemResponse(b.getId(), b.getName(), b.getType(), b.getImageUrls(), new HashMap<>()));
+                result.add(new BannerItemResponse(b.getId(), b.getName(), b.getType(), ImageResponses.fromList(b.getImageUrls(), imageUrlSigner), new HashMap<>()));
             }
         }
         return result;

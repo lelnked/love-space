@@ -32,6 +32,11 @@ public abstract class AbstractPostgresIntegrationTest {
         registry.add("spring.datasource.username", POSTGRES::getUsername);
         registry.add("spring.datasource.password", POSTGRES::getPassword);
         registry.add("app.security.api-keys", () -> "test-api-key");
+        registry.add("app.storage.oss.endpoint", () -> "oss-cn-hangzhou.aliyuncs.com");
+        registry.add("app.storage.oss.bucket", () -> "love-space-test");
+        registry.add("app.storage.oss.region", () -> "cn-hangzhou");
+        registry.add("app.storage.oss.access-key-id", () -> "test-access-key-id");
+        registry.add("app.storage.oss.access-key-secret", () -> "test-access-key-secret");
     }
 
     /** 测试用预共享 API Key，与 {@link #registerProperties} 保持一致。 */

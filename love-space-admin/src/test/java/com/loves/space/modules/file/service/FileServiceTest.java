@@ -1,78 +1,59 @@
 package com.loves.space.modules.file.service;
 
-import com.loves.space.common.exception.ValidationException;
-import com.loves.space.infrastructure.storage.FileStorage;
-import com.loves.space.modules.file.dto.FileUploadResponse;
+import com.loves.space.infrastructure.storage.OssProperties;
+import com.loves.space.infrastructure.storage.StsCredentialIssuer;
+import com.loves.space.infrastructure.storage.StsCredentialIssuer.StsCredential;
+import com.loves.space.modules.file.dto.UploadCredentialRequest;
+import com.loves.space.modules.file.dto.UploadCredentialResponse;
 import org.junit.jupiter.api.Test;
-import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.web.multipart.MultipartFile;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
- * {@link FileService} 单元测试：不需要 Spring 上下文；用内置 stub 代替 FileStorage。
+ * {@link FileService} 单元测试：覆盖 contentType→ext 映射、objectKey 前缀/格式、字段透传。
  */
 class FileServiceTest {
 
-    /** 简单 stub：固定返回一个 URL，便于断言。 */
-    private static final class StubFileStorage implements FileStorage {
-        public static final String STUB_URL = "http://test/upload/x.png";
+    private static final OssProperties PROPS = new OssProperties(
+            "https://oss-test.example.com", "love-space-test", "cn-test",
+            "ak", "sk", "images", "bound", 1800L, 20L * 1024 * 1024);
 
-        @Override
-        public String save(MultipartFile file) {
-            return STUB_URL;
-        }
-    }
+    private final StsCredentialIssuer issuer = mock(StsCredentialIssuer.class);
+    private final FileService service = new FileService(issuer, PROPS);
 
-    private final FileService service = new FileService(new StubFileStorage());
+    @ParameterizedTest
+    @CsvSource({
+            "image/png, png",
+            "image/jpeg, jpg",
+            "image/webp, webp"
+    })
+    void objectKeyExtensionMatchesContentType(String contentType, String expectedExt) {
+        when(issuer.issueFor(anyString()))
+                .thenReturn(new StsCredential("ak", "sk", "tok", "2026-05-23T08:00:00Z"));
 
-    /** 构造合法的 PNG 字节：以 PNG magic number 开头。 */
-    private static byte[] pngBytes() {
-        return new byte[]{
-                (byte) 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A,
-                0, 0, 0, 0
-        };
-    }
+        UploadCredentialResponse response = service.issueUploadCredential(new UploadCredentialRequest(contentType));
 
-    @Test
-    void rejectsFileLargerThan20MB() {
-        // 通过子类覆写 getSize 模拟超大文件
-        MultipartFile file = new MockMultipartFile("file", "x.png", "image/png", pngBytes()) {
-            @Override
-            public long getSize() {
-                return 20L * 1024 * 1024 + 1;
-            }
-        };
-        assertThatThrownBy(() -> service.upload(file))
-                .isInstanceOf(ValidationException.class)
-                .hasMessageContaining("20MB");
+        assertThat(response.objectKey()).matches("^images/[0-9a-f-]+\\." + expectedExt + "$");
+        assertThat(response.bucket()).isEqualTo("love-space-test");
+        assertThat(response.region()).isEqualTo("cn-test");
     }
 
     @Test
-    void rejectsDisallowedContentType() {
-        MultipartFile pdf = new MockMultipartFile(
-                "file", "x.pdf", "application/pdf", new byte[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12});
-        assertThatThrownBy(() -> service.upload(pdf))
-                .isInstanceOf(ValidationException.class);
-    }
+    void credentialFieldsPassedThrough() {
+        when(issuer.issueFor(anyString()))
+                .thenReturn(new StsCredential("ID", "SECRET", "TOKEN", "2026-05-23T08:00:00Z"));
 
-    @Test
-    void rejectsMagicNumberMismatch() {
-        // 声明 png 但 bytes 不是 png
-        MultipartFile fake = new MockMultipartFile(
-                "file", "x.png", "image/png",
-                new byte[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12});
-        assertThatThrownBy(() -> service.upload(fake))
-                .isInstanceOf(ValidationException.class)
-                .hasMessageContaining("不匹配");
-    }
+        UploadCredentialResponse response = service.issueUploadCredential(
+                new UploadCredentialRequest("image/png"));
 
-    @Test
-    void happyPathReturnsUrl() {
-        MultipartFile valid = new MockMultipartFile(
-                "file", "x.png", "image/png", pngBytes());
-        FileUploadResponse response = service.upload(valid);
-        assertThat(response.url()).isEqualTo(StubFileStorage.STUB_URL);
+        assertThat(response.accessKeyId()).isEqualTo("ID");
+        assertThat(response.accessKeySecret()).isEqualTo("SECRET");
+        assertThat(response.securityToken()).isEqualTo("TOKEN");
+        assertThat(response.expiration()).isEqualTo("2026-05-23T08:00:00Z");
     }
 }

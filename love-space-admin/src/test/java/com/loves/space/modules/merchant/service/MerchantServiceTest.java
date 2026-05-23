@@ -2,6 +2,8 @@ package com.loves.space.modules.merchant.service;
 
 import com.loves.space.common.enums.Period;
 import com.loves.space.common.exception.ValidationException;
+import com.loves.space.infrastructure.storage.ImageUrlSigner;
+import com.loves.space.infrastructure.storage.ObjectKeyValidator;
 import com.loves.space.modules.merchant.dto.MerchantDetailResponse;
 import com.loves.space.modules.merchant.dto.MerchantUpsertRequest;
 import com.loves.space.modules.merchant.dto.ReviewUpsertItem;
@@ -9,8 +11,13 @@ import com.loves.space.modules.merchant.repository.MerchantRepository;
 import com.loves.space.modules.merchant.repository.MerchantReviewRepository;
 import com.loves.space.modules.merchant.repository.MerchantTagRepository;
 import com.loves.space.support.AbstractPostgresIntegrationTest;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.UUID;
@@ -31,6 +38,23 @@ class MerchantServiceTest extends AbstractPostgresIntegrationTest {
     private MerchantTagRepository merchantTagRepository;
     @Autowired
     private MerchantReviewRepository merchantReviewRepository;
+
+    @MockitoBean
+    private ObjectKeyValidator objectKeyValidator;
+
+    @MockitoBean
+    private ImageUrlSigner imageUrlSigner;
+
+    @BeforeEach
+    void stubStorage() {
+        when(objectKeyValidator.validateAndBind(anyString()))
+                .thenAnswer(inv -> {
+                    String key = inv.getArgument(0);
+                    return key.startsWith("images/") ? "bound/" + key.substring("images/".length()) : key;
+                });
+        when(imageUrlSigner.sign(anyString()))
+                .thenAnswer(inv -> "https://signed.example.com/" + inv.getArgument(0));
+    }
 
     /** 构造合法 upsert 请求；name/score/story/images 可在调用前替换。 */
     private MerchantUpsertRequest validRequest() {
@@ -112,6 +136,33 @@ class MerchantServiceTest extends AbstractPostgresIntegrationTest {
 
         assertThatThrownBy(() -> merchantService.upsert(null, bad))
                 .isInstanceOf(ValidationException.class);
+    }
+
+    @Test
+    void upsertBindsImageObjectKeysAndReturnsSignedUrls() {
+        UUID cityId = UUID.randomUUID();
+        MerchantUpsertRequest request = new MerchantUpsertRequest(
+                "图签商户",
+                "images/logo.png",
+                "测试地址",
+                null, null, cityId, null,
+                (short) 25, (short) 20, (short) 20, (short) 15,
+                null, 0, true,
+                List.of(), List.of(),
+                List.of("images/aaa.png", "bound/bbb.jpg"),
+                List.of());
+
+        MerchantDetailResponse detail = merchantService.upsert(null, request);
+
+        assertThat(detail.logo().id()).isEqualTo("bound/logo.png");
+        assertThat(detail.logo().url()).isEqualTo("https://signed.example.com/bound/logo.png");
+        assertThat(detail.images()).extracting("id")
+                .containsExactly("bound/aaa.png", "bound/bbb.jpg");
+        assertThat(detail.images()).extracting("url")
+                .containsExactly("https://signed.example.com/bound/aaa.png",
+                        "https://signed.example.com/bound/bbb.jpg");
+        assertThat(merchantRepository.findById(detail.id()).orElseThrow().getImages())
+                .containsExactly("bound/aaa.png", "bound/bbb.jpg");
     }
 
     @Test
