@@ -10,6 +10,7 @@ import com.loves.space.modules.merchant.dto.MerchantAdminItem;
 import com.loves.space.modules.merchant.dto.MerchantDetailResponse;
 import com.loves.space.modules.merchant.dto.MerchantQuery;
 import com.loves.space.modules.merchant.dto.MerchantUpsertRequest;
+import com.loves.space.modules.merchant.dto.ReviewUpsertItem;
 import com.loves.space.modules.merchant.entity.Merchant;
 import com.loves.space.modules.merchant.entity.MerchantReview;
 import com.loves.space.modules.merchant.entity.MerchantTag;
@@ -27,15 +28,18 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 /**
- * 商户服务（运营后台）：upsert（主记录 + 子表整体替换）、列表、详情、删除、上下架切换、按分类批量下架。
+ * 商户服务（运营后台）：upsert（主记录 + tag/review 子表整体替换）、列表、详情、删除、上下架切换、按分类批量下架。
+ * <p>images / periods 已内联在 {@link Merchant} 主表（jsonb 数组），不再有独立子表。
  */
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class MerchantService {
 
     /** 商户名称最大字符数（codePoint）。 */
@@ -47,16 +51,15 @@ public class MerchantService {
     private final MerchantTagRepository merchantTagRepository;
     private final MerchantReviewRepository merchantReviewRepository;
 
-
     /**
      * 创建或更新商户。
-     * <p>同一事务内：保存主记录 → 删除并重建 image / period / tag / review 子表。
+     * <p>同一事务内：保存主记录（含 images/periods 内联数组）→ 删除并重建 tag / review 子表。
      *
      * @param id      商户 ID；为 null 表示新建
      * @param request 商户输入
      * @return 商户详情
      */
-    public UUID upsert(UUID id, MerchantUpsertRequest request) {
+    public MerchantDetailResponse upsert(UUID id, MerchantUpsertRequest request) {
         validate(request);
 
         Merchant merchant = id == null
@@ -78,11 +81,36 @@ public class MerchantService {
         merchant.setStory(request.story());
         merchant.setWeight(request.weight() == null ? 0 : request.weight());
         merchant.setOnline(request.online() != null && request.online());
+        merchant.setImages(new ArrayList<>(request.images()));
+        merchant.setPeriods(toPeriodNames(request.periods()));
 
         Merchant saved = merchantRepository.save(merchant);
-        return saved.getId();
-    }
+        UUID merchantId = saved.getId();
 
+        merchantTagRepository.deleteAllByMerchantId(merchantId);
+        List<UUID> tagIds = request.tagIds() == null ? List.of() : request.tagIds();
+        for (UUID tagId : tagIds) {
+            MerchantTag tag = new MerchantTag();
+            tag.setId(UUID.randomUUID());
+            tag.setMerchantId(merchantId);
+            tag.setTagId(tagId);
+            merchantTagRepository.save(tag);
+        }
+
+        merchantReviewRepository.deleteAllByMerchantId(merchantId);
+        List<ReviewUpsertItem> reviews = request.reviews() == null ? List.of() : request.reviews();
+        for (ReviewUpsertItem item : reviews) {
+            MerchantReview review = new MerchantReview();
+            review.setMerchantId(merchantId);
+            review.setNickname(item.nickname());
+            review.setTitle(item.title());
+            review.setContent(item.content());
+            review.setSortOrder(item.sortOrder());
+            merchantReviewRepository.save(review);
+        }
+
+        return detail(merchantId);
+    }
 
     /** 列表分页查询。 */
     @Transactional(readOnly = true)
@@ -112,7 +140,42 @@ public class MerchantService {
     /** 商户详情。 */
     @Transactional(readOnly = true)
     public MerchantDetailResponse detail(UUID id) {
-       return null;
+        Merchant merchant = merchantRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("商户不存在：" + id));
+
+        List<UUID> tagIds = merchantTagRepository.findAllByMerchantId(id).stream()
+                .map(MerchantTag::getTagId)
+                .toList();
+
+        List<MerchantDetailResponse.ReviewItem> reviews = merchantReviewRepository
+                .findAllByMerchantIdOrderBySortOrderAsc(id).stream()
+                .sorted(Comparator.comparing(MerchantReview::getSortOrder))
+                .map(r -> new MerchantDetailResponse.ReviewItem(
+                        r.getId(), r.getNickname(), r.getTitle(), r.getContent(), r.getSortOrder()))
+                .toList();
+
+        return new MerchantDetailResponse(
+                merchant.getId(),
+                merchant.getName(),
+                merchant.getLogo(),
+                merchant.getAddress(),
+                merchant.getLongitude(),
+                merchant.getLatitude(),
+                merchant.getCityId(),
+                merchant.getCategoryId(),
+                merchant.getSafetyEnvironmentScore(),
+                merchant.getBusinessRightsScore(),
+                merchant.getExperienceFriendlyScore(),
+                merchant.getSocialContributionScore(),
+                merchant.getStory(),
+                merchant.getWeight(),
+                merchant.isOnline(),
+                toPeriods(merchant.getPeriods()),
+                tagIds,
+                merchant.getImages() == null ? List.of() : List.copyOf(merchant.getImages()),
+                reviews,
+                merchant.getCreatedAt(),
+                merchant.getUpdatedAt());
     }
 
     /** 删除商户（并清理子表）。 */
@@ -127,11 +190,12 @@ public class MerchantService {
     }
 
     /** 切换上下架。 */
-    public UUID setOnline(UUID id, boolean online) {
+    public MerchantDetailResponse setOnline(UUID id, boolean online) {
         Merchant merchant = merchantRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("商户不存在：" + id));
         merchant.setOnline(online);
-        return id;
+        merchantRepository.save(merchant);
+        return detail(id);
     }
 
     /** 按分类批量下架（分类删除前调用）。 */
@@ -171,6 +235,22 @@ public class MerchantService {
         if (value < min || value > max) {
             throw new ValidationException(field + " 必须在 [" + min + ", " + max + "] 之间");
         }
+    }
+
+    /** Period 枚举 -> 字符串名（持久化）。 */
+    private static List<String> toPeriodNames(List<Period> periods) {
+        if (periods == null) {
+            return new ArrayList<>();
+        }
+        return periods.stream().map(Period::name).collect(java.util.stream.Collectors.toCollection(ArrayList::new));
+    }
+
+    /** 字符串名 -> Period 枚举（读取展示）。 */
+    private static List<Period> toPeriods(List<String> names) {
+        if (names == null) {
+            return List.of();
+        }
+        return names.stream().map(Period::valueOf).toList();
     }
 
     /** 实体到列表项。 */

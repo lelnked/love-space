@@ -2,7 +2,6 @@ package com.loves.space.modules.merchant.controller;
 
 import com.loves.space.common.annotation.OperationLog;
 import com.loves.space.common.dto.OnlineStatusRequest;
-import com.loves.space.common.enums.Period;
 import com.loves.space.common.page.PageResponseMapper.PageResponse;
 import com.loves.space.modules.merchant.dto.MerchantAdminItem;
 import com.loves.space.modules.merchant.dto.MerchantDetailResponse;
@@ -39,12 +38,11 @@ public class MerchantController {
     @GetMapping
     public PageResponse<MerchantAdminItem> list(@RequestParam(required = false) UUID cityId,
                                                 @RequestParam(required = false) UUID categoryId,
-                                                @RequestParam(required = false) Period period,
                                                 @RequestParam(required = false) Boolean online,
                                                 @RequestParam(required = false) String name,
                                                 @RequestParam(required = false) Integer page,
                                                 @RequestParam(required = false) Integer size) {
-        return merchantService.page(new MerchantQuery(cityId, categoryId, period, online, name, page, size));
+        return merchantService.page(new MerchantQuery(cityId, categoryId, online, name, page, size));
     }
 
     /** 商户详情。 */

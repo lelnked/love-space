@@ -1,7 +1,5 @@
 package com.loves.space.modules.merchant.dto;
 
-import com.loves.space.common.enums.Period;
-
 import java.util.UUID;
 
 /**
@@ -9,7 +7,6 @@ import java.util.UUID;
  *
  * @param cityId     按城市过滤（可空）
  * @param categoryId 按分类过滤（可空）
- * @param period     按推荐生理周期过滤（可空）
  * @param online     上架状态过滤（可空）
  * @param name       名称模糊（可空）
  * @param page       页码（1 基，可空）
@@ -18,7 +15,6 @@ import java.util.UUID;
 public record MerchantQuery(
         UUID cityId,
         UUID categoryId,
-        Period period,
         Boolean online,
         String name,
         Integer page,

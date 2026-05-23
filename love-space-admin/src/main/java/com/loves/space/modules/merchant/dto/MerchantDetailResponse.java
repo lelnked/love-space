@@ -25,9 +25,9 @@ import java.util.UUID;
  * @param story                   商户故事
  * @param weight                  排序权重
  * @param online                  是否上架
- * @param recommendedPeriods      推荐生理周期列表
+ * @param periods                 推荐生理周期列表
  * @param tagIds                  关联标签 ID 列表
- * @param images                  图片列表（按 sortOrder 升序）
+ * @param images                  图片 URL 列表（按数组顺序展示）
  * @param reviews                 评价列表（按 sortOrder 升序）
  * @param createdAt               创建时间
  * @param updatedAt               更新时间
@@ -48,23 +48,13 @@ public record MerchantDetailResponse(
         String story,
         Integer weight,
         boolean online,
-        List<Period> recommendedPeriods,
+        List<Period> periods,
         List<UUID> tagIds,
-        List<ImageItem> images,
+        List<String> images,
         List<ReviewItem> reviews,
         OffsetDateTime createdAt,
         OffsetDateTime updatedAt
 ) {
-
-    /**
-     * 商户图片详情项。
-     *
-     * @param id        图片 ID
-     * @param url       图片 URL
-     * @param sortOrder 排序序号
-     */
-    public record ImageItem(UUID id, String url, Integer sortOrder) {
-    }
 
     /**
      * 商户评价详情项。

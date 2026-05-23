@@ -1,8 +1,10 @@
 package com.loves.space.modules.merchant.service;
 
+import com.loves.space.common.enums.Period;
 import com.loves.space.common.exception.ValidationException;
 import com.loves.space.modules.merchant.dto.MerchantDetailResponse;
 import com.loves.space.modules.merchant.dto.MerchantUpsertRequest;
+import com.loves.space.modules.merchant.dto.ReviewUpsertItem;
 import com.loves.space.modules.merchant.repository.MerchantRepository;
 import com.loves.space.modules.merchant.repository.MerchantReviewRepository;
 import com.loves.space.modules.merchant.repository.MerchantTagRepository;
@@ -17,7 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
- * {@link MerchantService} 集成测试：covers upsert 校验、子表替换、按分类批量下架。
+ * {@link MerchantService} 集成测试：覆盖 upsert 校验、tag/review 子表替换、按分类批量下架。
  */
 class MerchantServiceTest extends AbstractPostgresIntegrationTest {
 
@@ -25,10 +27,6 @@ class MerchantServiceTest extends AbstractPostgresIntegrationTest {
     private MerchantService merchantService;
     @Autowired
     private MerchantRepository merchantRepository;
-    @Autowired
-    private MerchantImageRepository merchantImageRepository;
-    @Autowired
-    private MerchantPeriodRepository merchantPeriodRepository;
     @Autowired
     private MerchantTagRepository merchantTagRepository;
     @Autowired
@@ -53,7 +51,7 @@ class MerchantServiceTest extends AbstractPostgresIntegrationTest {
                 true,
                 List.of(),
                 List.of(),
-                List.of(new MerchantUpsertRequest.ImageItem("https://example.com/a.png", 0)),
+                List.of("https://example.com/a.png"),
                 List.of()
         );
     }
@@ -67,7 +65,7 @@ class MerchantServiceTest extends AbstractPostgresIntegrationTest {
                 base.safetyEnvironmentScore(), base.businessRightsScore(),
                 base.experienceFriendlyScore(), base.socialContributionScore(),
                 base.story(), base.weight(), base.online(),
-                base.recommendedPeriods(), base.tagIds(), base.images(), base.reviews());
+                base.periods(), base.tagIds(), base.images(), base.reviews());
 
         assertThatThrownBy(() -> merchantService.upsert(null, bad))
                 .isInstanceOf(ValidationException.class);
@@ -81,7 +79,7 @@ class MerchantServiceTest extends AbstractPostgresIntegrationTest {
                 (short) 31, base.businessRightsScore(),
                 base.experienceFriendlyScore(), base.socialContributionScore(),
                 base.story(), base.weight(), base.online(),
-                base.recommendedPeriods(), base.tagIds(), base.images(), base.reviews());
+                base.periods(), base.tagIds(), base.images(), base.reviews());
 
         assertThatThrownBy(() -> merchantService.upsert(null, bad))
                 .isInstanceOf(ValidationException.class);
@@ -95,7 +93,7 @@ class MerchantServiceTest extends AbstractPostgresIntegrationTest {
                 base.safetyEnvironmentScore(), base.businessRightsScore(),
                 base.experienceFriendlyScore(), base.socialContributionScore(),
                 base.story(), base.weight(), base.online(),
-                base.recommendedPeriods(), base.tagIds(), List.of(), base.reviews());
+                base.periods(), base.tagIds(), List.of(), base.reviews());
 
         assertThatThrownBy(() -> merchantService.upsert(null, bad))
                 .isInstanceOf(ValidationException.class);
@@ -110,7 +108,7 @@ class MerchantServiceTest extends AbstractPostgresIntegrationTest {
                 base.safetyEnvironmentScore(), base.businessRightsScore(),
                 base.experienceFriendlyScore(), base.socialContributionScore(),
                 tooLong, base.weight(), base.online(),
-                base.recommendedPeriods(), base.tagIds(), base.images(), base.reviews());
+                base.periods(), base.tagIds(), base.images(), base.reviews());
 
         assertThatThrownBy(() -> merchantService.upsert(null, bad))
                 .isInstanceOf(ValidationException.class);
@@ -128,21 +126,17 @@ class MerchantServiceTest extends AbstractPostgresIntegrationTest {
                 null, null, cityId, categoryId,
                 (short) 25, (short) 20, (short) 20, (short) 15,
                 "故事内容", 100, true,
-                List.of(com.loves.space.common.enums.Period.MENSTRUAL,
-                        com.loves.space.common.enums.Period.LUTEAL),
+                List.of(Period.MENSTRUAL, Period.LUTEAL),
                 List.of(tagId),
-                List.of(
-                        new MerchantUpsertRequest.ImageItem("https://example.com/1.png", 0),
-                        new MerchantUpsertRequest.ImageItem("https://example.com/2.png", 1)),
-                List.of(new com.loves.space.modules.merchant.dto.ReviewUpsertItem(
-                        "user", "title", "content", 0))
+                List.of("https://example.com/1.png", "https://example.com/2.png"),
+                List.of(new ReviewUpsertItem("user", "title", "content", 0))
         );
 
         MerchantDetailResponse detail = merchantService.upsert(null, request);
 
         assertThat(detail.id()).isNotNull();
-        assertThat(merchantImageRepository.findAllByMerchantIdOrderBySortOrderAsc(detail.id())).hasSize(2);
-        assertThat(merchantPeriodRepository.findAllByMerchantId(detail.id())).hasSize(2);
+        assertThat(detail.images()).hasSize(2);
+        assertThat(detail.periods()).containsExactlyInAnyOrder(Period.MENSTRUAL, Period.LUTEAL);
         assertThat(merchantTagRepository.findAllByMerchantId(detail.id())).hasSize(1);
         assertThat(merchantReviewRepository.findAllByMerchantIdOrderBySortOrderAsc(detail.id())).hasSize(1);
     }
@@ -157,14 +151,14 @@ class MerchantServiceTest extends AbstractPostgresIntegrationTest {
                 base.safetyEnvironmentScore(), base.businessRightsScore(),
                 base.experienceFriendlyScore(), base.socialContributionScore(),
                 null, 0, true, List.of(), List.of(),
-                List.of(new MerchantUpsertRequest.ImageItem("https://example.com/a.png", 0)),
+                List.of("https://example.com/a.png"),
                 List.of());
         MerchantUpsertRequest b = new MerchantUpsertRequest(
                 "乙", base.logo(), base.address(), null, null, cityId, categoryId,
                 base.safetyEnvironmentScore(), base.businessRightsScore(),
                 base.experienceFriendlyScore(), base.socialContributionScore(),
                 null, 0, true, List.of(), List.of(),
-                List.of(new MerchantUpsertRequest.ImageItem("https://example.com/b.png", 0)),
+                List.of("https://example.com/b.png"),
                 List.of());
 
         MerchantDetailResponse ma = merchantService.upsert(null, a);

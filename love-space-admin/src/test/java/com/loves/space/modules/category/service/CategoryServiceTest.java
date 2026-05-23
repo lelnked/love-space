@@ -43,7 +43,7 @@ class CategoryServiceTest extends AbstractPostgresIntegrationTest {
                 (short) 20, (short) 15, (short) 15, (short) 10,
                 null, 0, true,
                 List.of(), List.of(),
-                List.of(new MerchantUpsertRequest.ImageItem("https://example.com/1.png", 0)),
+                List.of("https://example.com/1.png"),
                 List.of()
         );
         MerchantDetailResponse merchant = merchantService.upsert(null, request);

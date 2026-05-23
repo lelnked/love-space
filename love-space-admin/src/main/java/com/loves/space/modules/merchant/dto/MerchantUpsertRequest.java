@@ -13,7 +13,7 @@ import java.util.UUID;
 
 /**
  * 商户创建/更新请求（upsert）。
- * <p>本对象在 service 层一次性写入：商户主记录 + 图片 + 推荐周期 + 标签 + 评价。
+ * <p>主记录与 tag/review 子表在 service 层一次性写入；images / periods 现已内联在主表。
  *
  * @param name                    商户名称（≤ 15 个字符）
  * @param logo                    商户 LOGO URL
@@ -29,9 +29,9 @@ import java.util.UUID;
  * @param story                   商户故事（≤ 5000 字符，可空）
  * @param weight                  排序权重（默认 0）
  * @param online                  是否上架（默认 false）
- * @param recommendedPeriods      推荐生理周期列表（可空，service 视为空集合）
+ * @param periods                 推荐生理周期列表（可空，service 视为空集合）
  * @param tagIds                  关联标签 ID 列表（可空）
- * @param images                  商户图片列表（至少 1 张）
+ * @param images                  商户图片 URL 列表（至少 1 张，按数组顺序展示）
  * @param reviews                 商户评价列表（可空）
  */
 public record MerchantUpsertRequest(
@@ -49,20 +49,9 @@ public record MerchantUpsertRequest(
         String story,
         Integer weight,
         Boolean online,
-        List<Period> recommendedPeriods,
+        List<Period> periods,
         List<UUID> tagIds,
-        @Valid List<ImageItem> images,
+        List<@NotBlank String> images,
         @Valid List<ReviewUpsertItem> reviews
 ) {
-    /**
-     * 商户图片输入项。
-     *
-     * @param url       图片 URL
-     * @param sortOrder 排序序号
-     */
-    public record ImageItem(
-            @NotBlank String url,
-            @NotNull @Min(0) Integer sortOrder
-    ) {
-    }
 }
