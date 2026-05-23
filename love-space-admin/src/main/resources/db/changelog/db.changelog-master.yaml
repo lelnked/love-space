@@ -1,14 +1,8 @@
 # 运营后台数据库变更主入口
 # 仅 include 列表，不内联 changeSet；实际 changeset 全部为 Liquibase formatted-SQL 文件
-# 子文件需与 love-space-app 端 001-init-schema.sql 字节一致（建议 CI 校验 sha256 hash）
+# 001-init-schema.sql 与 love-space-app 端字节一致（建议 CI 校验 sha256 hash）
 databaseChangeLog:
   - include:
       file: db/changelog/changes/001-init-schema.sql
   - include:
       file: db/changelog/changes/002-seed-admin-manager.sql
-  - include:
-      file: db/changelog/changes/003-create-loves-banner.sql
-  - include:
-      file: db/changelog/changes/004-drop-city-banner-sort-order.sql
-  - include:
-      file: db/changelog/changes/005-refactor-merchant-children.sql
