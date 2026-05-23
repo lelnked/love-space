@@ -16,6 +16,7 @@ import { CategoryItem, listCategories } from "../../api/categories";
 import { listTags, TagItem } from "../../api/tags";
 import { uploadFile } from "../../api/files";
 import { PERIOD_LABEL, PERIOD_VALUES, Period } from "../../api/types";
+import { useToast } from "../../context/ToastContext";
 
 interface FieldError {
   field: string;
@@ -78,8 +79,8 @@ export default function MerchantForm() {
   const [submitting, setSubmitting] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [uploadingImageIndex, setUploadingImageIndex] = useState<number | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const toast = useToast();
 
   useEffect(() => {
     void listCities().then(setCities).catch(() => undefined);
@@ -120,7 +121,7 @@ export default function MerchantForm() {
         setOnline(d.online);
       })
       .catch((err: AxiosError<{ detail?: string }>) => {
-        setError(err.response?.data?.detail ?? "加载失败");
+        toast.error(err.response?.data?.detail ?? "加载失败");
       })
       .finally(() => setLoading(false));
   }, [id]);
@@ -135,7 +136,7 @@ export default function MerchantForm() {
       setLogoPreview(URL.createObjectURL(file));
     } catch (err) {
       const ax = err as AxiosError<{ detail?: string }>;
-      alert(ax.response?.data?.detail ?? "上传失败");
+      toast.error(ax.response?.data?.detail ?? "上传失败");
     } finally {
       setUploadingLogo(false);
       e.target.value = "";
@@ -154,7 +155,7 @@ export default function MerchantForm() {
       );
     } catch (err) {
       const ax = err as AxiosError<{ detail?: string }>;
-      alert(ax.response?.data?.detail ?? "上传失败");
+      toast.error(ax.response?.data?.detail ?? "上传失败");
     } finally {
       setUploadingImageIndex(null);
       e.target.value = "";
@@ -189,7 +190,6 @@ export default function MerchantForm() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (submitting) return;
-    setError(null);
     setFieldErrors({});
 
     const errs: Record<string, string> = {};
@@ -252,7 +252,7 @@ export default function MerchantForm() {
         for (const fe of data.errors) map[fe.field] = fe.message;
         setFieldErrors(map);
       }
-      setError(data?.detail ?? "保存失败");
+      toast.error(data?.detail ?? "保存失败");
     } finally {
       setSubmitting(false);
     }
@@ -642,8 +642,6 @@ export default function MerchantForm() {
               </div>
             </div>
           </fieldset>
-
-          {error && <div className="text-error-500 text-sm">{error}</div>}
 
           <div className="flex gap-3">
             <Button size="sm" disabled={submitting}>

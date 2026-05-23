@@ -5,6 +5,7 @@ import AppLayout from "./layout/AppLayout";
 import { ScrollToTop } from "./components/common/ScrollToTop";
 import Home from "./pages/Dashboard/Home";
 import { AuthProvider } from "./context/AuthContext";
+import { ToastProvider } from "./context/ToastContext";
 import RequireAuth from "./components/auth/RequireAuth";
 import ManagerList from "./pages/Managers/List";
 import CityList from "./pages/Cities/List";
@@ -20,6 +21,7 @@ import LogList from "./pages/Logs/List";
 export default function App() {
   return (
     <AuthProvider>
+      <ToastProvider>
       <Router>
         <ScrollToTop />
         <Routes>
@@ -52,6 +54,7 @@ export default function App() {
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Router>
+      </ToastProvider>
     </AuthProvider>
   );
 }

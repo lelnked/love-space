@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { AxiosError } from "axios";
 import FilterBar, { FilterField, FilterValues } from "../../components/filter/FilterBar";
 import Pagination from "../../components/pagination/Pagination";
+import { useToast } from "../../context/ToastContext";
 import {
   createTag,
   deleteTag,
@@ -50,7 +51,7 @@ export default function TagList() {
   const [filters, setFilters] = useState<FilterValues>({});
   const [items, setItems] = useState<TagItem[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const toast = useToast();
   const [newName, setNewName] = useState("");
   const [creating, setCreating] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -71,17 +72,16 @@ export default function TagList() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    setError(null);
     try {
       const data = await listTags(buildQuery(filters));
       setItems(data);
     } catch (err) {
       const ax = err as AxiosError<{ detail?: string }>;
-      setError(ax.response?.data?.detail ?? "加载失败");
+      toast.error(ax.response?.data?.detail ?? "加载失败");
     } finally {
       setLoading(false);
     }
-  }, [filters]);
+  }, [filters, toast]);
 
   useEffect(() => {
     void load();
@@ -90,11 +90,11 @@ export default function TagList() {
   const handleCreate = async () => {
     const name = newName.trim();
     if (!name) {
-      alert("请输入标签名称");
+      toast.warning("请输入标签名称");
       return;
     }
     if (codePointLength(name) > 6) {
-      alert("标签名称最多 6 个字符");
+      toast.warning("标签名称最多 6 个字符");
       return;
     }
     setCreating(true);
@@ -104,7 +104,7 @@ export default function TagList() {
       await load();
     } catch (err) {
       const ax = err as AxiosError<{ detail?: string }>;
-      alert(ax.response?.data?.detail ?? "创建失败");
+      toast.error(ax.response?.data?.detail ??"创建失败");
     } finally {
       setCreating(false);
     }
@@ -122,7 +122,7 @@ export default function TagList() {
     const name = editingName.trim();
     if (!name) return;
     if (codePointLength(name) > 6) {
-      alert("标签名称最多 6 个字符");
+      toast.warning("标签名称最多 6 个字符");
       return;
     }
     try {
@@ -131,7 +131,7 @@ export default function TagList() {
       await load();
     } catch (err) {
       const ax = err as AxiosError<{ detail?: string }>;
-      alert(ax.response?.data?.detail ?? "保存失败");
+      toast.error(ax.response?.data?.detail ??"保存失败");
     }
   };
 
@@ -141,7 +141,7 @@ export default function TagList() {
       await load();
     } catch (err) {
       const ax = err as AxiosError<{ detail?: string }>;
-      alert(ax.response?.data?.detail ?? "操作失败");
+      toast.error(ax.response?.data?.detail ??"操作失败");
     }
   };
 
@@ -152,7 +152,7 @@ export default function TagList() {
       await load();
     } catch (err) {
       const ax = err as AxiosError<{ detail?: string }>;
-      alert(ax.response?.data?.detail ?? "删除失败");
+      toast.error(ax.response?.data?.detail ??"删除失败");
     }
   };
 
@@ -190,8 +190,6 @@ export default function TagList() {
           setPage(1);
         }}
       />
-
-      {error && <div className="text-error-500 text-sm mb-2">{error}</div>}
 
       <div className="overflow-x-auto bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800">
         <table className="w-full text-sm">

@@ -6,8 +6,8 @@ import Pagination from "../../components/pagination/Pagination";
 import PageMeta from "../../components/common/PageMeta";
 import ComponentCard from "../../components/common/ComponentCard";
 import Badge from "../../components/ui/badge/Badge";
-import Alert from "../../components/ui/alert/Alert";
 import Button from "../../components/ui/button/Button";
+import { useToast } from "../../context/ToastContext";
 import {
   Table,
   TableBody,
@@ -54,7 +54,7 @@ export default function MerchantList() {
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const toast = useToast();
   const [cities, setCities] = useState<CityItem[]>([]);
   const [categories, setCategories] = useState<CategoryItem[]>([]);
   const [scoreCache, setScoreCache] = useState<Record<string, number | null>>({});
@@ -109,7 +109,6 @@ export default function MerchantList() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    setError(null);
     try {
       const data = await pageMerchants(buildQuery(filters, page, size));
       setItems(data.content);
@@ -130,11 +129,11 @@ export default function MerchantList() {
       setScoreCache(next);
     } catch (err) {
       const ax = err as AxiosError<{ detail?: string }>;
-      setError(ax.response?.data?.detail ?? "加载失败");
+      toast.error(ax.response?.data?.detail ?? "加载失败");
     } finally {
       setLoading(false);
     }
-  }, [filters, page, size]);
+  }, [filters, page, size, toast]);
 
   useEffect(() => {
     void load();
@@ -155,7 +154,7 @@ export default function MerchantList() {
       await load();
     } catch (err) {
       const ax = err as AxiosError<{ detail?: string }>;
-      setError(ax.response?.data?.detail ?? "操作失败");
+      toast.error(ax.response?.data?.detail ?? "操作失败");
     }
   };
 
@@ -166,7 +165,7 @@ export default function MerchantList() {
       await load();
     } catch (err) {
       const ax = err as AxiosError<{ detail?: string }>;
-      setError(ax.response?.data?.detail ?? "删除失败");
+      toast.error(ax.response?.data?.detail ?? "删除失败");
     }
   };
 
@@ -189,10 +188,6 @@ export default function MerchantList() {
             onApply={handleApply}
             onReset={handleReset}
           />
-
-          {error && (
-            <Alert variant="error" title="操作失败" message={error} showLink={false} />
-          )}
 
           <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
             <div className="max-w-full overflow-x-auto">

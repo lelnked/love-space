@@ -6,20 +6,20 @@ import Label from "../form/Label";
 import Input from "../form/input/InputField";
 import Button from "../ui/button/Button";
 import { useAuth } from "../../hooks/useAuth";
+import { useToast } from "../../context/ToastContext";
 
 export default function SignInForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const { login } = useAuth();
   const navigate = useNavigate();
+  const toast = useToast();
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (submitting) return;
-    setError(null);
     setSubmitting(true);
     try {
       await login(username.trim(), password);
@@ -27,9 +27,9 @@ export default function SignInForm() {
     } catch (err) {
       const ax = err as AxiosError;
       if (ax.response?.status === 401) {
-        setError("用户名或密码错误，或账号已停用");
+        toast.error("用户名或密码错误，或账号已停用");
       } else {
-        setError("登录失败，请稍后重试");
+        toast.error("登录失败，请稍后重试");
       }
     } finally {
       setSubmitting(false);
@@ -83,9 +83,6 @@ export default function SignInForm() {
                   </span>
                 </div>
               </div>
-              {error && (
-                <div className="text-error-500 text-sm">{error}</div>
-              )}
               <div>
                 <Button
                   className="w-full"

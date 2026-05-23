@@ -4,7 +4,7 @@ import FilterBar, { FilterField, FilterValues } from "../../components/filter/Fi
 import Pagination from "../../components/pagination/Pagination";
 import PageMeta from "../../components/common/PageMeta";
 import ComponentCard from "../../components/common/ComponentCard";
-import Alert from "../../components/ui/alert/Alert";
+import { useToast } from "../../context/ToastContext";
 import {
   Table,
   TableBody,
@@ -63,11 +63,10 @@ export default function LogList() {
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const toast = useToast();
 
   const load = useCallback(async () => {
     setLoading(true);
-    setError(null);
     try {
       const data = await pageOperationLogs(buildQuery(filters, page, size));
       setItems(data.content);
@@ -75,11 +74,11 @@ export default function LogList() {
       setTotalPages(data.totalPages);
     } catch (err) {
       const ax = err as AxiosError<{ detail?: string }>;
-      setError(ax.response?.data?.detail ?? "加载失败");
+      toast.error(ax.response?.data?.detail ?? "加载失败");
     } finally {
       setLoading(false);
     }
-  }, [filters, page, size]);
+  }, [filters, page, size, toast]);
 
   useEffect(() => {
     void load();
@@ -106,10 +105,6 @@ export default function LogList() {
             onApply={handleApply}
             onReset={handleReset}
           />
-
-          {error && (
-            <Alert variant="error" title="操作失败" message={error} showLink={false} />
-          )}
 
           <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
             <div className="max-w-full overflow-x-auto">

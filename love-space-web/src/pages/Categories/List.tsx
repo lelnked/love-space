@@ -3,8 +3,8 @@ import { AxiosError } from "axios";
 import Pagination from "../../components/pagination/Pagination";
 import PageMeta from "../../components/common/PageMeta";
 import ComponentCard from "../../components/common/ComponentCard";
-import Alert from "../../components/ui/alert/Alert";
 import Button from "../../components/ui/button/Button";
+import { useToast } from "../../context/ToastContext";
 import { Modal } from "../../components/ui/modal";
 import Label from "../../components/form/Label";
 import Input from "../../components/form/input/InputField";
@@ -39,7 +39,7 @@ function formatDateTime(value: string): string {
 export default function CategoryList() {
   const [items, setItems] = useState<CategoryItem[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const toast = useToast();
   const [page, setPage] = useState(1);
   const [size, setSize] = useState(20);
 
@@ -59,12 +59,10 @@ export default function CategoryList() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formName, setFormName] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [formError, setFormError] = useState<string | null>(null);
   const [formFieldErrors, setFormFieldErrors] = useState<Record<string, string>>({});
 
   const load = useCallback(async () => {
     setLoading(true);
-    setError(null);
     try {
       const data = await listCategories();
       const sorted = [...data].sort((a, b) =>
@@ -73,11 +71,11 @@ export default function CategoryList() {
       setItems(sorted);
     } catch (err) {
       const ax = err as AxiosError<{ detail?: string }>;
-      setError(ax.response?.data?.detail ?? "加载失败");
+      toast.error(ax.response?.data?.detail ?? "加载失败");
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [toast]);
 
   useEffect(() => {
     void load();
@@ -87,7 +85,6 @@ export default function CategoryList() {
     setModalMode("create");
     setEditingId(null);
     setFormName("");
-    setFormError(null);
     setFormFieldErrors({});
     setModalOpen(true);
   };
@@ -96,7 +93,6 @@ export default function CategoryList() {
     setModalMode("edit");
     setEditingId(it.id);
     setFormName(it.name);
-    setFormError(null);
     setFormFieldErrors({});
     setModalOpen(true);
   };
@@ -109,7 +105,6 @@ export default function CategoryList() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (submitting) return;
-    setFormError(null);
     setFormFieldErrors({});
     const name = formName.trim();
     if (!name) {
@@ -134,7 +129,7 @@ export default function CategoryList() {
         for (const fe of data.errors) map[fe.field] = fe.message;
         setFormFieldErrors(map);
       }
-      setFormError(data?.detail ?? (modalMode === "edit" ? "保存失败" : "创建失败"));
+      toast.error(data?.detail ?? (modalMode === "edit" ? "保存失败" : "创建失败"));
     } finally {
       setSubmitting(false);
     }
@@ -147,7 +142,7 @@ export default function CategoryList() {
       await load();
     } catch (err) {
       const ax = err as AxiosError<{ detail?: string }>;
-      setError(ax.response?.data?.detail ?? "删除失败");
+      toast.error(ax.response?.data?.detail ?? "删除失败");
     }
   };
 
@@ -165,10 +160,6 @@ export default function CategoryList() {
       </div>
       <div className="space-y-6">
         <ComponentCard title="分类列表">
-          {error && (
-            <Alert variant="error" title="操作失败" message={error} showLink={false} />
-          )}
-
           <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
             <div className="max-w-full overflow-x-auto">
               <Table>
@@ -263,15 +254,6 @@ export default function CategoryList() {
                 hint={formFieldErrors.name}
               />
             </div>
-
-            {formError && (
-              <Alert
-                variant="error"
-                title={modalMode === "edit" ? "保存失败" : "创建失败"}
-                message={formError}
-                showLink={false}
-              />
-            )}
 
             <div className="flex justify-end gap-3 pt-2">
               <button

@@ -13,6 +13,7 @@ import {
 } from "../../api/banners";
 import { uploadFile } from "../../api/files";
 import CitySelect from "./components/CitySelect";
+import { useToast } from "../../context/ToastContext";
 
 interface FieldError {
   field: string;
@@ -37,8 +38,8 @@ export default function BannerForm() {
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const toast = useToast();
 
   useEffect(() => {
     if (!id) return;
@@ -52,7 +53,7 @@ export default function BannerForm() {
         setLink(d.link);
       })
       .catch((err: AxiosError<{ detail?: string }>) => {
-        setError(err.response?.data?.detail ?? "加载失败");
+        toast.error(err.response?.data?.detail ?? "加载失败");
       })
       .finally(() => setLoading(false));
   }, [id]);
@@ -67,7 +68,7 @@ export default function BannerForm() {
       setImagePreviews((prev) => [...prev, URL.createObjectURL(file)]);
     } catch (err) {
       const ax = err as AxiosError<{ detail?: string }>;
-      alert(ax.response?.data?.detail ?? "上传失败");
+      toast.error(ax.response?.data?.detail ?? "上传失败");
     } finally {
       setUploading(false);
       e.target.value = "";
@@ -82,7 +83,6 @@ export default function BannerForm() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (submitting) return;
-    setError(null);
     setFieldErrors({});
 
     const errs: Record<string, string> = {};
@@ -114,7 +114,7 @@ export default function BannerForm() {
         for (const fe of data.errors) map[fe.field] = fe.message;
         setFieldErrors(map);
       }
-      setError(data?.detail ?? "保存失败");
+      toast.error(data?.detail ?? "保存失败");
     } finally {
       setSubmitting(false);
     }
@@ -195,8 +195,6 @@ export default function BannerForm() {
               ))}
             </div>
           </div>
-
-          {error && <div className="text-error-500 text-sm">{error}</div>}
 
           <div className="flex gap-3">
             <Button size="sm" disabled={submitting}>
