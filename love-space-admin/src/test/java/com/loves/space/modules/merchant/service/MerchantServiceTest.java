@@ -3,8 +3,6 @@ package com.loves.space.modules.merchant.service;
 import com.loves.space.common.exception.ValidationException;
 import com.loves.space.modules.merchant.dto.MerchantDetailResponse;
 import com.loves.space.modules.merchant.dto.MerchantUpsertRequest;
-import com.loves.space.modules.merchant.repository.MerchantImageRepository;
-import com.loves.space.modules.merchant.repository.MerchantPeriodRepository;
 import com.loves.space.modules.merchant.repository.MerchantRepository;
 import com.loves.space.modules.merchant.repository.MerchantReviewRepository;
 import com.loves.space.modules.merchant.repository.MerchantTagRepository;

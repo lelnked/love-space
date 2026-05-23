@@ -10,19 +10,14 @@ import com.loves.space.modules.merchant.dto.MerchantAdminItem;
 import com.loves.space.modules.merchant.dto.MerchantDetailResponse;
 import com.loves.space.modules.merchant.dto.MerchantQuery;
 import com.loves.space.modules.merchant.dto.MerchantUpsertRequest;
-import com.loves.space.modules.merchant.dto.ReviewUpsertItem;
 import com.loves.space.modules.merchant.entity.Merchant;
-import com.loves.space.modules.merchant.entity.MerchantImage;
-import com.loves.space.modules.merchant.entity.MerchantPeriod;
 import com.loves.space.modules.merchant.entity.MerchantReview;
 import com.loves.space.modules.merchant.entity.MerchantTag;
-import com.loves.space.modules.merchant.repository.MerchantImageRepository;
-import com.loves.space.modules.merchant.repository.MerchantPeriodRepository;
 import com.loves.space.modules.merchant.repository.MerchantRepository;
 import com.loves.space.modules.merchant.repository.MerchantReviewRepository;
 import com.loves.space.modules.merchant.repository.MerchantTagRepository;
 import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.criteria.Subquery;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -40,7 +35,7 @@ import java.util.UUID;
  * 商户服务（运营后台）：upsert（主记录 + 子表整体替换）、列表、详情、删除、上下架切换、按分类批量下架。
  */
 @Service
-@Transactional
+@RequiredArgsConstructor
 public class MerchantService {
 
     /** 商户名称最大字符数（codePoint）。 */
@@ -49,22 +44,9 @@ public class MerchantService {
     private static final int MAX_STORY_CODE_POINTS = 5000;
 
     private final MerchantRepository merchantRepository;
-    private final MerchantImageRepository merchantImageRepository;
-    private final MerchantPeriodRepository merchantPeriodRepository;
     private final MerchantTagRepository merchantTagRepository;
     private final MerchantReviewRepository merchantReviewRepository;
 
-    public MerchantService(MerchantRepository merchantRepository,
-                           MerchantImageRepository merchantImageRepository,
-                           MerchantPeriodRepository merchantPeriodRepository,
-                           MerchantTagRepository merchantTagRepository,
-                           MerchantReviewRepository merchantReviewRepository) {
-        this.merchantRepository = merchantRepository;
-        this.merchantImageRepository = merchantImageRepository;
-        this.merchantPeriodRepository = merchantPeriodRepository;
-        this.merchantTagRepository = merchantTagRepository;
-        this.merchantReviewRepository = merchantReviewRepository;
-    }
 
     /**
      * 创建或更新商户。
@@ -74,7 +56,7 @@ public class MerchantService {
      * @param request 商户输入
      * @return 商户详情
      */
-    public MerchantDetailResponse upsert(UUID id, MerchantUpsertRequest request) {
+    public UUID upsert(UUID id, MerchantUpsertRequest request) {
         validate(request);
 
         Merchant merchant = id == null
@@ -98,68 +80,13 @@ public class MerchantService {
         merchant.setOnline(request.online() != null && request.online());
 
         Merchant saved = merchantRepository.save(merchant);
-        UUID merchantId = saved.getId();
-
-        replaceChildren(merchantId, request);
-
-        return detail(merchantId);
+        return saved.getId();
     }
 
-    /** 子表整体替换。 */
-    private void replaceChildren(UUID merchantId, MerchantUpsertRequest request) {
-        merchantImageRepository.deleteAllByMerchantId(merchantId);
-        merchantPeriodRepository.deleteAllByMerchantId(merchantId);
-        merchantTagRepository.deleteAllByMerchantId(merchantId);
-        merchantReviewRepository.deleteAllByMerchantId(merchantId);
-        // 强制 flush 删除以避免与后续 insert 主键冲突（复合主键场景）
-        merchantImageRepository.flush();
-        merchantPeriodRepository.flush();
-        merchantTagRepository.flush();
-        merchantReviewRepository.flush();
-
-        // 图片
-        for (MerchantUpsertRequest.ImageItem item : request.images()) {
-            MerchantImage image = new MerchantImage();
-            image.setMerchantId(merchantId);
-            image.setUrl(item.url());
-            image.setSortOrder(item.sortOrder());
-            merchantImageRepository.save(image);
-        }
-        // 推荐周期
-        if (request.recommendedPeriods() != null) {
-            for (Period period : request.recommendedPeriods().stream().distinct().toList()) {
-                MerchantPeriod mp = new MerchantPeriod();
-                mp.setMerchantId(merchantId);
-                mp.setPeriod(period);
-                merchantPeriodRepository.save(mp);
-            }
-        }
-        // 标签
-        if (request.tagIds() != null) {
-            for (UUID tagId : request.tagIds().stream().distinct().toList()) {
-                MerchantTag mt = new MerchantTag();
-                mt.setMerchantId(merchantId);
-                mt.setTagId(tagId);
-                merchantTagRepository.save(mt);
-            }
-        }
-        // 评价
-        if (request.reviews() != null) {
-            for (ReviewUpsertItem item : request.reviews()) {
-                MerchantReview review = new MerchantReview();
-                review.setMerchantId(merchantId);
-                review.setNickname(item.nickname());
-                review.setTitle(item.title());
-                review.setContent(item.content());
-                review.setSortOrder(item.sortOrder());
-                merchantReviewRepository.save(review);
-            }
-        }
-    }
 
     /** 列表分页查询。 */
     @Transactional(readOnly = true)
-    public PageResponse<MerchantAdminItem> list(MerchantQuery query) {
+    public PageResponse<MerchantAdminItem> page(MerchantQuery query) {
         Specification<Merchant> spec = (root, cq, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
             if (query.cityId() != null) {
@@ -174,14 +101,6 @@ public class MerchantService {
             if (StringUtils.hasText(query.name())) {
                 predicates.add(cb.like(root.get("name"), "%" + query.name() + "%"));
             }
-            if (query.period() != null) {
-                Subquery<UUID> sub = cq.subquery(UUID.class);
-                var mp = sub.from(MerchantPeriod.class);
-                sub.select(mp.get("merchantId"))
-                        .where(cb.equal(mp.get("merchantId"), root.get("id")),
-                                cb.equal(mp.get("period"), query.period()));
-                predicates.add(cb.exists(sub));
-            }
             return cb.and(predicates.toArray(new Predicate[0]));
         };
         Pageable pageable = new PageQuery(query.page(), query.size())
@@ -193,44 +112,7 @@ public class MerchantService {
     /** 商户详情。 */
     @Transactional(readOnly = true)
     public MerchantDetailResponse detail(UUID id) {
-        Merchant merchant = merchantRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("商户不存在：" + id));
-        List<MerchantImage> images = merchantImageRepository.findAllByMerchantIdOrderBySortOrderAsc(id);
-        List<Period> periods = merchantPeriodRepository.findAllByMerchantId(id).stream()
-                .map(MerchantPeriod::getPeriod)
-                .toList();
-        List<UUID> tagIds = merchantTagRepository.findAllByMerchantId(id).stream()
-                .map(MerchantTag::getTagId)
-                .toList();
-        List<MerchantReview> reviews = merchantReviewRepository.findAllByMerchantIdOrderBySortOrderAsc(id);
-
-        return new MerchantDetailResponse(
-                merchant.getId(),
-                merchant.getName(),
-                merchant.getLogo(),
-                merchant.getAddress(),
-                merchant.getLongitude(),
-                merchant.getLatitude(),
-                merchant.getCityId(),
-                merchant.getCategoryId(),
-                merchant.getSafetyEnvironmentScore(),
-                merchant.getBusinessRightsScore(),
-                merchant.getExperienceFriendlyScore(),
-                merchant.getSocialContributionScore(),
-                merchant.getStory(),
-                merchant.getWeight(),
-                merchant.isOnline(),
-                periods,
-                tagIds,
-                images.stream()
-                        .map(i -> new MerchantDetailResponse.ImageItem(i.getId(), i.getUrl(), i.getSortOrder()))
-                        .toList(),
-                reviews.stream()
-                        .map(r -> new MerchantDetailResponse.ReviewItem(
-                                r.getId(), r.getNickname(), r.getTitle(), r.getContent(), r.getSortOrder()))
-                        .toList(),
-                merchant.getCreatedAt(),
-                merchant.getUpdatedAt());
+       return null;
     }
 
     /** 删除商户（并清理子表）。 */
@@ -239,19 +121,17 @@ public class MerchantService {
         if (existing.isEmpty()) {
             throw new ResourceNotFoundException("商户不存在：" + id);
         }
-        merchantImageRepository.deleteAllByMerchantId(id);
-        merchantPeriodRepository.deleteAllByMerchantId(id);
         merchantTagRepository.deleteAllByMerchantId(id);
         merchantReviewRepository.deleteAllByMerchantId(id);
         merchantRepository.deleteById(id);
     }
 
     /** 切换上下架。 */
-    public MerchantDetailResponse setOnline(UUID id, boolean online) {
+    public UUID setOnline(UUID id, boolean online) {
         Merchant merchant = merchantRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("商户不存在：" + id));
         merchant.setOnline(online);
-        return detail(merchant.getId());
+        return id;
     }
 
     /** 按分类批量下架（分类删除前调用）。 */

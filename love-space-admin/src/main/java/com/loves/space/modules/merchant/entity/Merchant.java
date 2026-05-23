@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -48,6 +49,14 @@ public class Merchant extends BaseAuditEntity {
     /** 所属分类 ID（无 FK，可空）。 */
     @Column(name = "category_id")
     private UUID categoryId;
+
+    /** 商户图片 */
+    @Column(name = "images")
+    private List<String> images;
+
+    /** 推荐周期 */
+    @Column(name = "periods")
+    private List<String> periods;
 
     /** 安全环境原始分（满分 30）。 */
     @Column(name = "safety_environment_score", nullable = false)

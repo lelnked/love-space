@@ -20,19 +20,19 @@ import java.util.UUID;
  */
 @Entity
 @Table(name = "loves_merchant_tag")
-@IdClass(MerchantTagId.class)
 @EntityListeners(AuditingEntityListener.class)
 @Getter
 @Setter
 public class MerchantTag {
 
-    /** 商户 ID。 */
     @Id
+    private UUID id;
+
+    /** 商户 ID。 */
     @Column(name = "merchant_id", nullable = false)
     private UUID merchantId;
 
     /** 标签 ID。 */
-    @Id
     @Column(name = "tag_id", nullable = false)
     private UUID tagId;
 

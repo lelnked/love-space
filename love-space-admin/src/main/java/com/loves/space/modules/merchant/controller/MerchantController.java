@@ -44,7 +44,7 @@ public class MerchantController {
                                                 @RequestParam(required = false) String name,
                                                 @RequestParam(required = false) Integer page,
                                                 @RequestParam(required = false) Integer size) {
-        return merchantService.list(new MerchantQuery(cityId, categoryId, period, online, name, page, size));
+        return merchantService.page(new MerchantQuery(cityId, categoryId, period, online, name, page, size));
     }
 
     /** 商户详情。 */
