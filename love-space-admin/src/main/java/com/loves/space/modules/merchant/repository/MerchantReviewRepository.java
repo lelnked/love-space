@@ -1,9 +1,10 @@
 package com.loves.space.modules.merchant.repository;
 
 import com.loves.space.modules.merchant.entity.MerchantReview;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -12,8 +13,8 @@ import java.util.UUID;
  */
 public interface MerchantReviewRepository extends JpaRepository<MerchantReview, UUID> {
 
-    /** 按商户 ID 查询全部评价，sortOrder 升序。 */
-    List<MerchantReview> findAllByMerchantIdOrderBySortOrderAsc(UUID merchantId);
+    /** 按商户 ID 分页查询评价。 */
+    Page<MerchantReview> findAllByMerchantId(UUID merchantId, Pageable pageable);
 
     /** 按评价 ID + 商户 ID 查询（用于校验评价归属）。 */
     Optional<MerchantReview> findByIdAndMerchantId(UUID id, UUID merchantId);

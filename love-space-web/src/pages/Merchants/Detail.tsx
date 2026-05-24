@@ -6,6 +6,7 @@ import ComponentCard from "../../components/common/ComponentCard";
 import Badge from "../../components/ui/badge/Badge";
 import Button from "../../components/ui/button/Button";
 import { Modal } from "../../components/ui/modal";
+import Pagination from "../../components/pagination/Pagination";
 import Label from "../../components/form/Label";
 import Input from "../../components/form/input/InputField";
 import { useToast } from "../../context/ToastContext";
@@ -24,7 +25,7 @@ import { PERIOD_LABEL, Period } from "../../api/types";
 import {
   createMerchantReview,
   deleteMerchantReview,
-  listMerchantReviews,
+  pageMerchantReviews,
   MerchantReviewItem,
   MerchantReviewUpsertRequest,
   updateMerchantReview,
@@ -254,6 +255,11 @@ function ReviewsTab({ merchantId }: { merchantId: string }) {
   const [items, setItems] = useState<MerchantReviewItem[]>([]);
   const [loading, setLoading] = useState(false);
 
+  const [page, setPage] = useState(1);
+  const [size, setSize] = useState(20);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<MerchantReviewUpsertRequest>(EMPTY_FORM);
@@ -263,14 +269,17 @@ function ReviewsTab({ merchantId }: { merchantId: string }) {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      setItems(await listMerchantReviews(merchantId));
+      const data = await pageMerchantReviews(merchantId, page, size);
+      setItems(data.content);
+      setTotal(data.totalElements);
+      setTotalPages(data.totalPages);
     } catch (err) {
       const ax = err as AxiosError<{ detail?: string }>;
       toast.error(ax.response?.data?.detail ?? "加载失败");
     } finally {
       setLoading(false);
     }
-  }, [merchantId, toast]);
+  }, [merchantId, page, size, toast]);
 
   useEffect(() => {
     void load();
@@ -450,6 +459,17 @@ function ReviewsTab({ merchantId }: { merchantId: string }) {
             </Table>
           </div>
         </div>
+
+        <Pagination
+          page={page}
+          size={size}
+          total={total}
+          totalPages={totalPages}
+          onChange={({ page: nextPage, size: nextSize }) => {
+            setPage(nextPage);
+            setSize(nextSize);
+          }}
+        />
       </ComponentCard>
 
       <Modal

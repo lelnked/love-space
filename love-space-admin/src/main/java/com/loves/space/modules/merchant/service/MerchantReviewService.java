@@ -1,15 +1,18 @@
 package com.loves.space.modules.merchant.service;
 
 import com.loves.space.common.exception.ResourceNotFoundException;
+import com.loves.space.common.page.PageQuery;
+import com.loves.space.common.page.PageResponseMapper;
+import com.loves.space.common.page.PageResponseMapper.PageResponse;
 import com.loves.space.modules.merchant.dto.MerchantReviewResponse;
 import com.loves.space.modules.merchant.dto.MerchantReviewUpsertRequest;
 import com.loves.space.modules.merchant.entity.MerchantReview;
 import com.loves.space.modules.merchant.repository.MerchantRepository;
 import com.loves.space.modules.merchant.repository.MerchantReviewRepository;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.UUID;
 
 /**
@@ -28,12 +31,14 @@ public class MerchantReviewService {
         this.merchantRepository = merchantRepository;
     }
 
-    /** 列表（按 sortOrder 升序）。 */
+    /** 分页列表（按 sortOrder 升序）。 */
     @Transactional(readOnly = true)
-    public List<MerchantReviewResponse> list(UUID merchantId) {
+    public PageResponse<MerchantReviewResponse> page(UUID merchantId, PageQuery query) {
         requireMerchant(merchantId);
-        return merchantReviewRepository.findAllByMerchantIdOrderBySortOrderAsc(merchantId)
-                .stream().map(MerchantReviewService::toResponse).toList();
+        Sort sort = Sort.by(Sort.Direction.ASC, "sortOrder");
+        return PageResponseMapper.map(
+                merchantReviewRepository.findAllByMerchantId(merchantId, query.toPageable(sort)),
+                MerchantReviewService::toResponse);
     }
 
     /** 详情。 */

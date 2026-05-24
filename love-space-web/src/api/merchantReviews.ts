@@ -1,4 +1,5 @@
 import { apiClient } from "./client";
+import type { Page } from "./types";
 
 export interface MerchantReviewItem {
   id: string;
@@ -20,9 +21,14 @@ export interface MerchantReviewUpsertRequest {
   recommended: boolean;
 }
 
-export async function listMerchantReviews(merchantId: string): Promise<MerchantReviewItem[]> {
-  const { data } = await apiClient.get<MerchantReviewItem[]>(
+export async function pageMerchantReviews(
+  merchantId: string,
+  page: number,
+  size: number,
+): Promise<Page<MerchantReviewItem>> {
+  const { data } = await apiClient.get<Page<MerchantReviewItem>>(
     `/api/admin/merchants/${merchantId}/reviews`,
+    { params: { page, size } },
   );
   return data;
 }

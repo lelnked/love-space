@@ -1,6 +1,8 @@
 package com.loves.space.modules.merchant.controller;
 
 import com.loves.space.common.annotation.OperationLog;
+import com.loves.space.common.page.PageQuery;
+import com.loves.space.common.page.PageResponseMapper.PageResponse;
 import com.loves.space.modules.merchant.dto.MerchantReviewResponse;
 import com.loves.space.modules.merchant.dto.MerchantReviewUpsertRequest;
 import com.loves.space.modules.merchant.service.MerchantReviewService;
@@ -12,9 +14,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
 import java.util.UUID;
 
 /**
@@ -30,10 +32,12 @@ public class MerchantReviewController {
         this.merchantReviewService = merchantReviewService;
     }
 
-    /** 评价列表（按 sortOrder 升序）。 */
+    /** 评价分页列表（按 sortOrder 升序）。 */
     @GetMapping
-    public List<MerchantReviewResponse> list(@PathVariable UUID merchantId) {
-        return merchantReviewService.list(merchantId);
+    public PageResponse<MerchantReviewResponse> list(@PathVariable UUID merchantId,
+                                                     @RequestParam(required = false) Integer page,
+                                                     @RequestParam(required = false) Integer size) {
+        return merchantReviewService.page(merchantId, new PageQuery(page, size));
     }
 
     /** 评价详情。 */
