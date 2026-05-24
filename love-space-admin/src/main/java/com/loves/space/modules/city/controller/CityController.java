@@ -2,6 +2,7 @@ package com.loves.space.modules.city.controller;
 
 import com.loves.space.common.annotation.OperationLog;
 import com.loves.space.common.dto.OnlineStatusRequest;
+import com.loves.space.common.page.PageResponseMapper.PageResponse;
 import com.loves.space.modules.city.dto.CityCreateRequest;
 import com.loves.space.modules.city.dto.CityDetailResponse;
 import com.loves.space.modules.city.dto.CityItemResponse;
@@ -9,6 +10,7 @@ import com.loves.space.modules.city.dto.CityQuery;
 import com.loves.space.modules.city.dto.CityUpdateRequest;
 import com.loves.space.modules.city.service.CityService;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -34,6 +36,21 @@ public class CityController {
     public CityController(CityService cityService) {
         this.cityService = cityService;
     }
+
+
+    /**
+     * 查询城市page。
+     *
+     * @param online 上架状态过滤（可空）
+     * @param name   中文名模糊（可空）
+     */
+    @GetMapping("page")
+    public PageResponse<CityItemResponse> page(@RequestParam(required = false) Boolean online,
+                                               @RequestParam(required = false) String name,
+                                               Pageable pageable) {
+        return cityService.list(new CityQuery(online, name));
+    }
+
 
     /**
      * 查询城市列表。

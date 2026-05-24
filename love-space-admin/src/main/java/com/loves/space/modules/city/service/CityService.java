@@ -1,5 +1,7 @@
 package com.loves.space.modules.city.service;
 
+import com.loves.space.common.page.PageQuery;
+import com.loves.space.common.page.PageResponseMapper;
 import com.loves.space.common.util.ImageResponses;
 import com.loves.space.infrastructure.storage.ImageUrlSigner;
 import com.loves.space.infrastructure.storage.ObjectKeyValidator;
@@ -13,8 +15,10 @@ import com.loves.space.modules.city.entity.City_;
 import com.loves.space.modules.city.event.CityDeletedEvent;
 import com.loves.space.modules.city.event.CityOnlineChangedEvent;
 import com.loves.space.modules.city.repository.CityRepository;
+import com.loves.space.modules.manager.service.ManagerService;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -110,6 +114,29 @@ public class CityService {
                 .stream().map(this::toItem).toList();
     }
 
+    /**
+     * 分页查询城市列表。
+     * @param query
+     * @param pageable
+     * @return
+     */
+    public PageResponseMapper.PageResponse<CityItemResponse> page(CityQuery query, Pageable pageable) {
+        Specification<City> spec = (root, cq, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            if (query.online() != null) {
+                predicates.add(cb.equal(root.get(City_.online), query.online()));
+            }
+            if (StringUtils.hasText(query.name())) {
+                predicates.add(cb.like(root.get(City_.chineseName), "%" + query.name() + "%"));
+            }
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+        Pageable sorted = PageQuery.normalize(pageable, Sort.by(Sort.Direction.DESC, City_.CREATED_AT));
+        return PageResponseMapper.map( cityRepository.findAll(spec, sorted),(o) ->CityItemResponse.from(o,imageUrlSigner));
+    }
+
+
+
     /** 查询单个城市详情；不存在抛 404。 */
     @Transactional(readOnly = true)
     public CityDetailResponse get(UUID id) {
@@ -141,7 +168,7 @@ public class CityService {
      */
     public void delete(UUID id) {
         if (!cityRepository.existsById(id)) {
-            throw new IllegalArgumentException("城市不存在：" + id);
+            return;
         }
         cityRepository.deleteById(id);
         eventPublisher.publishEvent(new CityDeletedEvent(id));

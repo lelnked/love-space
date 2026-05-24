@@ -1,6 +1,9 @@
 package com.loves.space.modules.city.dto;
 
 import com.loves.space.common.dto.ImageResponse;
+import com.loves.space.common.util.ImageResponses;
+import com.loves.space.infrastructure.storage.ImageUrlSigner;
+import com.loves.space.modules.city.entity.City;
 
 import java.time.OffsetDateTime;
 import java.util.UUID;
@@ -29,4 +32,16 @@ public record CityItemResponse(
         OffsetDateTime createdAt,
         OffsetDateTime updatedAt
 ) {
+    public static CityItemResponse from(City city, ImageUrlSigner imageUrlSigner){
+        return new CityItemResponse(
+                city.getId(),
+                city.getChineseName(),
+                city.getEnglishName(),
+                city.getChineseProvince(),
+                city.getEnglishProvince(),
+                ImageResponses.from(city.getBackgroundImage(), imageUrlSigner),
+                city.isOnline(),
+                city.getCreatedAt(),
+                city.getUpdatedAt());
+    }
 }
