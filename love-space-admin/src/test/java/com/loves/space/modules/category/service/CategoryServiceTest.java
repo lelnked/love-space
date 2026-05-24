@@ -4,6 +4,8 @@ import com.loves.space.infrastructure.storage.ImageUrlSigner;
 import com.loves.space.infrastructure.storage.ObjectKeyValidator;
 import com.loves.space.modules.category.dto.CategoryItemResponse;
 import com.loves.space.modules.category.dto.CategoryUpsertRequest;
+import com.loves.space.modules.city.dto.CityCreateRequest;
+import com.loves.space.modules.city.service.CityService;
 import com.loves.space.modules.merchant.dto.MerchantDetailResponse;
 import com.loves.space.modules.merchant.dto.MerchantUpsertRequest;
 import com.loves.space.modules.merchant.repository.MerchantRepository;
@@ -32,6 +34,8 @@ class CategoryServiceTest extends AbstractPostgresIntegrationTest {
     private MerchantService merchantService;
     @Autowired
     private MerchantRepository merchantRepository;
+    @Autowired
+    private CityService cityService;
 
     @MockitoBean
     private ObjectKeyValidator objectKeyValidator;
@@ -55,7 +59,8 @@ class CategoryServiceTest extends AbstractPostgresIntegrationTest {
         CategoryItemResponse category = categoryService.create(
                 new CategoryUpsertRequest("测试分类-" + UUID.randomUUID()));
 
-        UUID cityId = UUID.randomUUID();
+        UUID cityId = cityService.create(new CityCreateRequest(
+                "城-" + UUID.randomUUID(), "EN", "省", "Province", null, true)).id();
         MerchantUpsertRequest request = new MerchantUpsertRequest(
                 "分类下商户",
                 "https://example.com/logo.png",

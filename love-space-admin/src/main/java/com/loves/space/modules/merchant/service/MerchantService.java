@@ -9,6 +9,9 @@ import com.loves.space.common.page.PageResponseMapper.PageResponse;
 import com.loves.space.common.util.ImageResponses;
 import com.loves.space.infrastructure.storage.ImageUrlSigner;
 import com.loves.space.infrastructure.storage.ObjectKeyValidator;
+import com.loves.space.modules.category.repository.CategoryRepository;
+import com.loves.space.modules.city.entity.City;
+import com.loves.space.modules.city.repository.CityRepository;
 import com.loves.space.modules.merchant.dto.MerchantAdminItem;
 import com.loves.space.modules.merchant.dto.MerchantDetailResponse;
 import com.loves.space.modules.merchant.dto.MerchantQuery;
@@ -53,6 +56,8 @@ public class MerchantService {
     private final MerchantReviewRepository merchantReviewRepository;
     private final ObjectKeyValidator objectKeyValidator;
     private final ImageUrlSigner imageUrlSigner;
+    private final CityRepository cityRepository;
+    private final CategoryRepository categoryRepository;
 
     /**
      * 创建或更新商户。
@@ -83,7 +88,11 @@ public class MerchantService {
         merchant.setSocialContributionScore(request.socialContributionScore());
         merchant.setStory(request.story());
         merchant.setWeight(request.weight() == null ? 0 : request.weight());
-        merchant.setOnline(request.online() != null && request.online());
+        boolean targetOnline = request.online() != null && request.online();
+        if (targetOnline) {
+            validateOnlineEligibility(merchant.getCityId(), merchant.getCategoryId());
+        }
+        merchant.setOnline(targetOnline);
         merchant.setImages(new ArrayList<>(request.images().stream()
                 .map(objectKeyValidator::validateAndBind).toList()));
         merchant.setPeriods(toPeriodNames(request.periods()));
@@ -172,13 +181,33 @@ public class MerchantService {
         merchantRepository.deleteById(id);
     }
 
-    /** 切换上下架。 */
+    /** 切换上下架。上架时校验所属城市/分类可用。 */
     public MerchantDetailResponse setOnline(UUID id, boolean online) {
         Merchant merchant = merchantRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("商户不存在：" + id));
+        if (online) {
+            validateOnlineEligibility(merchant.getCityId(), merchant.getCategoryId());
+        }
         merchant.setOnline(online);
         merchantRepository.save(merchant);
         return detail(id);
+    }
+
+    /**
+     * 校验商户上架资格：所属城市必须存在且已上架；若指定了分类，分类必须存在。
+     *
+     * @param cityId     商户所属城市 ID
+     * @param categoryId 商户所属分类 ID（可空）
+     */
+    private void validateOnlineEligibility(UUID cityId, UUID categoryId) {
+        City city = cityRepository.findById(cityId)
+                .orElseThrow(() -> new ValidationException("商户所属城市不存在，无法上架"));
+        if (!city.isOnline()) {
+            throw new ValidationException("商户所属城市未上架，无法上架商户");
+        }
+        if (categoryId != null && !categoryRepository.existsById(categoryId)) {
+            throw new ValidationException("商户所属分类不存在，无法上架");
+        }
     }
 
     /** 按分类批量下架（分类删除前调用）。 */

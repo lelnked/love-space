@@ -4,6 +4,10 @@ import com.loves.space.common.enums.Period;
 import com.loves.space.common.exception.ValidationException;
 import com.loves.space.infrastructure.storage.ImageUrlSigner;
 import com.loves.space.infrastructure.storage.ObjectKeyValidator;
+import com.loves.space.modules.category.dto.CategoryUpsertRequest;
+import com.loves.space.modules.category.service.CategoryService;
+import com.loves.space.modules.city.dto.CityCreateRequest;
+import com.loves.space.modules.city.service.CityService;
 import com.loves.space.modules.merchant.dto.MerchantDetailResponse;
 import com.loves.space.modules.merchant.dto.MerchantUpsertRequest;
 import com.loves.space.modules.merchant.repository.MerchantRepository;
@@ -34,6 +38,10 @@ class MerchantServiceTest extends AbstractPostgresIntegrationTest {
     private MerchantRepository merchantRepository;
     @Autowired
     private MerchantTagRepository merchantTagRepository;
+    @Autowired
+    private CityService cityService;
+    @Autowired
+    private CategoryService categoryService;
 
     @MockitoBean
     private ObjectKeyValidator objectKeyValidator;
@@ -50,6 +58,23 @@ class MerchantServiceTest extends AbstractPostgresIntegrationTest {
                 });
         when(imageUrlSigner.sign(anyString()))
                 .thenAnswer(inv -> "https://signed.example.com/" + inv.getArgument(0));
+    }
+
+    /** 创建一个已上架城市，返回其 ID（上架商户的前置条件）。 */
+    private UUID onlineCityId() {
+        return cityService.create(new CityCreateRequest(
+                "城-" + UUID.randomUUID(), "EN", "省", "Province", null, true)).id();
+    }
+
+    /** 创建一个未上架城市，返回其 ID。 */
+    private UUID offlineCityId() {
+        return cityService.create(new CityCreateRequest(
+                "城-" + UUID.randomUUID(), "EN", "省", "Province", null, false)).id();
+    }
+
+    /** 创建一个分类，返回其 ID。 */
+    private UUID categoryId() {
+        return categoryService.create(new CategoryUpsertRequest("类-" + UUID.randomUUID())).id();
     }
 
     /** 构造合法 upsert 请求；name/score/story/images 可在调用前替换。 */
@@ -135,7 +160,7 @@ class MerchantServiceTest extends AbstractPostgresIntegrationTest {
 
     @Test
     void upsertBindsImageObjectKeysAndReturnsSignedUrls() {
-        UUID cityId = UUID.randomUUID();
+        UUID cityId = onlineCityId();
         MerchantUpsertRequest request = new MerchantUpsertRequest(
                 "图签商户",
                 "images/logo.png",
@@ -161,8 +186,8 @@ class MerchantServiceTest extends AbstractPostgresIntegrationTest {
 
     @Test
     void upsertHappyPathPersistsChildren() {
-        UUID cityId = UUID.randomUUID();
-        UUID categoryId = UUID.randomUUID();
+        UUID cityId = onlineCityId();
+        UUID categoryId = categoryId();
         UUID tagId = UUID.randomUUID();
         MerchantUpsertRequest request = new MerchantUpsertRequest(
                 "正常商户",
@@ -186,8 +211,8 @@ class MerchantServiceTest extends AbstractPostgresIntegrationTest {
 
     @Test
     void offlineByCategoryIdFlipsAllOnlineMerchants() {
-        UUID categoryId = UUID.randomUUID();
-        UUID cityId = UUID.randomUUID();
+        UUID categoryId = categoryId();
+        UUID cityId = onlineCityId();
         MerchantUpsertRequest base = validRequest();
         MerchantUpsertRequest a = new MerchantUpsertRequest(
                 "甲", base.logo(), base.address(), null, null, cityId, categoryId,
@@ -209,5 +234,49 @@ class MerchantServiceTest extends AbstractPostgresIntegrationTest {
 
         assertThat(merchantRepository.findById(ma.id()).orElseThrow().isOnline()).isFalse();
         assertThat(merchantRepository.findById(mb.id()).orElseThrow().isOnline()).isFalse();
+    }
+
+    /** 构造一个下架商户（绕过上架校验），返回其 ID。 */
+    private UUID offlineMerchant(UUID cityId, UUID categoryId) {
+        MerchantUpsertRequest req = new MerchantUpsertRequest(
+                "商户", "https://example.com/logo.png", "地址", null, null, cityId, categoryId,
+                (short) 20, (short) 15, (short) 15, (short) 10,
+                null, 0, false, List.of(), List.of(),
+                List.of("https://example.com/a.png"));
+        return merchantService.upsert(null, req).id();
+    }
+
+    @Test
+    void setOnlineRejectsWhenCityNotOnline() {
+        UUID merchantId = offlineMerchant(offlineCityId(), null);
+        assertThatThrownBy(() -> merchantService.setOnline(merchantId, true))
+                .isInstanceOf(ValidationException.class);
+        assertThat(merchantRepository.findById(merchantId).orElseThrow().isOnline()).isFalse();
+    }
+
+    @Test
+    void setOnlineRejectsWhenCityMissing() {
+        UUID merchantId = offlineMerchant(UUID.randomUUID(), null);
+        assertThatThrownBy(() -> merchantService.setOnline(merchantId, true))
+                .isInstanceOf(ValidationException.class);
+    }
+
+    @Test
+    void setOnlineSucceedsWhenCityOnline() {
+        UUID merchantId = offlineMerchant(onlineCityId(), null);
+        MerchantDetailResponse updated = merchantService.setOnline(merchantId, true);
+        assertThat(updated.online()).isTrue();
+    }
+
+    @Test
+    void upsertRejectsOnlineWhenCityNotOnline() {
+        UUID cityId = offlineCityId();
+        MerchantUpsertRequest bad = new MerchantUpsertRequest(
+                "商户", "https://example.com/logo.png", "地址", null, null, cityId, null,
+                (short) 20, (short) 15, (short) 15, (short) 10,
+                null, 0, true, List.of(), List.of(),
+                List.of("https://example.com/a.png"));
+        assertThatThrownBy(() -> merchantService.upsert(null, bad))
+                .isInstanceOf(ValidationException.class);
     }
 }
