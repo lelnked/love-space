@@ -34,8 +34,12 @@ export async function uploadToOss(
     throw new Error("仅支持 png/jpeg/webp 图片");
   }
   const credential = await fetchUploadCredential(file.type);
+  // ali-oss 用 region 拼成 `<bucket>.<region>.aliyuncs.com`，region 必须带 `oss-` 前缀。
+  const region = credential.region.startsWith("oss-")
+    ? credential.region
+    : `oss-${credential.region}`;
   const client = new OSS({
-    region: credential.region,
+    region,
     accessKeyId: credential.accessKeyId,
     accessKeySecret: credential.accessKeySecret,
     stsToken: credential.securityToken,
