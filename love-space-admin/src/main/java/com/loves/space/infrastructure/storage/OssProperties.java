@@ -31,4 +31,12 @@ public record OssProperties(
         @Min(60) long urlExpirationSeconds,
         @Min(1) long maxImageBytes
 ) {
+
+    /**
+     * 签名 scope 用的 region：必须不带 {@code oss-} 前缀（例如 {@code cn-shanghai}）。
+     * 配置里写成 {@code oss-cn-shanghai} 时在此剥掉前缀，保证下发签名一致。
+     */
+    public String signingRegion() {
+        return region.startsWith("oss-") ? region.substring("oss-".length()) : region;
+    }
 }

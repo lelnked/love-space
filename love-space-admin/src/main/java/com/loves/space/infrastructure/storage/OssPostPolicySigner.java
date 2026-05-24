@@ -1,6 +1,9 @@
 package com.loves.space.infrastructure.storage;
 
 import com.aliyun.oss.common.utils.BinaryUtil;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ArrayNode;
+import tools.jackson.databind.node.ObjectNode;
 import com.loves.space.infrastructure.storage.StsCredentialIssuer.StsCredential;
 import org.springframework.stereotype.Component;
 
@@ -36,10 +39,17 @@ public class OssPostPolicySigner {
 
     private static final String SIGNATURE_VERSION = "OSS4-HMAC-SHA256";
 
-    private final OssProperties ossProperties;
+    /** SigningKey 派生用的固定段（OSS V4 规范）。 */
+    private static final String SIGNING_KEY_SECRET_PREFIX = "aliyun_v4";
+    private static final String SIGNING_SERVICE = "oss";
+    private static final String SIGNING_KEY_TERMINATOR = "aliyun_v4_request";
 
-    public OssPostPolicySigner(OssProperties ossProperties) {
+    private final OssProperties ossProperties;
+    private final ObjectMapper objectMapper;
+
+    public OssPostPolicySigner(OssProperties ossProperties, ObjectMapper objectMapper) {
         this.ossProperties = ossProperties;
+        this.objectMapper = objectMapper;
     }
 
     /**
@@ -56,26 +66,12 @@ public class OssPostPolicySigner {
         Instant expiration = Instant.parse(credential.expiration());
         String date = CREDENTIAL_DATE_FORMATTER.format(now);
         String xOssDate = OSS_DATE_FORMATTER.format(now);
-        // 签名 scope 里的 region 必须不带 oss- 前缀，例如 cn-shanghai。
-        String region = ossProperties.region().startsWith("oss-")
-                ? ossProperties.region().substring("oss-".length())
-                : ossProperties.region();
-        String xOssCredential = credential.accessKeyId() + "/" + date + "/" + region + "/oss/aliyun_v4_request";
+        String region = ossProperties.signingRegion();
+        String xOssCredential = credential.accessKeyId() + "/" + date + "/" + region
+                + "/" + SIGNING_SERVICE + "/" + SIGNING_KEY_TERMINATOR;
 
-        // 步骤 1：构造 Policy JSON。
-        String policyJson = "{"
-                + "\"expiration\":\"" + POLICY_EXPIRATION_FORMATTER.format(expiration) + "\","
-                + "\"conditions\":["
-                + "{\"bucket\":\"" + escapeJson(ossProperties.bucket()) + "\"},"
-                + "{\"x-oss-security-token\":\"" + escapeJson(credential.securityToken()) + "\"},"
-                + "{\"x-oss-signature-version\":\"" + SIGNATURE_VERSION + "\"},"
-                + "{\"x-oss-credential\":\"" + escapeJson(xOssCredential) + "\"},"
-                + "{\"x-oss-date\":\"" + xOssDate + "\"},"
-                + "[\"content-length-range\",1," + ossProperties.maxImageBytes() + "],"
-                + "[\"eq\",\"$success_action_status\",\"200\"],"
-                // 服务端已固定完整 key，表单只能上传到这个 key。
-                + "[\"eq\",\"$key\",\"" + escapeJson(objectKey) + "\"]"
-                + "]}";
+        // 步骤 1：构造 Policy JSON（Jackson 负责转义与类型，OSS 解码 Base64 后自行解析）。
+        String policyJson = buildPolicyJson(objectKey, expiration, xOssCredential, xOssDate, credential);
 
         // 步骤 2：Base64(Policy JSON) 即 StringToSign。
         String stringToSign = Base64.getEncoder()
@@ -83,10 +79,10 @@ public class OssPostPolicySigner {
 
         // 步骤 3：派生 SigningKey。
         byte[] dateKey = hmacSha256(
-                ("aliyun_v4" + credential.accessKeySecret()).getBytes(StandardCharsets.UTF_8), date);
+                (SIGNING_KEY_SECRET_PREFIX + credential.accessKeySecret()).getBytes(StandardCharsets.UTF_8), date);
         byte[] dateRegionKey = hmacSha256(dateKey, region);
-        byte[] dateRegionServiceKey = hmacSha256(dateRegionKey, "oss");
-        byte[] signingKey = hmacSha256(dateRegionServiceKey, "aliyun_v4_request");
+        byte[] dateRegionServiceKey = hmacSha256(dateRegionKey, SIGNING_SERVICE);
+        byte[] signingKey = hmacSha256(dateRegionServiceKey, SIGNING_KEY_TERMINATOR);
 
         // 步骤 4：计算 Signature（hex）。
         String signature = BinaryUtil.toHex(hmacSha256(signingKey, stringToSign));
@@ -121,9 +117,26 @@ public class OssPostPolicySigner {
         return scheme + ossProperties.bucket() + "." + hostWithoutScheme;
     }
 
-    /** 转义 JSON 字符串值中的反斜杠与双引号（Policy 字段值均为 ASCII，无需处理控制字符）。 */
-    private static String escapeJson(String value) {
-        return value.replace("\\", "\\\\").replace("\"", "\\\"");
+    /**
+     * 构造 PostObject Policy JSON。
+     *
+     * <p>{@code conditions} 里既有对象条件也有数组条件；{@code key} 用 {@code eq} 锁死，
+     * 表单只能上传到服务端预生成的这个 key。Jackson 负责所有转义与数字类型。
+     */
+    private String buildPolicyJson(String objectKey, Instant expiration,
+                                   String xOssCredential, String xOssDate, StsCredential credential) {
+        ObjectNode policy = objectMapper.createObjectNode();
+        policy.put("expiration", POLICY_EXPIRATION_FORMATTER.format(expiration));
+        ArrayNode conditions = policy.putArray("conditions");
+        conditions.addObject().put("bucket", ossProperties.bucket());
+        conditions.addObject().put("x-oss-security-token", credential.securityToken());
+        conditions.addObject().put("x-oss-signature-version", SIGNATURE_VERSION);
+        conditions.addObject().put("x-oss-credential", xOssCredential);
+        conditions.addObject().put("x-oss-date", xOssDate);
+        conditions.addArray().add("content-length-range").add(1).add(ossProperties.maxImageBytes());
+        conditions.addArray().add("eq").add("$success_action_status").add("200");
+        conditions.addArray().add("eq").add("$key").add(objectKey);
+        return objectMapper.writeValueAsString(policy);
     }
 
     private static byte[] hmacSha256(byte[] key, String data) {

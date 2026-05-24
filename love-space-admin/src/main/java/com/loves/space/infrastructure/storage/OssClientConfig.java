@@ -2,7 +2,6 @@ package com.loves.space.infrastructure.storage;
 
 import com.aliyun.oss.OSS;
 import com.aliyun.oss.OSSClientBuilder;
-import jakarta.annotation.PreDestroy;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -17,26 +16,17 @@ import org.springframework.context.annotation.Configuration;
 @EnableConfigurationProperties({OssProperties.class})
 public class OssClientConfig {
 
-    private OSS ossClient;
-
     /**
      * 构造单例 OSS 客户端；线程安全，可被多个组件共享。
+     *
+     * <p>应用关闭时由 Spring 自动调用推断出的销毁方法 {@code OSS.shutdown()} 释放连接池。
      */
     @Bean
     public OSS ossClient(OssProperties properties) {
-        this.ossClient = new OSSClientBuilder().build(
+        return new OSSClientBuilder().build(
                 properties.endpoint(),
                 properties.accessKeyId(),
                 properties.accessKeySecret()
         );
-        return this.ossClient;
-    }
-
-    /** 应用关闭时释放底层连接池。 */
-    @PreDestroy
-    public void shutdown() {
-        if (ossClient != null) {
-            ossClient.shutdown();
-        }
     }
 }

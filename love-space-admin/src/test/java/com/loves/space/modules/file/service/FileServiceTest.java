@@ -7,6 +7,8 @@ import com.loves.space.infrastructure.storage.StsCredentialIssuer.StsCredential;
 import com.loves.space.modules.file.dto.UploadCredentialRequest;
 import com.loves.space.modules.file.dto.UploadCredentialResponse;
 import org.junit.jupiter.api.Test;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
@@ -24,8 +26,10 @@ class FileServiceTest {
             "https://oss-cn-test.example.com", "love-space-test", "cn-test",
             "ak", "sk", "images", "bound", 1800L, 20L * 1024 * 1024);
 
+    private static final ObjectMapper MAPPER = new JsonMapper();
+
     private final StsCredentialIssuer issuer = mock(StsCredentialIssuer.class);
-    private final OssPostPolicySigner signer = new OssPostPolicySigner(PROPS);
+    private final OssPostPolicySigner signer = new OssPostPolicySigner(PROPS, MAPPER);
     private final FileService service = new FileService(issuer, signer, PROPS);
 
     @ParameterizedTest
@@ -49,7 +53,7 @@ class FileServiceTest {
         OssProperties noScheme = new OssProperties(
                 "oss-cn-chengdu.aliyuncs.com", "love-space-test", "cn-chengdu",
                 "ak", "sk", "images", "bound", 1800L, 20L * 1024 * 1024);
-        FileService svc = new FileService(issuer, new OssPostPolicySigner(noScheme), noScheme);
+        FileService svc = new FileService(issuer, new OssPostPolicySigner(noScheme, MAPPER), noScheme);
         when(issuer.issueFor(anyString()))
                 .thenReturn(new StsCredential("ID", "SECRET", "TOKEN", "2026-05-23T08:00:00Z"));
 
