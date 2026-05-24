@@ -1,9 +1,13 @@
-import { ChangeEvent, FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { AxiosError } from "axios";
 import Label from "../../components/form/Label";
 import Input from "../../components/form/input/InputField";
 import Button from "../../components/ui/button/Button";
+import ImageUploader from "../../components/form/ImageUploader";
+import ImageUploaderList, {
+  ImageListItem,
+} from "../../components/form/ImageUploaderList";
 import {
   createMerchant,
   getMerchant,
@@ -13,20 +17,12 @@ import {
 import { CityItem, listCities } from "../../api/cities";
 import { CategoryItem, listCategories } from "../../api/categories";
 import { listTags, TagItem } from "../../api/tags";
-import { uploadFile } from "../../api/files";
 import { PERIOD_LABEL, PERIOD_VALUES, Period } from "../../api/types";
 import { useToast } from "../../context/ToastContext";
 
 interface FieldError {
   field: string;
   message: string;
-}
-
-interface ImageRow {
-  /** OSS object key（提交给后端的图片标识）。 */
-  objectKey: string;
-  /** 用于预览的访问 URL（编辑回填用签名 URL，新上传用本地 blob URL）。 */
-  previewUrl: string;
 }
 
 export default function MerchantForm() {
@@ -42,7 +38,7 @@ export default function MerchantForm() {
   // 图片：logo 用 objectKey + 预览 URL；images 用 ImageRow 列表
   const [logoKey, setLogoKey] = useState("");
   const [logoPreview, setLogoPreview] = useState("");
-  const [images, setImages] = useState<ImageRow[]>([]);
+  const [images, setImages] = useState<ImageListItem[]>([]);
   // 周期+分类+城市
   const [periods, setPeriods] = useState<Period[]>([]);
   const [categoryId, setCategoryId] = useState("");
@@ -67,8 +63,6 @@ export default function MerchantForm() {
 
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [uploadingLogo, setUploadingLogo] = useState(false);
-  const [uploadingImageIndex, setUploadingImageIndex] = useState<number | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const toast = useToast();
 
@@ -107,47 +101,6 @@ export default function MerchantForm() {
       })
       .finally(() => setLoading(false));
   }, [id]);
-
-  const handleUploadLogo = async (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setUploadingLogo(true);
-    try {
-      const { url: objectKey } = await uploadFile(file);
-      setLogoKey(objectKey);
-      setLogoPreview(URL.createObjectURL(file));
-    } catch (err) {
-      const ax = err as AxiosError<{ detail?: string }>;
-      toast.error(ax.response?.data?.detail ?? "上传失败");
-    } finally {
-      setUploadingLogo(false);
-      e.target.value = "";
-    }
-  };
-
-  const handleUploadImage = async (e: ChangeEvent<HTMLInputElement>, index: number) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setUploadingImageIndex(index);
-    try {
-      const { url: objectKey } = await uploadFile(file);
-      const blobUrl = URL.createObjectURL(file);
-      setImages((prev) =>
-        prev.map((it, i) => (i === index ? { objectKey, previewUrl: blobUrl } : it)),
-      );
-    } catch (err) {
-      const ax = err as AxiosError<{ detail?: string }>;
-      toast.error(ax.response?.data?.detail ?? "上传失败");
-    } finally {
-      setUploadingImageIndex(null);
-      e.target.value = "";
-    }
-  };
-
-  const addImage = () =>
-    setImages((prev) => [...prev, { objectKey: "", previewUrl: "" }]);
-  const removeImage = (index: number) =>
-    setImages((prev) => prev.filter((_, i) => i !== index));
 
   const togglePeriod = (p: Period) =>
     setPeriods((prev) =>
@@ -286,84 +239,27 @@ export default function MerchantForm() {
               <Label>
                 LOGO <span className="text-error-500">*</span>
               </Label>
-              <div className="flex items-center gap-2 text-xs text-gray-500">
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleUploadLogo}
-                  disabled={uploadingLogo}
-                />
-                {uploadingLogo && <span>上传中...</span>}
-              </div>
+              <ImageUploader
+                value={logoKey}
+                previewUrl={logoPreview}
+                onChange={setLogoKey}
+                className="h-32 w-32"
+              />
               {fieldErrors.logo && (
                 <div className="text-error-500 text-xs mt-1">{fieldErrors.logo}</div>
-              )}
-              {logoPreview && (
-                <img
-                  src={logoPreview}
-                  alt="logo"
-                  className="mt-2 h-20 object-cover rounded border"
-                />
               )}
             </div>
 
             <div className="mt-5">
-              <div className="flex items-center justify-between mb-2">
-                <Label>图片列表（至少 1 张）</Label>
-                <button
-                  type="button"
-                  onClick={addImage}
-                  className="px-3 py-1 text-xs rounded border border-gray-300 hover:bg-gray-50"
-                >
-                  添加图片
-                </button>
-              </div>
+              <Label>图片列表（至少 1 张）</Label>
               {fieldErrors.images && (
                 <div className="text-error-500 text-xs mb-2">{fieldErrors.images}</div>
               )}
-              <div className="space-y-3">
-                {images.map((im, i) => (
-                  <div
-                    key={i}
-                    className="grid grid-cols-1 md:grid-cols-12 gap-2 items-center border border-gray-100 dark:border-gray-800 rounded p-3"
-                  >
-                    <div className="md:col-span-8">
-                      <div className="flex items-center gap-2 text-xs text-gray-500">
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={(e) => handleUploadImage(e, i)}
-                          disabled={uploadingImageIndex === i}
-                        />
-                        {uploadingImageIndex === i && <span>上传中...</span>}
-                      </div>
-                      {fieldErrors[`images.${i}.url`] && (
-                        <div className="text-error-500 text-xs mt-1">
-                          {fieldErrors[`images.${i}.url`]}
-                        </div>
-                      )}
-                    </div>
-                    <div className="md:col-span-2">
-                      {im.previewUrl && (
-                        <img
-                          src={im.previewUrl}
-                          alt={`图片 ${i + 1}`}
-                          className="h-16 w-16 object-cover rounded border"
-                        />
-                      )}
-                    </div>
-                    <div className="md:col-span-2 text-right">
-                      <button
-                        type="button"
-                        onClick={() => removeImage(i)}
-                        className="px-3 py-1 text-xs rounded border border-error-300 text-error-500 hover:bg-error-50"
-                      >
-                        删除
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <ImageUploaderList
+                value={images}
+                onChange={setImages}
+                errors={images.map((_, i) => fieldErrors[`images.${i}.url`])}
+              />
             </div>
           </fieldset>
 

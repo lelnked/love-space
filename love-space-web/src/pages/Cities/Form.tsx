@@ -1,17 +1,17 @@
-import { ChangeEvent, FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { AxiosError } from "axios";
 import Label from "../../components/form/Label";
 import Input from "../../components/form/input/InputField";
 import Switch from "../../components/form/switch/Switch";
 import Button from "../../components/ui/button/Button";
+import ImageUploader from "../../components/form/ImageUploader";
 import {
   CityUpsertRequest,
   createCity,
   getCity,
   updateCity,
 } from "../../api/cities";
-import { uploadFile } from "../../api/files";
 import { useToast } from "../../context/ToastContext";
 
 interface FieldError {
@@ -33,7 +33,6 @@ export default function CityForm() {
   const [online, setOnline] = useState(false);
 
   const [loading, setLoading] = useState(false);
-  const [uploading, setUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const toast = useToast();
@@ -56,23 +55,6 @@ export default function CityForm() {
       })
       .finally(() => setLoading(false));
   }, [id]);
-
-  const handleUpload = async (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setUploading(true);
-    try {
-      const { url } = await uploadFile(file);
-      setBackgroundImageKey(url);
-      setBackgroundImagePreview(URL.createObjectURL(file));
-    } catch (err) {
-      const ax = err as AxiosError<{ detail?: string }>;
-      toast.error(ax.response?.data?.detail ?? "上传失败");
-    } finally {
-      setUploading(false);
-      e.target.value = "";
-    }
-  };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -173,17 +155,12 @@ export default function CityForm() {
           </div>
           <div>
             <Label>背景图</Label>
-            <div className="flex items-center gap-2 text-xs text-gray-500">
-              <input type="file" accept="image/*" onChange={handleUpload} disabled={uploading} />
-              {uploading && <span>上传中...</span>}
-            </div>
-            {backgroundImagePreview && (
-              <img
-                src={backgroundImagePreview}
-                alt="背景图"
-                className="mt-2 h-32 object-cover rounded border"
-              />
-            )}
+            <ImageUploader
+              value={backgroundImageKey}
+              previewUrl={backgroundImagePreview}
+              onChange={setBackgroundImageKey}
+              className="h-40 w-full max-w-md"
+            />
           </div>
           <div>
             <Label>上架</Label>
