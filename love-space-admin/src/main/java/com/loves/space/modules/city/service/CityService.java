@@ -12,6 +12,7 @@ import com.loves.space.modules.city.dto.CityQuery;
 import com.loves.space.modules.city.dto.CityUpdateRequest;
 import com.loves.space.modules.city.entity.City;
 import com.loves.space.modules.city.entity.City_;
+import com.loves.space.modules.city.event.CityDeletedEvent;
 import com.loves.space.modules.city.event.CityOnlineChangedEvent;
 import com.loves.space.modules.city.repository.CityRepository;
 import jakarta.persistence.criteria.Predicate;
@@ -135,12 +136,17 @@ public class CityService {
         return toDetail(city);
     }
 
-    /** 删除城市。 */
+    /**
+     * 删除城市。
+     * <p>删除后发布 {@link CityDeletedEvent}，由 {@code BannerEventListener} 下架关联 CITY banner，
+     * 由 {@code MerchantEventListener} 下架该城市下全部商户。
+     */
     public void delete(UUID id) {
         if (!cityRepository.existsById(id)) {
             throw new ResourceNotFoundException("城市不存在：" + id);
         }
         cityRepository.deleteById(id);
+        eventPublisher.publishEvent(new CityDeletedEvent(id));
     }
 
     /** 创建场景下把请求体字段拷贝到实体；backgroundImage 已 validateAndBind。 */

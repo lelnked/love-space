@@ -210,14 +210,6 @@ public class MerchantService {
         }
     }
 
-    /** 按分类批量下架（分类删除前调用）。 */
-    public void offlineByCategoryId(UUID categoryId) {
-        if (categoryId == null) {
-            return;
-        }
-        merchantRepository.offlineAllByCategoryId(categoryId);
-    }
-
     /** 校验 upsert 请求的业务规则（与 DB CHECK 约束保持一致）。 */
     private static void validate(MerchantUpsertRequest request) {
         int nameLen = request.name().codePointCount(0, request.name().length());

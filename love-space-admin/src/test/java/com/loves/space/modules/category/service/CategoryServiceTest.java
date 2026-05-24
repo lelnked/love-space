@@ -8,6 +8,7 @@ import com.loves.space.modules.city.dto.CityCreateRequest;
 import com.loves.space.modules.city.service.CityService;
 import com.loves.space.modules.merchant.dto.MerchantDetailResponse;
 import com.loves.space.modules.merchant.dto.MerchantUpsertRequest;
+import com.loves.space.modules.merchant.entity.Merchant;
 import com.loves.space.modules.merchant.repository.MerchantRepository;
 import com.loves.space.modules.merchant.service.MerchantService;
 import com.loves.space.support.AbstractPostgresIntegrationTest;
@@ -55,7 +56,7 @@ class CategoryServiceTest extends AbstractPostgresIntegrationTest {
     }
 
     @Test
-    void deleteCategoryOfflinesItsMerchants() {
+    void deleteCategoryOfflinesAndDetachesItsMerchants() {
         CategoryItemResponse category = categoryService.create(
                 new CategoryUpsertRequest("测试分类-" + UUID.randomUUID()));
 
@@ -78,6 +79,8 @@ class CategoryServiceTest extends AbstractPostgresIntegrationTest {
 
         categoryService.delete(category.id());
 
-        assertThat(merchantRepository.findById(merchant.id()).orElseThrow().isOnline()).isFalse();
+        Merchant reloaded = merchantRepository.findById(merchant.id()).orElseThrow();
+        assertThat(reloaded.isOnline()).isFalse();
+        assertThat(reloaded.getCategoryId()).isNull();
     }
 }

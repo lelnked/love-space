@@ -10,7 +10,7 @@ import lombok.Setter;
 
 /**
  * 标签实体：对应 {@code tag} 表。
- * <p>名称唯一；下架标签不影响商户本身的上架状态，仅在 App 详情中隐藏。
+ * <p>名称唯一；下架或删除标签不影响商户本身的上架状态，但会清除该标签的全部 loves_merchant_tag 关联数据。
  */
 @Entity
 @Table(name = "loves_tag", uniqueConstraints = @UniqueConstraint(name = "ux_loves_tag_name", columnNames = "name"))

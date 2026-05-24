@@ -3,6 +3,7 @@ package com.loves.space.modules.banner.event;
 import com.loves.space.modules.banner.entity.Banner;
 import com.loves.space.modules.banner.entity.BannerType;
 import com.loves.space.modules.banner.entity.Banner_;
+import com.loves.space.modules.city.event.CityDeletedEvent;
 import com.loves.space.modules.city.event.CityOnlineChangedEvent;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -55,6 +56,31 @@ public class BannerEventListener {
                     event.cityId(), event.currentOnline(), affected);
         } catch (Exception e) {
             log.error("Failed to sync banner online state for city {}: {}",
+                    event.cityId(), e.getMessage(), e);
+        }
+    }
+
+    /**
+     * 监听 {@link CityDeletedEvent}，下架关联该城市的全部 CITY banner（仅下架，不删除）。
+     *
+     * <p>SQL 等价：{@code UPDATE loves_banner SET online=false WHERE linked_entity_id=? AND type='CITY'}。
+     */
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void onCityDeleted(CityDeletedEvent event) {
+        try {
+            CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+            CriteriaUpdate<Banner> update = cb.createCriteriaUpdate(Banner.class);
+            Root<Banner> root = update.from(Banner.class);
+            update.set(root.get(Banner_.online), false);
+            update.where(
+                    cb.equal(root.get(Banner_.linkedEntityId), event.cityId()),
+                    cb.equal(root.get(Banner_.type), BannerType.CITY)
+            );
+            int affected = entityManager.createQuery(update).executeUpdate();
+            log.info("City {} deleted, offlined {} banner(s)", event.cityId(), affected);
+        } catch (Exception e) {
+            log.error("Failed to offline banners for deleted city {}: {}",
                     event.cityId(), e.getMessage(), e);
         }
     }

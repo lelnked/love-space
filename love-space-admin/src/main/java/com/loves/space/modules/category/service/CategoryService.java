@@ -5,9 +5,9 @@ import com.loves.space.common.exception.ValidationException;
 import com.loves.space.modules.category.dto.CategoryItemResponse;
 import com.loves.space.modules.category.dto.CategoryUpsertRequest;
 import com.loves.space.modules.category.entity.Category;
+import com.loves.space.modules.category.event.CategoryDeletedEvent;
 import com.loves.space.modules.category.repository.CategoryRepository;
-import com.loves.space.modules.merchant.service.MerchantService;
-import org.springframework.context.annotation.Lazy;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,20 +16,19 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * 分类服务：CRUD；删除分类前会触发该分类下全部商户下架。
- * <p>{@link MerchantService} 通过 {@link Lazy} 注入以避免循环依赖。
+ * 分类服务：CRUD；删除分类时发布 {@link CategoryDeletedEvent} 触发商户级联处理。
  */
 @Service
 @Transactional
 public class CategoryService {
 
     private final CategoryRepository categoryRepository;
-    private final MerchantService merchantService;
+    private final ApplicationEventPublisher eventPublisher;
 
     public CategoryService(CategoryRepository categoryRepository,
-                          @Lazy MerchantService merchantService) {
+                           ApplicationEventPublisher eventPublisher) {
         this.categoryRepository = categoryRepository;
-        this.merchantService = merchantService;
+        this.eventPublisher = eventPublisher;
     }
 
     /** 创建分类。 */
@@ -71,14 +70,15 @@ public class CategoryService {
 
     /**
      * 删除分类。
-     * <p>先把该分类下的全部商户置为下架，再删除分类本身。
+     * <p>删除后发布 {@link CategoryDeletedEvent}，由 {@code MerchantEventListener} 清空商户的
+     * categoryId 并下架该分类下全部商户。
      */
     public void delete(UUID id) {
         if (!categoryRepository.existsById(id)) {
             throw new ResourceNotFoundException("分类不存在：" + id);
         }
-        merchantService.offlineByCategoryId(id);
         categoryRepository.deleteById(id);
+        eventPublisher.publishEvent(new CategoryDeletedEvent(id));
     }
 
     /** 实体到 DTO。 */

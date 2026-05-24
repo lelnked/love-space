@@ -6,8 +6,11 @@ import com.loves.space.modules.tag.dto.TagItemResponse;
 import com.loves.space.modules.tag.dto.TagQuery;
 import com.loves.space.modules.tag.dto.TagUpsertRequest;
 import com.loves.space.modules.tag.entity.Tag;
+import com.loves.space.modules.tag.event.TagDeletedEvent;
+import com.loves.space.modules.tag.event.TagOnlineChangedEvent;
 import com.loves.space.modules.tag.repository.TagRepository;
 import jakarta.persistence.criteria.Predicate;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -30,9 +33,12 @@ public class TagService {
     private static final int MAX_NAME_CODE_POINTS = 6;
 
     private final TagRepository tagRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
-    public TagService(TagRepository tagRepository) {
+    public TagService(TagRepository tagRepository,
+                      ApplicationEventPublisher eventPublisher) {
         this.tagRepository = tagRepository;
+        this.eventPublisher = eventPublisher;
     }
 
     /** 创建标签。 */
@@ -53,11 +59,19 @@ public class TagService {
         return toItem(tag);
     }
 
-    /** 切换上下架。 */
+    /**
+     * 切换上下架。
+     * <p>仅当状态真正发生变化时发布 {@link TagOnlineChangedEvent}，由 {@code MerchantEventListener}
+     * 在标签下架时清除该标签的全部商户关联数据。
+     */
     public TagItemResponse setOnline(UUID id, boolean online) {
         Tag tag = tagRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("标签不存在：" + id));
+        boolean previousOnline = tag.isOnline();
         tag.setOnline(online);
+        if (previousOnline != online) {
+            eventPublisher.publishEvent(new TagOnlineChangedEvent(id, previousOnline, online));
+        }
         return toItem(tag);
     }
 
@@ -78,12 +92,16 @@ public class TagService {
                 .stream().map(TagService::toItem).toList();
     }
 
-    /** 删除标签。 */
+    /**
+     * 删除标签。
+     * <p>删除后发布 {@link TagDeletedEvent}，由 {@code MerchantEventListener} 清除该标签的全部商户关联数据。
+     */
     public void delete(UUID id) {
         if (!tagRepository.existsById(id)) {
             throw new ResourceNotFoundException("标签不存在：" + id);
         }
         tagRepository.deleteById(id);
+        eventPublisher.publishEvent(new TagDeletedEvent(id));
     }
 
     /** 校验名称：非空、长度 ≤ 6 codePoint、唯一。 */

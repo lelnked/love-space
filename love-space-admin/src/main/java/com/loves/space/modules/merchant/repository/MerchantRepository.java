@@ -15,14 +15,14 @@ import java.util.UUID;
 public interface MerchantRepository extends JpaRepository<Merchant, UUID>, JpaSpecificationExecutor<Merchant> {
 
     /**
-     * 将指定分类下的全部商户置为下架（用于分类删除前的级联下架）。
+     * 将指定分类下的全部商户置为下架并清空其 categoryId（用于分类删除的级联处理）。
      *
      * @param categoryId 分类 ID
      * @return 受影响行数
      */
     @Modifying
-    @Query("update Merchant m set m.online = false where m.categoryId = :categoryId")
-    int offlineAllByCategoryId(@Param("categoryId") UUID categoryId);
+    @Query("update Merchant m set m.online = false, m.categoryId = null where m.categoryId = :categoryId")
+    int offlineAndDetachCategory(@Param("categoryId") UUID categoryId);
 
     /**
      * 将指定城市下的全部商户置为下架（用于城市下线时的级联下架）。

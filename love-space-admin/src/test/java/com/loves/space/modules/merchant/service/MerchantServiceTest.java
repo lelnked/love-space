@@ -209,33 +209,6 @@ class MerchantServiceTest extends AbstractPostgresIntegrationTest {
         assertThat(merchantTagRepository.findAllByMerchantId(detail.id())).hasSize(1);
     }
 
-    @Test
-    void offlineByCategoryIdFlipsAllOnlineMerchants() {
-        UUID categoryId = categoryId();
-        UUID cityId = onlineCityId();
-        MerchantUpsertRequest base = validRequest();
-        MerchantUpsertRequest a = new MerchantUpsertRequest(
-                "甲", base.logo(), base.address(), null, null, cityId, categoryId,
-                base.safetyEnvironmentScore(), base.businessRightsScore(),
-                base.experienceFriendlyScore(), base.socialContributionScore(),
-                null, 0, true, List.of(), List.of(),
-                List.of("https://example.com/a.png"));
-        MerchantUpsertRequest b = new MerchantUpsertRequest(
-                "乙", base.logo(), base.address(), null, null, cityId, categoryId,
-                base.safetyEnvironmentScore(), base.businessRightsScore(),
-                base.experienceFriendlyScore(), base.socialContributionScore(),
-                null, 0, true, List.of(), List.of(),
-                List.of("https://example.com/b.png"));
-
-        MerchantDetailResponse ma = merchantService.upsert(null, a);
-        MerchantDetailResponse mb = merchantService.upsert(null, b);
-
-        merchantService.offlineByCategoryId(categoryId);
-
-        assertThat(merchantRepository.findById(ma.id()).orElseThrow().isOnline()).isFalse();
-        assertThat(merchantRepository.findById(mb.id()).orElseThrow().isOnline()).isFalse();
-    }
-
     /** 构造一个下架商户（绕过上架校验），返回其 ID。 */
     private UUID offlineMerchant(UUID cityId, UUID categoryId) {
         MerchantUpsertRequest req = new MerchantUpsertRequest(

@@ -10,6 +10,7 @@ import com.loves.space.modules.banner.entity.BannerType;
 import com.loves.space.modules.banner.repository.BannerRepository;
 import com.loves.space.modules.city.entity.City;
 import com.loves.space.modules.city.repository.CityRepository;
+import com.loves.space.modules.city.service.CityService;
 import com.loves.space.support.AbstractPostgresIntegrationTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -36,6 +37,9 @@ class BannerServiceTest extends AbstractPostgresIntegrationTest {
 
     @Autowired
     private CityRepository cityRepository;
+
+    @Autowired
+    private CityService cityService;
 
     @MockitoBean
     private ObjectKeyValidator objectKeyValidator;
@@ -71,6 +75,21 @@ class BannerServiceTest extends AbstractPostgresIntegrationTest {
         assertThat(persisted.getImageUrls()).containsExactly("bound/aaa.png", "bound/bbb.jpg");
         assertThat(detail.imageUrls()).extracting("id").containsExactly("bound/aaa.png", "bound/bbb.jpg");
         assertThat(detail.imageUrls()).extracting("url").containsExactly("https://signed/aaa", "https://signed/bbb");
+    }
+
+    @Test
+    void deletingCityOfflinesItsBanners() {
+        when(objectKeyValidator.validateAndBind("images/aaa.png")).thenReturn("bound/aaa.png");
+        when(imageUrlSigner.sign("bound/aaa.png")).thenReturn("https://signed/aaa");
+
+        BannerDetailResponse detail = bannerService.create(new BannerCreateRequest(
+                "banner-city-delete", BannerType.CITY, List.of("images/aaa.png"), cityId));
+        bannerService.setOnline(detail.id(), true);
+        assertThat(bannerRepository.findById(detail.id()).orElseThrow().isOnline()).isTrue();
+
+        cityService.delete(cityId);
+
+        assertThat(bannerRepository.findById(detail.id()).orElseThrow().isOnline()).isFalse();
     }
 
     @Test
