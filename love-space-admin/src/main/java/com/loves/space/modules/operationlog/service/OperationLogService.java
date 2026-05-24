@@ -72,15 +72,15 @@ public class OperationLogService {
     /**
      * 分页查询操作日志。
      *
-     * @param query 查询条件
+     * @param query    查询条件
+     * @param pageable 分页参数（page 1 基，size 20/30）
      * @return 分页响应（按 createdAt 倒序）
      */
     @Transactional(readOnly = true)
-    public PageResponse<OperationLogItem> page(OperationLogQuery query) {
+    public PageResponse<OperationLogItem> page(OperationLogQuery query, Pageable pageable) {
         Specification<OperationLog> spec = buildSpec(query);
-        PageQuery pageQuery = new PageQuery(query.page(), query.size());
-        Pageable pageable = pageQuery.toPageable(Sort.by(Sort.Direction.DESC, "createdAt"));
-        Page<OperationLog> entities = operationLogRepository.findAll(spec, pageable);
+        Pageable sorted = PageQuery.normalize(pageable, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Page<OperationLog> entities = operationLogRepository.findAll(spec, sorted);
         return PageResponseMapper.map(entities, e -> new OperationLogItem(
                 e.getId(),
                 e.getUsername(),

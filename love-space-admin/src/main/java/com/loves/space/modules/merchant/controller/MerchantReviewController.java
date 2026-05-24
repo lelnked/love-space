@@ -1,12 +1,12 @@
 package com.loves.space.modules.merchant.controller;
 
 import com.loves.space.common.annotation.OperationLog;
-import com.loves.space.common.page.PageQuery;
 import com.loves.space.common.page.PageResponseMapper.PageResponse;
 import com.loves.space.modules.merchant.dto.MerchantReviewResponse;
 import com.loves.space.modules.merchant.dto.MerchantReviewUpsertRequest;
 import com.loves.space.modules.merchant.service.MerchantReviewService;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.UUID;
@@ -34,10 +33,8 @@ public class MerchantReviewController {
 
     /** 评价分页列表（按 sortOrder 升序）。 */
     @GetMapping
-    public PageResponse<MerchantReviewResponse> list(@PathVariable UUID merchantId,
-                                                     @RequestParam(required = false) Integer page,
-                                                     @RequestParam(required = false) Integer size) {
-        return merchantReviewService.page(merchantId, new PageQuery(page, size));
+    public PageResponse<MerchantReviewResponse> list(@PathVariable UUID merchantId, Pageable pageable) {
+        return merchantReviewService.page(merchantId, pageable);
     }
 
     /** 评价详情。 */

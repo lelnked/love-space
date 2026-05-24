@@ -9,6 +9,7 @@ import com.loves.space.modules.merchant.dto.MerchantQuery;
 import com.loves.space.modules.merchant.dto.MerchantUpsertRequest;
 import com.loves.space.modules.merchant.service.MerchantService;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -40,9 +41,8 @@ public class MerchantController {
                                                 @RequestParam(required = false) UUID categoryId,
                                                 @RequestParam(required = false) Boolean online,
                                                 @RequestParam(required = false) String name,
-                                                @RequestParam(required = false) Integer page,
-                                                @RequestParam(required = false) Integer size) {
-        return merchantService.page(new MerchantQuery(cityId, categoryId, online, name, page, size));
+                                                Pageable pageable) {
+        return merchantService.page(new MerchantQuery(cityId, categoryId, online, name), pageable);
     }
 
     /** 商户详情。 */

@@ -3,6 +3,7 @@ package com.loves.space.modules.manager.service;
 import com.loves.space.common.enums.Role;
 import com.loves.space.common.exception.ResourceNotFoundException;
 import com.loves.space.common.exception.ValidationException;
+import com.loves.space.common.page.PageQuery;
 import com.loves.space.common.page.PageResponseMapper;
 import com.loves.space.common.page.PageResponseMapper.PageResponse;
 import com.loves.space.modules.manager.dto.ManagerCreateRequest;
@@ -13,7 +14,6 @@ import com.loves.space.modules.manager.dto.PasswordResetRequest;
 import com.loves.space.modules.manager.entity.Manager;
 import com.loves.space.modules.manager.repository.ManagerRepository;
 import jakarta.persistence.criteria.Predicate;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
@@ -34,13 +34,6 @@ import java.util.UUID;
 @Transactional
 public class ManagerService {
 
-    /** 默认页码（1 基）。 */
-    private static final int DEFAULT_PAGE = 1;
-    /** 默认每页大小。 */
-    private static final int DEFAULT_SIZE = 20;
-    /** 可选每页大小。 */
-    private static final int ALT_SIZE = 30;
-
     private final ManagerRepository managerRepository;
     private final PasswordEncoder passwordEncoder;
 
@@ -53,11 +46,12 @@ public class ManagerService {
      * 分页查询运营管理员列表。
      * <p>支持 username 模糊、role 精确、enable 精确、createdAt 区间过滤；按 createdAt DESC 排序。
      *
-     * @param query 查询条件
+     * @param query    查询条件
+     * @param pageable 分页参数（page 1 基，size 20/30）
      * @return 分页结果（含列表项与分页元数据）
      */
     @Transactional(readOnly = true)
-    public PageResponse<ManagerItem> page(ManagerQuery query) {
+    public PageResponse<ManagerItem> page(ManagerQuery query, Pageable pageable) {
         Specification<Manager> specification = (root, cq, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
             if (StringUtils.hasText(query.username())) {
@@ -78,12 +72,8 @@ public class ManagerService {
             return cb.and(predicates.toArray(new Predicate[0]));
         };
 
-        int safePage = query.page() == null || query.page() < 1 ? DEFAULT_PAGE : query.page();
-        int safeSize = query.size() != null && (query.size() == DEFAULT_SIZE || query.size() == ALT_SIZE)
-                ? query.size() : DEFAULT_SIZE;
-        Pageable pageable = PageRequest.of(safePage - 1, safeSize, Sort.by(Sort.Direction.DESC, "createdAt"));
-
-        return PageResponseMapper.map(managerRepository.findAll(specification, pageable), ManagerService::toItem);
+        Pageable sorted = PageQuery.normalize(pageable, Sort.by(Sort.Direction.DESC, "createdAt"));
+        return PageResponseMapper.map(managerRepository.findAll(specification, sorted), ManagerService::toItem);
     }
 
     /**

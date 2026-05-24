@@ -2,7 +2,6 @@ package com.loves.space.modules.banner.controller;
 
 import com.loves.space.common.annotation.OperationLog;
 import com.loves.space.common.dto.OnlineStatusRequest;
-import com.loves.space.common.page.PageQuery;
 import com.loves.space.common.page.PageResponseMapper.PageResponse;
 import com.loves.space.modules.banner.dto.BannerCreateRequest;
 import com.loves.space.modules.banner.dto.BannerDetailResponse;
@@ -12,6 +11,7 @@ import com.loves.space.modules.banner.dto.BannerUpdateRequest;
 import com.loves.space.modules.banner.entity.BannerType;
 import com.loves.space.modules.banner.service.BannerService;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -44,18 +44,16 @@ public class BannerController {
      *
      * @param keyword 名称关键字（可空）
      * @param type    类型过滤（可空）
-     * @param online  上下架状态过滤（可空）
-     * @param page    页码（1 基，可空）
-     * @param size    每页大小（20/30，可空，默认 20）
+     * @param online   上下架状态过滤（可空）
+     * @param pageable 分页参数（page 1 基，size 20/30，默认第 1 页、每页 20）
      */
     @GetMapping
     public PageResponse<BannerListItemResponse> list(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) BannerType type,
             @RequestParam(required = false) Boolean online,
-            @RequestParam(required = false) Integer page,
-            @RequestParam(required = false) Integer size) {
-        return bannerService.pageList(new BannerQuery(keyword, type, online), new PageQuery(page, size));
+            Pageable pageable) {
+        return bannerService.pageList(new BannerQuery(keyword, type, online), pageable);
     }
 
     /** 查询 banner 详情。 */

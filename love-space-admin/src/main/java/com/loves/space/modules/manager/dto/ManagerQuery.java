@@ -10,16 +10,12 @@ import java.time.OffsetDateTime;
  * @param enable          启用状态过滤（可空）
  * @param createdAtFrom   创建时间起（包含，可空）
  * @param createdAtTo     创建时间止（包含，可空）
- * @param page            页码（1 基，可空）
- * @param size            每页大小（可空）
  */
 public record ManagerQuery(
         String username,
         String role,
         Boolean enable,
         OffsetDateTime createdAtFrom,
-        OffsetDateTime createdAtTo,
-        Integer page,
-        Integer size
+        OffsetDateTime createdAtTo
 ) {
 }

@@ -111,15 +111,15 @@ public class BannerService {
      * 分页查询 banner 列表，按 {@code updatedAt DESC} 排序；批量装配关联城市名。
      */
     @Transactional(readOnly = true)
-    public PageResponse<BannerListItemResponse> pageList(BannerQuery query, PageQuery pageQuery) {
+    public PageResponse<BannerListItemResponse> pageList(BannerQuery query, Pageable pageable) {
         List<Specification<Banner>> specs = Stream.of(
                 BannerSpecifications.nameContains(query.keyword()),
                 BannerSpecifications.hasType(query.type()),
                 BannerSpecifications.onlineEquals(query.online())
         ).filter(Objects::nonNull).toList();
         Specification<Banner> spec = Specification.allOf(specs);
-        Pageable pageable = pageQuery.toPageable(Sort.by(Sort.Direction.DESC, Banner_.UPDATED_AT));
-        Page<Banner> page = bannerRepository.findAll(spec, pageable);
+        Pageable sorted = PageQuery.normalize(pageable, Sort.by(Sort.Direction.DESC, Banner_.UPDATED_AT));
+        Page<Banner> page = bannerRepository.findAll(spec, sorted);
         Map<UUID, String> cityNames = batchLoadCityNames(page.getContent());
         return PageResponseMapper.map(page, banner -> toItem(banner, cityNames.get(banner.getLinkedEntityId())));
     }

@@ -106,7 +106,7 @@ public class MerchantService {
 
     /** 列表分页查询。 */
     @Transactional(readOnly = true)
-    public PageResponse<MerchantAdminItem> page(MerchantQuery query) {
+    public PageResponse<MerchantAdminItem> page(MerchantQuery query, Pageable pageable) {
         Specification<Merchant> spec = (root, cq, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
             if (query.cityId() != null) {
@@ -123,9 +123,8 @@ public class MerchantService {
             }
             return cb.and(predicates.toArray(new Predicate[0]));
         };
-        Pageable pageable = new PageQuery(query.page(), query.size())
-                .toPageable(Sort.by(Sort.Order.desc("weight"), Sort.Order.desc("createdAt")));
-        Page<Merchant> page = merchantRepository.findAll(spec, pageable);
+        Pageable sorted = PageQuery.normalize(pageable, Sort.by(Sort.Order.desc("weight"), Sort.Order.desc("createdAt")));
+        Page<Merchant> page = merchantRepository.findAll(spec, sorted);
         return PageResponseMapper.map(page, this::toAdminItem);
     }
 

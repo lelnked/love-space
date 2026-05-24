@@ -9,6 +9,7 @@ import com.loves.space.modules.merchant.dto.MerchantReviewUpsertRequest;
 import com.loves.space.modules.merchant.entity.MerchantReview;
 import com.loves.space.modules.merchant.repository.MerchantRepository;
 import com.loves.space.modules.merchant.repository.MerchantReviewRepository;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,11 +34,11 @@ public class MerchantReviewService {
 
     /** 分页列表（按 sortOrder 升序）。 */
     @Transactional(readOnly = true)
-    public PageResponse<MerchantReviewResponse> page(UUID merchantId, PageQuery query) {
+    public PageResponse<MerchantReviewResponse> page(UUID merchantId, Pageable pageable) {
         requireMerchant(merchantId);
         Sort sort = Sort.by(Sort.Direction.ASC, "sortOrder");
         return PageResponseMapper.map(
-                merchantReviewRepository.findAllByMerchantId(merchantId, query.toPageable(sort)),
+                merchantReviewRepository.findAllByMerchantId(merchantId, PageQuery.normalize(pageable, sort)),
                 MerchantReviewService::toResponse);
     }
 

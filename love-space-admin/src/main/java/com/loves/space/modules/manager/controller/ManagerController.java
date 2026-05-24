@@ -9,6 +9,7 @@ import com.loves.space.modules.manager.dto.ManagerQuery;
 import com.loves.space.modules.manager.dto.PasswordResetRequest;
 import com.loves.space.modules.manager.service.ManagerService;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -48,8 +49,7 @@ public class ManagerController {
      * @param enable         启用状态（可空）
      * @param createdAtFrom  创建时间起（可空）
      * @param createdAtTo    创建时间止（可空）
-     * @param page           页码（1 基，可空）
-     * @param size           每页大小（可空）
+     * @param pageable       分页参数（page 1 基，size 20/30，默认第 1 页、每页 20）
      * @return 分页结果
      */
     @GetMapping
@@ -59,9 +59,8 @@ public class ManagerController {
             @RequestParam(required = false) Boolean enable,
             @RequestParam(required = false) OffsetDateTime createdAtFrom,
             @RequestParam(required = false) OffsetDateTime createdAtTo,
-            @RequestParam(required = false) Integer page,
-            @RequestParam(required = false) Integer size) {
-        return managerService.page(new ManagerQuery(username, role, enable, createdAtFrom, createdAtTo, page, size));
+            Pageable pageable) {
+        return managerService.page(new ManagerQuery(username, role, enable, createdAtFrom, createdAtTo), pageable);
     }
 
     /**
