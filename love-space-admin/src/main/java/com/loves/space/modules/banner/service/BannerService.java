@@ -111,7 +111,7 @@ public class BannerService {
      * 分页查询 banner 列表，按 {@code updatedAt DESC} 排序；批量装配关联城市名。
      */
     @Transactional(readOnly = true)
-    public PageResponse<BannerListItemResponse> pageList(BannerQuery query, Pageable pageable) {
+    public PageResponse<BannerListItemResponse> page(BannerQuery query, Pageable pageable) {
         List<Specification<Banner>> specs = Stream.of(
                 BannerSpecifications.nameContains(query.keyword()),
                 BannerSpecifications.hasType(query.type()),

@@ -96,7 +96,7 @@ class MerchantControllerWebMvcTest extends AbstractPostgresIntegrationTest {
 
     @Test
     void list_returns_paginated_content_with_percent_scores() throws Exception {
-        String body = mockMvc.perform(get("/api/app/merchants")
+        String body = mockMvc.perform(get("/api/app/merchants/page")
                         .param("cityId", cityId.toString())
                         .header("X-API-Key", TEST_API_KEY))
                 .andExpect(status().isOk())
@@ -118,7 +118,7 @@ class MerchantControllerWebMvcTest extends AbstractPostgresIntegrationTest {
 
     @Test
     void list_with_unmatched_period_filter_returns_empty_page() throws Exception {
-        mockMvc.perform(get("/api/app/merchants")
+        mockMvc.perform(get("/api/app/merchants/page")
                         .param("cityId", cityId.toString())
                         .param("period", Period.MENSTRUAL.name())
                         .header("X-API-Key", TEST_API_KEY))

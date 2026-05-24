@@ -81,7 +81,7 @@ function buildParams(query: MerchantQuery): Record<string, string | number | boo
 }
 
 export async function pageMerchants(query: MerchantQuery): Promise<Page<MerchantItem>> {
-  const { data } = await apiClient.get<Page<MerchantItem>>("/api/admin/merchants", {
+  const { data } = await apiClient.get<Page<MerchantItem>>("/api/admin/merchants/page", {
     params: buildParams(query),
   });
   return data;

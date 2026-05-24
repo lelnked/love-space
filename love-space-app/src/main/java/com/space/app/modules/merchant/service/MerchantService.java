@@ -62,7 +62,7 @@ public class MerchantService {
     }
 
     /** 商户列表分页查询。 */
-    public Page<MerchantListItemResponse> search(UUID cityId, Period period, UUID categoryId, PageQuery pageQuery) {
+    public Page<MerchantListItemResponse> page(UUID cityId, Period period, UUID categoryId, PageQuery pageQuery) {
         // 排序在 native SQL 中硬编码（weight DESC, created_at DESC），此处传入未排序 Pageable
         Pageable pageable = pageQuery.toPageable(Sort.unsorted());
         Page<Merchant> page = merchantRepository.searchOnline(cityId, period, categoryId, pageable);

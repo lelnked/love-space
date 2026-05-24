@@ -133,7 +133,7 @@ class MerchantReadIT extends AbstractPostgresIntegrationTest {
                 .andExpect(jsonPath("$.images[0].id").value("bound/a.png"))
                 .andExpect(jsonPath("$.images[0].url").value("https://signed.example.com/bound/a.png"));
 
-        mockMvc.perform(get("/api/admin/merchants")
+        mockMvc.perform(get("/api/admin/merchants/page")
                         .param("cityId", cityId.toString())
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
                 .andExpect(status().isOk())

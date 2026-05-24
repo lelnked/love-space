@@ -74,7 +74,7 @@ class OperationLogControllerWebMvcTest extends AbstractPostgresIntegrationTest {
         insertLog("admin", "manager", "create", now);
         insertLog("alice", "city", "update", now);
 
-        mockMvc.perform(get("/api/admin/logs")
+        mockMvc.perform(get("/api/admin/logs/page")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                         .param("username", "admin")
                         .param("module", "city"))
@@ -94,7 +94,7 @@ class OperationLogControllerWebMvcTest extends AbstractPostgresIntegrationTest {
         OffsetDateTime from = base.minusHours(2);
         OffsetDateTime to = base;
 
-        mockMvc.perform(get("/api/admin/logs")
+        mockMvc.perform(get("/api/admin/logs/page")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                         .param("createdAtFrom", from.toString())
                         .param("createdAtTo", to.toString()))

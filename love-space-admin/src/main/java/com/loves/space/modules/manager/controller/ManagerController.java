@@ -52,8 +52,8 @@ public class ManagerController {
      * @param pageable       分页参数（page 1 基，size 20/30，默认第 1 页、每页 20）
      * @return 分页结果
      */
-    @GetMapping
-    public PageResponse<ManagerItem> list(
+    @GetMapping("/page")
+    public PageResponse<ManagerItem> page(
             @RequestParam(required = false) String username,
             @RequestParam(required = false) String role,
             @RequestParam(required = false) Boolean enable,

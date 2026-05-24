@@ -43,8 +43,8 @@ function buildParams(query: BannerQuery): Record<string, string | number | boole
   return params;
 }
 
-export async function listBanners(query: BannerQuery = {}): Promise<Page<BannerListItem>> {
-  const { data } = await apiClient.get<Page<BannerListItem>>("/api/admin/banners", {
+export async function pageBanners(query: BannerQuery = {}): Promise<Page<BannerListItem>> {
+  const { data } = await apiClient.get<Page<BannerListItem>>("/api/admin/banners/page", {
     params: buildParams(query),
   });
   return data;

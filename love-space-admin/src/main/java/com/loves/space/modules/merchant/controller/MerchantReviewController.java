@@ -32,8 +32,8 @@ public class MerchantReviewController {
     }
 
     /** 评价分页列表（按 sortOrder 升序）。 */
-    @GetMapping
-    public PageResponse<MerchantReviewResponse> list(@PathVariable UUID merchantId, Pageable pageable) {
+    @GetMapping("/page")
+    public PageResponse<MerchantReviewResponse> page(@PathVariable UUID merchantId, Pageable pageable) {
         return merchantReviewService.page(merchantId, pageable);
     }
 

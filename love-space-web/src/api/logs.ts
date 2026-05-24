@@ -31,7 +31,7 @@ function buildParams(query: OperationLogQuery): Record<string, string | number> 
 }
 
 export async function pageOperationLogs(query: OperationLogQuery): Promise<Page<OperationLogItem>> {
-  const { data } = await apiClient.get<Page<OperationLogItem>>("/api/admin/logs", {
+  const { data } = await apiClient.get<Page<OperationLogItem>>("/api/admin/logs/page", {
     params: buildParams(query),
   });
   return data;

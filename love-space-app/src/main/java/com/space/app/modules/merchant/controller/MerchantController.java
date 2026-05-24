@@ -33,14 +33,14 @@ public class MerchantController {
     }
 
     /** 列表分页查询：weight DESC, createdAt DESC。 */
-    @GetMapping
-    public PageResponse<MerchantListItemResponse> list(
+    @GetMapping("/page")
+    public PageResponse<MerchantListItemResponse> page(
             @RequestParam("cityId") @NotNull UUID cityId,
             @RequestParam(value = "period", required = false) Period period,
             @RequestParam(value = "categoryId", required = false) UUID categoryId,
             @RequestParam(value = "page", required = false) Integer page,
             @RequestParam(value = "size", required = false) Integer size) {
-        return PageResponse.of(merchantService.search(cityId, period, categoryId, new PageQuery(page, size)));
+        return PageResponse.of(merchantService.page(cityId, period, categoryId, new PageQuery(page, size)));
     }
 
     /** 商户详情；下架或不存在 → 404。 */

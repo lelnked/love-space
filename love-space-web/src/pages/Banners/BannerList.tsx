@@ -20,7 +20,7 @@ import {
   BannerQuery,
   BannerType,
   deleteBanner,
-  listBanners,
+  pageBanners,
   setBannerOnline,
 } from "../../api/banners";
 
@@ -73,7 +73,7 @@ export default function BannerList() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await listBanners(buildQuery(filters, page, size));
+      const data = await pageBanners(buildQuery(filters, page, size));
       setItems(data.content);
       setTotal(data.totalElements);
       setTotalPages(data.totalPages);

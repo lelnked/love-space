@@ -55,7 +55,7 @@ function buildParams(query: ManagerQuery): Record<string, string | number | bool
 }
 
 export async function pageManagers(query: ManagerQuery): Promise<Page<ManagerItem>> {
-  const { data } = await apiClient.get<Page<ManagerItem>>("/api/admin/managers", {
+  const { data } = await apiClient.get<Page<ManagerItem>>("/api/admin/managers/page", {
     params: buildParams(query),
   });
   return data;

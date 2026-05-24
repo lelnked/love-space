@@ -53,7 +53,7 @@ class ManagerControllerSecurityTest extends AbstractPostgresIntegrationTest {
 
     @Test
     void anonymousAccessReturns401() throws Exception {
-        mockMvc.perform(get("/api/admin/managers"))
+        mockMvc.perform(get("/api/admin/managers/page"))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -61,7 +61,7 @@ class ManagerControllerSecurityTest extends AbstractPostgresIntegrationTest {
     void memberAccessReturns403() throws Exception {
         Manager member = createManager(Role.MEMBER);
         String token = jwtTokenProvider.issue(member.getId(), member.getUsername(), Role.MEMBER);
-        mockMvc.perform(get("/api/admin/managers")
+        mockMvc.perform(get("/api/admin/managers/page")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
                 .andExpect(status().isForbidden());
     }
@@ -70,7 +70,7 @@ class ManagerControllerSecurityTest extends AbstractPostgresIntegrationTest {
     void adminAccessReturns200() throws Exception {
         Manager admin = managerRepository.findByUsername("admin").orElseGet(() -> createManager(Role.ADMIN));
         String token = jwtTokenProvider.issue(admin.getId(), admin.getUsername(), Role.ADMIN);
-        mockMvc.perform(get("/api/admin/managers")
+        mockMvc.perform(get("/api/admin/managers/page")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
                 .andExpect(status().isOk());
     }

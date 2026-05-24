@@ -36,8 +36,8 @@ public class MerchantController {
     }
 
     /** 商户分页列表（按 weight DESC, createdAt DESC）。 */
-    @GetMapping
-    public PageResponse<MerchantAdminItem> list(@RequestParam(required = false) UUID cityId,
+    @GetMapping("/page")
+    public PageResponse<MerchantAdminItem> page(@RequestParam(required = false) UUID cityId,
                                                 @RequestParam(required = false) UUID categoryId,
                                                 @RequestParam(required = false) Boolean online,
                                                 @RequestParam(required = false) String name,

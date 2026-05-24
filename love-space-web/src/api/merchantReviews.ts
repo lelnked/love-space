@@ -27,7 +27,7 @@ export async function pageMerchantReviews(
   size: number,
 ): Promise<Page<MerchantReviewItem>> {
   const { data } = await apiClient.get<Page<MerchantReviewItem>>(
-    `/api/admin/merchants/${merchantId}/reviews`,
+    `/api/admin/merchants/${merchantId}/reviews/page`,
     { params: { page, size } },
   );
   return data;

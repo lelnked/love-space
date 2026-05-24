@@ -82,7 +82,7 @@ class MerchantReadIT extends AbstractPostgresIntegrationTest {
 
     @Test
     void listReturnsLogoAsImageResponse() throws Exception {
-        mockMvc.perform(get("/api/app/merchants")
+        mockMvc.perform(get("/api/app/merchants/page")
                         .param("cityId", cityId.toString())
                         .header("X-API-Key", TEST_API_KEY))
                 .andExpect(status().isOk())

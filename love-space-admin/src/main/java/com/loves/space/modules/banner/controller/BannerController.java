@@ -47,13 +47,13 @@ public class BannerController {
      * @param online   上下架状态过滤（可空）
      * @param pageable 分页参数（page 1 基，size 20/30，默认第 1 页、每页 20）
      */
-    @GetMapping
-    public PageResponse<BannerListItemResponse> list(
+    @GetMapping("/page")
+    public PageResponse<BannerListItemResponse> page(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) BannerType type,
             @RequestParam(required = false) Boolean online,
             Pageable pageable) {
-        return bannerService.pageList(new BannerQuery(keyword, type, online), pageable);
+        return bannerService.page(new BannerQuery(keyword, type, online), pageable);
     }
 
     /** 查询 banner 详情。 */
