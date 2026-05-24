@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { AxiosError } from "axios";
 import FilterBar, { FilterField, FilterValues } from "../../components/filter/FilterBar";
 import Pagination from "../../components/pagination/Pagination";
@@ -55,6 +55,7 @@ export default function MerchantList() {
   const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(false);
   const toast = useToast();
+  const navigate = useNavigate();
   const [cities, setCities] = useState<CityItem[]>([]);
   const [categories, setCategories] = useState<CategoryItem[]>([]);
   const [scoreCache, setScoreCache] = useState<Record<string, number | null>>({});
@@ -238,14 +239,13 @@ export default function MerchantList() {
                   )}
                   {!loading &&
                     items.map((it) => (
-                      <TableRow key={it.id}>
-                        <TableCell className="px-5 py-4 sm:px-6 text-start font-medium text-theme-sm">
-                          <Link
-                            to={`/merchants/${it.id}`}
-                            className="text-brand-500 hover:text-brand-600 hover:underline"
-                          >
-                            {it.name}
-                          </Link>
+                      <TableRow
+                        key={it.id}
+                        onClick={() => navigate(`/merchants/${it.id}`)}
+                        className="cursor-pointer hover:bg-gray-50 dark:hover:bg-white/[0.03]"
+                      >
+                        <TableCell className="px-5 py-4 sm:px-6 text-start font-medium text-theme-sm text-brand-500">
+                          {it.name}
                         </TableCell>
                         <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
                           {cityName[it.cityId] ?? "-"}
@@ -272,7 +272,10 @@ export default function MerchantList() {
                           {formatDateTime(it.createdAt)}
                         </TableCell>
                         <TableCell className="px-4 py-3 text-start text-theme-sm">
-                          <div className="flex gap-2">
+                          <div
+                            className="flex gap-2"
+                            onClick={(e) => e.stopPropagation()}
+                          >
                             <Link to={`/merchants/${it.id}/edit`}>
                               <Button size="sm" variant="primary">编辑</Button>
                             </Link>
