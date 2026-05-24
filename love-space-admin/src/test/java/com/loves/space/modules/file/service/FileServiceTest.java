@@ -45,6 +45,20 @@ class FileServiceTest {
     }
 
     @Test
+    void hostBuiltAsAbsoluteUrlWhenEndpointHasNoScheme() {
+        OssProperties noScheme = new OssProperties(
+                "oss-cn-chengdu.aliyuncs.com", "love-space-test", "cn-chengdu",
+                "ak", "sk", "images", "bound", 1800L, 20L * 1024 * 1024);
+        FileService svc = new FileService(issuer, new OssPostPolicySigner(noScheme), noScheme);
+        when(issuer.issueFor(anyString()))
+                .thenReturn(new StsCredential("ID", "SECRET", "TOKEN", "2026-05-23T08:00:00Z"));
+
+        UploadCredentialResponse response = svc.issueUploadCredential(new UploadCredentialRequest("image/png"));
+
+        assertThat(response.host()).isEqualTo("https://love-space-test.oss-cn-chengdu.aliyuncs.com");
+    }
+
+    @Test
     void signatureFieldsIssued() {
         when(issuer.issueFor(anyString()))
                 .thenReturn(new StsCredential("ID", "SECRET", "TOKEN", "2026-05-23T08:00:00Z"));

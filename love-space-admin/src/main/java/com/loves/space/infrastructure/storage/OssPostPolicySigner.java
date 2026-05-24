@@ -104,9 +104,21 @@ public class OssPostPolicySigner {
         );
     }
 
-    /** 把 OSS endpoint 拼成带 bucket 的虚拟主机地址，例如 {@code https://my-bucket.oss-cn-shanghai.aliyuncs.com}。 */
+    /**
+     * 把 OSS endpoint 拼成带 bucket 的虚拟主机地址，例如 {@code https://my-bucket.oss-cn-shanghai.aliyuncs.com}。
+     *
+     * <p>兼容 endpoint 配置带或不带协议头：缺失时补 {@code https://}，确保返回的是浏览器可直接 POST 的绝对地址。
+     */
     private String buildHost() {
-        return ossProperties.endpoint().replaceFirst("://", "://" + ossProperties.bucket() + ".");
+        String endpoint = ossProperties.endpoint();
+        String scheme = "https://";
+        String hostWithoutScheme = endpoint;
+        int schemeEnd = endpoint.indexOf("://");
+        if (schemeEnd >= 0) {
+            scheme = endpoint.substring(0, schemeEnd + "://".length());
+            hostWithoutScheme = endpoint.substring(schemeEnd + "://".length());
+        }
+        return scheme + ossProperties.bucket() + "." + hostWithoutScheme;
     }
 
     /** 转义 JSON 字符串值中的反斜杠与双引号（Policy 字段值均为 ASCII，无需处理控制字符）。 */

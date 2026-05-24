@@ -34,6 +34,10 @@ export async function uploadToOss(
     throw new Error("仅支持 png/jpeg/webp 图片");
   }
   const credential = await fetchUploadCredential(file.type);
+  // host 必须是绝对地址，否则会被当成相对路径拼到当前页面 URL 上。
+  if (!/^https?:\/\//i.test(credential.host)) {
+    throw new Error(`OSS 上传地址非法：${credential.host}`);
+  }
 
   const formData = new FormData();
   formData.append("key", credential.objectKey);
