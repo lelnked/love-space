@@ -1,6 +1,5 @@
 package com.loves.space.modules.merchant.service;
 
-import com.loves.space.common.exception.ResourceNotFoundException;
 import com.loves.space.common.page.PageQuery;
 import com.loves.space.common.page.PageResponseMapper;
 import com.loves.space.common.page.PageResponseMapper.PageResponse;
@@ -72,14 +71,14 @@ public class MerchantReviewService {
     /** 校验商户存在。 */
     private void requireMerchant(UUID merchantId) {
         if (!merchantRepository.existsById(merchantId)) {
-            throw new ResourceNotFoundException("商户不存在：" + merchantId);
+            throw new IllegalArgumentException("商户不存在：" + merchantId);
         }
     }
 
     /** 校验评价存在且归属该商户。 */
     private MerchantReview requireReview(UUID merchantId, UUID id) {
         return merchantReviewRepository.findByIdAndMerchantId(id, merchantId)
-                .orElseThrow(() -> new ResourceNotFoundException("评价不存在：" + id));
+                .orElseThrow(() -> new IllegalArgumentException("评价不存在：" + id));
     }
 
     /** 请求字段写入实体。 */

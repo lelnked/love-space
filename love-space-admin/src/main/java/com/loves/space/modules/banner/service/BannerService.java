@@ -1,7 +1,5 @@
 package com.loves.space.modules.banner.service;
 
-import com.loves.space.common.exception.ResourceNotFoundException;
-import com.loves.space.common.exception.ValidationException;
 import com.loves.space.common.page.PageQuery;
 import com.loves.space.common.page.PageResponseMapper;
 import com.loves.space.common.page.PageResponseMapper.PageResponse;
@@ -79,10 +77,10 @@ public class BannerService {
      */
     public BannerDetailResponse update(UUID id, BannerUpdateRequest request) {
         if (request.online() != null) {
-            throw new ValidationException("BANNER_ONLINE_NOT_EDITABLE_HERE");
+            throw new IllegalArgumentException("BANNER_ONLINE_NOT_EDITABLE_HERE");
         }
         Banner banner = bannerRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("banner 不存在：" + id));
+                .orElseThrow(() -> new IllegalArgumentException("banner 不存在：" + id));
         validateLink(request.type(), request.linkedEntityId());
         banner.setName(request.name());
         banner.setType(request.type());
@@ -94,7 +92,7 @@ public class BannerService {
     /** 删除 banner。 */
     public void delete(UUID id) {
         if (!bannerRepository.existsById(id)) {
-            throw new ResourceNotFoundException("banner 不存在：" + id);
+            throw new IllegalArgumentException("banner 不存在：" + id);
         }
         bannerRepository.deleteById(id);
     }
@@ -103,7 +101,7 @@ public class BannerService {
     @Transactional(readOnly = true)
     public BannerDetailResponse getById(UUID id) {
         Banner banner = bannerRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("banner 不存在：" + id));
+                .orElseThrow(() -> new IllegalArgumentException("banner 不存在：" + id));
         return toDetail(banner, lookupCityName(banner));
     }
 
@@ -126,16 +124,16 @@ public class BannerService {
 
     /**
      * 切换 banner 上下架：当 {@code type=CITY && online=true} 时校验关联城市为 online；
-     * 否则抛 {@link ValidationException} {@code BANNER_LINKED_CITY_OFFLINE}。
+     * 否则抛 {@link IllegalArgumentException} {@code BANNER_LINKED_CITY_OFFLINE}。
      */
     public BannerDetailResponse setOnline(UUID id, boolean online) {
         Banner banner = bannerRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("banner 不存在：" + id));
+                .orElseThrow(() -> new IllegalArgumentException("banner 不存在：" + id));
         if (online && banner.getType() == BannerType.CITY) {
             City city = cityRepository.findById(banner.getLinkedEntityId())
-                    .orElseThrow(() -> new ValidationException("BANNER_LINKED_CITY_NOT_FOUND"));
+                    .orElseThrow(() -> new IllegalArgumentException("BANNER_LINKED_CITY_NOT_FOUND"));
             if (!city.isOnline()) {
-                throw new ValidationException("BANNER_LINKED_CITY_OFFLINE");
+                throw new IllegalArgumentException("BANNER_LINKED_CITY_OFFLINE");
             }
         }
         banner.setOnline(online);
@@ -153,7 +151,7 @@ public class BannerService {
     private void validateLink(BannerType type, UUID linkedEntityId) {
         if (type == BannerType.CITY) {
             if (!cityRepository.existsById(linkedEntityId)) {
-                throw new ValidationException("BANNER_LINKED_CITY_NOT_FOUND");
+                throw new IllegalArgumentException("BANNER_LINKED_CITY_NOT_FOUND");
             }
         }
     }

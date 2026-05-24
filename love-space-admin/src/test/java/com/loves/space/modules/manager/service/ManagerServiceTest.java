@@ -1,7 +1,6 @@
 package com.loves.space.modules.manager.service;
 
 import com.loves.space.common.enums.Role;
-import com.loves.space.common.exception.ValidationException;
 import com.loves.space.modules.manager.dto.ManagerCreateRequest;
 import com.loves.space.modules.manager.dto.ManagerDetailResponse;
 import com.loves.space.modules.manager.dto.PasswordResetRequest;

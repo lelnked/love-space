@@ -1,6 +1,5 @@
 package com.loves.space.modules.banner.service;
 
-import com.loves.space.common.exception.ValidationException;
 import com.loves.space.infrastructure.storage.ImageUrlSigner;
 import com.loves.space.infrastructure.storage.ObjectKeyValidator;
 import com.loves.space.modules.banner.dto.BannerCreateRequest;

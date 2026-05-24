@@ -1,7 +1,5 @@
 package com.loves.space.modules.city.service;
 
-import com.loves.space.common.exception.ResourceNotFoundException;
-import com.loves.space.common.exception.ValidationException;
 import com.loves.space.common.util.ImageResponses;
 import com.loves.space.infrastructure.storage.ImageUrlSigner;
 import com.loves.space.infrastructure.storage.ObjectKeyValidator;
@@ -63,7 +61,7 @@ public class CityService {
      */
     public CityDetailResponse create(CityCreateRequest request) {
         if (cityRepository.existsByChineseName(request.chineseName())) {
-            throw new ValidationException("城市中文名已存在：" + request.chineseName());
+            throw new IllegalArgumentException("城市中文名已存在：" + request.chineseName());
         }
         City city = new City();
         applyCreate(city, request, bindBackgroundImage(request.backgroundImage()));
@@ -76,9 +74,9 @@ public class CityService {
      */
     public CityDetailResponse update(UUID id, CityUpdateRequest request) {
         City city = cityRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("城市不存在：" + id));
+                .orElseThrow(() -> new IllegalArgumentException("城市不存在：" + id));
         if (cityRepository.existsByChineseNameAndIdNot(request.chineseName(), id)) {
-            throw new ValidationException("城市中文名已存在：" + request.chineseName());
+            throw new IllegalArgumentException("城市中文名已存在：" + request.chineseName());
         }
         boolean previousOnline = city.isOnline();
         city.setChineseName(request.chineseName());
@@ -116,7 +114,7 @@ public class CityService {
     @Transactional(readOnly = true)
     public CityDetailResponse get(UUID id) {
         City city = cityRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("城市不存在：" + id));
+                .orElseThrow(() -> new IllegalArgumentException("城市不存在：" + id));
         return toDetail(city);
     }
 
@@ -127,7 +125,7 @@ public class CityService {
      */
     public CityDetailResponse setOnline(UUID id, boolean online) {
         City city = cityRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("城市不存在：" + id));
+                .orElseThrow(() -> new IllegalArgumentException("城市不存在：" + id));
         boolean previousOnline = city.isOnline();
         city.setOnline(online);
         if (previousOnline != online) {
@@ -143,7 +141,7 @@ public class CityService {
      */
     public void delete(UUID id) {
         if (!cityRepository.existsById(id)) {
-            throw new ResourceNotFoundException("城市不存在：" + id);
+            throw new IllegalArgumentException("城市不存在：" + id);
         }
         cityRepository.deleteById(id);
         eventPublisher.publishEvent(new CityDeletedEvent(id));

@@ -1,7 +1,5 @@
 package com.loves.space.modules.tag.service;
 
-import com.loves.space.common.exception.ResourceNotFoundException;
-import com.loves.space.common.exception.ValidationException;
 import com.loves.space.modules.tag.dto.TagItemResponse;
 import com.loves.space.modules.tag.dto.TagQuery;
 import com.loves.space.modules.tag.dto.TagUpsertRequest;
@@ -53,7 +51,7 @@ public class TagService {
     /** 更新标签名（保留 online 不变）。 */
     public TagItemResponse update(UUID id, TagUpsertRequest request) {
         Tag tag = tagRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("标签不存在：" + id));
+                .orElseThrow(() -> new IllegalArgumentException("标签不存在：" + id));
         validateName(request.name(), id);
         tag.setName(request.name());
         return toItem(tag);
@@ -66,7 +64,7 @@ public class TagService {
      */
     public TagItemResponse setOnline(UUID id, boolean online) {
         Tag tag = tagRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("标签不存在：" + id));
+                .orElseThrow(() -> new IllegalArgumentException("标签不存在：" + id));
         boolean previousOnline = tag.isOnline();
         tag.setOnline(online);
         if (previousOnline != online) {
@@ -98,7 +96,7 @@ public class TagService {
      */
     public void delete(UUID id) {
         if (!tagRepository.existsById(id)) {
-            throw new ResourceNotFoundException("标签不存在：" + id);
+            throw new IllegalArgumentException("标签不存在：" + id);
         }
         tagRepository.deleteById(id);
         eventPublisher.publishEvent(new TagDeletedEvent(id));
@@ -107,17 +105,17 @@ public class TagService {
     /** 校验名称：非空、长度 ≤ 6 codePoint、唯一。 */
     private void validateName(String name, UUID excludeId) {
         if (!StringUtils.hasText(name)) {
-            throw new ValidationException("标签名不能为空");
+            throw new IllegalArgumentException("标签名不能为空");
         }
         int codePoints = name.codePointCount(0, name.length());
         if (codePoints > MAX_NAME_CODE_POINTS) {
-            throw new ValidationException("标签名长度不能超过 " + MAX_NAME_CODE_POINTS + " 个字符");
+            throw new IllegalArgumentException("标签名长度不能超过 " + MAX_NAME_CODE_POINTS + " 个字符");
         }
         boolean duplicate = excludeId == null
                 ? tagRepository.existsByName(name)
                 : tagRepository.existsByNameAndIdNot(name, excludeId);
         if (duplicate) {
-            throw new ValidationException("标签名已存在：" + name);
+            throw new IllegalArgumentException("标签名已存在：" + name);
         }
     }
 

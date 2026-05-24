@@ -1,7 +1,6 @@
 package com.loves.space.modules.merchant.service;
 
 import com.loves.space.common.enums.Period;
-import com.loves.space.common.exception.ValidationException;
 import com.loves.space.infrastructure.storage.ImageUrlSigner;
 import com.loves.space.infrastructure.storage.ObjectKeyValidator;
 import com.loves.space.modules.category.dto.CategoryUpsertRequest;

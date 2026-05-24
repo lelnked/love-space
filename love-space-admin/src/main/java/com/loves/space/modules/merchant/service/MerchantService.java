@@ -1,8 +1,6 @@
 package com.loves.space.modules.merchant.service;
 
 import com.loves.space.common.enums.Period;
-import com.loves.space.common.exception.ResourceNotFoundException;
-import com.loves.space.common.exception.ValidationException;
 import com.loves.space.common.page.PageQuery;
 import com.loves.space.common.page.PageResponseMapper;
 import com.loves.space.common.page.PageResponseMapper.PageResponse;
@@ -73,7 +71,7 @@ public class MerchantService {
         Merchant merchant = id == null
                 ? new Merchant()
                 : merchantRepository.findById(id)
-                        .orElseThrow(() -> new ResourceNotFoundException("商户不存在：" + id));
+                        .orElseThrow(() -> new IllegalArgumentException("商户不存在：" + id));
 
         merchant.setName(request.name());
         merchant.setLogo(objectKeyValidator.validateAndBind(request.logo()));
@@ -141,7 +139,7 @@ public class MerchantService {
     @Transactional(readOnly = true)
     public MerchantDetailResponse detail(UUID id) {
         Merchant merchant = merchantRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("商户不存在：" + id));
+                .orElseThrow(() -> new IllegalArgumentException("商户不存在：" + id));
 
         List<UUID> tagIds = merchantTagRepository.findAllByMerchantId(id).stream()
                 .map(MerchantTag::getTagId)
@@ -174,7 +172,7 @@ public class MerchantService {
     public void delete(UUID id) {
         Optional<Merchant> existing = merchantRepository.findById(id);
         if (existing.isEmpty()) {
-            throw new ResourceNotFoundException("商户不存在：" + id);
+            throw new IllegalArgumentException("商户不存在：" + id);
         }
         merchantTagRepository.deleteAllByMerchantId(id);
         merchantReviewRepository.deleteAllByMerchantId(id);
@@ -184,7 +182,7 @@ public class MerchantService {
     /** 切换上下架。上架时校验所属城市/分类可用。 */
     public MerchantDetailResponse setOnline(UUID id, boolean online) {
         Merchant merchant = merchantRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("商户不存在：" + id));
+                .orElseThrow(() -> new IllegalArgumentException("商户不存在：" + id));
         if (online) {
             validateOnlineEligibility(merchant.getCityId(), merchant.getCategoryId());
         }
@@ -201,12 +199,12 @@ public class MerchantService {
      */
     private void validateOnlineEligibility(UUID cityId, UUID categoryId) {
         City city = cityRepository.findById(cityId)
-                .orElseThrow(() -> new ValidationException("商户所属城市不存在，无法上架"));
+                .orElseThrow(() -> new IllegalArgumentException("商户所属城市不存在，无法上架"));
         if (!city.isOnline()) {
-            throw new ValidationException("商户所属城市未上架，无法上架商户");
+            throw new IllegalArgumentException("商户所属城市未上架，无法上架商户");
         }
         if (categoryId != null && !categoryRepository.existsById(categoryId)) {
-            throw new ValidationException("商户所属分类不存在，无法上架");
+            throw new IllegalArgumentException("商户所属分类不存在，无法上架");
         }
     }
 
@@ -214,15 +212,15 @@ public class MerchantService {
     private static void validate(MerchantUpsertRequest request) {
         int nameLen = request.name().codePointCount(0, request.name().length());
         if (nameLen > MAX_NAME_CODE_POINTS) {
-            throw new ValidationException("商户名称长度不能超过 " + MAX_NAME_CODE_POINTS + " 个字符");
+            throw new IllegalArgumentException("商户名称长度不能超过 " + MAX_NAME_CODE_POINTS + " 个字符");
         }
         if (request.images() == null || request.images().isEmpty()) {
-            throw new ValidationException("商户至少需要 1 张图片");
+            throw new IllegalArgumentException("商户至少需要 1 张图片");
         }
         if (request.story() != null) {
             int storyLen = request.story().codePointCount(0, request.story().length());
             if (storyLen > MAX_STORY_CODE_POINTS) {
-                throw new ValidationException("商户故事长度不能超过 " + MAX_STORY_CODE_POINTS + " 个字符");
+                throw new IllegalArgumentException("商户故事长度不能超过 " + MAX_STORY_CODE_POINTS + " 个字符");
             }
         }
         checkScoreRange("safetyEnvironmentScore", request.safetyEnvironmentScore(), 0, 30);
@@ -234,10 +232,10 @@ public class MerchantService {
     /** 检查单维评分上下界。 */
     private static void checkScoreRange(String field, Short value, int min, int max) {
         if (value == null) {
-            throw new ValidationException(field + " 不能为空");
+            throw new IllegalArgumentException(field + " 不能为空");
         }
         if (value < min || value > max) {
-            throw new ValidationException(field + " 必须在 [" + min + ", " + max + "] 之间");
+            throw new IllegalArgumentException(field + " 必须在 [" + min + ", " + max + "] 之间");
         }
     }
 

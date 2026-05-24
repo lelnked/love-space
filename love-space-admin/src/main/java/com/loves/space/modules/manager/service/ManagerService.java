@@ -1,8 +1,6 @@
 package com.loves.space.modules.manager.service;
 
 import com.loves.space.common.enums.Role;
-import com.loves.space.common.exception.ResourceNotFoundException;
-import com.loves.space.common.exception.ValidationException;
 import com.loves.space.common.page.PageQuery;
 import com.loves.space.common.page.PageResponseMapper;
 import com.loves.space.common.page.PageResponseMapper.PageResponse;
@@ -85,7 +83,7 @@ public class ManagerService {
      */
     public ManagerDetailResponse create(ManagerCreateRequest request) {
         if (managerRepository.existsByUsername(request.username())) {
-            throw new ValidationException("用户名已存在：" + request.username());
+            throw new IllegalArgumentException("用户名已存在：" + request.username());
         }
         Manager manager = new Manager();
         manager.setUsername(request.username());
@@ -107,7 +105,7 @@ public class ManagerService {
     @Transactional(readOnly = true)
     public ManagerDetailResponse get(UUID id) {
         Manager manager = managerRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("管理员不存在：" + id));
+                .orElseThrow(() -> new IllegalArgumentException("管理员不存在：" + id));
         return toDetail(manager);
     }
 
@@ -119,7 +117,7 @@ public class ManagerService {
      */
     public void setEnable(UUID id, boolean enable) {
         Manager manager = managerRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("管理员不存在：" + id));
+                .orElseThrow(() -> new IllegalArgumentException("管理员不存在：" + id));
         manager.setEnable(enable);
     }
 
@@ -131,7 +129,7 @@ public class ManagerService {
      */
     public void resetPassword(UUID id, PasswordResetRequest request) {
         Manager manager = managerRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("管理员不存在：" + id));
+                .orElseThrow(() -> new IllegalArgumentException("管理员不存在：" + id));
         manager.setPassword(passwordEncoder.encode(request.newPassword()));
     }
 

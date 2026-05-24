@@ -3,7 +3,6 @@ package com.loves.space.infrastructure.storage;
 import com.aliyun.oss.OSS;
 import com.aliyun.oss.OSSException;
 import com.aliyun.oss.model.ObjectMetadata;
-import com.loves.space.common.exception.ValidationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -20,7 +19,7 @@ import java.util.regex.Pattern;
  *     <li>若为 {@code images/} 前缀，copy 到 {@code bound/} 并 best-effort 删除原对象</li>
  * </ol>
  *
- * <p>所有对外抛出的 {@link ValidationException} 文案统一为 {@code "图片对象不可用"}，
+ * <p>所有对外抛出的 {@link IllegalArgumentException} 文案统一为 {@code "图片对象不可用"}，
  * 具体原因（不存在 / MIME 错 / 太大 / copy 失败）只记入日志。
  */
 @Component
@@ -47,12 +46,12 @@ public class AliyunOssObjectKeyValidator implements ObjectKeyValidator {
     @Override
     public String validateAndBind(String rawObjectKey) {
         if (rawObjectKey == null || rawObjectKey.isBlank()) {
-            throw new ValidationException(UNAVAILABLE_MESSAGE);
+            throw new IllegalArgumentException(UNAVAILABLE_MESSAGE);
         }
         Matcher matcher = OBJECT_KEY_PATTERN.matcher(rawObjectKey);
         if (!matcher.matches()) {
             LOG.warn("objectKey 正则不匹配：{}", rawObjectKey);
-            throw new ValidationException(UNAVAILABLE_MESSAGE);
+            throw new IllegalArgumentException(UNAVAILABLE_MESSAGE);
         }
         String prefix = matcher.group(1);
         String uuidPart = matcher.group(2);
@@ -63,18 +62,18 @@ public class AliyunOssObjectKeyValidator implements ObjectKeyValidator {
             metadata = ossClient.getObjectMetadata(ossProperties.bucket(), rawObjectKey);
         } catch (OSSException e) {
             LOG.warn("OSS headObject 失败 key={} code={}", rawObjectKey, e.getErrorCode());
-            throw new ValidationException(UNAVAILABLE_MESSAGE);
+            throw new IllegalArgumentException(UNAVAILABLE_MESSAGE);
         } catch (RuntimeException e) {
             LOG.warn("OSS headObject 异常 key={}", rawObjectKey, e);
-            throw new ValidationException(UNAVAILABLE_MESSAGE);
+            throw new IllegalArgumentException(UNAVAILABLE_MESSAGE);
         }
         if (!ALLOWED_CONTENT_TYPES.contains(metadata.getContentType())) {
             LOG.warn("MIME 非白名单 key={} contentType={}", rawObjectKey, metadata.getContentType());
-            throw new ValidationException(UNAVAILABLE_MESSAGE);
+            throw new IllegalArgumentException(UNAVAILABLE_MESSAGE);
         }
         if (metadata.getContentLength() > ossProperties.maxImageBytes()) {
             LOG.warn("对象过大 key={} length={}", rawObjectKey, metadata.getContentLength());
-            throw new ValidationException(UNAVAILABLE_MESSAGE);
+            throw new IllegalArgumentException(UNAVAILABLE_MESSAGE);
         }
 
         if (ossProperties.boundKeyPrefix().equals(prefix)) {

@@ -1,7 +1,5 @@
 package com.loves.space.modules.category.service;
 
-import com.loves.space.common.exception.ResourceNotFoundException;
-import com.loves.space.common.exception.ValidationException;
 import com.loves.space.modules.category.dto.CategoryItemResponse;
 import com.loves.space.modules.category.dto.CategoryUpsertRequest;
 import com.loves.space.modules.category.entity.Category;
@@ -34,7 +32,7 @@ public class CategoryService {
     /** 创建分类。 */
     public CategoryItemResponse create(CategoryUpsertRequest request) {
         if (categoryRepository.existsByName(request.name())) {
-            throw new ValidationException("分类名已存在：" + request.name());
+            throw new IllegalArgumentException("分类名已存在：" + request.name());
         }
         Category category = new Category();
         category.setName(request.name());
@@ -44,9 +42,9 @@ public class CategoryService {
     /** 更新分类。 */
     public CategoryItemResponse update(UUID id, CategoryUpsertRequest request) {
         Category category = categoryRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("分类不存在：" + id));
+                .orElseThrow(() -> new IllegalArgumentException("分类不存在：" + id));
         if (categoryRepository.existsByNameAndIdNot(request.name(), id)) {
-            throw new ValidationException("分类名已存在：" + request.name());
+            throw new IllegalArgumentException("分类名已存在：" + request.name());
         }
         category.setName(request.name());
         return toItem(category);
@@ -65,7 +63,7 @@ public class CategoryService {
     public CategoryItemResponse get(UUID id) {
         return categoryRepository.findById(id)
                 .map(CategoryService::toItem)
-                .orElseThrow(() -> new ResourceNotFoundException("分类不存在：" + id));
+                .orElseThrow(() -> new IllegalArgumentException("分类不存在：" + id));
     }
 
     /**
@@ -75,7 +73,7 @@ public class CategoryService {
      */
     public void delete(UUID id) {
         if (!categoryRepository.existsById(id)) {
-            throw new ResourceNotFoundException("分类不存在：" + id);
+            throw new IllegalArgumentException("分类不存在：" + id);
         }
         categoryRepository.deleteById(id);
         eventPublisher.publishEvent(new CategoryDeletedEvent(id));

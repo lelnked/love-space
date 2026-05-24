@@ -1,11 +1,9 @@
 package com.loves.space.modules.tag.service;
 
-import com.loves.space.common.exception.ValidationException;
 import com.loves.space.infrastructure.storage.ImageUrlSigner;
 import com.loves.space.infrastructure.storage.ObjectKeyValidator;
 import com.loves.space.modules.city.dto.CityCreateRequest;
 import com.loves.space.modules.city.service.CityService;
-import com.loves.space.modules.merchant.dto.MerchantDetailResponse;
 import com.loves.space.modules.merchant.dto.MerchantUpsertRequest;
 import com.loves.space.modules.merchant.repository.MerchantRepository;
 import com.loves.space.modules.merchant.repository.MerchantTagRepository;
