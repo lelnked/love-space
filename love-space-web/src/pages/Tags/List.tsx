@@ -243,14 +243,14 @@ export default function TagList() {
                         <button
                           type="button"
                           onClick={() => saveEdit(it)}
-                          className="px-3 py-1 text-xs rounded bg-brand-500 text-white hover:bg-brand-600"
+                          className="px-4 py-2 text-sm rounded bg-brand-500 text-white hover:bg-brand-600 disabled:opacity-50"
                         >
                           保存
                         </button>
                         <button
                           type="button"
                           onClick={cancelEdit}
-                          className="px-3 py-1 text-xs rounded border border-gray-300 hover:bg-gray-50"
+                          className="px-4 py-2 text-sm rounded bg-brand-500 text-white hover:bg-brand-600 disabled:opacity-50"
                         >
                           取消
                         </button>
@@ -260,21 +260,21 @@ export default function TagList() {
                         <button
                           type="button"
                           onClick={() => handleToggleOnline(it)}
-                          className="px-3 py-1 text-xs rounded border border-gray-300 hover:bg-gray-50"
+                          className="px-4 py-2 text-sm rounded bg-brand-500 text-white hover:bg-brand-600 disabled:opacity-50"
                         >
                           {it.online ? "下架" : "上架"}
                         </button>
                         <button
                           type="button"
                           onClick={() => startEdit(it)}
-                          className="px-3 py-1 text-xs rounded border border-gray-300 hover:bg-gray-50"
+                          className="px-4 py-2 text-sm rounded bg-brand-500 text-white hover:bg-brand-600 disabled:opacity-50"
                         >
                           编辑
                         </button>
                         <button
                           type="button"
                           onClick={() => handleDelete(it)}
-                          className="px-3 py-1 text-xs rounded border border-error-300 text-error-500 hover:bg-error-50"
+                          className="px-4 py-2 text-sm rounded bg-brand-500 text-white hover:bg-brand-600 disabled:opacity-50"
                         >
                           删除
                         </button>
