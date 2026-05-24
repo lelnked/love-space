@@ -239,8 +239,13 @@ export default function MerchantList() {
                   {!loading &&
                     items.map((it) => (
                       <TableRow key={it.id}>
-                        <TableCell className="px-5 py-4 sm:px-6 text-start font-medium text-gray-800 text-theme-sm dark:text-white/90">
-                          {it.name}
+                        <TableCell className="px-5 py-4 sm:px-6 text-start font-medium text-theme-sm">
+                          <Link
+                            to={`/merchants/${it.id}`}
+                            className="text-brand-500 hover:text-brand-600 hover:underline"
+                          >
+                            {it.name}
+                          </Link>
                         </TableCell>
                         <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
                           {cityName[it.cityId] ?? "-"}

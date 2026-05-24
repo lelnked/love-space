@@ -16,6 +16,7 @@ import CategoryList from "./pages/Categories/List";
 import TagList from "./pages/Tags/List";
 import MerchantList from "./pages/Merchants/List";
 import MerchantForm from "./pages/Merchants/Form";
+import MerchantDetailPage from "./pages/Merchants/Detail";
 import LogList from "./pages/Logs/List";
 
 export default function App() {
@@ -47,6 +48,7 @@ export default function App() {
             <Route path="/merchants" element={<MerchantList />} />
             <Route path="/merchants/create" element={<MerchantForm />} />
             <Route path="/merchants/:id/edit" element={<MerchantForm />} />
+            <Route path="/merchants/:id" element={<MerchantDetailPage />} />
             <Route path="/logs" element={<LogList />} />
           </Route>
 

@@ -38,4 +38,8 @@ public class MerchantReview extends BaseAuditEntity {
     /** 排序序号，升序展示。 */
     @Column(name = "sort_order", nullable = false)
     private Integer sortOrder;
+
+    /** 是否推荐。 */
+    @Column(name = "recommended", nullable = false)
+    private boolean recommended = false;
 }

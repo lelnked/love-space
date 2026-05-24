@@ -4,6 +4,7 @@ import com.loves.space.modules.merchant.entity.MerchantReview;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -13,6 +14,9 @@ public interface MerchantReviewRepository extends JpaRepository<MerchantReview, 
 
     /** 按商户 ID 查询全部评价，sortOrder 升序。 */
     List<MerchantReview> findAllByMerchantIdOrderBySortOrderAsc(UUID merchantId);
+
+    /** 按评价 ID + 商户 ID 查询（用于校验评价归属）。 */
+    Optional<MerchantReview> findByIdAndMerchantId(UUID id, UUID merchantId);
 
     /** 按商户 ID 批量删除（用于 upsert 前清空子表）。 */
     void deleteAllByMerchantId(UUID merchantId);
