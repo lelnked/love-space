@@ -7,8 +7,8 @@
 ## Summary
 
 把 admin 后台的图片"先服务端 multipart 上传"模型重构为"前端 STS 直传 OSS + 业务绑定时服务端校验"模型：
-1. 新增 `POST /api/admin/files/upload-credentials`，服务端通过 STS `AssumeRole` 拿临时凭证，预生成 `objectKey`（`images/<uuidv7>.<ext>`）一并下发。
-2. 前端用 `ali-oss` SDK 直传 OSS，不经过 admin 进程。
+1. 新增 `POST /api/admin/files/upload-credentials`，服务端通过 STS `AssumeRole` 拿临时凭证，用其在服务端计算 PostObject V4 签名（`OSS4-HMAC-SHA256`），并预生成 `objectKey`（`images/<uuidv7>.<ext>`）一并下发；`accessKeySecret` 不下发。
+2. 前端用 `multipart/form-data` 表单 POST 直传 OSS，不经过 admin 进程。
 3. 业务实体创建/更新时把 objectKey 提交给业务接口；服务端 `headObject` 做存在性 + MIME + 大小校验后入库。
 4. 所有读接口的图片字段统一返回 `ImageResponse(id, url)`，`url` 由 `ImageUrlSigner` 即时签名（默认 30 分钟）。
 5. 孤儿对象由 OSS bucket lifecycle 规则（`images/` 前缀，未带 `bound=true` tag 且超过 24 小时）自动删除；绑定成功时服务端给对象打 `bound=true` tag。
@@ -24,13 +24,13 @@
   - `com.aliyun.oss:aliyun-sdk-oss:3.18.1`（OSS 客户端：headObject、签名、tagging）。
   - `com.aliyun:aliyun-java-sdk-core:4.7.1` + `com.aliyun:aliyun-java-sdk-sts:3.1.2`（STS AssumeRole；仅 admin 真正调用，app 只读不需要 STS 但 admin 必须）。
   - 实际上 app 端只需 `aliyun-sdk-oss`（签名 GET URL 不需要 STS）。
-- 前端新增：`ali-oss`（npm，浏览器版直传 SDK）。
+- 前端：无需 OSS SDK，用浏览器原生 `FormData` + `XMLHttpRequest` 表单 POST 直传。
 
 **Storage**:
 - 阿里云 OSS bucket，配置 lifecycle 规则：`images/` 前缀，按 object tag `bound != "true"` 且对象创建后 24 小时过期删除。
 - PostgreSQL：现有列 `loves_banner.image_urls`(jsonb)、`loves_merchant.logo`(text)、`loves_merchant_image.image_url`(text)、`loves_city.background_image`(text) 改为存 OSS 对象 key（即 `images/<uuid>.<ext>`）；列名/类型不变。
 
-**Testing**: JUnit 5 + Spring Boot Test (MockMvc) + Mockito。所有阿里云 SDK 客户端（OSSClient、STS 调用、ImageUrlSigner、ObjectKeyValidator）通过接口在测试中以 stub 注入，不需要真实 OSS / STS。前端用 Vitest + Testing Library（如已用），ali-oss 上传逻辑在测试中 mock。
+**Testing**: JUnit 5 + Spring Boot Test (MockMvc) + Mockito。所有阿里云 SDK 客户端（OSSClient、STS 调用、ImageUrlSigner、ObjectKeyValidator）通过接口在测试中以 stub 注入，不需要真实 OSS / STS。前端用 Vitest + Testing Library（如已用），表单 POST 直传逻辑在测试中 mock（XHR / fetch）。
 
 **Target Platform**: Linux server（2 个 Spring Boot 进程） + 浏览器（admin web）。
 
@@ -50,7 +50,7 @@
 **Scale/Scope**:
 - admin 后端：新增 `files/credentials` 路径 + 改造 banner / merchant / city 三模块的请求 DTO + service 校验路径 + 所有响应 DTO；删除 `LocalFileStorage` / `FileService.upload(multipart)` / `FileController#upload`。
 - app 后端：新增 `ImageResponse` + `ImageUrlSigner` + 改造 banner / merchant / city 响应。
-- web 前端：新增 `useOssUpload` hook + 改造 file/banner/merchant/city 页面的上传组件与表单类型；删除原 multipart 上传调用。
+- web 前端：新增 `uploadToOss`（FormData + XHR 表单直传）+ 改造 file/banner/merchant/city 页面的上传组件与表单类型；删除原 multipart 上传调用。
 - 不涉及：category / tag / manager / auth / operationlog 模块（无图片字段）。
 
 ## Constitution Check
@@ -112,7 +112,7 @@ love-space-admin/                                                # admin 后端�
     │   ├── FileStorage.java                                     # 删（直传不再需要"服务端落盘"抽象）
     │   └── LocalFileStorage.java                                # 删
     ├── modules/file/
-    │   ├── dto/UploadCredentialResponse.java                    # 新：STS + objectKey 下发包
+    │   ├── dto/UploadCredentialResponse.java                    # 新：PostObject 表单签名 + objectKey 下发包
     │   ├── dto/UploadCredentialRequest.java                     # 新：客户端声明 contentType
     │   ├── dto/FileUploadResponse.java                          # 删
     │   ├── service/FileService.java                             # 重写：原 multipart upload 删除；改为 issueUploadCredential(contentType)
@@ -149,8 +149,8 @@ love-space-app/                                                  # app 后端（
 love-space-web/                                                  # React 19 + Vite 前端
 └── src/
     ├── types/image.ts                                           # 新：ImageResponse、UploadCredentialResponse
-    ├── lib/ossUpload.ts                                         # 新：useOssUpload hook 封装 ali-oss SDK
-    ├── pages/Files/...                                          # 上传组件：调 upload-credentials → ali-oss.put → 暴露 objectKey
+    ├── lib/ossUpload.ts                                         # 新：uploadToOss，FormData + XHR 表单 POST 直传
+    ├── pages/Files/...                                          # 上传组件：调 upload-credentials → 表单 POST → 暴露 objectKey
     ├── pages/Banners/...                                        # 表单改用 objectKey；详情/列表用 ImageResponse 渲染
     ├── pages/Merchants/...                                      # 同上（logo + images）
     └── pages/Cities/...                                         # 同上（backgroundImage）
@@ -173,7 +173,7 @@ love-space-web/                                                  # React 19 + Vi
 4. **业务绑定时校验**：`OSSClient.getObjectMetadata(bucket, key)` 拿 `Content-Type` + `Content-Length` + 存在性；不通过则抛 `ValidationException`。通过后用 `OSSClient.setObjectTagging(bucket, key, [bound=true])` 标记保留。
 5. **bucket lifecycle 与 bound tag**：阿里云 OSS Lifecycle 支持基于 tag 的过滤；规则示例：`Filter.tagSet[bound != "true"]` + `Days=1`。运维需在控制台 / Terraform 准备；plan 把规则配置写入 `bucket-lifecycle.md`。
 6. **读路径签名**：仍用 `OSSClient.generatePresignedUrl(GetObject, expiration)`，默认 30 分钟。
-7. **ali-oss 浏览器 SDK 接入**：`new OSS({ region, accessKeyId, accessKeySecret, stsToken, bucket })` + `client.put(objectKey, file, { headers: { 'Content-Type': contentType } })`；不要让前端做 multipart 也不要让前端自选 key。
+7. **前端表单直传接入**：服务端用 STS 临时凭证计算 PostObject V4 签名（`OSS4-HMAC-SHA256`），前端用 `FormData`（`key` / `policy` / `x-oss-signature` / `x-oss-credential` / `x-oss-date` / `x-oss-security-token` / `success_action_status` / `file`）POST 到 `host`；不向浏览器下发 `accessKeySecret`，也不让前端自选 key。
 8. **测试策略**：所有 SDK 接入点用接口替身；StsCredentialIssuer 在测试中返回固定 `Credentials`；ObjectKeyValidator 用 in-memory map 模拟 OSS metadata；ImageUrlSigner 直接拼装伪 URL。
 9. **生产 / 测试环境配置分离**：admin 用 dev / test profile 接同一 dev bucket，但通过 `key-prefix` 区分（如 `images-dev/`）以避免共享 lifecycle 误删 → 决定 keep `images/` 单一前缀，环境隔离用不同 bucket。
 10. **旧数据迁移**：spec Assumptions 已锁定不做自动迁移；plan 中提供手工 SQL 清空脚本。
@@ -184,7 +184,7 @@ love-space-web/                                                  # React 19 + Vi
 
 1. **data-model.md**：
    - `ImageResponse(id, url)` —— 不变。
-   - `UploadCredentialResponse(accessKeyId, accessKeySecret, securityToken, expiration, objectKey, region, bucket)` —— 新。
+   - `UploadCredentialResponse(host, objectKey, policy, signature, signatureVersion, xOssCredential, xOssDate, securityToken, expiration)` —— 新（PostObject 表单签名，不含 accessKeySecret）。
    - `UploadCredentialRequest(contentType)` —— 新；`contentType ∈ {image/png, image/jpeg, image/webp}`。
    - `OssProperties` / `StsProperties` 字段表。
    - 业务实体列语义变更矩阵（持久化值 = objectKey）。

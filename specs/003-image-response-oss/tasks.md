@@ -19,7 +19,7 @@ description: "Tasks for 阿里 OSS STS 直传 + 统一 ImageResponse"
 
 - [X] T001 [P] 在 `love-space-admin/pom.xml` 添加依赖：`com.aliyun.oss:aliyun-sdk-oss:3.18.1`、`com.aliyun:aliyun-java-sdk-core:4.7.1`、`com.aliyun:aliyun-java-sdk-sts:3.1.2`
 - [X] T002 [P] 在 `love-space-app/pom.xml` 添加依赖：`com.aliyun.oss:aliyun-sdk-oss:3.18.1`（不引 STS）
-- [X] T003 [P] 在 `love-space-web/package.json` 添加 `ali-oss` 依赖，运行 `npm install` 生成锁文件
+- [X] T003 [P] 前端表单直传无需 OSS SDK（已移除 `ali-oss`），用浏览器原生 `FormData` + `XMLHttpRequest`
 - [X] T004 [P] 在 `love-space-admin/src/main/resources/application.yml`（与 `application-test.yml`）增加 `app.storage.oss.*` 与 `app.storage.sts.*` 占位段；真实凭据仅通过环境变量注入
 - [X] T005 [P] 在 `love-space-app/src/main/resources/application.yml`（与 `application-test.yml`）增加 `app.storage.oss.*` 占位段（仅读路径）
 
@@ -59,7 +59,7 @@ description: "Tasks for 阿里 OSS STS 直传 + 统一 ImageResponse"
 ### Web 前端基础类型与 hook
 
 - [X] T024 [P] 在 `love-space-web/src/types/image.ts` 新增 `ImageResponse`、`UploadCredentialResponse`、`UploadCredentialRequest` 类型
-- [X] T025 [P] 在 `love-space-web/src/lib/ossUpload.ts` 新建 `useOssUpload` hook（封装 `ali-oss` `new OSS({ stsToken... }).put(objectKey, file, { headers: { 'Content-Type': ... } })`，返回 `Promise<string objectKey>`）
+- [X] T025 [P] 在 `love-space-web/src/lib/ossUpload.ts` 新建 `uploadToOss`（用 `FormData` + `XMLHttpRequest` 表单 POST 直传到 `host`，字段见 contracts/upload-credentials-endpoint.md，返回 `Promise<string objectKey>`）
 
 ### 基础单元测试
 
@@ -72,18 +72,18 @@ description: "Tasks for 阿里 OSS STS 直传 + 统一 ImageResponse"
 
 ## Phase 3: User Story 1 — STS 直传凭证下发 (P1) 🎯 MVP
 
-**Goal**: 前端 `POST /api/admin/files/upload-credentials` 拿到 STS + 预生成 objectKey，可用 `ali-oss` 直传到 OSS。
+**Goal**: 前端 `POST /api/admin/files/upload-credentials` 拿到 PostObject 表单签名 + 预生成 objectKey，可用表单 POST 直传到 OSS。
 
-**Independent Test**: 调用端点收到合法 7 字段响应；前端拿 STS PUT 到响应 objectKey 成功；越权 key 被 OSS 拒。
+**Independent Test**: 调用端点收到合法签名响应（不含 accessKeySecret）；前端用表单 POST 到响应 objectKey 成功；越权 key 被 OSS Policy 拒。
 
 - [X] T028 [P] [US1] 在 `love-space-admin/src/main/java/com/loves/space/modules/file/dto/UploadCredentialRequest.java` 新建 record `{ String contentType }`，加 `@NotBlank` + `@Pattern("^image/(png|jpeg|webp)$")`；中文 JavaDoc
-- [X] T029 [P] [US1] 在 `love-space-admin/src/main/java/com/loves/space/modules/file/dto/UploadCredentialResponse.java` 新建 record 7 字段（见 data-model.md）；中文 JavaDoc
-- [X] T030 [US1] 重写 `love-space-admin/src/main/java/com/loves/space/modules/file/service/FileService.java`：删除原 multipart `upload` 方法；新增 `issueUploadCredential(UploadCredentialRequest req)`：MIME→ext 映射（png/jpg/webp） + `UuidV7Generator.next()` 生成 objectKey（`images/<uuid>.<ext>`） + 调 `StsCredentialIssuer.issueFor(objectKey)` + 拼装响应；中文 JavaDoc
+- [X] T029 [P] [US1] 在 `love-space-admin/src/main/java/com/loves/space/modules/file/dto/UploadCredentialResponse.java` 新建 record（PostObject 表单签名 9 字段，见 data-model.md，不含 accessKeySecret）；另在 `infrastructure/storage/OssPostPolicySigner.java` 实现 V4 签名计算；中文 JavaDoc
+- [X] T030 [US1] 重写 `love-space-admin/src/main/java/com/loves/space/modules/file/service/FileService.java`：删除原 multipart `upload` 方法；新增 `issueUploadCredential(UploadCredentialRequest req)`：MIME→ext 映射（png/jpg/webp） + `UuidV7Generator.next()` 生成 objectKey（`images/<uuid>.<ext>`） + 调 `StsCredentialIssuer.issueFor(objectKey)` + `OssPostPolicySigner.sign(objectKey, credential)` 拼装响应；中文 JavaDoc
 - [X] T031 [US1] 改 `love-space-admin/src/main/java/com/loves/space/modules/file/controller/FileController.java`：删除 `POST /upload`；新增 `POST /upload-credentials`（`@Validated @RequestBody UploadCredentialRequest`，返回 `UploadCredentialResponse`）；中文 JavaDoc
 - [X] T032 [US1] 删除 `love-space-admin/src/main/java/com/loves/space/infrastructure/storage/FileStorage.java` 与 `LocalFileStorage.java`；同时删除 `love-space-admin/src/main/java/com/loves/space/modules/file/dto/FileUploadResponse.java`；移除所有引用
 - [X] T033 [P] [US1] 在 `love-space-admin/src/test/java/com/loves/space/modules/file/service/FileServiceTest.java` 单元测试：stub `StsCredentialIssuer` 返回固定凭证，断言 contentType→ext 映射正确（image/jpeg → `.jpg`）、objectKey 形如 `images/<uuidv7>.<ext>`
 - [X] T034 [P] [US1] 在 `love-space-admin/src/test/java/com/loves/space/modules/file/controller/FileControllerIT.java` MockMvc 集成测试：合法请求返回 200 + 完整字段；非白名单 contentType 返回 400；未登录返回 401
-- [X] T035 [US1] 在 `love-space-web/src/pages/Files/...`（或 banner/merchant 表单组件统一上传按钮处）接入 `useOssUpload`：调 `POST /api/admin/files/upload-credentials` → `ali-oss.put` → 暴露 objectKey；删除旧 multipart `POST /api/admin/files/upload` 调用
+- [X] T035 [US1] 在 `love-space-web/src/pages/Files/...`（或 banner/merchant 表单组件统一上传按钮处）接入 `uploadToOss`：调 `POST /api/admin/files/upload-credentials` → 表单 POST 直传 → 暴露 objectKey；删除旧 multipart `POST /api/admin/files/upload` 调用
 
 **Checkpoint**: US1 端到端可独立验证（直传 OK，不依赖 US2/3/4）。
 
@@ -165,7 +165,7 @@ description: "Tasks for 阿里 OSS STS 直传 + 统一 ImageResponse"
 - [X] T059 [P] [US4] 改 `love-space-web/src/pages/Banners/...`（列表 / 详情 / 表单）：消费 `ImageResponse[]`；表单 submit 传 objectKey 字符串
 - [X] T060 [P] [US4] 改 `love-space-web/src/pages/Merchants/...`：logo + images 同上
 - [X] T061 [P] [US4] 改 `love-space-web/src/pages/Cities/...`：backgroundImage 同上
-- [X] T062 [P] [US4] 改 `love-space-web/src/pages/Files/...`：删除旧 multipart 上传 UI；仅保留"上传按钮 → useOssUpload → 显示 objectKey + 预览签名 url"（注：web 端无独立 Files 页面；`src/api/files.ts#uploadFile` 已直接走 `uploadToOss` 返回 objectKey，原 multipart 调用已不存在）
+- [X] T062 [P] [US4] 改 `love-space-web/src/pages/Files/...`：删除旧 multipart 上传 UI；仅保留"上传按钮 → uploadToOss → 显示 objectKey + 预览签名 url"（注：web 端无独立 Files 页面；`src/api/files.ts#uploadFile` 已直接走 `uploadToOss` 返回 objectKey，原 multipart 调用已不存在）
 
 ### 测试
 

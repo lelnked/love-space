@@ -144,28 +144,33 @@
 
 **Alternatives considered**: V4 签名（更长更安全但 URL 更长）—— 当前威胁模型 V1 已足够。
 
-## R8. 前端 ali-oss SDK 接入
+## R8. 前端表单直传（服务端 POST 签名）接入
 
-**Decision**: 安装 `ali-oss` (npm)；封装 `useOssUpload(file: File): Promise<string /* objectKey */>` hook：
+**Decision**: 不引入任何 OSS SDK；服务端用 STS 临时凭证计算 PostObject V4 签名（`OSS4-HMAC-SHA256`），前端用 `multipart/form-data` 表单 POST 直传（`XMLHttpRequest` 以获得字节进度）：
 
 ```ts
 async function uploadToOss(file: File): Promise<string> {
   const cred = await api.post('/api/admin/files/upload-credentials', { contentType: file.type })
-  const client = new OSS({
-    region: cred.region, accessKeyId: cred.accessKeyId,
-    accessKeySecret: cred.accessKeySecret, stsToken: cred.securityToken,
-    bucket: cred.bucket, secure: true
-  })
-  await client.put(cred.objectKey, file, { headers: { 'Content-Type': file.type } })
+  const form = new FormData()
+  form.append('key', cred.objectKey)
+  form.append('policy', cred.policy)
+  form.append('x-oss-signature', cred.signature)
+  form.append('x-oss-signature-version', cred.signatureVersion)
+  form.append('x-oss-credential', cred.xOssCredential)
+  form.append('x-oss-date', cred.xOssDate)
+  form.append('x-oss-security-token', cred.securityToken)
+  form.append('success_action_status', '200')
+  form.append('file', file) // 必须最后
+  // XHR POST 到 cred.host，2xx 即成功
   return cred.objectKey
 }
 ```
 
-**Rationale**: `ali-oss` 官方维护、文档齐全、自带浏览器/Node 双兼容；不要手写 OSS 签名 V1 / V4。
+**Rationale**: 服务端签名 + 前端表单直传是阿里云官方推荐方案；**浏览器永不接触 `accessKeySecret`**，泄露面最小。免去 `ali-oss` 依赖与其在浏览器侧把 SK 暴露在内存中的风险。
 
 **Alternatives considered**:
-- `fetch(PUT 预签名 URL)`：与本特性"STS 直传"决定不一致；否决。
-- 第三方 wrapper：无必要。
+- `ali-oss` SDK + `new OSS({ accessKeySecret, stsToken })`：会把临时 SK 下发到浏览器；安全性差，否决（原实现，已废弃）。
+- `fetch(PUT 预签名 URL)`：PUT 预签名无法约束 `content-length-range` 等 Policy 条件；否决。
 
 ## R9. 测试策略
 

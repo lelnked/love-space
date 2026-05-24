@@ -25,15 +25,19 @@
 
 ### 1.3 `UploadCredentialResponse`（新增，admin）
 
+服务端用 STS 临时凭证计算的 OSS 表单直传（PostObject）V4 签名包。**不含 `accessKeySecret`，浏览器不接触密钥。**
+
 | Field | Type | Nullability | 说明 |
 |---|---|---|---|
-| `accessKeyId` | `String` | 非空 | STS 临时 AK。 |
-| `accessKeySecret` | `String` | 非空 | STS 临时 SK。 |
-| `securityToken` | `String` | 非空 | STS 临时 Token，配合 SDK 使用。 |
-| `expiration` | `String` | 非空 | ISO-8601 UTC 时间，凭证失效时刻。 |
-| `objectKey` | `String` | 非空 | 服务端预生成的目标 key，形如 `images/<uuidv7>.<ext>`；客户端 PUT 时 MUST 使用此 key，不得改动。 |
-| `region` | `String` | 非空 | OSS region，如 `oss-cn-shanghai`，供 `ali-oss` SDK 使用。 |
-| `bucket` | `String` | 非空 | OSS bucket 名。 |
+| `host` | `String` | 非空 | 表单提交地址（带 bucket 的虚拟主机域名），如 `https://love-space-dev.oss-cn-shanghai.aliyuncs.com`。 |
+| `objectKey` | `String` | 非空 | 服务端预生成的目标 key，形如 `images/<uuidv7>.<ext>`；表单 `key` 字段 MUST 与之相等。 |
+| `policy` | `String` | 非空 | Base64 编码的 Policy（StringToSign）。 |
+| `signature` | `String` | 非空 | V4 签名（hex），对应表单 `x-oss-signature`。 |
+| `signatureVersion` | `String` | 非空 | 固定 `OSS4-HMAC-SHA256`。 |
+| `xOssCredential` | `String` | 非空 | `<临时AK>/<yyyyMMdd>/<region>/oss/aliyun_v4_request`。 |
+| `xOssDate` | `String` | 非空 | `yyyyMMdd'T'HHmmss'Z'`（UTC）。 |
+| `securityToken` | `String` | 非空 | STS 会话令牌，对应表单 `x-oss-security-token`。 |
+| `expiration` | `String` | 非空 | ISO-8601 UTC，签名 / 凭证失效时刻（取自 STS 凭证）。 |
 
 ### 1.4 `ImageResponses`（工具类，admin + app 各一份）
 

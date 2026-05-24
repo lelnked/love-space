@@ -62,8 +62,11 @@ class FileControllerIT extends AbstractPostgresIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.accessKeyId").value("STS-AK"))
                 .andExpect(jsonPath("$.securityToken").value("STS-TOKEN"))
+                .andExpect(jsonPath("$.signatureVersion").value("OSS4-HMAC-SHA256"))
+                .andExpect(jsonPath("$.policy").isNotEmpty())
+                .andExpect(jsonPath("$.signature").value(org.hamcrest.Matchers.matchesRegex("^[0-9a-f]+$")))
+                .andExpect(jsonPath("$.host").isNotEmpty())
                 .andExpect(jsonPath("$.objectKey").value(org.hamcrest.Matchers.matchesRegex("^images/[0-9a-f-]+\\.png$")));
     }
 

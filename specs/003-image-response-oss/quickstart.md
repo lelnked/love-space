@@ -45,7 +45,7 @@ SPRING_PROFILES_ACTIVE=test ./mvnw spring-boot:run
 
 ```bash
 cd love-space-web
-npm install   # 含 ali-oss
+npm install
 npm run dev -- --mode test  # 端口 21424
 ```
 
@@ -54,8 +54,8 @@ npm run dev -- --mode test  # 端口 21424
 ## 4. 端到端验证（手工）
 
 1. 浏览器打开 `http://100.100.117.79:21424/`，登录 admin。
-2. 进入 Banner 管理 → 新建：选图 → 前端 `POST /api/admin/files/upload-credentials { contentType: "image/png" }` 拿到 STS + `objectKey=images/<uuid>.png`。
-3. 前端用 `ali-oss` 携带 `stsToken` 直传到 OSS（**不经过 admin 后端**）；成功后表单内暂存 `images/<uuid>.png`。
+2. 进入 Banner 管理 → 新建：选图 → 前端 `POST /api/admin/files/upload-credentials { contentType: "image/png" }` 拿到 PostObject 表单签名 + `objectKey=images/<uuid>.png`。
+3. 前端用 `multipart/form-data` 表单 POST 到 `host` 直传到 OSS（**不经过 admin 后端，浏览器不接触 accessKeySecret**）；成功后表单内暂存 `images/<uuid>.png`。
 4. 提交 banner 创建：`POST /api/admin/banners { imageUrls: ["images/<uuid>.png", ...] }`。
 5. 服务端校验：
    - DTO 正则通过

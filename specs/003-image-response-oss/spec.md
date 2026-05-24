@@ -12,29 +12,29 @@
 
 ### Session 2026-05-23
 
-- Q: 直传凭证采用哪种形式？ → A: STS AssumeRole — 服务端调阿里云 STS 拿临时 `AccessKeyId/AccessKeySecret/SecurityToken`，前端用 `ali-oss` SDK 直传；权限通过绑定到 RAM Role 的 policy 收敛（限制 bucket + key prefix + action）。
+- Q: 直传凭证采用哪种形式？ → A: STS AssumeRole + 服务端 POST 签名 — 服务端调阿里云 STS 拿临时 `AccessKeyId/AccessKeySecret/SecurityToken`，用其在服务端计算 PostObject V4 签名（`OSS4-HMAC-SHA256`），前端用表单 POST 直传；**`accessKeySecret` 不下发到浏览器**。权限通过绑定到 RAM Role 的 policy 收敛（限制 bucket + key prefix + action）。
 - Q: objectKey 放置策略？ → A: 直传 final — 客户端直接上传到 `images/<uuid>.<ext>`；业务绑定即认定有效；未绑定对象由 bucket lifecycle 自动清理。STS Policy 限制客户端只能写入 `images/` 前缀。
 - Q: 业务绑定时服务端校验深度？ → A: 存在性 + MIME + 大小 — 业务接口收到 objectKey 后，服务端 `headObject` 校验对象存在、`Content-Type ∈ {image/png, image/jpeg, image/webp}`、`Content-Length ≤ 20MB`；任一不满足拒绝写库。
 - Q: 孤儿对象清理策略？ → A: bucket lifecycle 24h — 在 `images/` 前缀配置阿里云 OSS 生命周期规则，对象创建后 24 小时自动删除；业务实体一旦持有 objectKey，是否额外打 tag / 标记保留由 plan 阶段细化。
 - Q: STS 临时凭证有效期？ → A: 15 分钟（900 秒），可由配置覆盖；阿里 STS 最小允许 900s，最大 3600s。
-- Q: 上传整体流程？ → A: STS 直传 — (1) 前端调 `POST /api/admin/files/upload-credentials` 拿 STS 凭证 + 服务端预生成 objectKey；(2) 前端用 `ali-oss` SDK 直传到 `images/<uuid>.<ext>`；(3) 业务实体创建/更新时把 objectKey 作为图片 id 提交；(4) 服务端 `headObject` 校验后入库。原 `POST /api/admin/files/upload` multipart 端点取消。
+- Q: 上传整体流程？ → A: 表单直传 — (1) 前端调 `POST /api/admin/files/upload-credentials` 拿 PostObject 表单签名 + 服务端预生成 objectKey；(2) 前端用 `multipart/form-data` 表单 POST 直传到 `images/<uuid>.<ext>`；(3) 业务实体创建/更新时把 objectKey 作为图片 id 提交；(4) 服务端 `headObject` 校验后入库。原 `POST /api/admin/files/upload` multipart 端点取消。
 
 ## User Scenarios & Testing *(mandatory)*
 
-### User Story 1 - 通过 STS 临时凭证直传 OSS（预上传） (Priority: P1)
+### User Story 1 - 通过服务端 POST 签名直传 OSS（预上传） (Priority: P1)
 
-前端在用户挑选图片后，先向服务端申请阿里云 STS 临时凭证 + 一个由服务端预生成的 objectKey，再用 `ali-oss` SDK 直接把图片上传到 OSS bucket。此阶段不写任何业务表；上传产物只是"待挂载"的 OSS 对象。服务端不经手图片字节流，吞吐瓶颈与磁盘带宽都不落在 admin 进程上。
+前端在用户挑选图片后，先向服务端申请 PostObject 表单签名 + 一个由服务端预生成的 objectKey，再用 `multipart/form-data` 表单 POST 直接把图片上传到 OSS bucket。此阶段不写任何业务表；上传产物只是"待挂载"的 OSS 对象。服务端不经手图片字节流，吞吐瓶颈与磁盘带宽都不落在 admin 进程上；浏览器也不接触 `accessKeySecret`。
 
 **Why this priority**: 是后续所有"业务表持有图片"场景（用户头像、动态、Banner、商户图、城市背景、文章封面 …）的基础设施；直传模式让 admin 进程不必处理 multipart payload，且为未来移动端 app 写入图片留好同样的入口。
 
-**Independent Test**: 前端调 `POST /api/admin/files/upload-credentials` 拿到 `{ accessKeyId, accessKeySecret, securityToken, expiration, objectKey, region, bucket }`，用 `ali-oss` SDK PUT 到 `images/<uuid>.<ext>`；不创建任何业务实体，OSS bucket 中也能直接看到该对象，前端拿到 objectKey 字符串。
+**Independent Test**: 前端调 `POST /api/admin/files/upload-credentials` 拿到 `{ host, objectKey, policy, signature, signatureVersion, xOssCredential, xOssDate, securityToken, expiration }`，用表单 POST 到 `host`；不创建任何业务实体，OSS bucket 中也能直接看到该对象，前端拿到 objectKey 字符串。
 
 **Acceptance Scenarios**:
 
-1. **Given** admin 已登录、OSS / STS / RAM Role 配置正确，**When** 调用 `POST /api/admin/files/upload-credentials`，**Then** 响应包含可用的 STS 凭证、服务端生成的 `objectKey`（形如 `images/<uuidv7>.<ext>`，扩展名来自客户端声明）、`expiration`（≤ 当前时间 + 15 分钟）。
-2. **Given** 前端拿到凭证，**When** 用 `ali-oss` SDK PUT 上传文件到响应中的 `objectKey`，**Then** OSS bucket 中存在对应对象，且对象 Content-Type 与上传声明一致。
-3. **Given** 前端尝试用同一份 STS 凭证写入 STS Policy 之外的 key（例如 `images/../other`），**When** PUT 请求到达 OSS，**Then** OSS 返回 `AccessDenied`，凭证不能越权。
-4. **Given** STS 凭证超过 15 分钟未使用，**When** 再用同一份凭证上传，**Then** OSS 返回鉴权失败；前端 MUST 重新申请凭证。
+1. **Given** admin 已登录、OSS / STS / RAM Role 配置正确，**When** 调用 `POST /api/admin/files/upload-credentials`，**Then** 响应包含 PostObject 表单签名（`policy` / `signature` / `xOssCredential` / `xOssDate` / `securityToken`）、服务端生成的 `objectKey`（形如 `images/<uuidv7>.<ext>`，扩展名来自客户端声明）、`expiration`（≤ 当前时间 + 15 分钟），且**不含** `accessKeySecret`。
+2. **Given** 前端拿到签名，**When** 用表单 POST 上传文件到响应中的 `host`（`key` 字段等于 `objectKey`），**Then** OSS bucket 中存在对应对象，且对象 Content-Type 与上传声明一致。
+3. **Given** 前端尝试把表单 `key` 改成签名 Policy 之外的 key（例如 `images/../other`），**When** POST 请求到达 OSS，**Then** OSS 返回 Policy 校验失败，签名不能越权。
+4. **Given** 签名 / STS 凭证超过有效期，**When** 再用同一份签名上传，**Then** OSS 返回鉴权失败；前端 MUST 重新申请签名。
 5. **Given** RAM Role / STS 配置缺失或错误，**When** 应用启动或调用 upload-credentials 端点，**Then** 启动失败或端点返回明确错误，不得回退为本地磁盘存储或服务端代理上传。
 
 ---
@@ -108,7 +108,7 @@ admin 后端与 app 后端现有多个模块以裸 `String url`（或 `List<Stri
 
 #### 直传与凭证
 
-- **FR-001**: 系统 MUST 提供 `POST /api/admin/files/upload-credentials` 端点，接收客户端声明的目标 MIME（白名单 png/jpeg/webp）与扩展名，返回结构 `{ accessKeyId, accessKeySecret, securityToken, expiration, objectKey, region, bucket }`，用于前端用 `ali-oss` SDK 直接 PUT。
+- **FR-001**: 系统 MUST 提供 `POST /api/admin/files/upload-credentials` 端点，接收客户端声明的目标 MIME（白名单 png/jpeg/webp），返回 PostObject 表单签名 `{ host, objectKey, policy, signature, signatureVersion, xOssCredential, xOssDate, securityToken, expiration }`，用于前端用 `multipart/form-data` 表单 POST 直传；响应 MUST NOT 含 `accessKeySecret`。
 - **FR-002**: `objectKey` MUST 由服务端预生成，格式 `images/<uuidv7>.<ext>`，扩展名取自客户端 MIME 反查（png → `png`，jpeg → `jpg`，webp → `webp`）；客户端 MUST NOT 自行选择或修改 objectKey。
 - **FR-003**: STS 临时凭证 MUST 通过阿里云 STS `AssumeRole` 获取，绑定到的 RAM Role 策略 MUST 限制：(a) 仅 `oss:PutObject`；(b) 资源限定 `acs:oss:*:*:<bucket>/images/*`；(c) 不授予 `GetObject` / `DeleteObject` / `ListObjects`。
 - **FR-004**: STS 临时凭证有效期 MUST 默认 900 秒（15 分钟），可由配置覆盖（最低 900s、最高 3600s）。`expiration` 字段 MUST 用 ISO-8601 UTC 时间返回。
@@ -144,7 +144,7 @@ admin 后端与 app 后端现有多个模块以裸 `String url`（或 `List<Stri
 ### Key Entities *(include if feature involves data)*
 
 - **ImageResponse**：对外图片表示。属性：`id`（稳定图片标识 = OSS 对象 key，非空）、`url`（当次签名的 GET 可访问地址，非空）。仅用于响应，不用于请求。
-- **UploadCredentialResponse**：直传凭证下发包。属性：`accessKeyId`、`accessKeySecret`、`securityToken`（来自 STS）、`expiration`（ISO-8601 UTC）、`objectKey`（服务端预生成的目标 key，形如 `images/<uuidv7>.<ext>`）、`region`、`bucket`。仅用于响应。
+- **UploadCredentialResponse**：PostObject 表单签名下发包。属性：`host`、`objectKey`（服务端预生成的目标 key，形如 `images/<uuidv7>.<ext>`）、`policy`、`signature`、`signatureVersion`、`xOssCredential`、`xOssDate`、`securityToken`、`expiration`（ISO-8601 UTC）。**不含 `accessKeySecret`**。仅用于响应。
 - **OSS Object**：实际图片字节存放单元；key 形如 `images/<uuidv7>.<ext>`；客户端 PUT 上传，服务端 `headObject` 校验，读时由 `ImageUrlSigner` 即时签名。
 - **图片 id / objectKey**：系统层面的图片标识，等于 OSS 对象 key；与业务实体表中的图片字段值一一对应。
 - **STS RAM Role**：阿里云上预先创建的角色，绑定一份只允许 `oss:PutObject` 到 `<bucket>/images/*` 的 policy；服务端通过 `AssumeRole` 拿临时凭证下发给前端。其 ARN、session name 通过配置注入，不在代码中硬编码。
