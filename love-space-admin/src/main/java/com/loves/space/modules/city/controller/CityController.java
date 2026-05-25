@@ -48,7 +48,7 @@ public class CityController {
     public PageResponse<CityItemResponse> page(@RequestParam(required = false) Boolean online,
                                                @RequestParam(required = false) String name,
                                                Pageable pageable) {
-        return cityService.list(new CityQuery(online, name));
+        return cityService.page(new CityQuery(online, name),pageable);
     }
 
 
