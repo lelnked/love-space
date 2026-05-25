@@ -62,3 +62,6 @@ bin/
 *.bak
 *.tmp
 tmp/
+
+# ===== Claude Code =====
+.claude/scheduled_tasks.lock
