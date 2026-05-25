@@ -138,11 +138,13 @@ export default function MerchantDetailPage() {
   );
 }
 
-function InfoRow({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="flex gap-4 py-2 border-b border-gray-100 dark:border-white/[0.05]">
-      <div className="w-32 shrink-0 text-gray-500 text-theme-sm dark:text-gray-400">{label}</div>
-      <div className="text-gray-800 text-theme-sm dark:text-white/90">{children}</div>
+    <div>
+      <Label>{label}</Label>
+      <div className="text-theme-sm text-gray-800 dark:text-white/90 whitespace-pre-wrap">
+        {children}
+      </div>
     </div>
   );
 }
@@ -160,84 +162,134 @@ function InfoTab({
   categoryName: Record<string, string>;
   tagName: Record<string, string>;
 }) {
-  if (loading) return <ComponentCard title="基础信息"><div className="text-gray-500">加载中...</div></ComponentCard>;
-  if (!detail) return <ComponentCard title="基础信息"><div className="text-gray-500">暂无数据</div></ComponentCard>;
+  const sectionClass =
+    "border border-gray-200 dark:border-gray-800 rounded-lg p-4 bg-white dark:bg-gray-900";
+  const sectionTitleClass =
+    "text-sm font-semibold text-gray-800 dark:text-white/90 mb-3";
+
+  if (loading) return <div className="text-gray-500">加载中...</div>;
+  if (!detail) return <div className="text-gray-500">暂无数据</div>;
 
   return (
-    <div className="space-y-6">
-      <ComponentCard title="基础信息">
-        <div className="flex items-center justify-between mb-2">
-          <Badge size="sm" color={detail.online ? "success" : "error"}>
-            {detail.online ? "已上架" : "未上架"}
-          </Badge>
-          <Link to={`/merchants/${detail.id}/edit`}>
-            <Button size="sm" variant="primary">编辑商户</Button>
-          </Link>
+    <div className="max-w-4xl space-y-5">
+      {/* 顶部操作：编辑跳转 */}
+      <div className="flex justify-end">
+        <Link to={`/merchants/${detail.id}/edit`}>
+          <Button size="sm" variant="primary">编辑商户</Button>
+        </Link>
+      </div>
+
+      {/* 1. 基础信息 */}
+      <fieldset className={sectionClass}>
+        <legend className={sectionTitleClass}>基础信息</legend>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Field label="名称">{detail.name}</Field>
+          <Field label="地址">{detail.address}</Field>
+          <Field label="经度">{detail.longitude ?? "-"}</Field>
+          <Field label="纬度">{detail.latitude ?? "-"}</Field>
         </div>
-        <InfoRow label="名称">{detail.name}</InfoRow>
-        <InfoRow label="LOGO">
+      </fieldset>
+
+      {/* 2. 图片 */}
+      <fieldset className={sectionClass}>
+        <legend className={sectionTitleClass}>图片</legend>
+        <div>
+          <Label>LOGO</Label>
           {detail.logo ? (
-            <img src={detail.logo.url} alt="logo" className="h-16 object-cover rounded border" />
+            <img
+              src={detail.logo.url}
+              alt="logo"
+              className="h-32 w-32 object-cover rounded border"
+            />
           ) : (
-            "-"
+            <div className="text-theme-sm text-gray-400">-</div>
           )}
-        </InfoRow>
-        <InfoRow label="地址">{detail.address}</InfoRow>
-        <InfoRow label="经纬度">
-          {detail.longitude ?? "-"} , {detail.latitude ?? "-"}
-        </InfoRow>
-        <InfoRow label="城市">{cityName[detail.cityId] ?? "-"}</InfoRow>
-        <InfoRow label="分类">
-          {detail.categoryId ? categoryName[detail.categoryId] ?? "-" : "-"}
-        </InfoRow>
-        <InfoRow label="推荐周期">
-          {detail.periods.length
-            ? detail.periods.map((p: Period) => PERIOD_LABEL[p]).join("、")
-            : "-"}
-        </InfoRow>
-        <InfoRow label="标签">
-          {detail.tagIds.length ? (
-            <div className="flex flex-wrap gap-1">
-              {detail.tagIds.map((t) => (
-                <Badge key={t} size="sm" color="info">
-                  {tagName[t] ?? t}
-                </Badge>
+        </div>
+        <div className="mt-5">
+          <Label>图片列表</Label>
+          {detail.images.length > 0 ? (
+            <div className="flex flex-wrap gap-3">
+              {detail.images.map((im) => (
+                <img
+                  key={im.id}
+                  src={im.url}
+                  alt="商户图片"
+                  className="h-24 w-24 object-cover rounded border"
+                />
               ))}
             </div>
           ) : (
-            "-"
+            <div className="text-theme-sm text-gray-400">-</div>
           )}
-        </InfoRow>
-        <InfoRow label="权重">{detail.weight}</InfoRow>
-      </ComponentCard>
+        </div>
+      </fieldset>
 
-      <ComponentCard title="四维评分">
-        <InfoRow label="安全环境分">{detail.safetyEnvironmentScore}</InfoRow>
-        <InfoRow label="经营权益分">{detail.businessRightsScore}</InfoRow>
-        <InfoRow label="体验友好分">{detail.experienceFriendlyScore}</InfoRow>
-        <InfoRow label="社会贡献分">{detail.socialContributionScore}</InfoRow>
-      </ComponentCard>
+      {/* 3. 推荐周期 / 分类 / 城市 */}
+      <fieldset className={sectionClass}>
+        <legend className={sectionTitleClass}>推荐周期 / 分类 / 城市</legend>
+        <div className="mb-3">
+          <Label>推荐生理周期</Label>
+          <div className="text-theme-sm text-gray-800 dark:text-white/90">
+            {detail.periods.length
+              ? detail.periods.map((p: Period) => PERIOD_LABEL[p]).join("、")
+              : "-"}
+          </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Field label="城市">{cityName[detail.cityId] ?? "-"}</Field>
+          <Field label="分类">
+            {detail.categoryId ? categoryName[detail.categoryId] ?? "-" : "-"}
+          </Field>
+        </div>
+      </fieldset>
 
-      <ComponentCard title="商户故事">
-        <p className="text-gray-800 text-theme-sm dark:text-white/90 whitespace-pre-wrap">
-          {detail.story || "-"}
-        </p>
-      </ComponentCard>
-
-      {detail.images.length > 0 && (
-        <ComponentCard title="图片">
-          <div className="flex flex-wrap gap-3">
-            {detail.images.map((im) => (
-              <img
-                key={im.id}
-                src={im.url}
-                alt="商户图片"
-                className="h-24 w-24 object-cover rounded border"
-              />
+      {/* 4. 标签 */}
+      <fieldset className={sectionClass}>
+        <legend className={sectionTitleClass}>标签</legend>
+        {detail.tagIds.length ? (
+          <div className="flex flex-wrap gap-1">
+            {detail.tagIds.map((t) => (
+              <Badge key={t} size="sm" color="info">
+                {tagName[t] ?? t}
+              </Badge>
             ))}
           </div>
-        </ComponentCard>
-      )}
+        ) : (
+          <div className="text-theme-sm text-gray-400">-</div>
+        )}
+      </fieldset>
+
+      {/* 5. 四维评分 */}
+      <fieldset className={sectionClass}>
+        <legend className={sectionTitleClass}>四维评分</legend>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Field label="安全环境分">{detail.safetyEnvironmentScore}</Field>
+          <Field label="经营权益分">{detail.businessRightsScore}</Field>
+          <Field label="体验友好分">{detail.experienceFriendlyScore}</Field>
+          <Field label="社会贡献分">{detail.socialContributionScore}</Field>
+        </div>
+      </fieldset>
+
+      {/* 6. 权重 / 上下架 */}
+      <fieldset className={sectionClass}>
+        <legend className={sectionTitleClass}>权重 / 上下架</legend>
+        <div className="grid grid-cols-1 gap-4">
+          <Field label="权重">{detail.weight}</Field>
+          <Field label="上架">
+            <Badge size="sm" color={detail.online ? "success" : "error"}>
+              {detail.online ? "已上架" : "未上架"}
+            </Badge>
+          </Field>
+        </div>
+      </fieldset>
+
+      {/* 7. 商户故事 */}
+      <fieldset className={sectionClass}>
+        <legend className={sectionTitleClass}>商户故事</legend>
+        <p className="text-theme-sm text-gray-800 dark:text-white/90 whitespace-pre-wrap">
+          {detail.story || "-"}
+        </p>
+      </fieldset>
     </div>
   );
 }

@@ -8,6 +8,8 @@ import ImageUploader from "../../components/form/ImageUploader";
 import ImageUploaderList, {
   ImageListItem,
 } from "../../components/form/ImageUploaderList";
+import Switch from "../../components/form/switch/Switch";
+import Checkbox from "../../components/form/input/Checkbox";
 import {
   createMerchant,
   getMerchant,
@@ -268,16 +270,14 @@ export default function MerchantForm() {
             <legend className={sectionTitleClass}>推荐周期 / 分类 / 城市</legend>
             <div className="mb-3">
               <Label>推荐生理周期</Label>
-              <div className="flex flex-wrap gap-3">
+              <div className="flex flex-wrap gap-4">
                 {PERIOD_VALUES.map((p) => (
-                  <label key={p} className="inline-flex items-center gap-1 text-sm">
-                    <input
-                      type="checkbox"
-                      checked={periods.includes(p)}
-                      onChange={() => togglePeriod(p)}
-                    />
-                    {PERIOD_LABEL[p]}
-                  </label>
+                  <Checkbox
+                    key={p}
+                    label={PERIOD_LABEL[p]}
+                    checked={periods.includes(p)}
+                    onChange={() => togglePeriod(p)}
+                  />
                 ))}
               </div>
             </div>
@@ -392,7 +392,29 @@ export default function MerchantForm() {
             </div>
           </fieldset>
 
-          {/* 7. 故事 */}
+          {/* 7. 权重 + 上下架 */}
+          <fieldset className={sectionClass}>
+            <legend className={sectionTitleClass}>权重 / 上下架</legend>
+            <div className="grid grid-cols-1 gap-4">
+              <div>
+                <Label>权重</Label>
+                <Input
+                  type="number"
+                  value={String(weight)}
+                  onChange={(e) => setWeight(Number(e.target.value))}
+                />
+              </div>
+              <div>
+                <Switch
+                  label="上架"
+                  defaultChecked={online}
+                  onChange={setOnline}
+                />
+              </div>
+            </div>
+          </fieldset>
+
+          {/* 8. 故事 */}
           <fieldset className={sectionClass}>
             <legend className={sectionTitleClass}>商户故事</legend>
             <textarea
@@ -406,31 +428,6 @@ export default function MerchantForm() {
               <div className="text-error-500 text-xs mt-1">{fieldErrors.story}</div>
             )}
             <div className="text-xs text-gray-400 mt-1">{story.length} / 5000</div>
-          </fieldset>
-
-          {/* 8. 权重 + 上下架 */}
-          <fieldset className={sectionClass}>
-            <legend className={sectionTitleClass}>权重 / 上下架</legend>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label>权重</Label>
-                <Input
-                  type="number"
-                  value={String(weight)}
-                  onChange={(e) => setWeight(Number(e.target.value))}
-                />
-              </div>
-              <div className="flex items-end">
-                <label className="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
-                  <input
-                    type="checkbox"
-                    checked={online}
-                    onChange={(e) => setOnline(e.target.checked)}
-                  />
-                  上架
-                </label>
-              </div>
-            </div>
           </fieldset>
 
           <div className="flex gap-3">
