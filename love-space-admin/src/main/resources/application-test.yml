@@ -19,23 +19,23 @@ app:
     secret: test-only-jwt-secret-please-change-in-production-32+bytes!!!
   storage:
     oss:
-      endpoint: https://oss-test.example.com
-      bucket: love-space-test
-      region: cn-test
-      access-key-id: test-oss-ak
-      access-key-secret: test-oss-sk
-      upload-key-prefix: images
-      bound-key-prefix: bound
-      url-expiration-seconds: 1800
-      max-image-bytes: 20971520
+      endpoint: ${ALIYUN_OSS_ENDPOINT:https://oss-test.example.com}
+      bucket: ${ALIYUN_OSS_BUCKET:love-space-test}
+      region: ${ALIYUN_OSS_REGION:cn-test}
+      access-key-id: ${ALIYUN_OSS_ACCESS_KEY_ID:test-oss-ak}
+      access-key-secret: ${ALIYUN_OSS_ACCESS_KEY_SECRET:test-oss-sk}
+      upload-key-prefix: ${ALIYUN_OSS_UPLOAD_KEY_PREFIX:images}
+      bound-key-prefix: ${ALIYUN_OSS_BOUND_KEY_PREFIX:bound}
+      url-expiration-seconds: ${ALIYUN_OSS_URL_EXPIRATION_SECONDS:1800}
+      max-image-bytes: ${ALIYUN_OSS_MAX_IMAGE_BYTES:20971520}
     sts:
-      endpoint: https://sts-test.example.com
-      region-id: cn-test
-      role-arn: acs:ram::000000000000:role/test-role
-      role-session-name: love-space-admin-test
-      duration-seconds: 900
-      access-key-id: test-sts-ak
-      access-key-secret: test-sts-sk
+      endpoint: ${ALIYUN_STS_ENDPOINT:https://sts-test.example.com}
+      region-id: ${ALIYUN_STS_REGION_ID:cn-test}
+      role-arn: ${ALIYUN_STS_ROLE_ARN:acs:ram::000000000000:role/test-role}
+      role-session-name: ${ALIYUN_STS_ROLE_SESSION_NAME:love-space-admin-test}
+      duration-seconds: ${ALIYUN_STS_DURATION_SECONDS:900}
+      access-key-id: ${ALIYUN_STS_ACCESS_KEY_ID:test-sts-ak}
+      access-key-secret: ${ALIYUN_STS_ACCESS_KEY_SECRET:test-sts-sk}
   public-base-url: http://localhost:8080
 
 logging:
