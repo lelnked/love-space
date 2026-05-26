@@ -129,6 +129,20 @@ export default function MerchantForm() {
     images.forEach((im, i) => {
       if (!im.objectKey.trim()) errs[`images.${i}.url`] = "请上传图片";
     });
+    const checkScore = (
+      field: string,
+      value: number,
+      max: number,
+      label: string,
+    ) => {
+      if (!Number.isInteger(value) || value < 0 || value > max) {
+        errs[field] = `${label}需为 0-${max} 的整数`;
+      }
+    };
+    checkScore("safetyEnvironmentScore", safetyEnvironmentScore, 30, "安全环境分");
+    checkScore("businessRightsScore", businessRightsScore, 25, "经营权益分");
+    checkScore("experienceFriendlyScore", experienceFriendlyScore, 25, "体验友好分");
+    checkScore("socialContributionScore", socialContributionScore, 20, "社会贡献分");
     if (story.length > 5000) errs.story = "故事最多 5000 字";
     if (Object.keys(errs).length > 0) {
       setFieldErrors(errs);
@@ -357,6 +371,8 @@ export default function MerchantForm() {
                   onChange={(e) => setSafetyEnvironmentScore(Number(e.target.value))}
                   min="0"
                   max="30"
+                  error={Boolean(fieldErrors.safetyEnvironmentScore)}
+                  hint={fieldErrors.safetyEnvironmentScore}
                 />
               </div>
               <div>
@@ -367,6 +383,8 @@ export default function MerchantForm() {
                   onChange={(e) => setBusinessRightsScore(Number(e.target.value))}
                   min="0"
                   max="25"
+                  error={Boolean(fieldErrors.businessRightsScore)}
+                  hint={fieldErrors.businessRightsScore}
                 />
               </div>
               <div>
@@ -377,6 +395,8 @@ export default function MerchantForm() {
                   onChange={(e) => setExperienceFriendlyScore(Number(e.target.value))}
                   min="0"
                   max="25"
+                  error={Boolean(fieldErrors.experienceFriendlyScore)}
+                  hint={fieldErrors.experienceFriendlyScore}
                 />
               </div>
               <div>
@@ -387,6 +407,8 @@ export default function MerchantForm() {
                   onChange={(e) => setSocialContributionScore(Number(e.target.value))}
                   min="0"
                   max="20"
+                  error={Boolean(fieldErrors.socialContributionScore)}
+                  hint={fieldErrors.socialContributionScore}
                 />
               </div>
             </div>
