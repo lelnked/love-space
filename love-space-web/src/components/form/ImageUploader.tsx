@@ -84,20 +84,29 @@ export default function ImageUploader({
     },
   });
 
-  const handleRemove = () => {
+  const handleRemove = (e: React.MouseEvent) => {
+    e.stopPropagation();
     setLocalPreview("");
     onChange("");
   };
 
+  const handlePreview = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setPreviewSrc(shownPreview);
+  };
+
   const sizeClass = className ?? "h-40 w-full";
 
-  // 已上传：纯展示 + 悬停遮罩（不绑 dropzone，避免点图误触发文件选择）。
+  // 已上传：缩略图 + 悬停遮罩。点击格子本身可重新选择以替换；
+  // 遮罩按钮（预览 / 删除）阻止冒泡，避免误触发文件选择。
   if (shownPreview && !uploading) {
     return (
       <>
         <div
-          className={`group relative overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700 ${sizeClass}`}
+          {...getRootProps()}
+          className={`group relative cursor-pointer overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700 ${sizeClass}`}
         >
+          <input {...getInputProps()} />
           <img
             src={shownPreview}
             alt="预览"
@@ -106,7 +115,7 @@ export default function ImageUploader({
           <div className="absolute inset-0 flex items-center justify-center gap-4 bg-black/50 opacity-0 transition group-hover:opacity-100">
             <button
               type="button"
-              onClick={() => setPreviewSrc(shownPreview)}
+              onClick={handlePreview}
               className="text-white/90 transition hover:text-white"
               aria-label="预览图片"
             >
