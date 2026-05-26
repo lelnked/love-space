@@ -66,6 +66,18 @@ export async function updateMerchantReview(
   return data;
 }
 
+export async function setMerchantReviewRecommended(
+  merchantId: string,
+  id: string,
+  recommended: boolean,
+): Promise<MerchantReviewItem> {
+  const { data } = await apiClient.patch<MerchantReviewItem>(
+    `/api/admin/merchants/${merchantId}/reviews/${id}/recommended`,
+    { recommended },
+  );
+  return data;
+}
+
 export async function deleteMerchantReview(merchantId: string, id: string): Promise<void> {
   await apiClient.delete<void>(`/api/admin/merchants/${merchantId}/reviews/${id}`);
 }

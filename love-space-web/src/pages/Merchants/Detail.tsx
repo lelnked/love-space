@@ -28,6 +28,7 @@ import {
   pageMerchantReviews,
   MerchantReviewItem,
   MerchantReviewUpsertRequest,
+  setMerchantReviewRecommended,
   updateMerchantReview,
 } from "../../api/merchantReviews";
 
@@ -415,6 +416,23 @@ function ReviewsTab({ merchantId }: { merchantId: string }) {
     }
   };
 
+  const handleToggleRecommended = async (it: MerchantReviewItem) => {
+    const next = !it.recommended;
+    setItems((prev) =>
+      prev.map((x) => (x.id === it.id ? { ...x, recommended: next } : x)),
+    );
+    try {
+      await setMerchantReviewRecommended(merchantId, it.id, next);
+      toast.success(next ? "已设为推荐" : "已取消推荐");
+    } catch (err) {
+      setItems((prev) =>
+        prev.map((x) => (x.id === it.id ? { ...x, recommended: it.recommended } : x)),
+      );
+      const ax = err as AxiosError<{ detail?: string }>;
+      toast.error(ax.response?.data?.detail ?? "操作失败");
+    }
+  };
+
   return (
     <>
       <div className="flex items-center justify-end mb-6">
@@ -497,6 +515,13 @@ function ReviewsTab({ merchantId }: { merchantId: string }) {
                       </TableCell>
                       <TableCell className="px-4 py-3 text-start text-theme-sm">
                         <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            variant={it.recommended ? "outline" : "primary"}
+                            onClick={() => handleToggleRecommended(it)}
+                          >
+                            {it.recommended ? "取消推荐" : "推荐"}
+                          </Button>
                           <Button size="sm" variant="primary" onClick={() => openEdit(it)}>
                             编辑
                           </Button>
@@ -581,18 +606,33 @@ function ReviewsTab({ merchantId }: { merchantId: string }) {
                   }
                 />
               </div>
-              <div className="flex items-end">
-                <label className="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
-                  <input
-                    type="checkbox"
-                    checked={form.recommended}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, recommended: e.target.checked }))
-                    }
-                  />
-                  推荐
-                </label>
-              </div>
+            </div>
+            <div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={form.recommended}
+                onClick={() =>
+                  setForm((f) => ({ ...f, recommended: !f.recommended }))
+                }
+                className="flex cursor-pointer select-none items-center gap-3 text-sm font-medium text-gray-700 dark:text-gray-400"
+              >
+                <span className="relative">
+                  <span
+                    className={`block h-6 w-11 rounded-full transition duration-150 ease-linear ${
+                      form.recommended
+                        ? "bg-brand-500"
+                        : "bg-gray-200 dark:bg-white/10"
+                    }`}
+                  ></span>
+                  <span
+                    className={`absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow-theme-sm transition duration-150 ease-linear ${
+                      form.recommended ? "translate-x-full" : "translate-x-0"
+                    }`}
+                  ></span>
+                </span>
+                推荐
+              </button>
             </div>
 
             <div className="flex justify-end gap-3 pt-2">

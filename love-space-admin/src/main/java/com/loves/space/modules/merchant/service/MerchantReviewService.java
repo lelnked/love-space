@@ -63,6 +63,13 @@ public class MerchantReviewService {
         return toResponse(review);
     }
 
+    /** 切换推荐状态。 */
+    public MerchantReviewResponse setRecommended(UUID merchantId, UUID id, boolean recommended) {
+        MerchantReview review = requireReview(merchantId, id);
+        review.setRecommended(recommended);
+        return toResponse(review);
+    }
+
     /** 删除。 */
     public void delete(UUID merchantId, UUID id) {
         merchantReviewRepository.delete(requireReview(merchantId, id));

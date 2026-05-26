@@ -2,6 +2,7 @@ package com.loves.space.modules.merchant.controller;
 
 import com.loves.space.common.annotation.OperationLog;
 import com.loves.space.common.page.PageResponseMapper.PageResponse;
+import com.loves.space.modules.merchant.dto.MerchantReviewRecommendRequest;
 import com.loves.space.modules.merchant.dto.MerchantReviewResponse;
 import com.loves.space.modules.merchant.dto.MerchantReviewUpsertRequest;
 import com.loves.space.modules.merchant.service.MerchantReviewService;
@@ -9,6 +10,7 @@ import jakarta.validation.Valid;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -58,6 +60,15 @@ public class MerchantReviewController {
                                          @PathVariable UUID id,
                                          @Valid @RequestBody MerchantReviewUpsertRequest request) {
         return merchantReviewService.update(merchantId, id, request);
+    }
+
+    /** 切换推荐状态。 */
+    @PatchMapping("/{id}/recommended")
+    @OperationLog("merchant-review:recommend")
+    public MerchantReviewResponse setRecommended(@PathVariable UUID merchantId,
+                                                 @PathVariable UUID id,
+                                                 @RequestBody MerchantReviewRecommendRequest request) {
+        return merchantReviewService.setRecommended(merchantId, id, request.recommended());
     }
 
     /** 删除评价。 */
