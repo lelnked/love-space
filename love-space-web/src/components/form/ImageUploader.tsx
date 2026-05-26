@@ -4,7 +4,7 @@ import { AxiosError } from "axios";
 
 import { uploadToOss } from "../../lib/ossUpload";
 import { useToast } from "../../context/ToastContext";
-import { EyeIcon, TrashIcon } from "./imageActionIcons";
+import { EyeIcon, ReplaceIcon, TrashIcon } from "./imageActionIcons";
 
 interface ImageUploaderProps {
   /** 当前 objectKey（空串表示未选择）。 */
@@ -73,7 +73,7 @@ export default function ImageUploader({
     [onChange, toast],
   );
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+  const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
     onDrop,
     multiple: false,
     disabled: disabled || uploading,
@@ -93,6 +93,11 @@ export default function ImageUploader({
   const handlePreview = (e: React.MouseEvent) => {
     e.stopPropagation();
     setPreviewSrc(shownPreview);
+  };
+
+  const handleReplace = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    open();
   };
 
   const sizeClass = className ?? "h-40 w-full";
@@ -121,6 +126,16 @@ export default function ImageUploader({
             >
               <EyeIcon />
             </button>
+            {!disabled && (
+              <button
+                type="button"
+                onClick={handleReplace}
+                className="text-white/90 transition hover:text-white"
+                aria-label="替换图片"
+              >
+                <ReplaceIcon />
+              </button>
+            )}
             {!disabled && !hideRemove && (
               <button
                 type="button"
