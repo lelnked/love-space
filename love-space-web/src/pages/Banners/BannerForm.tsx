@@ -1,9 +1,12 @@
-import { ChangeEvent, FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { AxiosError } from "axios";
 import Label from "../../components/form/Label";
 import Input from "../../components/form/input/InputField";
 import Button from "../../components/ui/button/Button";
+import ImageUploaderList, {
+  ImageListItem,
+} from "../../components/form/ImageUploaderList";
 import {
   BannerType,
   BannerUpsertRequest,
@@ -11,7 +14,6 @@ import {
   getBanner,
   updateBanner,
 } from "../../api/banners";
-import { uploadFile } from "../../api/files";
 import CitySelect from "./components/CitySelect";
 import { useToast } from "../../context/ToastContext";
 
@@ -31,12 +33,10 @@ export default function BannerForm() {
 
   const [name, setName] = useState("");
   const [type, setType] = useState<BannerType>("CITY");
-  const [imageKeys, setImageKeys] = useState<string[]>([]);
-  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const [images, setImages] = useState<ImageListItem[]>([]);
   const [link, setLink] = useState<string>("");
 
   const [loading, setLoading] = useState(false);
-  const [uploading, setUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const toast = useToast();
@@ -48,8 +48,7 @@ export default function BannerForm() {
       .then((d) => {
         setName(d.name);
         setType(d.type);
-        setImageKeys(d.imageUrls.map((im) => im.id));
-        setImagePreviews(d.imageUrls.map((im) => im.url));
+        setImages(d.imageUrls.map((im) => ({ objectKey: im.id, previewUrl: im.url })));
         setLink(d.link);
       })
       .catch((err: AxiosError<{ detail?: string }>) => {
@@ -58,28 +57,6 @@ export default function BannerForm() {
       .finally(() => setLoading(false));
   }, [id]);
 
-  const handleUpload = async (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setUploading(true);
-    try {
-      const { url: objectKey } = await uploadFile(file);
-      setImageKeys((prev) => [...prev, objectKey]);
-      setImagePreviews((prev) => [...prev, URL.createObjectURL(file)]);
-    } catch (err) {
-      const ax = err as AxiosError<{ detail?: string }>;
-      toast.error(ax.response?.data?.detail ?? "上传失败");
-    } finally {
-      setUploading(false);
-      e.target.value = "";
-    }
-  };
-
-  const removeImage = (idx: number) => {
-    setImageKeys((prev) => prev.filter((_, i) => i !== idx));
-    setImagePreviews((prev) => prev.filter((_, i) => i !== idx));
-  };
-
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (submitting) return;
@@ -87,7 +64,7 @@ export default function BannerForm() {
 
     const errs: Record<string, string> = {};
     if (!name.trim()) errs.name = "名称不能为空";
-    if (imageKeys.length === 0) errs.imageUrls = "至少上传 1 张图片";
+    if (images.length === 0) errs.imageUrls = "至少上传 1 张图片";
     if (!link) errs.link = "请选择关联城市";
     if (Object.keys(errs).length > 0) {
       setFieldErrors(errs);
@@ -97,7 +74,7 @@ export default function BannerForm() {
     const payload: BannerUpsertRequest = {
       name: name.trim(),
       type,
-      imageUrls: imageKeys,
+      imageUrls: images.map((it) => it.objectKey),
       link,
     };
 
@@ -173,27 +150,10 @@ export default function BannerForm() {
             <Label>
               图片 <span className="text-error-500">*</span>
             </Label>
-            <div className="flex items-center gap-2 text-xs text-gray-500">
-              <input type="file" accept="image/*" onChange={handleUpload} disabled={uploading} />
-              {uploading && <span>上传中...</span>}
-            </div>
             {fieldErrors.imageUrls && (
-              <p className="mt-1 text-xs text-error-500">{fieldErrors.imageUrls}</p>
+              <p className="mb-2 text-xs text-error-500">{fieldErrors.imageUrls}</p>
             )}
-            <div className="mt-2 flex flex-wrap gap-3">
-              {imageKeys.map((key, idx) => (
-                <div key={`${key}-${idx}`} className="relative">
-                  <img src={imagePreviews[idx]} alt={`图片 ${idx + 1}`} className="h-24 w-24 object-cover rounded border" />
-                  <button
-                    type="button"
-                    onClick={() => removeImage(idx)}
-                    className="absolute -top-2 -right-2 bg-white border rounded-full w-5 h-5 text-xs leading-4 text-error-500"
-                  >
-                    ×
-                  </button>
-                </div>
-              ))}
-            </div>
+            <ImageUploaderList value={images} onChange={setImages} />
           </div>
 
           <div className="flex gap-3">
