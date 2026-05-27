@@ -32,6 +32,7 @@ export default function BannerForm() {
   const editing = Boolean(id);
 
   const [name, setName] = useState("");
+  const [positionCode, setPositionCode] = useState("");
   const [type, setType] = useState<BannerType>("CITY");
   const [images, setImages] = useState<ImageListItem[]>([]);
   const [link, setLink] = useState<string>("");
@@ -47,6 +48,7 @@ export default function BannerForm() {
     getBanner(id)
       .then((d) => {
         setName(d.name);
+        setPositionCode(d.positionCode);
         setType(d.type);
         setImages(d.imageUrls.map((im) => ({ objectKey: im.id, previewUrl: im.url })));
         setLink(d.link);
@@ -64,6 +66,7 @@ export default function BannerForm() {
 
     const errs: Record<string, string> = {};
     if (!name.trim()) errs.name = "名称不能为空";
+    if (!positionCode.trim()) errs.positionCode = "位置标识不能为空";
     if (images.length === 0) errs.imageUrls = "至少上传 1 张图片";
     if (!link) errs.link = "请选择关联城市";
     if (Object.keys(errs).length > 0) {
@@ -73,6 +76,7 @@ export default function BannerForm() {
 
     const payload: BannerUpsertRequest = {
       name: name.trim(),
+      positionCode: positionCode.trim(),
       type,
       imageUrls: images.map((it) => it.objectKey),
       link,
@@ -116,6 +120,18 @@ export default function BannerForm() {
               onChange={(e) => setName(e.target.value)}
               error={Boolean(fieldErrors.name)}
               hint={fieldErrors.name}
+            />
+          </div>
+
+          <div>
+            <Label>
+              位置标识 <span className="text-error-500">*</span>
+            </Label>
+            <Input
+              value={positionCode}
+              onChange={(e) => setPositionCode(e.target.value)}
+              error={Boolean(fieldErrors.positionCode)}
+              hint={fieldErrors.positionCode}
             />
           </div>
 

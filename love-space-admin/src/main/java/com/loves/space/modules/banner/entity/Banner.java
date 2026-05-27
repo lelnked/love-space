@@ -31,6 +31,10 @@ public class Banner extends BaseAuditEntity {
     @Column(name = "name", nullable = false)
     private String name;
 
+    /** 展示位置标识码（运营自由填写，非枚举），非空，长度 ≤ 64。 */
+    @Column(name = "position_code", nullable = false)
+    private String positionCode;
+
     /**
      * 是否上线（对移动端可见）；新建时默认 false，仅允许在列表页通过专用接口切换。
      */

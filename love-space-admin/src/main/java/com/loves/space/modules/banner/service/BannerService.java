@@ -64,6 +64,7 @@ public class BannerService {
         validateLink(request.type(), request.linkedEntityId());
         Banner banner = new Banner();
         banner.setName(request.name());
+        banner.setPositionCode(request.positionCode());
         banner.setType(request.type());
         banner.setImageUrls(bindImageObjectKeys(request.imageUrls()));
         banner.setLinkedEntityId(request.linkedEntityId());
@@ -83,6 +84,7 @@ public class BannerService {
                 .orElseThrow(() -> new IllegalArgumentException("banner 不存在：" + id));
         validateLink(request.type(), request.linkedEntityId());
         banner.setName(request.name());
+        banner.setPositionCode(request.positionCode());
         banner.setType(request.type());
         banner.setImageUrls(bindImageObjectKeys(request.imageUrls()));
         banner.setLinkedEntityId(request.linkedEntityId());
@@ -112,6 +114,7 @@ public class BannerService {
     public PageResponse<BannerListItemResponse> page(BannerQuery query, Pageable pageable) {
         List<Specification<Banner>> specs = Stream.of(
                 BannerSpecifications.nameContains(query.keyword()),
+                BannerSpecifications.positionCodeContains(query.positionCode()),
                 BannerSpecifications.hasType(query.type()),
                 BannerSpecifications.onlineEquals(query.online())
         ).filter(Objects::nonNull).toList();
@@ -186,6 +189,7 @@ public class BannerService {
         return new BannerListItemResponse(
                 banner.getId(),
                 banner.getName(),
+                banner.getPositionCode(),
                 banner.getType(),
                 ImageResponses.fromList(banner.getImageUrls(), imageUrlSigner),
                 banner.getLinkedEntityId(),
@@ -200,6 +204,7 @@ public class BannerService {
         return new BannerDetailResponse(
                 banner.getId(),
                 banner.getName(),
+                banner.getPositionCode(),
                 banner.getType(),
                 ImageResponses.fromList(banner.getImageUrls(), imageUrlSigner),
                 banner.getLinkedEntityId(),

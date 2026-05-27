@@ -14,6 +14,7 @@ import java.util.UUID;
 public record BannerDetailResponse(
         UUID id,
         String name,
+        String positionCode,
         BannerType type,
         List<ImageResponse> imageUrls,
         @JsonProperty("link") UUID linkedEntityId,

@@ -50,10 +50,11 @@ public class BannerController {
     @GetMapping("/page")
     public PageResponse<BannerListItemResponse> page(
             @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String positionCode,
             @RequestParam(required = false) BannerType type,
             @RequestParam(required = false) Boolean online,
             Pageable pageable) {
-        return bannerService.page(new BannerQuery(keyword, type, online), pageable);
+        return bannerService.page(new BannerQuery(keyword, positionCode, type, online), pageable);
     }
 
     /** 查询 banner 详情。 */

@@ -8,3 +8,5 @@ databaseChangeLog:
       file: db/changelog/changes/002-seed-admin-manager.sql
   - include:
       file: db/changelog/changes/003-add-merchant-review-recommended.sql
+  - include:
+      file: db/changelog/changes/004-add-banner-position-code.sql

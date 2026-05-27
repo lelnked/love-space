@@ -27,6 +27,15 @@ public final class BannerSpecifications {
         return (root, cq, cb) -> cb.like(root.get(Banner_.name), pattern);
     }
 
+    /** 位置标识码模糊匹配（{@code %positionCode%}）；空白字符串返回恒真。 */
+    public static Specification<Banner> positionCodeContains(String positionCode) {
+        if (!StringUtils.hasText(positionCode)) {
+            return null;
+        }
+        String pattern = "%" + positionCode.trim() + "%";
+        return (root, cq, cb) -> cb.like(root.get(Banner_.positionCode), pattern);
+    }
+
     /** 类型精确匹配；{@code null} 返回恒真。 */
     public static Specification<Banner> hasType(BannerType type) {
         if (type == null) {

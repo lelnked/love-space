@@ -9,5 +9,5 @@ import com.loves.space.modules.banner.entity.BannerType;
  * @param type    类型过滤（可空）
  * @param online  上下架状态过滤（可空，null 表示不过滤）
  */
-public record BannerQuery(String keyword, BannerType type, Boolean online) {
+public record BannerQuery(String keyword, String positionCode, BannerType type, Boolean online) {
 }

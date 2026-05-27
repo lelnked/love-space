@@ -26,6 +26,7 @@ import {
 
 const FILTER_FIELDS: FilterField[] = [
   { name: "keyword", label: "名称", type: "text", placeholder: "模糊匹配" },
+  { name: "positionCode", label: "位置标识", type: "text", placeholder: "模糊匹配" },
   {
     name: "type",
     label: "类型",
@@ -54,6 +55,7 @@ function formatDateTime(value: string): string {
 function buildQuery(filters: FilterValues, page: number, size: number): BannerQuery {
   const q: BannerQuery = { page, size };
   if (filters.keyword) q.keyword = filters.keyword;
+  if (filters.positionCode) q.positionCode = filters.positionCode;
   if (filters.type) q.type = filters.type as BannerType;
   if (filters.online === "true") q.online = true;
   else if (filters.online === "false") q.online = false;
@@ -147,6 +149,9 @@ export default function BannerList() {
                       名称
                     </TableCell>
                     <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
+                      位置标识
+                    </TableCell>
+                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
                       类型
                     </TableCell>
                     <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
@@ -184,6 +189,9 @@ export default function BannerList() {
                       <TableRow key={it.id}>
                         <TableCell className="px-5 py-4 sm:px-6 text-start font-medium text-gray-800 text-theme-sm dark:text-white/90">
                           {it.name}
+                        </TableCell>
+                        <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                          {it.positionCode}
                         </TableCell>
                         <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
                           {it.type}

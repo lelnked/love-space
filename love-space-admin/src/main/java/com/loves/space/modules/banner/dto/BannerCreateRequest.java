@@ -21,6 +21,7 @@ import java.util.UUID;
  */
 public record BannerCreateRequest(
         @NotBlank @Size(max = 128) String name,
+        @NotBlank @Size(max = 64) String positionCode,
         @NotNull BannerType type,
         @NotEmpty List<@NotBlank @Pattern(regexp = "^(images|bound)/[\\w-]+\\.(png|jpg|webp)$",
                 message = "imageUrls 仅接受 OSS objectKey（images/<id>.<ext> 或 bound/<id>.<ext>）") String> imageUrls,

@@ -7,6 +7,7 @@ export type BannerType = "CITY";
 export interface BannerListItem {
   id: string;
   name: string;
+  positionCode: string;
   type: BannerType;
   imageUrls: ImageResponse[];
   link: string;
@@ -20,6 +21,7 @@ export type BannerDetail = BannerListItem;
 
 export interface BannerQuery {
   keyword?: string;
+  positionCode?: string;
   type?: BannerType | "";
   online?: boolean | "";
   page?: number;
@@ -28,6 +30,7 @@ export interface BannerQuery {
 
 export interface BannerUpsertRequest {
   name: string;
+  positionCode: string;
   type: BannerType;
   imageUrls: string[];
   link: string;
@@ -36,6 +39,7 @@ export interface BannerUpsertRequest {
 function buildParams(query: BannerQuery): Record<string, string | number | boolean> {
   const params: Record<string, string | number | boolean> = {};
   if (query.keyword) params.keyword = query.keyword;
+  if (query.positionCode) params.positionCode = query.positionCode;
   if (query.type) params.type = query.type;
   if (query.online === true || query.online === false) params.online = query.online;
   if (query.page) params.page = query.page;
