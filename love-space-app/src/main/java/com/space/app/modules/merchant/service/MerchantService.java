@@ -1,7 +1,6 @@
 package com.space.app.modules.merchant.service;
 
 import com.space.app.common.enums.Period;
-import com.space.app.common.exception.ResourceNotFoundException;
 import com.space.app.common.page.PageQuery;
 import com.space.app.common.util.ImageResponses;
 import com.space.app.infrastructure.storage.ImageUrlSigner;

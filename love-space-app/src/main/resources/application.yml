@@ -37,7 +37,6 @@ app:
       access-key-secret: ${ALIYUN_OSS_ACCESS_KEY_SECRET:}
       url-expiration-seconds: ${ALIYUN_OSS_URL_EXPIRATION_SECONDS:1800}
 
+
 logging:
-  level:
-    root: INFO
-    com.space.app: INFO
+  config: classpath:logback-spring.xml

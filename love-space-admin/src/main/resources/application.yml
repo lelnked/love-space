@@ -56,7 +56,7 @@ app:
       access-key-secret: ${ALIYUN_STS_ACCESS_KEY_SECRET:}
   public-base-url: ${ADMIN_PUBLIC_BASE_URL:http://localhost:8080}
 
+
+
 logging:
-  level:
-    root: INFO
-    com.loves.space: INFO
+  config: classpath:logback-spring.xml
