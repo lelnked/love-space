@@ -3,9 +3,14 @@ import { Link, useLocation } from "react-router";
 
 // Assume these icons are imported from an icon library
 import {
+  BoxCubeIcon,
   ChevronDownIcon,
+  FolderIcon,
+  GridIcon,
+  GroupIcon,
   HorizontaLDots,
-  ListIcon,
+  ShootingStarIcon,
+  TimeIcon,
   UserCircleIcon,
 } from "../icons";
 import { useSidebar } from "../context/SidebarContext";
@@ -25,32 +30,32 @@ const navItems: NavItem[] = [
     path: "/managers",
   },
   {
-    icon: <ListIcon />,
+    icon: <GridIcon />,
     name: "城市管理",
     path: "/cities",
   },
   {
-    icon: <ListIcon />,
+    icon: <ShootingStarIcon />,
     name: "Banner管理",
     path: "/banners",
   },
   {
-    icon: <ListIcon />,
+    icon: <FolderIcon />,
     name: "分类管理",
     path: "/categories",
   },
   {
-    icon: <ListIcon />,
+    icon: <BoxCubeIcon />,
     name: "标签管理",
     path: "/tags",
   },
   {
-    icon: <ListIcon />,
+    icon: <GroupIcon />,
     name: "商户管理",
     path: "/merchants",
   },
   {
-    icon: <ListIcon />,
+    icon: <TimeIcon />,
     name: "操作日志",
     path: "/logs",
   },
