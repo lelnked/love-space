@@ -3,7 +3,6 @@ import SignIn from "./pages/AuthPages/SignIn";
 import NotFound from "./pages/OtherPage/NotFound";
 import AppLayout from "./layout/AppLayout";
 import { ScrollToTop } from "./components/common/ScrollToTop";
-import Home from "./pages/Dashboard/Home";
 import { AuthProvider } from "./context/AuthContext";
 import { ToastProvider } from "./context/ToastContext";
 import RequireAuth from "./components/auth/RequireAuth";
@@ -35,7 +34,7 @@ export default function App() {
               </RequireAuth>
             }
           >
-            <Route index path="/" element={<Home />} />
+            <Route index path="/" element={<Navigate to="/cities" replace />} />
             <Route path="/managers" element={<ManagerList />} />
             <Route path="/cities" element={<CityList />} />
             <Route path="/cities/create" element={<CityForm />} />

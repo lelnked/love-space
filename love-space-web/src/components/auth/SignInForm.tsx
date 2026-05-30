@@ -23,7 +23,7 @@ export default function SignInForm() {
     setSubmitting(true);
     try {
       await login(username.trim(), password);
-      navigate("/", { replace: true });
+      navigate("/cities", { replace: true });
     } catch (err) {
       const ax = err as AxiosError;
       if (ax.response?.status === 401) {
