@@ -8,7 +8,7 @@ export default function UserDropdown() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
-  const displayName = user?.nickname?.trim() || user?.username || "未登录";
+  const displayName = user?.username || "未登录";
   const initial = displayName.charAt(0).toUpperCase();
 
   function toggleDropdown() {
@@ -65,11 +65,6 @@ export default function UserDropdown() {
           <span className="block font-medium text-gray-700 text-theme-sm dark:text-gray-400">
             {displayName}
           </span>
-          {user?.username && (
-            <span className="mt-0.5 block text-theme-xs text-gray-500 dark:text-gray-400">
-              @{user.username}
-            </span>
-          )}
         </div>
 
         <button
