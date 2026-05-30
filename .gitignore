@@ -65,3 +65,4 @@ tmp/
 
 # ===== Claude Code =====
 .claude/scheduled_tasks.lock
+.claude/skills/lan-all-dev-company/
