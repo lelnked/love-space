@@ -12,4 +12,10 @@ import java.util.UUID;
  * 元模型构造类型安全查询（宪法 VI），禁止在 Specification 中拼接字段名字面量。
  */
 public interface BannerRepository extends JpaRepository<Banner, UUID>, JpaSpecificationExecutor<Banner> {
+
+    /** 是否已存在同名 banner。 */
+    boolean existsByName(String name);
+
+    /** 是否存在同名但 ID 不为给定值的 banner（更新时唯一性校验）。 */
+    boolean existsByNameAndIdNot(String name, UUID id);
 }

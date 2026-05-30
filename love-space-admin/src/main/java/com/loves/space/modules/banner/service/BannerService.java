@@ -61,6 +61,7 @@ public class BannerService {
      * 创建 banner：online 强制为 false（FR-007）；校验类型与关联实体存在。
      */
     public BannerDetailResponse create(BannerCreateRequest request) {
+        validateNameUnique(request.name(), null);
         validateLink(request.type(), request.linkedEntityId());
         Banner banner = new Banner();
         banner.setName(request.name());
@@ -82,6 +83,7 @@ public class BannerService {
         }
         Banner banner = bannerRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("banner 不存在：" + id));
+        validateNameUnique(request.name(), id);
         validateLink(request.type(), request.linkedEntityId());
         banner.setName(request.name());
         banner.setPositionCode(request.positionCode());
@@ -148,6 +150,16 @@ public class BannerService {
         return rawObjectKeys.stream()
                 .map(objectKeyValidator::validateAndBind)
                 .toList();
+    }
+
+    /** 校验 banner 名称唯一（创建传 {@code excludeId=null}，更新传当前 id）。 */
+    private void validateNameUnique(String name, UUID excludeId) {
+        boolean duplicate = excludeId == null
+                ? bannerRepository.existsByName(name)
+                : bannerRepository.existsByNameAndIdNot(name, excludeId);
+        if (duplicate) {
+            throw new IllegalArgumentException("Banner 名称已存在：" + name);
+        }
     }
 
     /** 校验 {@code linkedEntityId} 存在性与类型一致性。 */
