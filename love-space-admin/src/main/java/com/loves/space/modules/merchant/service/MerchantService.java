@@ -128,6 +128,13 @@ public class MerchantService {
             if (StringUtils.hasText(query.name())) {
                 predicates.add(cb.like(root.get("name"), "%" + query.name() + "%"));
             }
+            if (query.period() != null) {
+                // periods 列为 jsonb 字符串数组，用 PostgreSQL jsonb_exists 判断是否包含该周期枚举名
+                predicates.add(cb.isTrue(cb.function(
+                        "jsonb_exists", Boolean.class,
+                        root.get("periods"),
+                        cb.literal(query.period().name()))));
+            }
             return cb.and(predicates.toArray(new Predicate[0]));
         };
         Pageable sorted = PageQuery.normalize(pageable, Sort.by(Sort.Order.desc("weight"), Sort.Order.desc("createdAt")));
