@@ -29,7 +29,8 @@ export default function SignInForm() {
       if (ax.response?.status === 401) {
         toast.error("用户名或密码错误，或账号已停用");
       } else {
-        toast.error("登录失败，请稍后重试");
+        const data = ax.response?.data as { detail?: string } | undefined;
+        toast.error(data?.detail ?? "登录失败，请稍后重试");
       }
     } finally {
       setSubmitting(false);

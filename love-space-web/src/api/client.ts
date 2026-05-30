@@ -32,6 +32,17 @@ function createClient(): AxiosInstance {
   instance.interceptors.response.use(
     (response) => response,
     (error: AxiosError) => {
+      // 后端错误体统一为 { status, error, message, path }（见 GlobalExceptionHandler）。
+      // 前端历史代码读取 response.data.detail，这里把后端返回的 message 同步到 detail，
+      // 使所有错误弹窗都能展示后端返回的真实 message。
+      const data = error.response?.data;
+      if (data && typeof data === "object" && !Array.isArray(data)) {
+        const body = data as Record<string, unknown>;
+        if (body.detail == null && typeof body.message === "string") {
+          body.detail = body.message;
+        }
+      }
+
       if (error.response?.status === 401) {
         setStoredToken(null);
         if (typeof window !== "undefined" && window.location.pathname !== "/signin") {
