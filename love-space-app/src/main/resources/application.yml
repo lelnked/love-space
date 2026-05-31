@@ -18,9 +18,6 @@ spring:
           time_zone: UTC
   liquibase:
     enabled: false  # schema 由 admin 服务统一管理，app 端不再运行 Liquibase
-  mvc:
-    problemdetails:
-      enabled: true
 
 server:
   port: 8081
