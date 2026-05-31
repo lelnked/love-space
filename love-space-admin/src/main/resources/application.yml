@@ -19,9 +19,6 @@ spring:
           time_zone: UTC
   liquibase:
     change-log: classpath:db/changelog/db.changelog-master.yaml
-  mvc:
-    problemdetails:
-      enabled: true
   servlet:
     multipart:
       max-file-size: 20MB
