@@ -14,10 +14,11 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"   # docker build 上下文的父目录
 
 # ===== 通用配置 =====
 RESTART_POLICY=unless-stopped        # 随 docker 守护进程开机自启
-LOG_BASE_DIR=/opt/love-space/logs    # admin/app 日志分别挂到 $LOG_BASE_DIR/{admin,app}
+LOG_BASE_DIR=/app/loveSpace/logs     # admin/app 日志分别挂到 $LOG_BASE_DIR/{admin,app}（不存在自动创建）
 
-# 用 host 网络模式：容器复用宿主机网络栈，直接通过 localhost 连 postgres，
-# 端口即应用自身监听端口（admin 8080 / app 8081），无需自建网络或端口映射。
+# 用 host 网络模式：容器复用宿主机网络栈，端口即应用自身监听端口
+# （admin 8080 / app 8081），无需自建网络或端口映射。
+# DB 连接走固定地址 172.16.16.12:5432（见下方 *_DB_URL）。
 
 # ===== PostgreSQL 连接（与 deploy-postgres.sh 保持一致）=====
 PG_DB=love_space
@@ -28,7 +29,7 @@ PG_PASSWORD=love_space
 ADMIN_IMAGE_NAME=love-space-admin
 ADMIN_CONTAINER=love-space-admin
 ADMIN_HOST_PORT=8080
-ADMIN_DB_URL="jdbc:postgresql://localhost:5432/${PG_DB}"
+ADMIN_DB_URL="jdbc:postgresql://172.16.16.12:5432/${PG_DB}"
 ADMIN_DB_USERNAME="$PG_USER"
 ADMIN_DB_PASSWORD="$PG_PASSWORD"
 ADMIN_JWT_SECRET="please-replace-with-a-256-bit-base64-secret-please-replace"
@@ -37,7 +38,7 @@ ADMIN_JWT_SECRET="please-replace-with-a-256-bit-base64-secret-please-replace"
 APP_IMAGE_NAME=love-space-app
 APP_CONTAINER=love-space-app
 APP_HOST_PORT=8081
-APP_DB_URL="jdbc:postgresql://localhost:5432/${PG_DB}"
+APP_DB_URL="jdbc:postgresql://172.16.16.12:5432/${PG_DB}"
 APP_DB_USERNAME="$PG_USER"
 APP_DB_PASSWORD="$PG_PASSWORD"
 APP_SECURITY_API_KEYS="dev-app-api-key-please-rotate"   # 多 key 用英文逗号分隔

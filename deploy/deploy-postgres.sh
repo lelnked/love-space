@@ -1,17 +1,19 @@
 #!/usr/bin/env bash
 # 用 docker 部署共用的 PostgreSQL（admin 与 app 共享同一个库 love_space）。
-# 数据存命名卷，删容器不丢数据；带 healthcheck，方便 admin/app 启动前等待就绪。
+# 数据绑定挂载到宿主机目录，删容器不丢数据；带 healthcheck，方便 admin/app 启动前等待就绪。
 
 set -euo pipefail
 
 # ===== 配置（按需修改）=====
-RESTART_POLICY=unless-stopped       # 随 docker 守护进程开机自启
+RESTART_POLICY=unless-stopped              # 随 docker 守护进程开机自启
 PG_IMAGE=postgres:17
 PG_CONTAINER=love-space-postgres
 PG_DB=love_space
 PG_USER=love_space
 PG_PASSWORD=love_space
-PG_VOLUME=love-space-pgdata         # 命名数据卷
+PG_BASE_DIR=/app/loveSpace/pgdata          # postgres 挂载根目录（绑定挂载，不存在则自动创建）
+PG_DATA_DIR="$PG_BASE_DIR/data"            # 数据目录 -> 容器 /var/lib/postgresql/data
+PG_LOG_DIR="$PG_BASE_DIR/logs"             # 日志目录 -> 容器 /var/log/postgresql
 
 # 用 host 网络模式：容器直接复用宿主机网络栈，postgres 监听宿主机 5432，
 # admin/app 通过 localhost:5432 连库，无需自建 docker 网络或端口映射。
@@ -23,7 +25,12 @@ if docker ps -a --format '{{.Names}}' | grep -qx "$PG_CONTAINER"; then
   echo "[清理] 移除已存在的容器 $PG_CONTAINER"; docker rm -f "$PG_CONTAINER" >/dev/null
 fi
 
+# 确保宿主机数据/日志目录存在（首次部署自动新建）；日志目录放开写权限给容器内 postgres 用户。
+mkdir -p "$PG_DATA_DIR" "$PG_LOG_DIR"
+chmod 777 "$PG_LOG_DIR"
+
 echo "[postgres] 启动容器 $PG_CONTAINER（镜像 $PG_IMAGE，host 网络，监听 5432）"
+echo "[postgres]   数据目录 $PG_DATA_DIR  日志目录 $PG_LOG_DIR"
 docker run -d \
   --name "$PG_CONTAINER" \
   --network host \
@@ -31,12 +38,17 @@ docker run -d \
   -e POSTGRES_DB="$PG_DB" \
   -e POSTGRES_USER="$PG_USER" \
   -e POSTGRES_PASSWORD="$PG_PASSWORD" \
-  -v "${PG_VOLUME}:/var/lib/postgresql/data" \
+  -v "${PG_DATA_DIR}:/var/lib/postgresql/data" \
+  -v "${PG_LOG_DIR}:/var/log/postgresql" \
   --health-cmd="pg_isready -U $PG_USER -d $PG_DB" \
   --health-interval=5s \
   --health-timeout=3s \
   --health-retries=10 \
-  "$PG_IMAGE" >/dev/null
+  "$PG_IMAGE" \
+  -c logging_collector=on \
+  -c log_directory=/var/log/postgresql \
+  -c log_filename=postgresql-%Y-%m-%d.log \
+  -c log_rotation_age=1d >/dev/null
 
 echo "[postgres] 等待数据库就绪..."
 for _ in $(seq 1 30); do
