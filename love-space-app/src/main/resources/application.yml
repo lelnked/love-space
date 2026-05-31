@@ -2,7 +2,7 @@ spring:
   application:
     name: love-space-app
   profiles:
-    active: dev
+    active: ${SPRING_PROFILES_ACTIVE:prod}
   datasource:
     url: ${APP_DB_URL:jdbc:postgresql://localhost:5432/love_space}
     username: ${APP_DB_USERNAME:love_space}

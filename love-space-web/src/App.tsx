@@ -22,7 +22,7 @@ export default function App() {
   return (
     <AuthProvider>
       <ToastProvider>
-      <Router>
+      <Router basename="/love-space">
         <ScrollToTop />
         <Routes>
           <Route path="/signin" element={<SignIn />} />

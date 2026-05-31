@@ -1,0 +1,206 @@
+# Love Space 部署手册
+
+目标服务器：`root@119.29.108.66`，密码见团队密钥管理。
+
+## 目录结构（服务器）
+
+```
+/app/loveSpace/
+├── admin/          # admin JAR + Dockerfile
+├── app/            # app JAR + Dockerfile
+├── web/            # 前端静态文件（Vite dist）
+├── deploy/         # 部署脚本
+└── logs/           # 运行日志（admin/ app/）
+
+/app/nginx/
+├── conf/nginx.conf
+├── conf.d/tripleyourlife.com.conf   # nginx 站点配置
+├── ssl/            # SSL 证书
+└── logs/
+```
+
+---
+
+## 一、首次部署（全新环境）
+
+### 1. 构建产物（本地执行）
+
+```bash
+# 前端
+cd love-space-web
+npm install
+npm run build          # 产物在 dist/
+
+# admin 后端
+cd love-space-admin
+./mvnw clean package -DskipTests
+
+# app 后端
+cd love-space-app
+./mvnw clean package -DskipTests
+```
+
+### 2. 上传到服务器
+
+```bash
+# 创建目录
+ssh root@119.29.108.66 "mkdir -p /app/loveSpace/{admin,app,web,deploy}"
+
+# 上传
+scp love-space-admin/target/love-space-admin-*.jar  root@119.29.108.66:/app/loveSpace/admin/
+scp love-space-admin/Dockerfile                     root@119.29.108.66:/app/loveSpace/admin/
+scp love-space-app/target/love-space-app-*.jar      root@119.29.108.66:/app/loveSpace/app/
+scp love-space-app/Dockerfile                       root@119.29.108.66:/app/loveSpace/app/
+scp -r love-space-web/dist/*                        root@119.29.108.66:/app/loveSpace/web/
+scp deploy/*                                        root@119.29.108.66:/app/loveSpace/deploy/
+```
+
+### 3. 配置阿里云 OSS 环境变量（服务器执行，只需一次）
+
+```bash
+cat >> ~/.bashrc << 'EOF'
+export ALIYUN_OSS_REGION=cn-hangzhou
+export ALIYUN_OSS_ENDPOINT=oss-cn-hangzhou.aliyuncs.com
+export ALIYUN_OSS_BUCKET=love-space-test-0524
+export ALIYUN_OSS_ACCESS_KEY_ID=<your-key-id>
+export ALIYUN_OSS_ACCESS_KEY_SECRET=<your-key-secret>
+export ALIYUN_STS_ROLE_ARN=acs:ram::1220279335098944:role/oss-sts
+EOF
+source ~/.bashrc
+```
+
+### 4. 部署 PostgreSQL（服务器执行，只需一次）
+
+```bash
+cd /app/loveSpace/deploy
+bash deploy-postgres.sh
+```
+
+### 5. 部署 admin 和 app（服务器执行）
+
+```bash
+cd /app/loveSpace/deploy
+bash deploy-apps.sh 1.0.0
+```
+
+> 版本号自定义，会作为 Docker 镜像 tag，例如 `love-space-admin:1.0.0`。
+
+---
+
+## 二、日常更新部署
+
+### 只更新后端
+
+```bash
+# 本地：重新构建 jar
+cd love-space-admin && ./mvnw clean package -DskipTests
+cd love-space-app   && ./mvnw clean package -DskipTests
+
+# 上传 jar
+scp love-space-admin/target/love-space-admin-*.jar root@119.29.108.66:/app/loveSpace/admin/
+scp love-space-app/target/love-space-app-*.jar     root@119.29.108.66:/app/loveSpace/app/
+
+# 服务器：重新构建镜像并启动（版本号递增）
+ssh root@119.29.108.66 "cd /app/loveSpace/deploy && bash deploy-apps.sh 1.0.x"
+```
+
+### 只更新前端
+
+```bash
+# 本地：重新构建
+cd love-space-web && npm run build
+
+# 上传
+scp -r love-space-web/dist/* root@119.29.108.66:/app/loveSpace/web/
+# nginx 直接读静态文件，无需重启
+```
+
+### 同时更新前后端
+
+按上面两步依次执行即可。
+
+---
+
+## 三、nginx 配置说明
+
+站点配置文件：`/app/nginx/conf.d/tripleyourlife.com.conf`
+
+love-space 相关的三段 location：
+
+```nginx
+# 前端静态文件
+location /love-space/ {
+    alias /app/loveSpace/web/;
+    index index.html;
+    try_files $uri $uri/ /love-space/index.html;
+}
+
+# public/ 目录下的图片（Vite 不加 base 前缀，需单独映射）
+location /images/ {
+    alias /app/loveSpace/web/images/;
+}
+
+# admin 后端代理
+location /love-space/admin/ {
+    proxy_pass http://172.17.0.1:8080/;
+}
+
+# app 后端代理
+location /love-space/app/ {
+    proxy_pass http://172.17.0.1:8081/;
+}
+```
+
+修改 nginx 配置后执行：
+
+```bash
+docker exec nginx-tripleyourlife nginx -t          # 验证语法
+docker exec nginx-tripleyourlife nginx -s reload   # 热重载
+```
+
+> nginx 容器挂载了 `/app/nginx/conf.d`，直接编辑宿主机文件即可，无需重建容器。
+> 如需新增 volume 挂载（如新增静态目录），必须 `docker rm -f` 后重建容器。
+
+---
+
+## 四、访问地址
+
+| 服务 | 地址 |
+|------|------|
+| 前端 | https://www.tripleyourlife.com/love-space/ |
+| admin 接口 | https://www.tripleyourlife.com/love-space/admin/api/admin/... |
+| app 接口 | https://www.tripleyourlife.com/love-space/app/api/... |
+
+默认管理员账号：`admin` / `8@y2eoRLyStM*UVU`（首次登录后请修改密码）
+
+---
+
+## 五、常用运维命令
+
+```bash
+# 查看容器状态
+docker ps
+
+# 查看日志
+tail -f /app/loveSpace/logs/admin/app.log
+tail -f /app/loveSpace/logs/app/app.log
+docker logs love-space-admin --tail 100
+docker logs love-space-app   --tail 100
+
+# 重启单个容器
+docker restart love-space-admin
+docker restart love-space-app
+
+# 连接数据库
+docker exec -it love-space-postgres psql -U love_space -d love_space
+```
+
+---
+
+## 六、注意事项
+
+- **admin 必须先于 app 启动**：admin 负责执行 Liquibase 建表，app 不跑迁移。`deploy-apps.sh` 已保证顺序。
+- **profile 配置**：`application-dev.yml` / `application-test.yml` 已删除，`application.yml` 直接生效，无需设置 `SPRING_PROFILES_ACTIVE`。
+- **数据库地址**：容器使用 `--network host`，DB 连接地址为 `172.16.16.12:8954`（宿主机内网 IP + postgres 映射端口）。
+- **前端 base 路径**：`vite.config.ts` 中 `base: "/love-space/"`，`BrowserRouter` 中 `basename="/love-space"`，两者必须保持一致。
+- **前端 API 地址**：`.env.production` 中 `VITE_ADMIN_API_BASE=https://www.tripleyourlife.com/love-space/admin`，修改后需重新构建。

@@ -7,7 +7,7 @@
 # 把 Spring Boot fat jar 拆成分层目录，让运行镜像按层缓存：依赖层不随业务代码改动失效。
 FROM eclipse-temurin:25-jre AS layers
 WORKDIR /workspace
-ARG JAR_FILE=target/love-space-app-*.jar
+ARG JAR_FILE=love-space-app-*.jar
 COPY ${JAR_FILE} app.jar
 RUN java -Djarmode=tools -jar app.jar extract --layers --destination extracted
 
