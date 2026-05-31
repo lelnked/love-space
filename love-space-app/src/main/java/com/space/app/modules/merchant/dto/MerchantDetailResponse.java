@@ -21,7 +21,6 @@ import java.util.UUID;
  * @param tags               上架标签集合
  * @param scores             四维百分制评分
  * @param loveIndex          爱女指数（total + level）
- * @param reviews            评价列表
  * @param story              商户故事（≤5000 字），可空
  */
 public record MerchantDetailResponse(
@@ -36,7 +35,6 @@ public record MerchantDetailResponse(
         List<TagItemResponse> tags,
         ScoreView scores,
         LoveIndexView loveIndex,
-        List<ReviewItemResponse> reviews,
         String story
 ) {
 }

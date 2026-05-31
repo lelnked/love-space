@@ -13,4 +13,7 @@ public interface MerchantReviewRepository extends JpaRepository<MerchantReview, 
 
     /** 按商户 ID 查询，sortOrder 升序。 */
     List<MerchantReview> findAllByMerchantIdOrderBySortOrderAsc(UUID merchantId);
+
+    /** 按商户 ID + recommended 过滤，sortOrder 升序。 */
+    List<MerchantReview> findAllByMerchantIdAndRecommendedOrderBySortOrderAsc(UUID merchantId, boolean recommended);
 }

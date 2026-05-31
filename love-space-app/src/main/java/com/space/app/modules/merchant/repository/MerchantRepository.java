@@ -52,4 +52,7 @@ public interface MerchantRepository extends JpaRepository<Merchant, UUID> {
 
     /** 按 ID 查询且仅当上架时返回。 */
     Optional<Merchant> findByIdAndOnlineTrue(UUID id);
+
+    /** 商户是否存在且上架（用于评价接口的轻量校验，避免整表加载）。 */
+    boolean existsByIdAndOnlineTrue(UUID id);
 }

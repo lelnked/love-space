@@ -7,12 +7,10 @@ import com.space.app.common.util.ImageResponses;
 import com.space.app.infrastructure.storage.ImageUrlSigner;
 import com.space.app.modules.merchant.dto.MerchantDetailResponse;
 import com.space.app.modules.merchant.dto.MerchantListItemResponse;
-import com.space.app.modules.merchant.dto.ReviewItemResponse;
 import com.space.app.modules.merchant.dto.TagItemResponse;
 import com.space.app.modules.merchant.entity.Merchant;
 import com.space.app.modules.merchant.entity.MerchantTag;
 import com.space.app.modules.merchant.repository.MerchantRepository;
-import com.space.app.modules.merchant.repository.MerchantReviewRepository;
 import com.space.app.modules.merchant.repository.MerchantTagRepository;
 import com.space.app.modules.tag.entity.Tag;
 import com.space.app.modules.tag.repository.TagRepository;
@@ -33,7 +31,8 @@ import java.util.stream.Collectors;
  * 商户服务：App 端只读。
  * <ul>
  *   <li>列表分页：cityId 必填，period / categoryId 可选；排序 weight DESC, createdAt DESC；</li>
- *   <li>详情拼装：图片、上架标签、四维百分制、爱女指数、评价、故事；下架商户 404。</li>
+ *   <li>详情拼装：图片、上架标签、四维百分制、爱女指数、故事；下架商户 404。
+ *       评价不在详情内联返回，见 {@link MerchantReviewQueryService}。</li>
  * </ul>
  */
 @Service
@@ -42,20 +41,17 @@ public class MerchantService {
 
     private final MerchantRepository merchantRepository;
     private final MerchantTagRepository merchantTagRepository;
-    private final MerchantReviewRepository merchantReviewRepository;
     private final TagRepository tagRepository;
     private final ScoreCalculator scoreCalculator;
     private final ImageUrlSigner imageUrlSigner;
 
     public MerchantService(MerchantRepository merchantRepository,
                            MerchantTagRepository merchantTagRepository,
-                           MerchantReviewRepository merchantReviewRepository,
                            TagRepository tagRepository,
                            ScoreCalculator scoreCalculator,
                            ImageUrlSigner imageUrlSigner) {
         this.merchantRepository = merchantRepository;
         this.merchantTagRepository = merchantTagRepository;
-        this.merchantReviewRepository = merchantReviewRepository;
         this.tagRepository = tagRepository;
         this.scoreCalculator = scoreCalculator;
         this.imageUrlSigner = imageUrlSigner;
@@ -124,10 +120,6 @@ public class MerchantService {
                 .map(t -> new TagItemResponse(t.getId(), t.getName()))
                 .toList();
 
-        List<ReviewItemResponse> reviews = merchantReviewRepository.findAllByMerchantIdOrderBySortOrderAsc(id).stream()
-                .map(r -> new ReviewItemResponse(r.getNickname(), r.getTitle(), r.getContent()))
-                .toList();
-
         return new MerchantDetailResponse(
                 merchant.getId(),
                 merchant.getName(),
@@ -148,7 +140,6 @@ public class MerchantService {
                         merchant.getBusinessRightsScore(),
                         merchant.getExperienceFriendlyScore(),
                         merchant.getSocialContributionScore()),
-                reviews,
                 Objects.toString(merchant.getStory(), null));
     }
 }
