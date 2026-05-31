@@ -4,7 +4,6 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.Id;
-import jakarta.persistence.IdClass;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
@@ -15,8 +14,8 @@ import java.time.OffsetDateTime;
 import java.util.UUID;
 
 /**
- * 商户-标签关联实体：对应 {@code merchant_tag} 表。
- * <p>复合主键 (merchant_id, tag_id)，仅审计 {@code created_at}（NOT NULL，无 updated_at）。
+ * 商户-标签关联实体：对应 {@code loves_merchant_tag} 表。
+ * <p>单列主键 {@code id}，(merchant_id, tag_id) 上有唯一约束；仅审计 {@code created_at}（NOT NULL，无 updated_at）。
  */
 @Entity
 @Table(name = "loves_merchant_tag")
