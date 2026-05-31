@@ -16,7 +16,8 @@ import java.util.stream.Collectors;
 /**
  * {@link BannerType#CITY} 解析器：{@code linkedEntityId} 指向 {@code loves_city.id}。
  *
- * <p>批量一次性加载关联 {@link City}（防 N+1）；装配 {@code data = {id, name}}；
+ * <p>批量一次性加载关联 {@link City}（防 N+1）；装配
+ * {@code data = {id, chineseName, englishName, chineseProvince, englishProvince}}；
  * 关联城市不存在或 {@code online=false} 时返回 {@code null} 以剔除该 banner。
  */
 @Component
@@ -50,7 +51,10 @@ public class CityBannerDataResolver implements BannerDataResolver {
             }
             Map<String, Object> data = new LinkedHashMap<>();
             data.put("id", city.getId());
-            data.put("name", city.getChineseName());
+            data.put("chineseName", city.getChineseName());
+            data.put("englishName", city.getEnglishName());
+            data.put("chineseProvince", city.getChineseProvince());
+            data.put("englishProvince", city.getEnglishProvince());
             return data;
         };
     }
