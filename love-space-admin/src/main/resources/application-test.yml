@@ -32,7 +32,6 @@ app:
       role-arn: ${ALIYUN_STS_ROLE_ARN:acs:ram::000000000000:role/test-role}
       role-session-name: ${ALIYUN_STS_ROLE_SESSION_NAME:love-space-admin-test}
       duration-seconds: ${ALIYUN_STS_DURATION_SECONDS:900}
-  public-base-url: http://localhost:8080
 
 logging:
   level:
