@@ -4,8 +4,6 @@ spring:
     url: jdbc:postgresql://localhost:25432/love_space
     username: iris
     password: iris
-  liquibase:
-    contexts: dev
 
 app:
   security:

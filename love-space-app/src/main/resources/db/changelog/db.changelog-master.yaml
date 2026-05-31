@@ -1,7 +1,0 @@
-# 移动端后端 Liquibase 主入口
-# MUST 引用与 admin 端字节一致的 001-init-schema.sql；禁止引用 002-seed-admin-manager.sql
-databaseChangeLog:
-  - include:
-      file: db/changelog/changes/001-init-schema.sql
-  - include:
-      file: db/changelog/changes/003-add-merchant-review-recommended.sql

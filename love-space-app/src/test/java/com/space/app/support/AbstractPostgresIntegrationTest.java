@@ -31,6 +31,9 @@ public abstract class AbstractPostgresIntegrationTest {
         registry.add("spring.datasource.url", POSTGRES::getJdbcUrl);
         registry.add("spring.datasource.username", POSTGRES::getUsername);
         registry.add("spring.datasource.password", POSTGRES::getPassword);
+        // schema 由 admin 服务统一管理，app 端已移除 Liquibase；
+        // 集成测试改由 Hibernate 从实体自动建表，保持测试自洽。
+        registry.add("spring.jpa.hibernate.ddl-auto", () -> "create-drop");
         registry.add("app.security.api-keys", () -> "test-api-key");
         registry.add("app.storage.oss.endpoint", () -> "oss-cn-hangzhou.aliyuncs.com");
         registry.add("app.storage.oss.bucket", () -> "love-space-test");

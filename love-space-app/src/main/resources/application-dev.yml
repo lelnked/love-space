@@ -3,8 +3,6 @@ spring:
     url: jdbc:postgresql://localhost:5432/love_space
     username: love_space
     password: love_space
-  liquibase:
-    contexts: dev
 
 app:
   security:

@@ -17,7 +17,7 @@ spring:
         jdbc:
           time_zone: UTC
   liquibase:
-    change-log: classpath:db/changelog/db.changelog-master.yaml
+    enabled: false  # schema 由 admin 服务统一管理，app 端不再运行 Liquibase
   mvc:
     problemdetails:
       enabled: true
