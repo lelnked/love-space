@@ -73,7 +73,7 @@ public class BannerQueryService {
         for (Banner b : banners) {
             if (b.getType() == BannerType.CITY) {
                 City city = cityById.get(b.getLinkedEntityId());
-                if (city == null || !Boolean.TRUE.equals(city.getOnline())) {
+                if (city == null || !city.isOnline()) {
                     continue;
                 }
                 Map<String, Object> data = new LinkedHashMap<>();

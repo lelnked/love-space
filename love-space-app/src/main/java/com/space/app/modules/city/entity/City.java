@@ -4,6 +4,7 @@ import com.space.app.common.entity.BaseAuditEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -12,7 +13,7 @@ import lombok.Setter;
  * <p>App 端只读；列名 snake_case，所有字段全名（无缩写）。
  */
 @Entity
-@Table(name = "loves_city")
+@Table(name = "loves_city", uniqueConstraints = @UniqueConstraint(name = "ux_loves_city_chinese_name", columnNames = "chinese_name"))
 @Getter
 @Setter
 public class City extends BaseAuditEntity {
@@ -39,5 +40,5 @@ public class City extends BaseAuditEntity {
 
     /** 是否上架（仅上架城市对 App 可见）。 */
     @Column(name = "online", nullable = false)
-    private Boolean online;
+    private boolean online = false;
 }

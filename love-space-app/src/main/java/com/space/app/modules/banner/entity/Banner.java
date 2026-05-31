@@ -30,9 +30,13 @@ public class Banner extends BaseAuditEntity {
     @Column(name = "name", nullable = false)
     private String name;
 
+    /** 展示位置标识码（运营自由填写，非枚举）。 */
+    @Column(name = "position_code", nullable = false)
+    private String positionCode;
+
     /** 是否上线；app 查询时仅返回 true 的记录。 */
     @Column(name = "online", nullable = false)
-    private boolean online;
+    private boolean online = false;
 
     /** banner 类型，决定 {@link #linkedEntityId} 解释方式与 {@code data} 字段装配。 */
     @Enumerated(EnumType.STRING)

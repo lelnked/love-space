@@ -85,9 +85,9 @@ public class Merchant extends BaseAuditEntity {
 
     /** 排序权重，越大越靠前。 */
     @Column(name = "weight", nullable = false)
-    private Integer weight;
+    private Integer weight = 0;
 
     /** 是否上架。 */
     @Column(name = "online", nullable = false)
-    private Boolean online;
+    private boolean online = false;
 }
