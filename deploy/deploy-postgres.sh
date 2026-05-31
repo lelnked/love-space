@@ -2,16 +2,34 @@
 # 用 docker 部署共用的 PostgreSQL（admin 与 app 共享同一个库 love_space）。
 # 数据存命名卷，删容器不丢数据；带 healthcheck，方便 admin/app 启动前等待就绪。
 
-. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/_common.sh"
+set -euo pipefail
 
-ensure_network
-remove_if_exists "$PG_CONTAINER"
+# ===== 配置（按需修改）=====
+NETWORK=love-space-net              # 容器互联网络（自动创建）
+RESTART_POLICY=unless-stopped       # 随 docker 守护进程开机自启
+PG_IMAGE=postgres:17
+PG_CONTAINER=love-space-postgres
+PG_DB=love_space
+PG_USER=love_space
+PG_PASSWORD=love_space
+PG_HOST_PORT=5432                   # 宿主机映射端口（仅绑本机回环）；留空则不映射
+PG_VOLUME=love-space-pgdata         # 命名数据卷
 
-# 端口映射：PG_HOST_PORT 非空时仅绑定到本机回环，避免数据库直接对公网暴露。
-PORT_ARGS=()
-if [ -n "${PG_HOST_PORT:-}" ]; then
-  PORT_ARGS=(-p "127.0.0.1:${PG_HOST_PORT}:5432")
+command -v docker >/dev/null 2>&1 || { echo "[错误] 未找到 docker，请先安装 Docker。" >&2; exit 1; }
+
+# 确保互联网络存在。
+docker network inspect "$NETWORK" >/dev/null 2>&1 || {
+  echo "[网络] 创建 docker 网络 $NETWORK"; docker network create "$NETWORK" >/dev/null;
+}
+
+# 删除同名旧容器（幂等重新部署）。
+if docker ps -a --format '{{.Names}}' | grep -qx "$PG_CONTAINER"; then
+  echo "[清理] 移除已存在的容器 $PG_CONTAINER"; docker rm -f "$PG_CONTAINER" >/dev/null
 fi
+
+# 端口映射：非空时仅绑定到本机回环，避免数据库直接对公网暴露。
+PORT_ARGS=()
+[ -n "${PG_HOST_PORT}" ] && PORT_ARGS=(-p "127.0.0.1:${PG_HOST_PORT}:5432")
 
 echo "[postgres] 启动容器 $PG_CONTAINER（镜像 $PG_IMAGE）"
 docker run -d \
@@ -30,7 +48,7 @@ docker run -d \
   "$PG_IMAGE" >/dev/null
 
 echo "[postgres] 等待数据库就绪..."
-for i in $(seq 1 30); do
+for _ in $(seq 1 30); do
   status="$(docker inspect -f '{{.State.Health.Status}}' "$PG_CONTAINER" 2>/dev/null || echo starting)"
   if [ "$status" = "healthy" ]; then
     echo "[postgres] 就绪 ✓ 容器名=$PG_CONTAINER 库=$PG_DB"
