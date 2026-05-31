@@ -32,7 +32,7 @@ ADMIN_HOST_PORT=8080
 ADMIN_DB_URL="jdbc:postgresql://172.16.16.12:5432/${PG_DB}"
 ADMIN_DB_USERNAME="$PG_USER"
 ADMIN_DB_PASSWORD="$PG_PASSWORD"
-ADMIN_JWT_SECRET="please-replace-with-a-256-bit-base64-secret-please-replace"
+ADMIN_JWT_SECRET="wwYYUD06sBrPtaBUgDeLZioRivtWwXo7PqEV/vem5TY="   # openssl rand -base64 32
 
 # ===== app 后端环境变量 =====
 APP_IMAGE_NAME=love-space-app
@@ -41,15 +41,17 @@ APP_HOST_PORT=8081
 APP_DB_URL="jdbc:postgresql://172.16.16.12:5432/${PG_DB}"
 APP_DB_USERNAME="$PG_USER"
 APP_DB_PASSWORD="$PG_PASSWORD"
-APP_SECURITY_API_KEYS="dev-app-api-key-please-rotate"   # 多 key 用英文逗号分隔
+APP_SECURITY_API_KEYS="fd7cff9c23a77592472224b5e029a21583d464deb3ce64e7e7a13d8832570383"   # openssl rand -hex 32；多 key 用英文逗号分隔
 
 # ===== 阿里云 OSS（admin 与 app 共用）=====
-ALIYUN_OSS_REGION=""
-ALIYUN_OSS_ENDPOINT=""
-ALIYUN_OSS_BUCKET=""
-ALIYUN_OSS_ACCESS_KEY_ID=""
-ALIYUN_OSS_ACCESS_KEY_SECRET=""
-ALIYUN_STS_ROLE_ARN=""               # admin 专用 STS（如使用 STS 直传）
+# 敏感值（access key 等）不写进脚本/入库；部署时用环境变量注入，例如：
+#   export ALIYUN_OSS_ACCESS_KEY_ID=... ALIYUN_OSS_ACCESS_KEY_SECRET=...
+ALIYUN_OSS_REGION="${ALIYUN_OSS_REGION:-}"
+ALIYUN_OSS_ENDPOINT="${ALIYUN_OSS_ENDPOINT:-}"
+ALIYUN_OSS_BUCKET="${ALIYUN_OSS_BUCKET:-}"
+ALIYUN_OSS_ACCESS_KEY_ID="${ALIYUN_OSS_ACCESS_KEY_ID:-}"
+ALIYUN_OSS_ACCESS_KEY_SECRET="${ALIYUN_OSS_ACCESS_KEY_SECRET:-}"
+ALIYUN_STS_ROLE_ARN="${ALIYUN_STS_ROLE_ARN:-}"   # admin 专用 STS（如使用 STS 直传）
 
 # ---- 校验必填的版本入参 ----
 VERSION="${1:-}"
