@@ -3,7 +3,7 @@ package com.loves.space.modules.file.service;
 import com.loves.space.common.util.UuidV7Generator;
 import com.loves.space.infrastructure.storage.OssPostPolicySigner;
 import com.loves.space.infrastructure.storage.OssPostPolicySigner.OssPostSignature;
-import com.loves.space.infrastructure.storage.OssProperties;
+import com.loves.space.infrastructure.storage.StorageProperties;
 import com.loves.space.infrastructure.storage.StsCredentialIssuer;
 import com.loves.space.infrastructure.storage.StsCredentialIssuer.StsCredential;
 import com.loves.space.modules.file.dto.UploadCredentialRequest;
@@ -30,14 +30,14 @@ public class FileService {
 
     private final StsCredentialIssuer stsCredentialIssuer;
     private final OssPostPolicySigner ossPostPolicySigner;
-    private final OssProperties ossProperties;
+    private final StorageProperties.Oss ossProperties;
 
     public FileService(StsCredentialIssuer stsCredentialIssuer,
                        OssPostPolicySigner ossPostPolicySigner,
-                       OssProperties ossProperties) {
+                       StorageProperties storageProperties) {
         this.stsCredentialIssuer = stsCredentialIssuer;
         this.ossPostPolicySigner = ossPostPolicySigner;
-        this.ossProperties = ossProperties;
+        this.ossProperties = storageProperties.oss();
     }
 
     /**

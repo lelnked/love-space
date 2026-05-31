@@ -15,11 +15,11 @@ import java.util.Date;
 public class AliyunOssImageUrlSigner implements ImageUrlSigner {
 
     private final OSS ossClient;
-    private final OssProperties ossProperties;
+    private final StorageProperties.Oss ossProperties;
 
-    public AliyunOssImageUrlSigner(OSS ossClient, OssProperties ossProperties) {
+    public AliyunOssImageUrlSigner(OSS ossClient, StorageProperties storageProperties) {
         this.ossClient = ossClient;
-        this.ossProperties = ossProperties;
+        this.ossProperties = storageProperties.oss();
     }
 
     @Override

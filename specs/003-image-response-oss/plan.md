@@ -99,10 +99,8 @@ love-space-admin/                                                # admin 后端�
     ├── common/dto/ImageResponse.java                            # 已存在；record(id, url)
     ├── common/util/ImageResponses.java                          # 新：批量把 objectKey → ImageResponse
     ├── infrastructure/storage/
-    │   ├── OssProperties.java                                   # 新：@ConfigurationProperties("app.storage.oss")
-    │   ├── StsProperties.java                                   # 新：@ConfigurationProperties("app.storage.sts")
-    │   ├── OssClientConfig.java                                 # 新：构造 OSS bean + 启动 sanity check
-    │   ├── StsClientConfig.java                                 # 新：构造 AcsClient bean + 启动校验 role ARN
+    │   ├── StorageProperties.java                               # @ConfigurationProperties("app.storage")；OSS+STS 合并，顶层共享 region/AK/SK，oss/sts 子 record
+    │   ├── StorageClientConfig.java                             # 统一装配 OSS + IAcsClient 两个 bean
     │   ├── StsCredentialIssuer.java                             # 新：接口
     │   ├── AliyunStsCredentialIssuer.java                       # 新：AssumeRole 实现
     │   ├── ObjectKeyValidator.java                              # 新：接口

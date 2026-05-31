@@ -187,31 +187,30 @@ async function uploadToOss(file: File): Promise<string> {
 
 ## R10. 配置 & 启动校验
 
-**Decision**: 新增两组 `@ConfigurationProperties`：
+**Decision**: admin 端用单一 `StorageProperties`（prefix `app.storage`）统管 OSS + STS——`region` / `access-key-id` / `access-key-secret` 三项 OSS 与 STS 共用，提到顶层共享，OSS / STS 各自差异化字段收进 `oss` / `sts` 子节点：
 
 ```yaml
 app:
   storage:
+    region: ${ALIYUN_OSS_REGION}                                   # OSS 签名 + STS AssumeRole 共用
+    access-key-id: ${ALIYUN_OSS_ACCESS_KEY_ID}                     # 同一对服务端凭证
+    access-key-secret: ${ALIYUN_OSS_ACCESS_KEY_SECRET}
     oss:
       endpoint: ${ALIYUN_OSS_ENDPOINT}
       bucket: ${ALIYUN_OSS_BUCKET}
-      region: ${ALIYUN_OSS_REGION}
-      access-key-id: ${ALIYUN_OSS_ACCESS_KEY_ID}
-      access-key-secret: ${ALIYUN_OSS_ACCESS_KEY_SECRET}
       upload-key-prefix: ${ALIYUN_OSS_UPLOAD_KEY_PREFIX:images}     # 直传落点（lifecycle 24h 清理）
       bound-key-prefix: ${ALIYUN_OSS_BOUND_KEY_PREFIX:bound}        # 绑定后归档前缀（无 lifecycle）
       url-expiration-seconds: ${ALIYUN_OSS_URL_EXPIRATION_SECONDS:1800}
       max-image-bytes: ${ALIYUN_OSS_MAX_IMAGE_BYTES:20971520}       # 20MB
     sts:
-      endpoint: ${ALIYUN_STS_ENDPOINT:https://sts.aliyuncs.com}
       role-arn: ${ALIYUN_STS_ROLE_ARN}
       role-session-name: ${ALIYUN_STS_ROLE_SESSION_NAME:love-space-admin-upload}
       duration-seconds: ${ALIYUN_STS_DURATION_SECONDS:900}
-      access-key-id: ${ALIYUN_STS_ACCESS_KEY_ID}
-      access-key-secret: ${ALIYUN_STS_ACCESS_KEY_SECRET}
 ```
 
-`@Validated` 校验所有 `@NotBlank` / `@Min` / `@Max`；`OssClientConfig` `@PostConstruct` 调 `doesBucketExist` 做 sanity check；`StsClientConfig` `@PostConstruct` 做一次 `AssumeRole` 自检（dry-run）失败 → 启动失败。
+> STS 接入点由 SDK 依据顶层 `region` 自行解析，原 `sts.endpoint` / `sts.region-id` 从未被代码使用，已删除；STS 复用顶层凭证，原 `sts.access-key-id` / `sts.access-key-secret` 一并删除。app 端仅读路径，保留独立的 `OssProperties`（prefix `app.storage.oss`），不含 STS。
+
+`@Validated` 校验所有 `@NotBlank` / `@Min` / `@Max`；`StorageClientConfig` 统一装配 `OSS` 与 `IAcsClient` 两个 bean（启动期不做网络 sanity check，交由运行期调用承担可观测性，避免本地无网络环境启动失败）。
 
 **Rationale**: 与 spec FR-005 / constitution 启动失败约定一致。
 

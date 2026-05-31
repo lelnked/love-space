@@ -16,20 +16,23 @@
 环境变量（**禁止**写入 `application*.yml`）：
 
 ```bash
-export ALIYUN_OSS_ENDPOINT=https://oss-cn-shanghai.aliyuncs.com
-export ALIYUN_OSS_BUCKET=love-space-dev
+# OSS 与 STS 共用同一对凭证与 region（admin 端合并后顶层共享）
 export ALIYUN_OSS_REGION=cn-shanghai
 export ALIYUN_OSS_ACCESS_KEY_ID=…
 export ALIYUN_OSS_ACCESS_KEY_SECRET=…
 
-export ALIYUN_STS_ENDPOINT=https://sts.cn-shanghai.aliyuncs.com
+export ALIYUN_OSS_ENDPOINT=https://oss-cn-shanghai.aliyuncs.com
+export ALIYUN_OSS_BUCKET=love-space-dev
+
 export ALIYUN_STS_ROLE_ARN=acs:ram::123456:role/LoveSpaceOssUploader
 export ALIYUN_STS_ROLE_SESSION_NAME=love-space-admin
-export ALIYUN_STS_ACCESS_KEY_ID=…
-export ALIYUN_STS_ACCESS_KEY_SECRET=…
 ```
 
+> 该凭证需同时具备 OSS 读写（head / copy / 签名）与 `sts:AssumeRole` 权限。STS 接入点由 SDK 依据 `ALIYUN_OSS_REGION` 自行解析，无需单独配置。
+
 可选覆写：`ALIYUN_OSS_URL_EXPIRATION_SECONDS`（默认 1800）、`ALIYUN_STS_DURATION_SECONDS`（默认 900）。
+
+> ⚠️ 已移除（admin 合并后不再使用）：`ALIYUN_STS_ENDPOINT`、`ALIYUN_STS_REGION_ID`、`ALIYUN_STS_ACCESS_KEY_ID`、`ALIYUN_STS_ACCESS_KEY_SECRET`。
 
 ## 2. 启动 admin 后端
 

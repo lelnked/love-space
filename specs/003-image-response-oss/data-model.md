@@ -48,34 +48,42 @@
 
 ## 2. 配置对象
 
-### 2.1 `OssProperties`（admin + app）
+### 2.1 `StorageProperties`（admin，OSS + STS 合并）
 
-`@ConfigurationProperties("app.storage.oss")` + `@Validated`：
+`@ConfigurationProperties("app.storage")` + `@Validated`。`region` / `accessKeyId` / `accessKeySecret` 为 OSS 与 STS 共用，提到顶层；其余按 `oss` / `sts` 子 record 分组（`@Valid` 级联校验）。
+
+顶层共享：
+
+| Field | Type | Validation | Default | 说明 |
+|---|---|---|---|---|
+| `region` | `String` | `@NotBlank` | — | 阿里云 region id；OSS 签名 scope 与 STS AssumeRole 共用。 |
+| `accessKeyId` | `String` | `@NotBlank` | — | 服务端主 AK（OSS head/copy/sign + STS AssumeRole 共用，需同时具备两类权限）。 |
+| `accessKeySecret` | `String` | `@NotBlank` | — | 上述 AK 的 SK。 |
+
+`oss`（`StorageProperties.Oss`）：
 
 | Field | Type | Validation | Default | 说明 |
 |---|---|---|---|---|
 | `endpoint` | `String` | `@NotBlank` | — | OSS 接入域名。 |
 | `bucket` | `String` | `@NotBlank` | — | bucket 名。 |
-| `region` | `String` | `@NotBlank` | — | OSS region。 |
-| `accessKeyId` | `String` | `@NotBlank` | — | 主 AK（服务端读签名 + 绑定时操作 + headObject 用）。 |
-| `accessKeySecret` | `String` | `@NotBlank` | — | 主 SK。 |
 | `uploadKeyPrefix` | `String` | `@NotBlank` | `images` | 直传落点前缀；lifecycle 在此前缀 24h 清理。 |
 | `boundKeyPrefix` | `String` | `@NotBlank` | `bound` | 绑定后归档前缀；不被 lifecycle 影响。 |
-| `urlExpirationSeconds` | `int` | `@Min(60)` | `1800` | 读签名 URL 有效期（秒）。 |
-| `maxImageBytes` | `long` | `@Min(1024)` | `20971520` | 业务绑定时校验的最大 Content-Length（默认 20MB）。 |
+| `urlExpirationSeconds` | `long` | `@Min(60)` | `1800` | 读签名 URL 有效期（秒）。 |
+| `maxImageBytes` | `long` | `@Min(1)` | `20971520` | 业务绑定时校验的最大 Content-Length（默认 20MB）。 |
 
-### 2.2 `StsProperties`（仅 admin）
-
-`@ConfigurationProperties("app.storage.sts")` + `@Validated`：
+`sts`（`StorageProperties.Sts`）：
 
 | Field | Type | Validation | Default | 说明 |
 |---|---|---|---|---|
-| `endpoint` | `String` | `@NotBlank` | `https://sts.aliyuncs.com` | STS 接入域名。 |
 | `roleArn` | `String` | `@NotBlank` | — | 要 AssumeRole 的 RAM Role ARN。 |
 | `roleSessionName` | `String` | `@NotBlank` | `love-space-admin-upload` | 凭证 session 标识。 |
-| `durationSeconds` | `int` | `@Min(900)` + `@Max(3600)` | `900` | STS 凭证有效期，阿里硬限制 900–3600。 |
-| `accessKeyId` | `String` | `@NotBlank` | — | 主账号下用于 AssumeRole 的 AK（与 OSS 主 AK 可不同；最小权限：仅 `sts:AssumeRole`）。 |
-| `accessKeySecret` | `String` | `@NotBlank` | — | 上述 AK 的 SK。 |
+| `durationSeconds` | `long` | `@Min(900)` + `@Max(3600)` | `900` | STS 凭证有效期，阿里硬限制 900–3600。 |
+
+> STS 接入点由 SDK 依据顶层 `region` 自行解析，原 `endpoint` / `regionId` 已删除；STS 复用顶层 `accessKeyId` / `accessKeySecret`，不再单列。顶层另有 `signingRegion()` helper：region 写成 `oss-cn-shanghai` 时剥掉 `oss-` 前缀，保证下发签名一致。
+
+### 2.2 `OssProperties`（仅 app，只读）
+
+app 端只走读路径，无 STS，保留独立的 `@ConfigurationProperties("app.storage.oss")` + `@Validated`（字段：`endpoint` / `bucket` / `region` / `accessKeyId` / `accessKeySecret` / `urlExpirationSeconds` 等），不随 admin 合并。
 
 ## 3. 内部接口
 

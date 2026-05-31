@@ -17,15 +17,12 @@ public class AliyunStsCredentialIssuer implements StsCredentialIssuer {
             "Resource":["acs:oss:*:*:%s/%s"]}]}""";
 
     private final IAcsClient acsClient;
-    private final StsProperties stsProperties;
-    private final OssProperties ossProperties;
+    private final StorageProperties storageProperties;
 
     public AliyunStsCredentialIssuer(IAcsClient acsClient,
-                                     StsProperties stsProperties,
-                                     OssProperties ossProperties) {
+                                     StorageProperties storageProperties) {
         this.acsClient = acsClient;
-        this.stsProperties = stsProperties;
-        this.ossProperties = ossProperties;
+        this.storageProperties = storageProperties;
     }
 
     @Override
@@ -33,11 +30,12 @@ public class AliyunStsCredentialIssuer implements StsCredentialIssuer {
         if (objectKey == null || objectKey.isBlank()) {
             throw new IllegalArgumentException("objectKey 不能为空");
         }
+        StorageProperties.Sts sts = storageProperties.sts();
         AssumeRoleRequest request = new AssumeRoleRequest();
-        request.setRoleArn(stsProperties.roleArn());
-        request.setRoleSessionName(stsProperties.roleSessionName());
-        request.setDurationSeconds(stsProperties.durationSeconds());
-        request.setPolicy(POLICY_TEMPLATE.formatted(ossProperties.bucket(), objectKey));
+        request.setRoleArn(sts.roleArn());
+        request.setRoleSessionName(sts.roleSessionName());
+        request.setDurationSeconds(sts.durationSeconds());
+        request.setPolicy(POLICY_TEMPLATE.formatted(storageProperties.oss().bucket(), objectKey));
         try {
             AssumeRoleResponse response = acsClient.getAcsResponse(request);
             AssumeRoleResponse.Credentials credentials = response.getCredentials();

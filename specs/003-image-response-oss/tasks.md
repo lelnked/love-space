@@ -36,6 +36,8 @@ description: "Tasks for 阿里 OSS STS 直传 + 统一 ImageResponse"
 - [X] T008 在 `love-space-admin/src/main/java/com/loves/space/infrastructure/storage/OssClientConfig.java` 新建 `@Configuration`，启用 `OssProperties`，注入 `OSS` bean（`OSSClientBuilder().build(endpoint, accessKeyId, accessKeySecret)`），增加 `@PostConstruct` sanity check（启动期间 `getBucketInfo` 失败即 fail-fast）
 - [X] T009 在 `love-space-admin/src/main/java/com/loves/space/infrastructure/storage/StsClientConfig.java` 新建 `@Configuration`，启用 `StsProperties`，注入 `com.aliyuncs.IAcsClient` bean（`DefaultProfile` + `DefaultAcsClient`）
 
+> 📝 **后续重构（去重）**：T006–T009 的 admin 端 `OssProperties` / `StsProperties` 已合并为单一 `StorageProperties`（prefix `app.storage`，顶层共享 `region` / `accessKeyId` / `accessKeySecret`，差异字段收进 `oss` / `sts` 子 record）；`OssClientConfig` / `StsClientConfig` 合并为 `StorageClientConfig`。删除死配置 `sts.endpoint` / `sts.regionId`（SDK 依 region 自解析），STS 复用顶层凭证；同步移除环境变量 `ALIYUN_STS_ENDPOINT` / `ALIYUN_STS_REGION_ID` / `ALIYUN_STS_ACCESS_KEY_ID` / `ALIYUN_STS_ACCESS_KEY_SECRET`。app 端 `OssProperties` 不变。详见 data-model.md §2、research.md R10。
+
 ### Admin 三件套接口与实现
 
 - [X] T010 [P] 在 `love-space-admin/src/main/java/com/loves/space/infrastructure/storage/StsCredentialIssuer.java` 新建接口 + 嵌套 record `StsCredential(accessKeyId, accessKeySecret, securityToken, expiration)`；中文 JavaDoc

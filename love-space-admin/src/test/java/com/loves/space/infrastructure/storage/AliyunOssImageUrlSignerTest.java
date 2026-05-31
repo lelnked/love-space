@@ -29,9 +29,11 @@ class AliyunOssImageUrlSignerTest {
     @BeforeEach
     void setUp() {
         oss = mock(OSS.class);
-        OssProperties properties = new OssProperties(
-                "https://oss-test.example.com", BUCKET, "cn-test",
-                "ak", "sk", "images", "bound", 1800L, 20L * 1024 * 1024);
+        StorageProperties properties = new StorageProperties(
+                "cn-test", "ak", "sk",
+                new StorageProperties.Oss("https://oss-test.example.com", BUCKET,
+                        "images", "bound", 1800L, 20L * 1024 * 1024),
+                new StorageProperties.Sts("acs:ram::0:role/x", "sess", 900L));
         signer = new AliyunOssImageUrlSigner(oss, properties);
     }
 

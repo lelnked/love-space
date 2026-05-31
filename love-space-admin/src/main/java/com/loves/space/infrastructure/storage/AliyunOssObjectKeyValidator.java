@@ -36,11 +36,11 @@ public class AliyunOssObjectKeyValidator implements ObjectKeyValidator {
             Set.of("image/png", "image/jpeg", "image/webp");
 
     private final OSS ossClient;
-    private final OssProperties ossProperties;
+    private final StorageProperties.Oss ossProperties;
 
-    public AliyunOssObjectKeyValidator(OSS ossClient, OssProperties ossProperties) {
+    public AliyunOssObjectKeyValidator(OSS ossClient, StorageProperties storageProperties) {
         this.ossClient = ossClient;
-        this.ossProperties = ossProperties;
+        this.ossProperties = storageProperties.oss();
     }
 
     @Override

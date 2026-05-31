@@ -44,11 +44,11 @@ public class OssPostPolicySigner {
     private static final String SIGNING_SERVICE = "oss";
     private static final String SIGNING_KEY_TERMINATOR = "aliyun_v4_request";
 
-    private final OssProperties ossProperties;
+    private final StorageProperties storageProperties;
     private final ObjectMapper objectMapper;
 
-    public OssPostPolicySigner(OssProperties ossProperties, ObjectMapper objectMapper) {
-        this.ossProperties = ossProperties;
+    public OssPostPolicySigner(StorageProperties storageProperties, ObjectMapper objectMapper) {
+        this.storageProperties = storageProperties;
         this.objectMapper = objectMapper;
     }
 
@@ -66,7 +66,7 @@ public class OssPostPolicySigner {
         Instant expiration = Instant.parse(credential.expiration());
         String date = CREDENTIAL_DATE_FORMATTER.format(now);
         String xOssDate = OSS_DATE_FORMATTER.format(now);
-        String region = ossProperties.signingRegion();
+        String region = storageProperties.signingRegion();
         String xOssCredential = credential.accessKeyId() + "/" + date + "/" + region
                 + "/" + SIGNING_SERVICE + "/" + SIGNING_KEY_TERMINATOR;
 
@@ -106,7 +106,7 @@ public class OssPostPolicySigner {
      * <p>兼容 endpoint 配置带或不带协议头：缺失时补 {@code https://}，确保返回的是浏览器可直接 POST 的绝对地址。
      */
     private String buildHost() {
-        String endpoint = ossProperties.endpoint();
+        String endpoint = storageProperties.oss().endpoint();
         String scheme = "https://";
         String hostWithoutScheme = endpoint;
         int schemeEnd = endpoint.indexOf("://");
@@ -114,7 +114,7 @@ public class OssPostPolicySigner {
             scheme = endpoint.substring(0, schemeEnd + "://".length());
             hostWithoutScheme = endpoint.substring(schemeEnd + "://".length());
         }
-        return scheme + ossProperties.bucket() + "." + hostWithoutScheme;
+        return scheme + storageProperties.oss().bucket() + "." + hostWithoutScheme;
     }
 
     /**
@@ -128,12 +128,12 @@ public class OssPostPolicySigner {
         ObjectNode policy = objectMapper.createObjectNode();
         policy.put("expiration", POLICY_EXPIRATION_FORMATTER.format(expiration));
         ArrayNode conditions = policy.putArray("conditions");
-        conditions.addObject().put("bucket", ossProperties.bucket());
+        conditions.addObject().put("bucket", storageProperties.oss().bucket());
         conditions.addObject().put("x-oss-security-token", credential.securityToken());
         conditions.addObject().put("x-oss-signature-version", SIGNATURE_VERSION);
         conditions.addObject().put("x-oss-credential", xOssCredential);
         conditions.addObject().put("x-oss-date", xOssDate);
-        conditions.addArray().add("content-length-range").add(1).add(ossProperties.maxImageBytes());
+        conditions.addArray().add("content-length-range").add(1).add(storageProperties.oss().maxImageBytes());
         conditions.addArray().add("eq").add("$success_action_status").add("200");
         conditions.addArray().add("eq").add("$key").add(objectKey);
         return objectMapper.writeValueAsString(policy);

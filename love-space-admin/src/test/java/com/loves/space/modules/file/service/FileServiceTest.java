@@ -1,7 +1,7 @@
 package com.loves.space.modules.file.service;
 
 import com.loves.space.infrastructure.storage.OssPostPolicySigner;
-import com.loves.space.infrastructure.storage.OssProperties;
+import com.loves.space.infrastructure.storage.StorageProperties;
 import com.loves.space.infrastructure.storage.StsCredentialIssuer;
 import com.loves.space.infrastructure.storage.StsCredentialIssuer.StsCredential;
 import com.loves.space.modules.file.dto.UploadCredentialRequest;
@@ -22,9 +22,11 @@ import static org.mockito.Mockito.when;
  */
 class FileServiceTest {
 
-    private static final OssProperties PROPS = new OssProperties(
-            "https://oss-cn-test.example.com", "love-space-test", "cn-test",
-            "ak", "sk", "images", "bound", 1800L, 20L * 1024 * 1024);
+    private static final StorageProperties PROPS = new StorageProperties(
+            "cn-test", "ak", "sk",
+            new StorageProperties.Oss("https://oss-cn-test.example.com", "love-space-test",
+                    "images", "bound", 1800L, 20L * 1024 * 1024),
+            new StorageProperties.Sts("acs:ram::0:role/x", "sess", 900L));
 
     private static final ObjectMapper MAPPER = new JsonMapper();
 
@@ -50,9 +52,11 @@ class FileServiceTest {
 
     @Test
     void hostBuiltAsAbsoluteUrlWhenEndpointHasNoScheme() {
-        OssProperties noScheme = new OssProperties(
-                "oss-cn-chengdu.aliyuncs.com", "love-space-test", "cn-chengdu",
-                "ak", "sk", "images", "bound", 1800L, 20L * 1024 * 1024);
+        StorageProperties noScheme = new StorageProperties(
+                "cn-chengdu", "ak", "sk",
+                new StorageProperties.Oss("oss-cn-chengdu.aliyuncs.com", "love-space-test",
+                        "images", "bound", 1800L, 20L * 1024 * 1024),
+                new StorageProperties.Sts("acs:ram::0:role/x", "sess", 900L));
         FileService svc = new FileService(issuer, new OssPostPolicySigner(noScheme, MAPPER), noScheme);
         when(issuer.issueFor(anyString()))
                 .thenReturn(new StsCredential("ID", "SECRET", "TOKEN", "2026-05-23T08:00:00Z"));
