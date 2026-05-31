@@ -55,7 +55,7 @@ class ManagerServiceTest extends AbstractPostgresIntegrationTest {
         String username = randomUsername();
         managerService.create(new ManagerCreateRequest(username, "InitPass123", null));
         assertThatThrownBy(() -> managerService.create(new ManagerCreateRequest(username, "InitPass456", null)))
-                .isInstanceOf(ValidationException.class)
+                .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("用户名已存在");
     }
 

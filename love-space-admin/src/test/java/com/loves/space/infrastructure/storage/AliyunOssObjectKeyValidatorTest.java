@@ -41,19 +41,19 @@ class AliyunOssObjectKeyValidatorTest {
     @Test
     void nullOrBlankRejected() {
         assertThatThrownBy(() -> validator.validateAndBind(null))
-                .isInstanceOf(ValidationException.class);
+                .isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> validator.validateAndBind(""))
-                .isInstanceOf(ValidationException.class);
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     void illegalPatternRejected() {
         assertThatThrownBy(() -> validator.validateAndBind("other/abc.png"))
-                .isInstanceOf(ValidationException.class);
+                .isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> validator.validateAndBind("images/../etc.png"))
-                .isInstanceOf(ValidationException.class);
+                .isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> validator.validateAndBind("images/abc.exe"))
-                .isInstanceOf(ValidationException.class);
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -61,7 +61,7 @@ class AliyunOssObjectKeyValidatorTest {
         when(oss.getObjectMetadata(eq(BUCKET), anyString()))
                 .thenThrow(new OSSException("not found", "NoSuchKey", "rid", "hid", "host", "PUT", "endpoint"));
         assertThatThrownBy(() -> validator.validateAndBind("images/abc.png"))
-                .isInstanceOf(ValidationException.class)
+                .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("图片对象不可用");
     }
 
@@ -72,7 +72,7 @@ class AliyunOssObjectKeyValidatorTest {
         meta.setContentLength(100);
         when(oss.getObjectMetadata(eq(BUCKET), anyString())).thenReturn(meta);
         assertThatThrownBy(() -> validator.validateAndBind("images/abc.png"))
-                .isInstanceOf(ValidationException.class);
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -82,7 +82,7 @@ class AliyunOssObjectKeyValidatorTest {
         meta.setContentLength(25L * 1024 * 1024);
         when(oss.getObjectMetadata(eq(BUCKET), anyString())).thenReturn(meta);
         assertThatThrownBy(() -> validator.validateAndBind("images/abc.png"))
-                .isInstanceOf(ValidationException.class);
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test

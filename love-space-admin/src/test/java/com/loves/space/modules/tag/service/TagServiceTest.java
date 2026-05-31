@@ -119,7 +119,7 @@ class TagServiceTest extends AbstractPostgresIntegrationTest {
     void nameLongerThanSixCodePointsIsRejected() {
         String tooLong = "字".repeat(7);
         assertThatThrownBy(() -> tagService.create(new TagUpsertRequest(tooLong)))
-                .isInstanceOf(ValidationException.class);
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -127,6 +127,6 @@ class TagServiceTest extends AbstractPostgresIntegrationTest {
         String name = uniqueName();
         tagService.create(new TagUpsertRequest(name));
         assertThatThrownBy(() -> tagService.create(new TagUpsertRequest(name)))
-                .isInstanceOf(ValidationException.class);
+                .isInstanceOf(IllegalArgumentException.class);
     }
 }

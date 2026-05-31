@@ -82,6 +82,7 @@ docker run -d \
   --name "$ADMIN_CONTAINER" \
   --network host \
   --restart "$RESTART_POLICY" \
+  -p 8954:5432
   -v "${ADMIN_LOG_DIR}:/app/logs" \
   -e ADMIN_DB_URL="$ADMIN_DB_URL" \
   -e ADMIN_DB_USERNAME="$ADMIN_DB_USERNAME" \

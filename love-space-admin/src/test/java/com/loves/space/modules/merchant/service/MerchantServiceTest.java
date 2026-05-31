@@ -111,7 +111,7 @@ class MerchantServiceTest extends AbstractPostgresIntegrationTest {
                 base.periods(), base.tagIds(), base.images());
 
         assertThatThrownBy(() -> merchantService.upsert(null, bad))
-                .isInstanceOf(ValidationException.class);
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -125,7 +125,7 @@ class MerchantServiceTest extends AbstractPostgresIntegrationTest {
                 base.periods(), base.tagIds(), base.images());
 
         assertThatThrownBy(() -> merchantService.upsert(null, bad))
-                .isInstanceOf(ValidationException.class);
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -139,7 +139,7 @@ class MerchantServiceTest extends AbstractPostgresIntegrationTest {
                 base.periods(), base.tagIds(), List.of());
 
         assertThatThrownBy(() -> merchantService.upsert(null, bad))
-                .isInstanceOf(ValidationException.class);
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -154,7 +154,7 @@ class MerchantServiceTest extends AbstractPostgresIntegrationTest {
                 base.periods(), base.tagIds(), base.images());
 
         assertThatThrownBy(() -> merchantService.upsert(null, bad))
-                .isInstanceOf(ValidationException.class);
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -222,7 +222,7 @@ class MerchantServiceTest extends AbstractPostgresIntegrationTest {
     void setOnlineRejectsWhenCityNotOnline() {
         UUID merchantId = offlineMerchant(offlineCityId(), null);
         assertThatThrownBy(() -> merchantService.setOnline(merchantId, true))
-                .isInstanceOf(ValidationException.class);
+                .isInstanceOf(IllegalArgumentException.class);
         assertThat(merchantRepository.findById(merchantId).orElseThrow().isOnline()).isFalse();
     }
 
@@ -230,7 +230,7 @@ class MerchantServiceTest extends AbstractPostgresIntegrationTest {
     void setOnlineRejectsWhenCityMissing() {
         UUID merchantId = offlineMerchant(UUID.randomUUID(), null);
         assertThatThrownBy(() -> merchantService.setOnline(merchantId, true))
-                .isInstanceOf(ValidationException.class);
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -249,6 +249,6 @@ class MerchantServiceTest extends AbstractPostgresIntegrationTest {
                 null, 0, true, List.of(), List.of(),
                 List.of("https://example.com/a.png"));
         assertThatThrownBy(() -> merchantService.upsert(null, bad))
-                .isInstanceOf(ValidationException.class);
+                .isInstanceOf(IllegalArgumentException.class);
     }
 }

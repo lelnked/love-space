@@ -87,8 +87,7 @@ class BannerControllerIT extends AbstractPostgresIntegrationTest {
 
     @Test
     void createReturnsImageResponseWithSignedUrl() throws Exception {
-        String body = objectMapper.writeValueAsString(new BannerCreateRequest(
-                "banner-it-1", BannerType.CITY, List.of("images/abc123.png"), cityId));
+        String body = objectMapper.writeValueAsString(new BannerCreateRequest("banner-it-1", "HOME", BannerType.CITY, List.of("images/abc123.png"), cityId));
 
         mockMvc.perform(post("/api/admin/banners")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
@@ -102,7 +101,7 @@ class BannerControllerIT extends AbstractPostgresIntegrationTest {
     @Test
     void createReturns400ForInvalidObjectKeyPattern() throws Exception {
         String body = objectMapper.writeValueAsString(new BannerCreateRequest(
-                "banner-it-bad", BannerType.CITY, List.of("other/abc.exe"), cityId));
+                "banner-it-bad", "HOME", BannerType.CITY, List.of("other/abc.exe"), cityId));
 
         mockMvc.perform(post("/api/admin/banners")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)

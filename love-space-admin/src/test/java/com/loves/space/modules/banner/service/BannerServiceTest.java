@@ -68,7 +68,7 @@ class BannerServiceTest extends AbstractPostgresIntegrationTest {
         when(imageUrlSigner.sign("bound/bbb.jpg")).thenReturn("https://signed/bbb");
 
         BannerDetailResponse detail = bannerService.create(new BannerCreateRequest(
-                "banner-1", BannerType.CITY, List.of("images/aaa.png", "bound/bbb.jpg"), cityId));
+                "banner-1", "HOME", BannerType.CITY, List.of("images/aaa.png", "bound/bbb.jpg"), cityId));
 
         Banner persisted = bannerRepository.findById(detail.id()).orElseThrow();
         assertThat(persisted.getImageUrls()).containsExactly("bound/aaa.png", "bound/bbb.jpg");
@@ -82,7 +82,7 @@ class BannerServiceTest extends AbstractPostgresIntegrationTest {
         when(imageUrlSigner.sign("bound/aaa.png")).thenReturn("https://signed/aaa");
 
         BannerDetailResponse detail = bannerService.create(new BannerCreateRequest(
-                "banner-city-delete", BannerType.CITY, List.of("images/aaa.png"), cityId));
+                "banner-city-delete", "HOME", BannerType.CITY, List.of("images/aaa.png"), cityId));
         bannerService.setOnline(detail.id(), true);
         assertThat(bannerRepository.findById(detail.id()).orElseThrow().isOnline()).isTrue();
 
@@ -95,13 +95,13 @@ class BannerServiceTest extends AbstractPostgresIntegrationTest {
     void validationFailureRollsBack() {
         when(objectKeyValidator.validateAndBind("images/legal.png")).thenReturn("bound/legal.png");
         when(objectKeyValidator.validateAndBind("images/bad.png"))
-                .thenThrow(new ValidationException("图片对象不可用"));
+                .thenThrow(new IllegalArgumentException("图片对象不可用"));
 
         long before = bannerRepository.count();
 
         assertThatThrownBy(() -> bannerService.create(new BannerCreateRequest(
-                "banner-bad", BannerType.CITY, List.of("images/legal.png", "images/bad.png"), cityId)))
-                .isInstanceOf(ValidationException.class);
+                "banner-bad", "HOME", BannerType.CITY, List.of("images/legal.png", "images/bad.png"), cityId)))
+                .isInstanceOf(IllegalArgumentException.class);
 
         assertThat(bannerRepository.count()).isEqualTo(before);
     }
