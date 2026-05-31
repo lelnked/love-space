@@ -6,6 +6,7 @@ set -euo pipefail
 
 # ===== 配置（按需修改）=====
 RESTART_POLICY=unless-stopped              # 随 docker 守护进程开机自启
+PG_MEM_LIMIT=750m                          # 容器内存上限，不超过 750m
 PG_IMAGE=postgres:17
 PG_CONTAINER=love-space-postgres
 PG_DB=love_space
@@ -35,6 +36,7 @@ docker run -d \
   --name "$PG_CONTAINER" \
   -p 8954:5432 \
   --restart "$RESTART_POLICY" \
+  --memory "$PG_MEM_LIMIT" \
   -e POSTGRES_DB="$PG_DB" \
   -e POSTGRES_USER="$PG_USER" \
   -e POSTGRES_PASSWORD="$PG_PASSWORD" \

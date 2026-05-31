@@ -15,6 +15,7 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"   # docker build 上下文的父目录
 # ===== 通用配置 =====
 RESTART_POLICY=unless-stopped        # 随 docker 守护进程开机自启
 LOG_BASE_DIR=/app/loveSpace/logs     # admin/app 日志分别挂到 $LOG_BASE_DIR/{admin,app}（不存在自动创建）
+JVM_MAX_HEAP=1000m                   # 每个后端 JVM 最大堆（-Xmx），最大不超过 1000m
 
 # 用 host 网络模式：容器复用宿主机网络栈，端口即应用自身监听端口
 # （admin 8080 / app 8081），无需自建网络或端口映射。
@@ -83,6 +84,7 @@ docker run -d \
   --network host \
   --restart "$RESTART_POLICY" \
   -v "${ADMIN_LOG_DIR}:/app/logs" \
+  -e JAVA_TOOL_OPTIONS="-Xmx${JVM_MAX_HEAP}" \
   -e ADMIN_DB_URL="$ADMIN_DB_URL" \
   -e ADMIN_DB_USERNAME="$ADMIN_DB_USERNAME" \
   -e ADMIN_DB_PASSWORD="$ADMIN_DB_PASSWORD" \
@@ -107,6 +109,7 @@ docker run -d \
   --network host \
   --restart "$RESTART_POLICY" \
   -v "${APP_LOG_DIR}:/app/logs" \
+  -e JAVA_TOOL_OPTIONS="-Xmx${JVM_MAX_HEAP}" \
   -e APP_DB_URL="$APP_DB_URL" \
   -e APP_DB_USERNAME="$APP_DB_USERNAME" \
   -e APP_DB_PASSWORD="$APP_DB_PASSWORD" \
