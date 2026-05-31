@@ -40,7 +40,8 @@ cd deploy
   容器内以非 root 用户运行，脚本会把宿主机日志目录设为 `777` 以保证可写。
 - **共用数据库**：admin 与 app 连同一个 `love_space` 库；admin 负责跑 Liquibase 建表，
   所以**首次部署务必让 admin 先于 app 起来**（`deploy-all.sh` 已保证顺序）。
-- **容器互联**：三者在 docker 网络 `love-space-net` 内，admin/app 通过容器名
-  `love-space-postgres` 连库，无需依赖宿主机端口。
+- **容器互联**：三者均用 host 网络模式（`--network host`），直接复用宿主机网络栈，
+  admin/app 通过 `localhost:5432` 连库；postgres 监听宿主机 5432、admin 监听 8080、
+  app 监听 8081，无需自建 docker 网络，也无需 `-p` 端口映射。
 - **数据持久化**：PostgreSQL 数据存命名卷 `love-space-pgdata`，`docker rm` 容器不丢数据。
 - **幂等**：重复执行脚本会先删同名旧容器再重建，可直接用于更新部署。

@@ -18,4 +18,8 @@ bash "$DIR/deploy-apps.sh" "$VERSION"
 
 echo
 echo "全部部署完成 ✓"
-docker ps --filter "network=love-space-net" --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'
+docker ps \
+  --filter "name=love-space-postgres" \
+  --filter "name=love-space-admin" \
+  --filter "name=love-space-app" \
+  --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'
