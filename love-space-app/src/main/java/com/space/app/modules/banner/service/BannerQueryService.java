@@ -55,13 +55,15 @@ public class BannerQueryService {
     /**
      * 查询 App 端 banner 列表。
      *
-     * @param positionCode 展示位置标识码（必填，精确匹配）
+     * @param positionCode   展示位置标识码（必填，精确匹配）
+     * @param linkedEntityId 关联实体过滤（可选）；为 null 时不过滤
      * @return banner 列表（已剔除关联城市离线或不存在的 CITY banner）
      */
-    public List<BannerItemResponse> list(String positionCode) {
+    public List<BannerItemResponse> list(String positionCode, UUID linkedEntityId) {
         Specification<Banner> spec = Specification.allOf(
                 BannerSpecifications.onlineTrue(),
-                BannerSpecifications.hasPositionCode(positionCode)
+                BannerSpecifications.hasPositionCode(positionCode),
+                BannerSpecifications.linkedTo(linkedEntityId)
         );
         List<Banner> banners = bannerRepository.findAll(spec, Sort.by(Sort.Direction.DESC, Banner_.UPDATED_AT));
 
