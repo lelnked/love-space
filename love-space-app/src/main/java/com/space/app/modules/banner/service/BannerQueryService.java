@@ -55,15 +55,13 @@ public class BannerQueryService {
     /**
      * 查询 App 端 banner 列表。
      *
-     * @param type   可选类型过滤；为 null 时不过滤
-     * @param cityId 可选关联城市过滤；为 null 时不过滤；非 null 时通常配合 {@code type=CITY}
+     * @param positionCode 展示位置标识码（必填，精确匹配）
      * @return banner 列表（已剔除关联城市离线或不存在的 CITY banner）
      */
-    public List<BannerItemResponse> list(BannerType type, UUID cityId) {
+    public List<BannerItemResponse> list(String positionCode) {
         Specification<Banner> spec = Specification.allOf(
                 BannerSpecifications.onlineTrue(),
-                BannerSpecifications.hasType(type),
-                BannerSpecifications.linkedTo(cityId)
+                BannerSpecifications.hasPositionCode(positionCode)
         );
         List<Banner> banners = bannerRepository.findAll(spec, Sort.by(Sort.Direction.DESC, Banner_.UPDATED_AT));
 

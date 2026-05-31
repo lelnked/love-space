@@ -1,7 +1,6 @@
 package com.space.app.modules.banner.controller;
 
 import com.space.app.modules.banner.dto.BannerItemResponse;
-import com.space.app.modules.banner.entity.BannerType;
 import com.space.app.modules.banner.service.BannerQueryService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -9,7 +8,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
-import java.util.UUID;
 
 /**
  * App 端 Banner 只读 API：{@code GET /api/app/banners}。
@@ -31,14 +29,12 @@ public class BannerController {
     /**
      * 查询展示用 banner 列表。
      *
-     * @param type   可选类型过滤（{@code CITY}），缺省时不过滤
-     * @param cityId 可选关联城市过滤；通常配合 {@code type=CITY} 使用
+     * @param positionCode 展示位置标识码（必填，精确匹配）
      * @return 已按 {@code updatedAt DESC} 排序并过滤后的 banner 数组
      */
     @GetMapping
     public List<BannerItemResponse> list(
-            @RequestParam(value = "type", required = false) BannerType type,
-            @RequestParam(value = "cityId", required = false) UUID cityId) {
-        return bannerQueryService.list(type, cityId);
+            @RequestParam(value = "positionCode") String positionCode) {
+        return bannerQueryService.list(positionCode);
     }
 }

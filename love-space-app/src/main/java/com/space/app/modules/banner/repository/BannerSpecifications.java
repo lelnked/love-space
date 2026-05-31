@@ -1,11 +1,8 @@
 package com.space.app.modules.banner.repository;
 
 import com.space.app.modules.banner.entity.Banner;
-import com.space.app.modules.banner.entity.BannerType;
 import com.space.app.modules.banner.entity.Banner_;
 import org.springframework.data.jpa.domain.Specification;
-
-import java.util.UUID;
 
 /**
  * Banner Specification 工厂（app 端只读）。
@@ -22,22 +19,11 @@ public final class BannerSpecifications {
     }
 
     /**
-     * 按类型过滤；{@code type} 为 null 时不增加约束。
+     * 按展示位置标识码精确过滤。
      *
-     * @param type 目标类型
+     * @param positionCode 展示位置标识码（必填）
      */
-    public static Specification<Banner> hasType(BannerType type) {
-        return (root, query, cb) -> type == null ? null : cb.equal(root.get(Banner_.type), type);
-    }
-
-    /**
-     * 按 {@code linkedEntityId} 过滤；{@code linkedEntityId} 为 null 时不增加约束。
-     *
-     * @param linkedEntityId 关联实体 UUID
-     */
-    public static Specification<Banner> linkedTo(UUID linkedEntityId) {
-        return (root, query, cb) -> linkedEntityId == null
-                ? null
-                : cb.equal(root.get(Banner_.linkedEntityId), linkedEntityId);
+    public static Specification<Banner> hasPositionCode(String positionCode) {
+        return (root, query, cb) -> cb.equal(root.get(Banner_.positionCode), positionCode);
     }
 }

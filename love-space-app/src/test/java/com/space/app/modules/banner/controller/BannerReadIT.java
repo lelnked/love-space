@@ -62,13 +62,16 @@ class BannerReadIT extends AbstractPostgresIntegrationTest {
 
         Banner banner = new Banner();
         banner.setName("banner-app-it");
+        banner.setPositionCode("home_top");
         banner.setOnline(true);
         banner.setType(BannerType.CITY);
         banner.setLinkedEntityId(city.getId());
         banner.setImageUrls(List.of("bound/x.png", "bound/y.png"));
         bannerRepository.save(banner);
 
-        mockMvc.perform(get("/api/app/banners").header("X-API-Key", TEST_API_KEY))
+        mockMvc.perform(get("/api/app/banners")
+                        .param("positionCode", "home_top")
+                        .header("X-API-Key", TEST_API_KEY))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].image[0].id").value("bound/x.png"))
                 .andExpect(jsonPath("$[0].image[0].url").value("https://signed.example.com/bound/x.png"))
