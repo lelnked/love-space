@@ -26,8 +26,8 @@ COPY --from=layers /workspace/extracted/application/ ./
 
 USER spring
 
-# app 后端默认端口 8080。
-EXPOSE 8080
+# app 后端默认端口 8081。
+EXPOSE 8081
 ENV JAVA_OPTS=""
 
 # 使用 Spring Boot loader 的 JarLauncher 启动分层应用。
