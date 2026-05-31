@@ -33,7 +33,7 @@ echo "[postgres] 启动容器 $PG_CONTAINER（镜像 $PG_IMAGE，host 网络，�
 echo "[postgres]   数据目录 $PG_DATA_DIR  日志目录 $PG_LOG_DIR"
 docker run -d \
   --name "$PG_CONTAINER" \
-  --network host \
+  -p 8954:5432 \
   --restart "$RESTART_POLICY" \
   -e POSTGRES_DB="$PG_DB" \
   -e POSTGRES_USER="$PG_USER" \
