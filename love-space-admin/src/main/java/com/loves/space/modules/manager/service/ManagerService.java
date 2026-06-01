@@ -118,6 +118,9 @@ public class ManagerService {
     public void setEnable(UUID id, boolean enable) {
         Manager manager = managerRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("管理员不存在：" + id));
+        if (!enable && "admin".equals(manager.getUsername())) {
+            throw new IllegalArgumentException("内置管理员 admin 账号不可停用");
+        }
         manager.setEnable(enable);
     }
 

@@ -281,9 +281,11 @@ export default function ManagerList() {
                         </TableCell>
                         <TableCell className="px-4 py-3 text-start text-theme-sm">
                           <div className="flex gap-2">
-                            <Button size="sm" variant="primary" onClick={() => handleToggleEnable(it)}>
-                              {it.enable ? "停用" : "启用"}
-                            </Button>
+                            {it.username !== "admin" && (
+                              <Button size="sm" variant="primary" onClick={() => handleToggleEnable(it)}>
+                                {it.enable ? "停用" : "启用"}
+                              </Button>
+                            )}
                             <Button size="sm" variant="primary" onClick={() => handleResetPassword(it)}>
                               重置密码
                             </Button>

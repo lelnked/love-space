@@ -70,6 +70,15 @@ class ManagerServiceTest extends AbstractPostgresIntegrationTest {
     }
 
     @Test
+    void setEnableRejectsDisablingBuiltinAdmin() {
+        UUID adminId = managerRepository.findByUsername("admin").orElseThrow().getId();
+        assertThatThrownBy(() -> managerService.setEnable(adminId, false))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("不可停用");
+        assertThat(managerRepository.findById(adminId).orElseThrow().isEnable()).isTrue();
+    }
+
+    @Test
     void resetPasswordReplacesHash() {
         String oldPassword = "InitPass123";
         String newPassword = "NewPass456!";
