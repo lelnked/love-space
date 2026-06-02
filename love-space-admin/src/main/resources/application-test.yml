@@ -1,0 +1,38 @@
+# 测试 / 联调环境：连接 docker 容器 lan_test_postgres（宿主机端口 25432）
+server:
+  port: 21423
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:25432/love_space
+    username: iris
+    password: iris
+  jpa:
+    properties:
+      hibernate:
+        format_sql: true
+  liquibase:
+    contexts: dev
+
+app:
+  jwt:
+    secret: test-only-jwt-secret-please-change-in-production-32+bytes!!!
+  storage:
+    region: ${ALIYUN_OSS_REGION:cn-test}
+    access-key-id: ${ALIYUN_OSS_ACCESS_KEY_ID:test-oss-ak}
+    access-key-secret: ${ALIYUN_OSS_ACCESS_KEY_SECRET:test-oss-sk}
+    oss:
+      endpoint: ${ALIYUN_OSS_ENDPOINT:https://oss-test.example.com}
+      bucket: ${ALIYUN_OSS_BUCKET:love-space-test}
+      upload-key-prefix: ${ALIYUN_OSS_UPLOAD_KEY_PREFIX:images}
+      bound-key-prefix: ${ALIYUN_OSS_BOUND_KEY_PREFIX:bound}
+      url-expiration-seconds: ${ALIYUN_OSS_URL_EXPIRATION_SECONDS:1800}
+      max-image-bytes: ${ALIYUN_OSS_MAX_IMAGE_BYTES:20971520}
+    sts:
+      role-arn: ${ALIYUN_STS_ROLE_ARN:acs:ram::000000000000:role/test-role}
+      role-session-name: ${ALIYUN_STS_ROLE_SESSION_NAME:love-space-admin-test}
+      duration-seconds: ${ALIYUN_STS_DURATION_SECONDS:900}
+
+logging:
+  level:
+    com.loves.space: DEBUG

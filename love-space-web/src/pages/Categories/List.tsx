@@ -28,6 +28,14 @@ interface FieldError {
   message: string;
 }
 
+/** 分类名称最大长度（code-point，中文/emoji 均按 1 计），与后端 codePointCount ≤ 10 对齐。 */
+const MAX_NAME_CODE_POINTS = 10;
+
+/** code-point 长度（emoji / 中文均按 1 计）。 */
+function codePointLength(s: string): number {
+  return Array.from(s).length;
+}
+
 function formatDateTime(value: string): string {
   try {
     return new Date(value).toLocaleString("zh-CN", { hour12: false });
@@ -109,6 +117,10 @@ export default function CategoryList() {
     const name = formName.trim();
     if (!name) {
       setFormFieldErrors({ name: "名称不能为空" });
+      return;
+    }
+    if (codePointLength(name) > MAX_NAME_CODE_POINTS) {
+      setFormFieldErrors({ name: `名称最多 ${MAX_NAME_CODE_POINTS} 个字符` });
       return;
     }
     setSubmitting(true);
@@ -247,9 +259,11 @@ export default function CategoryList() {
                 名称 <span className="text-error-500">*</span>
               </Label>
               <Input
-                placeholder="分类名称（≤30 字符）"
+                placeholder={`分类名称（≤${MAX_NAME_CODE_POINTS} 字符）`}
                 value={formName}
-                onChange={(e) => setFormName(e.target.value.slice(0, 30))}
+                onChange={(e) =>
+                  setFormName(Array.from(e.target.value).slice(0, MAX_NAME_CODE_POINTS).join(""))
+                }
                 error={Boolean(formFieldErrors.name)}
                 hint={formFieldErrors.name}
               />

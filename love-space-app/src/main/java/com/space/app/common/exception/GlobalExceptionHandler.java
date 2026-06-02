@@ -7,8 +7,11 @@ import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
@@ -64,6 +67,28 @@ public class GlobalExceptionHandler {
         log.warn("Access denied - path={}", request.getRequestURI());
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
                 .body(errorBody(HttpStatus.FORBIDDEN, ex.getMessage(), request.getRequestURI()));
+    }
+
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<Map<String, Object>> handleAuthentication(AuthenticationException ex, HttpServletRequest request) {
+        log.warn("Authentication failed - path={}", request.getRequestURI());
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(errorBody(HttpStatus.UNAUTHORIZED, ex.getMessage(), request.getRequestURI()));
+    }
+
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<Map<String, Object>> handleMissingParameter(MissingServletRequestParameterException ex, HttpServletRequest request) {
+        String message = "缺少必填参数 '" + ex.getParameterName() + "'";
+        log.info("Missing parameter - path={}, error={}", request.getRequestURI(), message);
+        return ResponseEntity.badRequest()
+                .body(errorBody(HttpStatus.BAD_REQUEST, message, request.getRequestURI()));
+    }
+
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<Map<String, Object>> handleMethodNotSupported(HttpRequestMethodNotSupportedException ex, HttpServletRequest request) {
+        log.info("Method not supported - path={}, method={}", request.getRequestURI(), ex.getMethod());
+        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED)
+                .body(errorBody(HttpStatus.METHOD_NOT_ALLOWED, ex.getMessage(), request.getRequestURI()));
     }
 
     @ExceptionHandler(Exception.class)

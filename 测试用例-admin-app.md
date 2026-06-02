@@ -35,95 +35,95 @@
 
 ## A1. 鉴权 `/api/admin/auth`
 
-- [ ] **AUTH-01** `P1` 正确账号密码登录成功
+- [x] **AUTH-01** `P1` 正确账号密码登录成功
   - 前置：内置 admin 已植入
   - 步骤：`POST /api/admin/auth/login` body `{username:"admin", password:"8@y2eoRLyStM*UVU"}`
   - 预期：200，返回 JWT 与顶层字段 `manager`（非 `user`），含 role=ADMIN
   - 关联：FR-020 / US3-AC3
 
-- [ ] **AUTH-02** `P1` 密码错误登录失败
+- [x] **AUTH-02** `P1` 密码错误登录失败
   - 步骤：以错误密码登录
   - 预期：401/鉴权失败 ProblemDetail，不返回 token，不泄露"用户名是否存在"
 
-- [ ] **AUTH-03** `P1` 已停用账号登录被拒
+- [x] **AUTH-03** `P1` 已停用账号登录被拒
   - 前置：存在一个 enable=false 的 Manager
   - 步骤：用该账号登录
   - 预期：登录失败并提示"账号已停用"
   - 关联：FR-053 / US3-AC4
 
-- [ ] **AUTH-04** `P1` 未携带 token 访问受保护接口返回 401
+- [x] **AUTH-04** `P1` 未携带 token 访问受保护接口返回 401
   - 步骤：不带 Authorization 调 `GET /api/admin/cities`
   - 预期：401 ProblemDetail
   - 关联：FR-002
 
-- [ ] **AUTH-05** `P1` 过期/非法 token 返回 401
+- [x] **AUTH-05** `P1` 过期/非法 token 返回 401
   - 步骤：用篡改/过期 JWT 调任意受保护接口
   - 预期：401
   - 关联：Edge（token 过期统一 401）
 
-- [ ] **AUTH-06** `P2` `GET /api/admin/auth/me` 返回当前登录 Manager
+- [x] **AUTH-06** `P2` `GET /api/admin/auth/me` 返回当前登录 Manager
   - 步骤：登录后带 token 调 `/me`
   - 预期：200，返回当前 manager 信息（username/role/nickname）
 
-- [ ] **AUTH-07** `P2` `POST /api/admin/auth/logout` 登出
+- [x] **AUTH-07** `P2` `POST /api/admin/auth/logout` 登出
   - 步骤：登录后调 logout
   - 预期：200；按实现语义令 token 失效/前端清除
 
 ## A2. Manager 管理 `/api/admin/managers`（仅 ADMIN）
 
-- [ ] **MGR-01** `P1` MEMBER 角色访问 Manager 接口返回 403
+- [x] **MGR-01** `P1` MEMBER 角色访问 Manager 接口返回 403
   - 前置：以 MEMBER 角色 Manager 登录
   - 步骤：`GET /api/admin/managers/page`
   - 预期：403 拒绝
   - 关联：FR-003 / US3-AC1 / SC-004
 
-- [ ] **MGR-02** `P1` 新建 Manager 强制 role=MEMBER（显式传 ADMIN 被忽略）
+- [x] **MGR-02** `P1` 新建 Manager 强制 role=MEMBER（显式传 ADMIN 被忽略）
   - 步骤：ADMIN 登录，`POST /api/admin/managers` body 含 `role:"ADMIN"`
   - 预期：创建成功，落库 role=MEMBER
   - 关联：FR-022 / US3-AC2
 
-- [ ] **MGR-03** `P1` 内置 admin 账号禁止停用
+- [x] **MGR-03** `P1` 内置 admin 账号禁止停用
   - 步骤：`PUT /api/admin/managers/{adminId}/disable`（目标为 username=admin）
   - 预期：拒绝，提示"内置管理员 admin 账号不可停用"
   - 关联：ManagerService 业务规则（commit 979e38d）
 
-- [ ] **MGR-04** `P1` 停用普通 Manager 后其无法登录
+- [x] **MGR-04** `P1` 停用普通 Manager 后其无法登录
   - 步骤：`PUT /api/admin/managers/{id}/disable` → 该 Manager 登录
   - 预期：停用成功；登录失败提示已停用
   - 关联：US3-AC4
 
-- [ ] **MGR-05** `P2` 启用已停用 Manager 后可登录
+- [x] **MGR-05** `P2` 启用已停用 Manager 后可登录
   - 步骤：`PUT /api/admin/managers/{id}/enable` → 登录
   - 预期：启用成功；登录成功
 
-- [ ] **MGR-06** `P2` 重置密码后旧密码失效、新密码可登录
+- [x] **MGR-06** `P2` 重置密码后旧密码失效、新密码可登录
   - 步骤：`PUT /api/admin/managers/{id}/password` 设新密码
   - 预期：旧密码登录失败，新密码登录成功；密码 BCrypt 存储
   - 关联：FR-022 / FR-053
 
-- [ ] **MGR-07** `P2` 分页列表按 username 模糊 / role / 启用状态 / 创建时间过滤
+- [x] **MGR-07** `P2` 分页列表按 username 模糊 / role / 启用状态 / 创建时间过滤
   - 步骤：带各组合过滤参数调 `GET /page`
   - 预期：结果集与过滤条件一致，默认 `createdAt DESC`，分页生效
   - 关联：FR-022 / FR-006
 
-- [ ] **MGR-08** `P3` 重复 username 新建被拒
+- [x] **MGR-08** `P3` 重复 username 新建被拒
   - 步骤：用已存在 username 新建
   - 预期：字段级校验错误（用户名已存在）
 
 ## A3. 城市管理 `/api/admin/cities`
 
-- [ ] **CITY-01** `P1` 新增城市成功且默认下线
+- [x] **CITY-01** `P1` 新增城市成功且默认下线
   - 步骤：`POST /api/admin/cities` 填中英文名称/省份等
   - 预期：创建成功；未上线状态（需手动上线）
   - 关联：FR-023
 
-- [ ] **CITY-02** `P1` 同名（chineseName）城市新增/编辑被拒
+- [x] **CITY-02** `P1` 同名（chineseName）城市新增/编辑被拒
   - 前置：已存在"上海"
   - 步骤：再次新增 chineseName="上海"
   - 预期：字段级校验错误（名称不重复）
   - 关联：FR-023 / Edge（同名拒绝）
 
-- [ ] **CITY-03** `P1` 上线城市后 App `/api/app/cities` 可见
+- [x] **CITY-03** `P1` 上线城市后 App `/api/app/cities` 可见
   - 步骤：`PUT /api/admin/cities/{id}/online` 上线 → 调 App cities
   - 预期：上线成功；App 端同步可见
   - 关联：US2-AC1
@@ -138,168 +138,168 @@
   - 预期：列表仍按 `createdAt DESC`；bannerSortOrder 不参与列表排序
   - 关联：FR-023
 
-- [ ] **CITY-06** `P2` 城市列表名称/上下线过滤 + 分页
+- [x] **CITY-06** `P2` 城市列表名称/上下线过滤 + 分页
   - 预期：过滤结果正确，默认 `createdAt DESC`，分页 20/30
   - 关联：FR-023 / FR-006
 
-- [ ] **CITY-07** `P2` 删除城市
+- [x] **CITY-07** `P2` 删除城市
   - 步骤：`DELETE /api/admin/cities/{id}`
   - 预期：删除成功；后续查询 404/不返回
 
-- [ ] **CITY-08** `P3` 背景图字段以 ImageResponse 返回（详见 IMG 用例）
+- [x] **CITY-08** `P3` 背景图字段以 ImageResponse 返回（详见 IMG 用例）
   - 预期：详情/列表 `backgroundImage` 为 `ImageResponse`，无背景图为 null
   - 关联：003-FR-011 / US4-AC3
 
 ## A4. 分类管理 `/api/admin/categories`
 
-- [ ] **CAT-01** `P1` 删除分类联动下架其下所有商户
+- [x] **CAT-01** `P1` 删除分类联动下架其下所有商户
   - 前置：分类下有 5 个上架商户
   - 步骤：`DELETE /api/admin/categories/{id}`
   - 预期：删除成功；5 个商户自动下架，App 列表不再返回
   - 关联：FR-024 / FR-051 / US2-AC5
 
-- [ ] **CAT-02** `P1` 分类名称不重复
+- [x] **CAT-02** `P1` 分类名称不重复
   - 步骤：新增重名分类
   - 预期：校验错误
 
-- [ ] **CAT-03** `P2` 分类名称 ≤10 汉字
+- [x] **CAT-03** `P2` 分类名称 ≤10 汉字
   - 步骤：提交 11 汉字名称
   - 预期：字段级校验错误
   - 关联：FR-024
 
-- [ ] **CAT-04** `P2` 新增/编辑/列表（默认 createdAt DESC，无排序字段）
+- [x] **CAT-04** `P2` 新增/编辑/列表（默认 createdAt DESC，无排序字段）
   - 预期：CRUD 正常；列表按创建时间倒序
 
 ## A5. 标签管理 `/api/admin/tags`
 
-- [ ] **TAG-01** `P1` 新增标签默认下架，上架后生效
+- [x] **TAG-01** `P1` 新增标签默认上架（需求变更，原"默认下架"基线作废）
   - 步骤：`POST /api/admin/tags` → `PUT /api/admin/tags/{id}/online`
   - 预期：创建/上架成功
   - 关联：FR-025
 
-- [ ] **TAG-02** `P1` 标签下架仅隐藏不影响商户上下架
+- [x] **TAG-02** `P1` 标签下架仅隐藏不影响商户上下架
   - 前置：商户绑定 3 个标签，其中 1 个下架
   - 步骤：App 调商户详情
   - 预期：返回 2 个上架标签；商户仍在线
   - 关联：FR-015 / FR-052 / US1-AC3 / US2-AC4
 
-- [ ] **TAG-03** `P2` 标签名 ≤6 汉字
+- [x] **TAG-03** `P2` 标签名 ≤6 汉字
   - 步骤：提交 7 汉字标签名
   - 预期：字段级校验错误
   - 关联：FR-025
 
-- [ ] **TAG-04** `P2` 标签不重名
+- [x] **TAG-04** `P2` 标签不重名
   - 预期：重名新增/编辑被拒
 
-- [ ] **TAG-05** `P2` 标签列表名称/上下架过滤 + 分页（createdAt DESC）
+- [x] **TAG-05** `P2` 标签列表名称/上下架过滤 + 分页（createdAt DESC）
   - 预期：过滤与排序正确
 
 ## A6. 商户管理 `/api/admin/merchants`
 
-- [ ] **MCH-01** `P1` 新增商户成功且默认下架，上架后 App 可见
+- [x] **MCH-01** `P1` 新增商户成功且默认下架，上架后 App 可见
   - 前置：已有上线城市、≥1 上架标签
   - 步骤：填完整表单（logo 1 张、images ≥1、四维评分、≥1 标签、≥1 评价、故事、weight、推荐周期）提交 → `PUT /api/admin/merchants/{id}/online`
   - 预期：保存成功默认下架；上架后 App `/api/app/merchants` 可查
   - 关联：FR-026/027 / US2-AC2
 
-- [ ] **MCH-02** `P1` 四维评分超上限被拒（S≤30/L≤25/E≤25/I≤20）
+- [x] **MCH-02** `P1` 四维评分超上限被拒（S≤30/L≤25/E≤25/I≤20）
   - 步骤：提交 S=31（或任一维超限）
   - 预期：字段级校验错误，不写库
   - 关联：FR-027 / US2-AC2 / Edge
 
-- [ ] **MCH-03** `P1` 商户名称 >15 汉字被拒
+- [x] **MCH-03** `P1` 商户名称 >15 汉字被拒
   - 步骤：提交 16 汉字名称
   - 预期：校验错误（≤15 汉字）
   - 关联：FR-027 / US2-AC3
 
-- [ ] **MCH-04** `P1` 图片至少 1 张校验
+- [x] **MCH-04** `P1` 图片至少 1 张校验
   - 步骤：images 为空提交
   - 预期：校验错误（≥1 张）
   - 关联：FR-027 / Edge
 
-- [ ] **MCH-05** `P1` logo 必填且仅 1 张
+- [x] **MCH-05** `P1` logo 必填且仅 1 张
   - 步骤：缺 logo / 传多张 logo
   - 预期：校验错误
   - 关联：FR-027
 
-- [ ] **MCH-06** `P2` 商户故事 >5000 字被拒
+- [x] **MCH-06** `P2` 商户故事 >5000 字被拒
   - 步骤：提交 5001 字故事
   - 预期：校验错误（≤5000）
   - 关联：FR-027 / Edge
 
-- [ ] **MCH-07** `P2` admin 列表默认排序 `weight DESC, createdAt DESC`
+- [x] **MCH-07** `P2` admin 列表默认排序 `weight DESC, createdAt DESC`
   - 前置：不同 weight 的多个商户
   - 步骤：`GET /api/admin/merchants/page`
   - 预期：先按 weight 降序，同 weight 按创建时间降序
   - 关联：FR-050
 
-- [ ] **MCH-08** `P2` 商户列表多条件过滤（name/cityId/categoryId/period/上下架）
+- [x] **MCH-08** `P2` 商户列表多条件过滤（name/cityId/categoryId/period/上下架）
   - 预期：过滤结果与条件一致；分页生效
   - 关联：FR-026
 
-- [ ] **MCH-09** `P2` 推荐周期多选保存与回显
+- [x] **MCH-09** `P2` 推荐周期多选保存与回显
   - 步骤：保存月经期+排卵期，查详情
   - 预期：recommendedPeriods 含两项
   - 关联：FR-027
 
-- [ ] **MCH-10** `P2` 编辑、下架、删除商户
+- [x] **MCH-10** `P2` 编辑、下架、删除商户
   - 预期：各操作成功；下架后 App 不返回；删除后详情 404
 
-- [ ] **MCH-11** `P3` categoryId 可为空（无分类商户）
+- [x] **MCH-11** `P3` categoryId 可为空（无分类商户）
   - 步骤：不传 categoryId 创建并上架
   - 预期：保存成功；App 端省略 categoryId 时该商户也返回
   - 关联：FR-012 / Clarification
 
 ## A7. 商户评价 `/api/admin/merchants/{merchantId}/reviews`
 
-- [ ] **REV-01** `P1` 创建评价（支持 emoji，含组合 emoji 👨‍👩‍👧）
+- [x] **REV-01** `P1` 创建评价（支持 emoji，含组合 emoji 👨‍👩‍👧）
   - 步骤：`POST` body nickname/title/content（含组合 emoji）
   - 预期：创建成功；回查 content 字符完整无丢失
   - 关联：FR-013 / SC-007 / Edge（emoji UTF-8/4字节）
 
-- [ ] **REV-02** `P2` 评价分页列表按 sortOrder 升序
+- [x] **REV-02** `P2` 评价分页列表按 sortOrder 升序
   - 步骤：`GET /reviews/page`
   - 预期：按 sortOrder ASC 返回
 
-- [ ] **REV-03** `P2` 更新/删除评价
+- [x] **REV-03** `P2` 更新/删除评价
   - 步骤：`PUT /reviews/{id}`、`DELETE /reviews/{id}`
   - 预期：更新/删除成功
 
-- [ ] **REV-04** `P2` 设置评价推荐位 recommended
+- [x] **REV-04** `P2` 设置评价推荐位 recommended
   - 步骤：`PATCH /reviews/{id}/recommended`
   - 预期：recommended 状态切换成功
 
 ## A8. Banner 管理 `/api/admin/banners` + City 联动
 
-- [ ] **BAN-01** `P1` 新增 CITY banner 默认 offline
+- [x] **BAN-01** `P1` 新增 CITY banner 默认 offline
   - 前置：≥1 个 online 城市
   - 步骤：`POST /api/admin/banners` 填 name、image ≥1、type=CITY、link=城市id
   - 预期：创建成功，online 默认 false
   - 关联：002-FR-010 / US1-AC1
 
-- [ ] **BAN-02** `P1` 保存校验：name 非空 / image≥1 / CITY 时 link 非空且城市存在
+- [x] **BAN-02** `P1` 保存校验：name 非空 / image≥1 / CITY 时 link 非空且城市存在
   - 步骤：分别缺 name、缺图片、缺/错 link 提交
   - 预期：各自字段级校验错误（如"至少上传一张图片"）
   - 关联：002-FR-020 / Edge
 
-- [ ] **BAN-03** `P1` 仅列表页可上下线，编辑不改 online
+- [x] **BAN-03** `P1` 仅列表页可上下线，编辑不改 online
   - 步骤：`POST /api/admin/banners/{id}/online` 上线；用 `PUT /api/admin/banners/{id}` 编辑其它字段
   - 预期：上线入口仅此一处；编辑保存不改变 online 状态
   - 关联：002-FR-006/009 / US1-AC4 / SC-005
 
-- [ ] **BAN-04** `P1` 上线 CITY banner 时校验关联城市为 online
+- [x] **BAN-04** `P1` 上线 CITY banner 时校验关联城市为 online
   - 前置：关联城市当前 offline
   - 步骤：尝试上线该 banner
   - 预期：拒绝并提示先启用城市
   - 关联：002-FR-011 / Edge
 
-- [ ] **BAN-05** `P1` City 下线联动其关联 banner 下线（AFTER_COMMIT）
+- [x] **BAN-05** `P1` City 下线联动其关联 banner 下线（AFTER_COMMIT）
   - 前置：城市 X online，关联 N 条 online=true 的 CITY banner
   - 步骤：`PUT /api/admin/cities/{X}/online` 切 offline → 事件处理后查 App banner
   - 预期：N 条 banner online 置 false；App 不再返回
   - 关联：002-FR-016/017/018 / US3-AC1 / SC-002
 
-- [ ] **BAN-06** `P1` City 重新上线联动其关联 banner 上线
+- [x] **BAN-06** `P1` City 重新上线联动其关联 banner 上线
   - 步骤：X 由 offline 切 online
   - 预期：原 N 条 banner online 置 true；App 重新返回
   - 关联：002-FR-017 / US3-AC2
@@ -309,43 +309,43 @@
   - 预期：城市状态变更成功（最终一致），错误记录到日志，不阻塞
   - 关联：002-FR-018 / US3-AC3
 
-- [ ] **BAN-08** `P2` 编辑 banner 替换关联城市更新 link 与 updatedAt
+- [x] **BAN-08** `P2` 编辑 banner 替换关联城市更新 link 与 updatedAt
   - 步骤：将 link 改为另一 online 城市保存
   - 预期：link 更新为新城市 id，updatedAt 刷新
   - 关联：US1-AC5
 
-- [ ] **BAN-09** `P2` banner 列表展示与过滤（name 模糊 / type / online / 分页）
+- [x] **BAN-09** `P2` banner 列表展示与过滤（name 模糊 / type / online / 分页）
   - 预期：列表含 name、type、关联城市名、online、updatedAt；过滤分页正确
   - 关联：002-FR-005
 
-- [ ] **BAN-10** `P3` Banner 接口对任一已登录 Manager（含 MEMBER）开放
+- [x] **BAN-10** `P3` Banner 接口对任一已登录 Manager（含 MEMBER）开放
   - 步骤：MEMBER 登录执行 banner CRUD/上下线
   - 预期：允许（不限 ADMIN）
   - 关联：002-FR-019
 
 ## A9. 文件直传 / OSS `/api/admin/files`
 
-- [ ] **OSS-01** `P1` 申请直传凭证返回完整签名且不含 accessKeySecret
+- [x] **OSS-01** `P1` 申请直传凭证返回完整签名且不含 accessKeySecret
   - 前置：OSS/STS/RAM Role 配置正确，admin 已登录
   - 步骤：`POST /api/admin/files/upload-credentials` 声明 MIME=image/png
   - 预期：返回 `{host, objectKey, policy, signature, signatureVersion, xOssCredential, xOssDate, securityToken, expiration}`；**不含 accessKeySecret**
   - 关联：003-FR-001 / US1-AC1
 
-- [ ] **OSS-02** `P1` objectKey 由服务端预生成且格式正确
+- [x] **OSS-02** `P1` objectKey 由服务端预生成且格式正确
   - 步骤：检查返回 objectKey
   - 预期：形如 `images/<uuidv7>.<ext>`，扩展名由 MIME 反查（png→png, jpeg→jpg, webp→webp）
   - 关联：003-FR-002
 
-- [ ] **OSS-03** `P1` expiration ≤ 当前 +15 分钟，ISO-8601 UTC
+- [x] **OSS-03** `P1` expiration ≤ 当前 +15 分钟，ISO-8601 UTC
   - 预期：默认 900s 有效期；ISO-8601 UTC 格式
   - 关联：003-FR-004
 
-- [ ] **OSS-04** `P1` 用签名表单 POST 直传成功，对象出现在 bucket
+- [x] **OSS-04** `P1` 用签名表单 POST 直传成功，对象出现在 bucket
   - 步骤：以返回签名 `multipart/form-data` POST 到 host（key=objectKey）
   - 预期：上传成功；bucket 存在该对象，Content-Type 与声明一致
   - 关联：003-FR-001 / US1-AC2
 
-- [ ] **OSS-05** `P1` 越权 key 被 OSS Policy 拒绝
+- [x] **OSS-05** `P1` 越权 key 被 OSS Policy 拒绝
   - 步骤：把表单 key 改为 `images/../other`
   - 预期：OSS 返回 Policy 校验失败/AccessDenied
   - 关联：003-FR-003 / US1-AC3 / SC-004
@@ -360,12 +360,12 @@
   - 预期：启动失败并打印明确原因；不静默回退本地
   - 关联：003-FR-005 / US1-AC5
 
-- [ ] **OSS-08** `P1` 旧 `POST /api/admin/files/upload` 端点已移除
+- [x] **OSS-08** `P1` 旧 `POST /api/admin/files/upload` 端点已移除
   - 步骤：调用旧 multipart 路径
   - 预期：404 / 405
   - 关联：003-FR-006 / US4-AC5
 
-- [ ] **OSS-09** `P1` 业务绑定校验：对象不存在拒绝写库
+- [x] **OSS-09** `P1` 业务绑定校验：对象不存在拒绝写库
   - 步骤：用未上传的 `images/<random>.png` 调 `POST /api/admin/banners`
   - 预期：422/400 业务校验错误（图片对象不可用），业务表无新增
   - 关联：003-FR-008 / US3-AC2 / SC-005
@@ -380,44 +380,44 @@
   - 预期：业务校验错误，不写库
   - 关联：003-FR-008 / US3-AC4
 
-- [ ] **OSS-12** `P1` 多图任一校验失败整体拒绝（不部分写入）
+- [x] **OSS-12** `P1` 多图任一校验失败整体拒绝（不部分写入）
   - 步骤：提交多个 objectKey，其中一个非法
   - 预期：整个请求拒绝，业务表零写入
   - 关联：003-FR-008 / US3-AC5
 
-- [ ] **OSS-13** `P1` 拒绝非 images/ 前缀或含 `..` 的 objectKey
+- [x] **OSS-13** `P1` 拒绝非 images/ 前缀或含 `..` 的 objectKey
   - 步骤：提交 `other/x.png`、`images/../x.png`
   - 预期：直接校验拒绝
   - 关联：003-FR-009
 
-- [ ] **OSS-14** `P2` 校验失败不暴露 OSS 内部细节
+- [x] **OSS-14** `P2` 校验失败不暴露 OSS 内部细节
   - 步骤：分别用"不存在"与"无权限"对象绑定
   - 预期：对外统一返回"图片对象不可用"，不区分 access denied / 不存在
   - 关联：003-FR-010
 
-- [ ] **OSS-15** `P1` 拒绝裸 URL 图片字段
+- [x] **OSS-15** `P1` 拒绝裸 URL 图片字段
   - 步骤：图片字段提交含 `://` 的值（如 http://.../x.png）
   - 预期：校验错误拒绝
   - 关联：003-FR-017
 
 ## A10. ImageResponse 统一返回（admin 侧）
 
-- [ ] **IMG-01** `P1` Banner 详情 imageUrls 为 List<ImageResponse>
+- [x] **IMG-01** `P1` Banner 详情 imageUrls 为 List<ImageResponse>
   - 步骤：`GET /api/admin/banners/{id}`
   - 预期：imageUrls 每项含非空 id 与带签名 url
   - 关联：003-FR-011/012 / US4-AC1
 
-- [ ] **IMG-02** `P1` 商户详情 logo 为 ImageResponse、images 为 List<ImageResponse>
+- [x] **IMG-02** `P1` 商户详情 logo 为 ImageResponse、images 为 List<ImageResponse>
   - 步骤：`GET /api/admin/merchants/{id}`
   - 预期：logo 单对象、images 列表，均带签名 url 与 id
   - 关联：US4-AC2
 
-- [ ] **IMG-03** `P1` 城市 backgroundImage 为 ImageResponse（无图为 null）
+- [x] **IMG-03** `P1` 城市 backgroundImage 为 ImageResponse（无图为 null）
   - 步骤：`GET /api/admin/cities`、`/cities/{id}`
   - 预期：有背景图为 ImageResponse；无背景图为 null
   - 关联：US4-AC3
 
-- [ ] **IMG-04** `P1` 签名 URL 去掉签名参数后访问被拒
+- [x] **IMG-04** `P1` 签名 URL 去掉签名参数后访问被拒
   - 步骤：取任一返回 url，剥离签名参数访问
   - 预期：403/AccessDenied
   - 关联：003-FR-013 / US2-AC2 / SC-002
@@ -427,38 +427,38 @@
   - 预期：期内 200 返回字节，超期失败
   - 关联：003-FR-015 / US2-AC3
 
-- [ ] **IMG-06** `P2` 每次响应 url 为当次新生成签名（不缓存过期签名）
+- [x] **IMG-06** `P2` 每次响应 url 为当次新生成签名（不缓存过期签名）
   - 步骤：两次拉同一详情，比对 url 签名参数
   - 预期：每次为新签名 url
   - 关联：003-FR-014
 
-- [ ] **IMG-07** `P2` ImageResponse.id 等于 OSS object key 且稳定
+- [x] **IMG-07** `P2` ImageResponse.id 等于 OSS object key 且稳定
   - 预期：id == `images/<uuid>.<ext>`，多次返回稳定一致
   - 关联：003-FR-016
 
-- [ ] **IMG-08** `P2` 无裸 String 图片字段残留（契约扫描）
+- [x] **IMG-08** `P2` 无裸 String 图片字段残留（契约扫描）
   - 步骤：抓取 admin 所有 controller 响应 schema
   - 预期：所有图片字段为 ImageResponse / List<ImageResponse>，零裸 String
   - 关联：US4 独立测试 / SC-003
 
 ## A11. 操作日志 `/api/admin/logs`
 
-- [ ] **LOG-01** `P1` 写操作异步落日志
+- [x] **LOG-01** `P1` 写操作异步落日志
   - 步骤：修改商户 weight → `GET /api/admin/logs/page`
   - 预期：存在 module=merchant、action=update、target=商户id 的记录
   - 关联：FR-004/029 / US4-AC1 / SC-006
 
-- [ ] **LOG-02** `P2` 按操作人 + 时间区间过滤
+- [x] **LOG-02** `P2` 按操作人 + 时间区间过滤
   - 步骤：按 username=admin + 今天过滤
   - 预期：仅返回 admin 今日日志
   - 关联：US4-AC2
 
-- [ ] **LOG-03** `P2` 日志分页（默认 20，可切 30，右下角分页器）
+- [x] **LOG-03** `P2` 日志分页（默认 20，可切 30，右下角分页器）
   - 前置：>20 条日志
   - 预期：分页正确，默认每页 20，可切 30
   - 关联：US4-AC3 / FR-006
 
-- [ ] **LOG-04** `P3` 各模块关键写操作均可查
+- [x] **LOG-04** `P3` 各模块关键写操作均可查
   - 步骤：城市/标签/分类/商户/Manager 的增改删/上下线/重置密码各触发一次
   - 预期：对应日志可查率 ≥99%
   - 关联：SC-006
@@ -469,22 +469,22 @@
 
 ## B1. API Key 鉴权
 
-- [ ] **AK-01** `P1` 缺失 X-API-Key 返回 401
+- [x] **AK-01** `P1` 缺失 X-API-Key 返回 401
   - 步骤：不带头调 `GET /api/app/cities`
   - 预期：401 ProblemDetail
   - 关联：FR-017 / Edge
 
-- [ ] **AK-02** `P1` key 不在白名单返回 401（不区分原因）
+- [x] **AK-02** `P1` key 不在白名单返回 401（不区分原因）
   - 步骤：带错误 key 调接口
   - 预期：401 + 通用提示，不透露具体原因
   - 关联：FR-017/018
 
-- [ ] **AK-03** `P1` 命中白名单任一 key 放行
+- [x] **AK-03** `P1` 命中白名单任一 key 放行
   - 步骤：带合法 key 调接口
   - 预期：200 正常返回
   - 关联：FR-017
 
-- [ ] **AK-04** `P2` 鉴权失败记录 WARN 审计日志且不含 key 明文
+- [x] **AK-04** `P2` 鉴权失败记录 WARN 审计日志且不含 key 明文
   - 步骤：触发一次鉴权失败，检查日志
   - 预期：WARN 日志含远端 IP、是否携带头、路径、时间戳；仅 key 的 SHA-256 前 6 位脱敏指纹，无明文
   - 关联：FR-019
@@ -496,114 +496,114 @@
 
 ## B2. 城市 `GET /api/app/cities`
 
-- [ ] **APP-CITY-01** `P1` 仅返回已上线城市，按运营排序
+- [x] **APP-CITY-01** `P1` 仅返回已上线城市，按运营排序
   - 预期：仅 online=true 城市，按约定排序
   - 关联：FR-011 / US2-AC1
 
-- [ ] **APP-CITY-02** `P2` 城市 backgroundImage 为 ImageResponse（无图 null）
+- [x] **APP-CITY-02** `P2` 城市 backgroundImage 为 ImageResponse（无图 null）
   - 预期：图片字段统一 ImageResponse
   - 关联：003-FR-011 / US4-AC3
 
 ## B3. 商户列表 `GET /api/app/merchants`
 
-- [ ] **APP-MCH-01** `P1` cityId 必填
+- [x] **APP-MCH-01** `P1` cityId 必填
   - 步骤：不传 cityId 调用
   - 预期：校验错误/缺参提示
   - 关联：FR-012
 
-- [ ] **APP-MCH-02** `P1` period 单值过滤（recommendedPeriods 包含该值）
+- [x] **APP-MCH-02** `P1` period 单值过滤（recommendedPeriods 包含该值）
   - 步骤：`?cityId=..&period=OVULATION`
   - 预期：仅返回推荐周期含 OVULATION 的上架商户
   - 关联：FR-012 / US1-AC2
 
-- [ ] **APP-MCH-03** `P1` 排序 weight DESC, createdAt DESC
+- [x] **APP-MCH-03** `P1` 排序 weight DESC, createdAt DESC
   - 预期：列表按权重降序、创建时间降序
   - 关联：FR-050 / US1-AC2
 
-- [ ] **APP-MCH-04** `P1` 仅返回上架商户
+- [x] **APP-MCH-04** `P1` 仅返回上架商户
   - 前置：城市下有上架与下架商户
   - 预期：仅返回 online=true 商户
 
-- [ ] **APP-MCH-05** `P1` 当前城市/周期无商户返回空集合（非 500）
+- [x] **APP-MCH-05** `P1` 当前城市/周期无商户返回空集合（非 500）
   - 步骤：筛选无结果条件
   - 预期：返回空列表 + 空状态语义，不报 500
   - 关联：US1-AC5 / Edge
 
-- [ ] **APP-MCH-06** `P2` 省略 categoryId 返回该城市所有上架商户（含 categoryId=NULL）
+- [x] **APP-MCH-06** `P2` 省略 categoryId 返回该城市所有上架商户（含 categoryId=NULL）
   - 步骤：不传 categoryId
   - 预期：含无分类商户；不接受 none/null 特殊值
   - 关联：FR-012 / Clarification
 
-- [ ] **APP-MCH-07** `P2` cityId 不存在/已下线返回空列表（非 404）
+- [x] **APP-MCH-07** `P2` cityId 不存在/已下线返回空列表（非 404）
   - 预期：空列表 + 空状态语义
   - 关联：Edge
 
-- [ ] **APP-MCH-08** `P2` 列表项 logo 为 ImageResponse
+- [x] **APP-MCH-08** `P2` 列表项 logo 为 ImageResponse
   - 关联：003-FR-012 / US4
 
 ## B4. 商户详情 `GET /api/app/merchants/{id}`
 
-- [ ] **APP-DET-01** `P1` 四维百分制换算正确（整数）
+- [x] **APP-DET-01** `P1` 四维百分制换算正确（整数）
   - 前置：原始分 S=24/L=20/E=20/I=16（满分 30/25/25/20）
   - 步骤：拉详情
   - 预期：返回 80/80/80/80，爱女指数 80
   - 关联：FR-014 / US1-AC4 / SC-003
 
-- [ ] **APP-DET-02** `P1` 仅返回上架标签（隐藏已下架）
+- [x] **APP-DET-02** `P1` 仅返回上架标签（隐藏已下架）
   - 前置：3 标签其中 1 下架
   - 预期：返回 2 个标签，商户仍可见
   - 关联：FR-015 / US1-AC3
 
-- [ ] **APP-DET-03** `P1` 详情含 logo/images（ImageResponse）、地址、坐标(可空)、评价、故事
+- [x] **APP-DET-03** `P1` 详情含 logo/images（ImageResponse）、地址、坐标(可空)、评价、故事
   - 预期：logo 为 ImageResponse、images 为 List<ImageResponse>；评价支持 emoji；故事文本完整
   - 关联：FR-013 / US4-AC2 / SC-007
 
 - [ ] **APP-DET-04** `P2` 历史图片为空时返回空数组而非 500
   - 关联：Edge
 
-- [ ] **APP-DET-05** `P2` 爱女指数 10 级映射正确
+- [x] **APP-DET-05** `P2` 爱女指数 10 级映射正确
   - 步骤：构造不同原始分组合验证 10 级/星级映射
   - 关联：FR-014
 
 ## B5. 商户评价 `GET /api/app/merchants/{merchantId}/reviews`
 
-- [ ] **APP-REV-01** `P1` 返回评价列表（昵称/标题/正文，支持 emoji 完整）
+- [x] **APP-REV-01** `P1` 返回评价列表（昵称/标题/正文，支持 emoji 完整）
   - 预期：emoji（含组合 emoji）字符完整无丢失
   - 关联：FR-013 / SC-007
 
-- [ ] **APP-REV-02** `P2` 分页/排序符合约定
+- [x] **APP-REV-02** `P2` 分页/排序符合约定
   - 预期：按 sortOrder 返回，分页正常
 
 ## B6. Banner `GET /api/app/banners`
 
-- [ ] **APP-BAN-01** `P1` 仅返回 online=true 的 banner
+- [x] **APP-BAN-01** `P1` 仅返回 online=true 的 banner
   - 前置：一条 online、一条 offline
   - 预期：仅返回 online 的那条
   - 关联：002-FR-013 / US2(banner)-AC1
 
-- [ ] **APP-BAN-02** `P1` CITY banner data 含关联城市 {id,name}，image 为 url 列表
+- [x] **APP-BAN-02** `P1` CITY banner data 含关联城市信息，image 为 url 列表
   - 步骤：取一条 online CITY banner（关联城市 X 在线）
-  - 预期：`data={id:X.id, name:X.name}`，`image` 为图片 url 列表（ImageResponse）
+  - 预期：`data={id:X.id, chineseName, englishName, chineseProvince, englishProvince}`（城市名以 `chineseName` 为准），`image` 为图片 url 列表（ImageResponse）
   - 关联：002-FR-013/014 / US2(banner)-AC2
 
-- [ ] **APP-BAN-03** `P1` 防御性跳过关联实体不存在/已下线的 banner
+- [x] **APP-BAN-03** `P1` 防御性跳过关联实体不存在/已下线的 banner
   - 前置：banner online=true 但关联城市被删除或已下线
   - 步骤：调 App banner
   - 预期：跳过该 banner，不返回，不报错
   - 关联：002-FR-015 / Edge
 
-- [ ] **APP-BAN-04** `P2` explore 模块已移除
+- [x] **APP-BAN-04** `P2` explore 模块已移除
   - 步骤：调用原 explore 路径
   - 预期：404（explore 入口/接口已从 app 后端移除）
   - 关联：002-FR-012 / US2(banner)-AC3
 
-- [ ] **APP-BAN-05** `P2` data 结构可容纳任意 JSON（扩展性）
+- [x] **APP-BAN-05** `P2` data 结构可容纳任意 JSON（扩展性）
   - 预期：接口结构允许非 CITY 类型扩展，不破坏契约
   - 关联：002-FR-014
 
 ## B7. App 只读约束
 
-- [ ] **APP-RO-01** `P1` App 端不提供任何写入/账号/注册/登录接口
+- [x] **APP-RO-01** `P1` App 端不提供任何写入/账号/注册/登录接口
   - 步骤：尝试对 `/api/app/**` 发 POST/PUT/DELETE 写请求
   - 预期：不存在写接口（404/405）；无用户管理/注册/登录入口
   - 关联：FR-016
@@ -612,25 +612,25 @@
 
 # C. 跨端 / 一致性
 
-- [ ] **X-01** `P1` admin 与 app 路径前缀互不混用
+- [x] **X-01** `P1` admin 与 app 路径前缀互不混用
   - 步骤：分别访问 `/api/admin/**` 与 `/api/app/**`
   - 预期：两套入口独立，鉴权方式各异（JWT vs API Key），无交叉
   - 关联：FR-001
 
-- [ ] **X-02** `P1` admin+app 所有图片字段 ImageResponse 覆盖率 100%
+- [x] **X-02** `P1` admin+app 所有图片字段 ImageResponse 覆盖率 100%
   - 步骤：抓取两后端全部 controller 响应 schema
   - 预期：零裸 String 图片字段
   - 关联：003-SC-003 / US4 独立测试
 
-- [ ] **X-03** `P2` City 状态联动后 app banner 可见性与城市状态 100% 一致
+- [x] **X-03** `P2` City 状态联动后 app banner 可见性与城市状态 100% 一致
   - 步骤：切换城市 online 状态，事件处理完成后比对 app banner
   - 预期：可见性变化与城市新状态一致
   - 关联：002-SC-002
 
-- [ ] **X-04** `P2` 同一图片被多实体引用按独立 objectKey 处理（不去重）
+- [x] **X-04** `P2` 同一图片被多实体引用按独立 objectKey 处理（不去重）
   - 关联：003 Edge
 
-- [ ] **X-05** `P3` 默认 admin 幂等植入（重复启动不重复创建/重置）
+- [x] **X-05** `P3` 默认 admin 幂等植入（重复启动不重复创建/重置）
   - 步骤：重复启动应用
   - 预期：`loves_manager` 中 admin 仅一条，密码不被重置
   - 关联：FR-021 / SC-005 / US3-AC3 / Edge

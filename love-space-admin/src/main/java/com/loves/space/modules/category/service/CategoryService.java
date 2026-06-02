@@ -29,7 +29,7 @@ public class CategoryService {
         this.eventPublisher = eventPublisher;
     }
 
-    /** 创建分类。 */
+    /** 创建分类。长度校验见 {@code CategoryUpsertRequest} 的 {@code @Size}；此处仅做查库才能判定的唯一性校验。 */
     public CategoryItemResponse create(CategoryUpsertRequest request) {
         if (categoryRepository.existsByName(request.name())) {
             throw new IllegalArgumentException("分类名已存在：" + request.name());
@@ -39,7 +39,7 @@ public class CategoryService {
         return toItem(categoryRepository.save(category));
     }
 
-    /** 更新分类。 */
+    /** 更新分类。长度校验见 {@code CategoryUpsertRequest} 的 {@code @Size}；此处仅做查库才能判定的唯一性校验。 */
     public CategoryItemResponse update(UUID id, CategoryUpsertRequest request) {
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("分类不存在：" + id));
