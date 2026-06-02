@@ -202,7 +202,7 @@ export default function MerchantForm() {
       {loading ? (
         <div className="text-gray-500">加载中...</div>
       ) : (
-        <form onSubmit={handleSubmit} className="max-w-4xl space-y-5">
+        <form onSubmit={handleSubmit} noValidate className="max-w-4xl space-y-5">
           {/* 1. 基础信息 */}
           <fieldset className={sectionClass}>
             <legend className={sectionTitleClass}>基础信息</legend>
