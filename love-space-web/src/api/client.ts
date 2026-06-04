@@ -44,9 +44,20 @@ function createClient(): AxiosInstance {
       }
 
       if (error.response?.status === 401) {
-        setStoredToken(null);
-        if (typeof window !== "undefined" && window.location.pathname !== "/signin") {
-          window.location.href = "/signin";
+        // 登录接口自身的 401（用户名/密码错误、账号停用）交给登录表单展示中文提示，
+        // 不在此处全局跳转，否则会抢先导航导致错误提示来不及显示。
+        const reqUrl = error.config?.url ?? "";
+        const isLoginRequest = reqUrl.includes("/auth/login");
+        if (!isLoginRequest) {
+          setStoredToken(null);
+          if (typeof window !== "undefined") {
+            // 子路径部署时 basename 为 import.meta.env.BASE_URL（默认 "/love-space/"），
+            // 硬跳转必须带上该前缀，否则会命中 dev server 的 404。
+            const signInPath = `${import.meta.env.BASE_URL}signin`.replace(/\/{2,}/g, "/");
+            if (window.location.pathname !== signInPath) {
+              window.location.href = signInPath;
+            }
+          }
         }
       }
       return Promise.reject(error);

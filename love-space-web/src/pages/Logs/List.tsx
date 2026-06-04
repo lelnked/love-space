@@ -8,14 +8,49 @@ import { useToast } from "../../context/ToastContext";
 import DataTable, { Column } from "../../components/datatable/DataTable";
 import { OperationLogItem, OperationLogQuery, pageOperationLogs } from "../../api/logs";
 
+const MODULE_LABELS: Record<string, string> = {
+  auth: "认证",
+  banner: "Banner",
+  category: "分类",
+  city: "城市",
+  file: "文件",
+  manager: "管理员",
+  merchant: "商户",
+  "merchant-review": "商户评价",
+  tag: "标签",
+};
+
+const ACTION_LABELS: Record<string, string> = {
+  create: "创建",
+  update: "更新",
+  delete: "删除",
+  "set-online": "上下架",
+  enable: "启用",
+  disable: "停用",
+  "reset-password": "重置密码",
+  recommend: "设为推荐",
+  logout: "登出",
+  "upload-credentials": "获取上传凭证",
+};
+
 const MODULE_OPTIONS = [
-  { label: "用户", value: "user" },
+  { label: "管理员", value: "manager" },
   { label: "城市", value: "city" },
   { label: "分类", value: "category" },
   { label: "标签", value: "tag" },
-  { label: "商家", value: "merchant" },
+  { label: "商户", value: "merchant" },
+  { label: "商户评价", value: "merchant-review" },
+  { label: "Banner", value: "banner" },
   { label: "认证", value: "auth" },
 ];
+
+function moduleLabel(value: string): string {
+  return MODULE_LABELS[value] ?? value;
+}
+
+function actionLabel(value: string): string {
+  return ACTION_LABELS[value] ?? value;
+}
 
 const FILTER_FIELDS: FilterField[] = [
   { name: "username", label: "操作人", type: "text", placeholder: "模糊匹配" },
@@ -97,8 +132,8 @@ export default function LogList() {
       render: (it) => formatDateTime(it.createdAt),
     },
     { key: "username", header: "操作人", width: "10rem" },
-    { key: "module", header: "模块", width: "8rem" },
-    { key: "action", header: "动作", width: "10rem" },
+    { key: "module", header: "模块", width: "8rem", render: (it) => moduleLabel(it.module) },
+    { key: "action", header: "动作", width: "10rem", render: (it) => actionLabel(it.action) },
     { key: "target", header: "对象", render: (it) => it.target ?? "-" },
   ];
 

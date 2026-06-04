@@ -137,14 +137,14 @@ export default function FilterBar({ fields, initialValues, onApply, onReset, rig
           onClick={() => onApply(values)}
           className="px-4 py-2 text-sm rounded bg-brand-500 text-white hover:bg-brand-600"
         >
-          Apply
+          查询
         </button>
         <button
           type="button"
           onClick={reset}
           className="px-4 py-2 text-sm rounded border border-gray-300 text-gray-700 hover:bg-gray-50"
         >
-          Reset
+          重置
         </button>
       </div>
     </div>

@@ -118,7 +118,12 @@ export default function BannerList() {
       className: "font-medium text-gray-800 dark:text-white/90",
     },
     { key: "positionCode", header: "位置标识" },
-    { key: "type", header: "类型", width: "8rem" },
+    {
+      key: "type",
+      header: "类型",
+      width: "8rem",
+      render: (it) => (it.type === "CITY" ? "城市" : it.type),
+    },
     {
       key: "linkedCityName",
       header: "关联城市",

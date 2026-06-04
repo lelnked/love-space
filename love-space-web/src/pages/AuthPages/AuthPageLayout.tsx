@@ -27,7 +27,7 @@ export default function AuthLayout({
                 />
               </Link>
               <p className="text-center text-gray-400 dark:text-white/60">
-                Free and Open-Source Tailwind CSS Admin Dashboard Template
+                恋爱空间运营后台
               </p>
             </div>
           </div>

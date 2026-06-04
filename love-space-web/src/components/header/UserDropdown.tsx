@@ -86,7 +86,7 @@ export default function UserDropdown() {
               fill=""
             />
           </svg>
-          Sign out
+          退出登录
         </button>
       </Dropdown>
     </div>
