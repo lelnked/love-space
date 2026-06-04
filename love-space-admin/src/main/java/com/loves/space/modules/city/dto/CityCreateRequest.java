@@ -15,10 +15,10 @@ import jakarta.validation.constraints.Size;
  * @param online          是否上架（可空，默认 false）
  */
 public record CityCreateRequest(
-        @NotBlank @Size(max = 50) String chineseName,
-        @NotBlank @Size(max = 100) String englishName,
-        @NotBlank @Size(max = 50) String chineseProvince,
-        @NotBlank @Size(max = 100) String englishProvince,
+        @NotBlank(message = "中文名不能为空") @Size(max = 50, message = "中文名长度不能超过 50 个字符") String chineseName,
+        @NotBlank(message = "英文名不能为空") @Size(max = 100, message = "英文名长度不能超过 100 个字符") String englishName,
+        @NotBlank(message = "中文省份不能为空") @Size(max = 50, message = "中文省份长度不能超过 50 个字符") String chineseProvince,
+        @NotBlank(message = "英文省份不能为空") @Size(max = 100, message = "英文省份长度不能超过 100 个字符") String englishProvince,
         @Pattern(regexp = "^(images|bound)/[\\w-]+\\.(png|jpg|webp)$",
                 message = "backgroundImage 仅接受 OSS objectKey（images/<id>.<ext> 或 bound/<id>.<ext>）")
         String backgroundImage,

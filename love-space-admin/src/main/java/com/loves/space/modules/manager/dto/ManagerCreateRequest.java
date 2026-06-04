@@ -12,8 +12,8 @@ import jakarta.validation.constraints.Size;
  * @param nickname 可选昵称（最长 64）
  */
 public record ManagerCreateRequest(
-        @NotBlank @Size(max = 64) String username,
-        @NotBlank @Size(min = 8, max = 128) String password,
-        @Size(max = 64) String nickname
+        @NotBlank(message = "用户名不能为空") @Size(max = 64, message = "用户名长度不能超过 64 个字符") String username,
+        @NotBlank(message = "密码不能为空") @Size(min = 8, max = 128, message = "密码长度需为 8~128 个字符") String password,
+        @Size(max = 64, message = "昵称长度不能超过 64 个字符") String nickname
 ) {
 }

@@ -8,6 +8,6 @@ import jakarta.validation.constraints.NotBlank;
  * @param name 标签名（必填、全库唯一、长度 ≤ 6 个汉字字符；service 层按 codePointCount 校验）
  */
 public record TagUpsertRequest(
-        @NotBlank String name
+        @NotBlank(message = "标签名不能为空") String name
 ) {
 }

@@ -29,8 +29,9 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleValidation(MethodArgumentNotValidException ex, HttpServletRequest request) {
+        // 仅返回中文 defaultMessage，不拼接英文字段名前缀，与业务异常（IllegalArgumentException）保持一致的中文风格。
         String fieldErrors = ex.getBindingResult().getFieldErrors().stream()
-                .map(e -> e.getField() + ": " + e.getDefaultMessage())
+                .map(DefaultMessageSourceResolvable::getDefaultMessage)
                 .collect(Collectors.joining(", "));
         String globalErrors = ex.getBindingResult().getGlobalErrors().stream()
                 .map(DefaultMessageSourceResolvable::getDefaultMessage)

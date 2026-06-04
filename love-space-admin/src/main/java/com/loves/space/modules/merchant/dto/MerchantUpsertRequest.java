@@ -34,26 +34,26 @@ import java.util.UUID;
  * @param images                  商户图片 URL 列表（至少 1 张，按数组顺序展示）
  */
 public record MerchantUpsertRequest(
-        @NotBlank String name,
-        @NotBlank
+        @NotBlank(message = "商户名称不能为空") String name,
+        @NotBlank(message = "商户 LOGO 不能为空")
         @Pattern(regexp = "^(images|bound)/[\\w-]+\\.(png|jpg|webp)$",
                 message = "logo 仅接受 OSS objectKey（images/<id>.<ext> 或 bound/<id>.<ext>）")
         String logo,
-        @NotBlank String address,
+        @NotBlank(message = "详细地址不能为空") String address,
         BigDecimal longitude,
         BigDecimal latitude,
-        @NotNull UUID cityId,
+        @NotNull(message = "所属城市不能为空") UUID cityId,
         UUID categoryId,
-        @NotNull @Min(0) @Max(30) Short safetyEnvironmentScore,
-        @NotNull @Min(0) @Max(25) Short businessRightsScore,
-        @NotNull @Min(0) @Max(25) Short experienceFriendlyScore,
-        @NotNull @Min(0) @Max(20) Short socialContributionScore,
+        @NotNull(message = "安全环境分不能为空") @Min(value = 0, message = "安全环境分不能小于 0") @Max(value = 30, message = "安全环境分不能超过 30") Short safetyEnvironmentScore,
+        @NotNull(message = "经营权益分不能为空") @Min(value = 0, message = "经营权益分不能小于 0") @Max(value = 25, message = "经营权益分不能超过 25") Short businessRightsScore,
+        @NotNull(message = "体验友好分不能为空") @Min(value = 0, message = "体验友好分不能小于 0") @Max(value = 25, message = "体验友好分不能超过 25") Short experienceFriendlyScore,
+        @NotNull(message = "社会贡献分不能为空") @Min(value = 0, message = "社会贡献分不能小于 0") @Max(value = 20, message = "社会贡献分不能超过 20") Short socialContributionScore,
         String story,
         Integer weight,
         Boolean online,
         List<Period> periods,
         List<UUID> tagIds,
-        List<@NotBlank @Pattern(regexp = "^(images|bound)/[\\w-]+\\.(png|jpg|webp)$",
+        List<@NotBlank(message = "商户图片不能为空") @Pattern(regexp = "^(images|bound)/[\\w-]+\\.(png|jpg|webp)$",
                 message = "images 仅接受 OSS objectKey（images/<id>.<ext> 或 bound/<id>.<ext>）") String> images
 ) {
 }

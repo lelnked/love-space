@@ -17,12 +17,12 @@ import java.util.UUID;
  * 若请求体中出现 {@code online} 字段，service 层抛 400（FR-009）。
  */
 public record BannerUpdateRequest(
-        @NotBlank @Size(max = 128) String name,
-        @NotBlank @Size(max = 64) String positionCode,
-        @NotNull BannerType type,
-        @NotEmpty List<@NotBlank @Pattern(regexp = "^(images|bound)/[\\w-]+\\.(png|jpg|webp)$",
+        @NotBlank(message = "banner 名称不能为空") @Size(max = 128, message = "banner 名称长度不能超过 128 个字符") String name,
+        @NotBlank(message = "展示位编码不能为空") @Size(max = 64, message = "展示位编码长度不能超过 64 个字符") String positionCode,
+        @NotNull(message = "banner 类型不能为空") BannerType type,
+        @NotEmpty(message = "至少上传一张图片") List<@NotBlank(message = "图片不能为空") @Pattern(regexp = "^(images|bound)/[\\w-]+\\.(png|jpg|webp)$",
                 message = "imageUrls 仅接受 OSS objectKey（images/<id>.<ext> 或 bound/<id>.<ext>）") String> imageUrls,
-        @JsonProperty("link") @NotNull UUID linkedEntityId,
+        @JsonProperty("link") @NotNull(message = "请选择关联城市") UUID linkedEntityId,
         /** 仅为捕获非法字段使用：JSON 中若显式传入会被 service 抛错；正常请求不传。 */
         Boolean online
 ) {

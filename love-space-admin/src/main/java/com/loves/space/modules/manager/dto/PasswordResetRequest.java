@@ -9,6 +9,6 @@ import jakarta.validation.constraints.Size;
  * @param newPassword 新明文密码（长度 8~128，服务端再做 BCrypt 哈希）
  */
 public record PasswordResetRequest(
-        @NotBlank @Size(min = 8, max = 128) String newPassword
+        @NotBlank(message = "新密码不能为空") @Size(min = 8, max = 128, message = "密码长度需为 8~128 个字符") String newPassword
 ) {
 }
