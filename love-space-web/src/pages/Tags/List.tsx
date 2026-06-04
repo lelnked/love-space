@@ -3,6 +3,7 @@ import { AxiosError } from "axios";
 import FilterBar, { FilterField, FilterValues } from "../../components/filter/FilterBar";
 import Pagination from "../../components/pagination/Pagination";
 import { useToast } from "../../context/ToastContext";
+import DataTable, { Column } from "../../components/datatable/DataTable";
 import {
   createTag,
   deleteTag,
@@ -136,9 +137,11 @@ export default function TagList() {
   };
 
   const handleToggleOnline = async (it: TagItem) => {
+    const next = !it.online;
     try {
-      await setTagOnline(it.id, !it.online);
-      await load();
+      await setTagOnline(it.id, next);
+      // 乐观更新：仅改本行，避免整表 reload 抖动
+      setItems((prev) => prev.map((t) => (t.id === it.id ? { ...t, online: next } : t)));
     } catch (err) {
       const ax = err as AxiosError<{ detail?: string }>;
       toast.error(ax.response?.data?.detail ??"操作失败");
@@ -149,12 +152,80 @@ export default function TagList() {
     if (!window.confirm(`确认删除标签「${it.name}」？`)) return;
     try {
       await deleteTag(it.id);
-      await load();
+      // 局部移除该行，无需整表 reload
+      setItems((prev) => prev.filter((t) => t.id !== it.id));
     } catch (err) {
       const ax = err as AxiosError<{ detail?: string }>;
       toast.error(ax.response?.data?.detail ??"删除失败");
     }
   };
+
+  const btnClass =
+    "px-4 py-2 text-sm rounded bg-brand-500 text-white hover:bg-brand-600 disabled:opacity-50";
+
+  const columns: Column<TagItem>[] = [
+    {
+      key: "name",
+      header: "名称",
+      width: "16rem",
+      className: "text-gray-800 dark:text-white/90",
+      render: (it) =>
+        editingId === it.id ? (
+          <input
+            type="text"
+            value={editingName}
+            onChange={(e) => setEditingName(e.target.value)}
+            className="border rounded px-2 py-1 text-sm"
+          />
+        ) : (
+          it.name
+        ),
+    },
+    {
+      key: "online",
+      header: "上架",
+      width: "8rem",
+      render: (it) => (
+        <span className={it.online ? "text-success-500" : "text-gray-400"}>
+          {it.online ? "已上架" : "未上架"}
+        </span>
+      ),
+    },
+    {
+      key: "createdAt",
+      header: "创建时间",
+      width: "13rem",
+      render: (it) => formatDateTime(it.createdAt),
+    },
+    {
+      key: "actions",
+      header: "操作",
+      width: "16rem",
+      render: (it) =>
+        editingId === it.id ? (
+          <div className="flex gap-2">
+            <button type="button" onClick={() => saveEdit(it)} className={btnClass}>
+              保存
+            </button>
+            <button type="button" onClick={cancelEdit} className={btnClass}>
+              取消
+            </button>
+          </div>
+        ) : (
+          <div className="flex gap-2">
+            <button type="button" onClick={() => handleToggleOnline(it)} className={btnClass}>
+              {it.online ? "下架" : "上架"}
+            </button>
+            <button type="button" onClick={() => startEdit(it)} className={btnClass}>
+              编辑
+            </button>
+            <button type="button" onClick={() => handleDelete(it)} className={btnClass}>
+              删除
+            </button>
+          </div>
+        ),
+    },
+  ];
 
   return (
     <div>
@@ -191,111 +262,23 @@ export default function TagList() {
         }}
       />
 
-      <div className="overflow-x-auto bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800">
-        <table className="w-full text-sm">
-          <thead className="bg-gray-50 dark:bg-gray-800 text-left text-gray-500">
-            <tr>
-              <th className="px-4 py-3">名称</th>
-              <th className="px-4 py-3">上架</th>
-              <th className="px-4 py-3">创建时间</th>
-              <th className="px-4 py-3">操作</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading && (
-              <tr>
-                <td colSpan={4} className="px-4 py-6 text-center text-gray-500">
-                  加载中...
-                </td>
-              </tr>
-            )}
-            {!loading && pagedItems.length === 0 && (
-              <tr>
-                <td colSpan={4} className="px-4 py-6 text-center text-gray-500">
-                  暂无数据
-                </td>
-              </tr>
-            )}
-            {!loading &&
-              pagedItems.map((it) => (
-                <tr key={it.id} className="border-t border-gray-100 dark:border-gray-800">
-                  <td className="px-4 py-3 text-gray-800 dark:text-white/90">
-                    {editingId === it.id ? (
-                      <input
-                        type="text"
-                        value={editingName}
-                        onChange={(e) => setEditingName(e.target.value)}
-                        className="border rounded px-2 py-1 text-sm"
-                      />
-                    ) : (
-                      it.name
-                    )}
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className={it.online ? "text-success-500" : "text-gray-400"}>
-                      {it.online ? "已上架" : "未上架"}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">{formatDateTime(it.createdAt)}</td>
-                  <td className="px-4 py-3 space-x-2">
-                    {editingId === it.id ? (
-                      <>
-                        <button
-                          type="button"
-                          onClick={() => saveEdit(it)}
-                          className="px-4 py-2 text-sm rounded bg-brand-500 text-white hover:bg-brand-600 disabled:opacity-50"
-                        >
-                          保存
-                        </button>
-                        <button
-                          type="button"
-                          onClick={cancelEdit}
-                          className="px-4 py-2 text-sm rounded bg-brand-500 text-white hover:bg-brand-600 disabled:opacity-50"
-                        >
-                          取消
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        <button
-                          type="button"
-                          onClick={() => handleToggleOnline(it)}
-                          className="px-4 py-2 text-sm rounded bg-brand-500 text-white hover:bg-brand-600 disabled:opacity-50"
-                        >
-                          {it.online ? "下架" : "上架"}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => startEdit(it)}
-                          className="px-4 py-2 text-sm rounded bg-brand-500 text-white hover:bg-brand-600 disabled:opacity-50"
-                        >
-                          编辑
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDelete(it)}
-                          className="px-4 py-2 text-sm rounded bg-brand-500 text-white hover:bg-brand-600 disabled:opacity-50"
-                        >
-                          删除
-                        </button>
-                      </>
-                    )}
-                  </td>
-                </tr>
-              ))}
-          </tbody>
-        </table>
-        <Pagination
-          page={page}
-          size={size}
-          total={total}
-          totalPages={totalPages}
-          onChange={({ page: nextPage, size: nextSize }) => {
-            setPage(nextPage);
-            setSize(nextSize);
-          }}
-        />
-      </div>
+      <DataTable
+        columns={columns}
+        rows={pagedItems}
+        rowKey={(it) => it.id}
+        loading={loading}
+      />
+
+      <Pagination
+        page={page}
+        size={size}
+        total={total}
+        totalPages={totalPages}
+        onChange={({ page: nextPage, size: nextSize }) => {
+          setPage(nextPage);
+          setSize(nextSize);
+        }}
+      />
     </div>
   );
 }

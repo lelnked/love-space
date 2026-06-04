@@ -5,13 +5,7 @@ import Pagination from "../../components/pagination/Pagination";
 import PageMeta from "../../components/common/PageMeta";
 import ComponentCard from "../../components/common/ComponentCard";
 import { useToast } from "../../context/ToastContext";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHeader,
-  TableRow,
-} from "../../components/ui/table";
+import DataTable, { Column } from "../../components/datatable/DataTable";
 import { OperationLogItem, OperationLogQuery, pageOperationLogs } from "../../api/logs";
 
 const MODULE_OPTIONS = [
@@ -94,6 +88,20 @@ export default function LogList() {
     setPage(1);
   };
 
+  const columns: Column<OperationLogItem>[] = [
+    {
+      key: "createdAt",
+      header: "时间",
+      width: "13rem",
+      className: "font-medium text-gray-800 dark:text-white/90",
+      render: (it) => formatDateTime(it.createdAt),
+    },
+    { key: "username", header: "操作人", width: "10rem" },
+    { key: "module", header: "模块", width: "8rem" },
+    { key: "action", header: "动作", width: "10rem" },
+    { key: "target", header: "对象", render: (it) => it.target ?? "-" },
+  ];
+
   return (
     <>
       <PageMeta title="操作日志 | Love Space Admin" description="后台操作日志" />
@@ -106,68 +114,12 @@ export default function LogList() {
             onReset={handleReset}
           />
 
-          <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
-            <div className="max-w-full overflow-x-auto">
-              <Table>
-                <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
-                  <TableRow>
-                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
-                      时间
-                    </TableCell>
-                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
-                      操作人
-                    </TableCell>
-                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
-                      模块
-                    </TableCell>
-                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
-                      动作
-                    </TableCell>
-                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
-                      对象
-                    </TableCell>
-                  </TableRow>
-                </TableHeader>
-
-                <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
-                  {loading && (
-                    <TableRow>
-                      <TableCell className="px-5 py-6 text-center text-gray-500 text-theme-sm dark:text-gray-400">
-                        加载中...
-                      </TableCell>
-                    </TableRow>
-                  )}
-                  {!loading && items.length === 0 && (
-                    <TableRow>
-                      <TableCell className="px-5 py-6 text-center text-gray-500 text-theme-sm dark:text-gray-400">
-                        暂无数据
-                      </TableCell>
-                    </TableRow>
-                  )}
-                  {!loading &&
-                    items.map((it) => (
-                      <TableRow key={it.id}>
-                        <TableCell className="px-5 py-4 sm:px-6 text-start font-medium text-gray-800 text-theme-sm dark:text-white/90">
-                          {formatDateTime(it.createdAt)}
-                        </TableCell>
-                        <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                          {it.username}
-                        </TableCell>
-                        <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                          {it.module}
-                        </TableCell>
-                        <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                          {it.action}
-                        </TableCell>
-                        <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                          {it.target ?? "-"}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                </TableBody>
-              </Table>
-            </div>
-          </div>
+          <DataTable
+            columns={columns}
+            rows={items}
+            rowKey={(it) => it.id}
+            loading={loading}
+          />
 
           <Pagination
             page={page}

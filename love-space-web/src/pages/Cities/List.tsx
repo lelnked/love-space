@@ -8,13 +8,7 @@ import ComponentCard from "../../components/common/ComponentCard";
 import Badge from "../../components/ui/badge/Badge";
 import Button from "../../components/ui/button/Button";
 import { useToast } from "../../context/ToastContext";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHeader,
-  TableRow,
-} from "../../components/ui/table";
+import DataTable, { Column } from "../../components/datatable/DataTable";
 import {
   CityItem,
   CityQuery,
@@ -89,9 +83,13 @@ export default function CityList() {
   }, [load]);
 
   const handleToggleOnline = async (item: CityItem) => {
+    const next = !item.online;
     try {
-      await setCityOnline(item.id, !item.online);
-      await load();
+      await setCityOnline(item.id, next);
+      // 乐观更新：仅改本行，避免整表 reload 抖动
+      setItems((prev) =>
+        prev.map((c) => (c.id === item.id ? { ...c, online: next } : c)),
+      );
     } catch (err) {
       const ax = err as AxiosError<{ detail?: string }>;
       toast.error(ax.response?.data?.detail ?? "操作失败");
@@ -102,12 +100,58 @@ export default function CityList() {
     if (!window.confirm(`确认删除城市「${item.chineseName}」？`)) return;
     try {
       await deleteCity(item.id);
-      await load();
+      // 局部移除该行，无需整表 reload
+      setItems((prev) => prev.filter((c) => c.id !== item.id));
     } catch (err) {
       const ax = err as AxiosError<{ detail?: string }>;
       toast.error(ax.response?.data?.detail ?? "删除失败");
     }
   };
+
+  const columns: Column<CityItem>[] = [
+    {
+      key: "chineseName",
+      header: "中文名",
+      width: "12rem",
+      className: "font-medium text-gray-800 dark:text-white/90",
+    },
+    { key: "englishName", header: "英文名" },
+    { key: "chineseProvince", header: "中文省份" },
+    {
+      key: "online",
+      header: "上架",
+      width: "7rem",
+      render: (it) => (
+        <Badge size="sm" color={it.online ? "success" : "error"}>
+          {it.online ? "已上架" : "未上架"}
+        </Badge>
+      ),
+    },
+    {
+      key: "createdAt",
+      header: "创建时间",
+      width: "13rem",
+      render: (it) => formatDateTime(it.createdAt),
+    },
+    {
+      key: "actions",
+      header: "操作",
+      width: "16rem",
+      render: (it) => (
+        <div className="flex gap-2">
+          <Link to={`/cities/${it.id}/edit`}>
+            <Button size="sm" variant="primary">编辑</Button>
+          </Link>
+          <Button size="sm" variant="primary" onClick={() => handleToggleOnline(it)}>
+            {it.online ? "下架" : "上架"}
+          </Button>
+          <Button size="sm" variant="primary" onClick={() => handleDelete(it)}>
+            删除
+          </Button>
+        </div>
+      ),
+    },
+  ];
 
   return (
     <>
@@ -135,86 +179,12 @@ export default function CityList() {
             }}
           />
 
-          <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
-            <div className="max-w-full overflow-x-auto">
-              <Table>
-                <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
-                  <TableRow>
-                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
-                      中文名
-                    </TableCell>
-                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
-                      英文名
-                    </TableCell>
-                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
-                      中文省份
-                    </TableCell>
-                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
-                      上架
-                    </TableCell>
-                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
-                      创建时间
-                    </TableCell>
-                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
-                      操作
-                    </TableCell>
-                  </TableRow>
-                </TableHeader>
-
-                <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
-                  {loading && (
-                    <TableRow>
-                      <TableCell className="px-5 py-6 text-center text-gray-500 text-theme-sm dark:text-gray-400">
-                        加载中...
-                      </TableCell>
-                    </TableRow>
-                  )}
-                  {!loading && pagedItems.length === 0 && (
-                    <TableRow>
-                      <TableCell className="px-5 py-6 text-center text-gray-500 text-theme-sm dark:text-gray-400">
-                        暂无数据
-                      </TableCell>
-                    </TableRow>
-                  )}
-                  {!loading &&
-                    pagedItems.map((it) => (
-                      <TableRow key={it.id}>
-                        <TableCell className="px-5 py-4 sm:px-6 text-start font-medium text-gray-800 text-theme-sm dark:text-white/90">
-                          {it.chineseName}
-                        </TableCell>
-                        <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                          {it.englishName}
-                        </TableCell>
-                        <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                          {it.chineseProvince}
-                        </TableCell>
-                        <TableCell className="px-4 py-3 text-start text-theme-sm">
-                          <Badge size="sm" color={it.online ? "success" : "error"}>
-                            {it.online ? "已上架" : "未上架"}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                          {formatDateTime(it.createdAt)}
-                        </TableCell>
-                        <TableCell className="px-4 py-3 text-start text-theme-sm">
-                          <div className="flex gap-2">
-                            <Link to={`/cities/${it.id}/edit`}>
-                              <Button size="sm" variant="primary">编辑</Button>
-                            </Link>
-                            <Button size="sm" variant="primary" onClick={() => handleToggleOnline(it)}>
-                              {it.online ? "下架" : "上架"}
-                            </Button>
-                            <Button size="sm" variant="primary" onClick={() => handleDelete(it)}>
-                              删除
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                </TableBody>
-              </Table>
-            </div>
-          </div>
+          <DataTable
+            columns={columns}
+            rows={pagedItems}
+            rowKey={(it) => it.id}
+            loading={loading}
+          />
 
           <Pagination
             page={page}

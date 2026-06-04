@@ -8,13 +8,7 @@ import ComponentCard from "../../components/common/ComponentCard";
 import Badge from "../../components/ui/badge/Badge";
 import Button from "../../components/ui/button/Button";
 import { useToast } from "../../context/ToastContext";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHeader,
-  TableRow,
-} from "../../components/ui/table";
+import DataTable, { Column } from "../../components/datatable/DataTable";
 import {
   BannerListItem,
   BannerQuery,
@@ -114,6 +108,56 @@ export default function BannerList() {
     }
   };
 
+  const columns: Column<BannerListItem>[] = [
+    {
+      key: "name",
+      header: "名称",
+      width: "12rem",
+      className: "font-medium text-gray-800 dark:text-white/90",
+    },
+    { key: "positionCode", header: "位置标识" },
+    { key: "type", header: "类型", width: "8rem" },
+    {
+      key: "linkedCityName",
+      header: "关联城市",
+      render: (it) => it.linkedCityName ?? "-",
+    },
+    {
+      key: "online",
+      header: "上下架",
+      width: "8rem",
+      render: (it) => (
+        <Badge size="sm" color={it.online ? "success" : "error"}>
+          {it.online ? "已上架" : "未上架"}
+        </Badge>
+      ),
+    },
+    {
+      key: "updatedAt",
+      header: "更新时间",
+      width: "13rem",
+      render: (it) => formatDateTime(it.updatedAt),
+    },
+    {
+      key: "actions",
+      header: "操作",
+      width: "16rem",
+      render: (it) => (
+        <div className="flex gap-2">
+          <Link to={`/banners/${it.id}/edit`}>
+            <Button size="sm" variant="primary">编辑</Button>
+          </Link>
+          <Button size="sm" variant="primary" onClick={() => handleToggleOnline(it)}>
+            {it.online ? "下架" : "上架"}
+          </Button>
+          <Button size="sm" variant="primary" onClick={() => handleDelete(it)}>
+            删除
+          </Button>
+        </div>
+      ),
+    },
+  ];
+
   return (
     <>
       <PageMeta title="Banner管理 | Love Space Admin" description="Banner 列表与管理" />
@@ -140,92 +184,12 @@ export default function BannerList() {
             }}
           />
 
-          <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
-            <div className="max-w-full overflow-x-auto">
-              <Table>
-                <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
-                  <TableRow>
-                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
-                      名称
-                    </TableCell>
-                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
-                      位置标识
-                    </TableCell>
-                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
-                      类型
-                    </TableCell>
-                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
-                      关联城市
-                    </TableCell>
-                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
-                      上下架
-                    </TableCell>
-                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
-                      更新时间
-                    </TableCell>
-                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
-                      操作
-                    </TableCell>
-                  </TableRow>
-                </TableHeader>
-
-                <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
-                  {loading && (
-                    <TableRow>
-                      <TableCell className="px-5 py-6 text-center text-gray-500 text-theme-sm dark:text-gray-400">
-                        加载中...
-                      </TableCell>
-                    </TableRow>
-                  )}
-                  {!loading && items.length === 0 && (
-                    <TableRow>
-                      <TableCell className="px-5 py-6 text-center text-gray-500 text-theme-sm dark:text-gray-400">
-                        暂无数据
-                      </TableCell>
-                    </TableRow>
-                  )}
-                  {!loading &&
-                    items.map((it) => (
-                      <TableRow key={it.id}>
-                        <TableCell className="px-5 py-4 sm:px-6 text-start font-medium text-gray-800 text-theme-sm dark:text-white/90">
-                          {it.name}
-                        </TableCell>
-                        <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                          {it.positionCode}
-                        </TableCell>
-                        <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                          {it.type}
-                        </TableCell>
-                        <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                          {it.linkedCityName ?? "-"}
-                        </TableCell>
-                        <TableCell className="px-4 py-3 text-start text-theme-sm">
-                          <Badge size="sm" color={it.online ? "success" : "error"}>
-                            {it.online ? "已上架" : "未上架"}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                          {formatDateTime(it.updatedAt)}
-                        </TableCell>
-                        <TableCell className="px-4 py-3 text-start text-theme-sm">
-                          <div className="flex gap-2">
-                            <Link to={`/banners/${it.id}/edit`}>
-                              <Button size="sm" variant="primary">编辑</Button>
-                            </Link>
-                            <Button size="sm" variant="primary" onClick={() => handleToggleOnline(it)}>
-                              {it.online ? "下架" : "上架"}
-                            </Button>
-                            <Button size="sm" variant="primary" onClick={() => handleDelete(it)}>
-                              删除
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                </TableBody>
-              </Table>
-            </div>
-          </div>
+          <DataTable
+            columns={columns}
+            rows={items}
+            rowKey={(it) => it.id}
+            loading={loading}
+          />
 
           <Pagination
             page={page}

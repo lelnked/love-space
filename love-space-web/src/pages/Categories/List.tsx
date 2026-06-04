@@ -8,13 +8,7 @@ import { useToast } from "../../context/ToastContext";
 import { Modal } from "../../components/ui/modal";
 import Label from "../../components/form/Label";
 import Input from "../../components/form/input/InputField";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHeader,
-  TableRow,
-} from "../../components/ui/table";
+import DataTable, { Column } from "../../components/datatable/DataTable";
 import {
   CategoryItem,
   createCategory,
@@ -151,12 +145,43 @@ export default function CategoryList() {
     if (!window.confirm(`确认删除分类「${it.name}」？\n注意：删除会下架该分类下所有商户。`)) return;
     try {
       await deleteCategory(it.id);
-      await load();
+      // 局部移除该行，无需整表 reload
+      setItems((prev) => prev.filter((c) => c.id !== it.id));
     } catch (err) {
       const ax = err as AxiosError<{ detail?: string }>;
       toast.error(ax.response?.data?.detail ?? "删除失败");
     }
   };
+
+  const columns: Column<CategoryItem>[] = [
+    {
+      key: "name",
+      header: "名称",
+      width: "16rem",
+      className: "font-medium text-gray-800 dark:text-white/90",
+    },
+    {
+      key: "createdAt",
+      header: "创建时间",
+      width: "13rem",
+      render: (it) => formatDateTime(it.createdAt),
+    },
+    {
+      key: "actions",
+      header: "操作",
+      width: "12rem",
+      render: (it) => (
+        <div className="flex gap-2">
+          <Button size="sm" variant="primary" onClick={() => openEdit(it)}>
+            编辑
+          </Button>
+          <Button size="sm" variant="primary" onClick={() => handleDelete(it)}>
+            删除
+          </Button>
+        </div>
+      ),
+    },
+  ];
 
   return (
     <>
@@ -172,63 +197,12 @@ export default function CategoryList() {
       </div>
       <div className="space-y-6">
         <ComponentCard title="分类列表">
-          <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
-            <div className="max-w-full overflow-x-auto">
-              <Table>
-                <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
-                  <TableRow>
-                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
-                      名称
-                    </TableCell>
-                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
-                      创建时间
-                    </TableCell>
-                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
-                      操作
-                    </TableCell>
-                  </TableRow>
-                </TableHeader>
-
-                <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
-                  {loading && (
-                    <TableRow>
-                      <TableCell className="px-5 py-6 text-center text-gray-500 text-theme-sm dark:text-gray-400">
-                        加载中...
-                      </TableCell>
-                    </TableRow>
-                  )}
-                  {!loading && pagedItems.length === 0 && (
-                    <TableRow>
-                      <TableCell className="px-5 py-6 text-center text-gray-500 text-theme-sm dark:text-gray-400">
-                        暂无数据
-                      </TableCell>
-                    </TableRow>
-                  )}
-                  {!loading &&
-                    pagedItems.map((it) => (
-                      <TableRow key={it.id}>
-                        <TableCell className="px-5 py-4 sm:px-6 text-start font-medium text-gray-800 text-theme-sm dark:text-white/90">
-                          {it.name}
-                        </TableCell>
-                        <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                          {formatDateTime(it.createdAt)}
-                        </TableCell>
-                        <TableCell className="px-4 py-3 text-start text-theme-sm">
-                          <div className="flex gap-2">
-                            <Button size="sm" variant="primary" onClick={() => openEdit(it)}>
-                              编辑
-                            </Button>
-                            <Button size="sm" variant="primary" onClick={() => handleDelete(it)}>
-                              删除
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                </TableBody>
-              </Table>
-            </div>
-          </div>
+          <DataTable
+            columns={columns}
+            rows={pagedItems}
+            rowKey={(it) => it.id}
+            loading={loading}
+          />
 
           <Pagination
             page={page}

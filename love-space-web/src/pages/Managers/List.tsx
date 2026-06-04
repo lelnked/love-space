@@ -10,13 +10,7 @@ import PageMeta from "../../components/common/PageMeta";
 import ComponentCard from "../../components/common/ComponentCard";
 import Badge from "../../components/ui/badge/Badge";
 import { useToast } from "../../context/ToastContext";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHeader,
-  TableRow,
-} from "../../components/ui/table";
+import DataTable, { Column } from "../../components/datatable/DataTable";
 import {
   createManager,
   disableManager,
@@ -119,6 +113,55 @@ export default function ManagerList() {
     setPage(1);
   };
 
+  const columns: Column<ManagerItem>[] = [
+    {
+      key: "username",
+      header: "用户名",
+      width: "12rem",
+      className: "font-medium text-gray-800 dark:text-white/90",
+    },
+    { key: "nickname", header: "昵称", render: (it) => it.nickname ?? "-" },
+    {
+      key: "role",
+      header: "角色",
+      width: "8rem",
+      render: (it) => (it.role === "ADMIN" ? "管理员" : "成员"),
+    },
+    {
+      key: "enable",
+      header: "状态",
+      width: "7rem",
+      render: (it) => (
+        <Badge size="sm" color={it.enable ? "success" : "error"}>
+          {it.enable ? "启用" : "停用"}
+        </Badge>
+      ),
+    },
+    {
+      key: "createdAt",
+      header: "创建时间",
+      width: "13rem",
+      render: (it) => formatDateTime(it.createdAt),
+    },
+    {
+      key: "actions",
+      header: "操作",
+      width: "16rem",
+      render: (it) => (
+        <div className="flex gap-2">
+          {it.username !== "admin" && (
+            <Button size="sm" variant="primary" onClick={() => handleToggleEnable(it)}>
+              {it.enable ? "停用" : "启用"}
+            </Button>
+          )}
+          <Button size="sm" variant="primary" onClick={() => handleResetPassword(it)}>
+            重置密码
+          </Button>
+        </div>
+      ),
+    },
+  ];
+
   const handleToggleEnable = async (item: ManagerItem) => {
     try {
       if (item.enable) await disableManager(item.id);
@@ -218,85 +261,12 @@ export default function ManagerList() {
             onReset={handleReset}
           />
 
-          <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
-            <div className="max-w-full overflow-x-auto">
-              <Table>
-                <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
-                  <TableRow>
-                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
-                      用户名
-                    </TableCell>
-                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
-                      昵称
-                    </TableCell>
-                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
-                      角色
-                    </TableCell>
-                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
-                      状态
-                    </TableCell>
-                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
-                      创建时间
-                    </TableCell>
-                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
-                      操作
-                    </TableCell>
-                  </TableRow>
-                </TableHeader>
-
-                <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
-                  {loading && (
-                    <TableRow>
-                      <TableCell className="px-5 py-6 text-center text-gray-500 text-theme-sm dark:text-gray-400">
-                        <div className="col-span-6">加载中...</div>
-                      </TableCell>
-                    </TableRow>
-                  )}
-                  {!loading && items.length === 0 && (
-                    <TableRow>
-                      <TableCell className="px-5 py-6 text-center text-gray-500 text-theme-sm dark:text-gray-400">
-                        <div className="col-span-6">暂无数据</div>
-                      </TableCell>
-                    </TableRow>
-                  )}
-                  {!loading &&
-                    items.map((it) => (
-                      <TableRow key={it.id}>
-                        <TableCell className="px-5 py-4 sm:px-6 text-start font-medium text-gray-800 text-theme-sm dark:text-white/90">
-                          {it.username}
-                        </TableCell>
-                        <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                          {it.nickname ?? "-"}
-                        </TableCell>
-                        <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                          {it.role === "ADMIN" ? "管理员" : "成员"}
-                        </TableCell>
-                        <TableCell className="px-4 py-3 text-start text-theme-sm">
-                          <Badge size="sm" color={it.enable ? "success" : "error"}>
-                            {it.enable ? "启用" : "停用"}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                          {formatDateTime(it.createdAt)}
-                        </TableCell>
-                        <TableCell className="px-4 py-3 text-start text-theme-sm">
-                          <div className="flex gap-2">
-                            {it.username !== "admin" && (
-                              <Button size="sm" variant="primary" onClick={() => handleToggleEnable(it)}>
-                                {it.enable ? "停用" : "启用"}
-                              </Button>
-                            )}
-                            <Button size="sm" variant="primary" onClick={() => handleResetPassword(it)}>
-                              重置密码
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                </TableBody>
-              </Table>
-            </div>
-          </div>
+          <DataTable
+            columns={columns}
+            rows={items}
+            rowKey={(it) => it.id}
+            loading={loading}
+          />
 
           <Pagination
             page={page}
