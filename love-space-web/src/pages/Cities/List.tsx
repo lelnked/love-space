@@ -8,6 +8,7 @@ import ComponentCard from "../../components/common/ComponentCard";
 import Badge from "../../components/ui/badge/Badge";
 import Button from "../../components/ui/button/Button";
 import { useToast } from "../../context/ToastContext";
+import { useConfirm } from "../../context/ConfirmContext";
 import DataTable, { Column } from "../../components/datatable/DataTable";
 import {
   CityItem,
@@ -51,6 +52,7 @@ export default function CityList() {
   const [items, setItems] = useState<CityItem[]>([]);
   const [loading, setLoading] = useState(false);
   const toast = useToast();
+  const confirm = useConfirm();
   const [page, setPage] = useState(1);
   const [size, setSize] = useState(20);
 
@@ -97,7 +99,7 @@ export default function CityList() {
   };
 
   const handleDelete = async (item: CityItem) => {
-    if (!window.confirm(`确认删除城市「${item.chineseName}」？`)) return;
+    if (!(await confirm({ title: "删除城市", message: `确认删除城市「${item.chineseName}」？`, confirmText: "删除", danger: true }))) return;
     try {
       await deleteCity(item.id);
       // 局部移除该行，无需整表 reload

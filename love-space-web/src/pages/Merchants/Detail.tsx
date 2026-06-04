@@ -10,6 +10,7 @@ import Pagination from "../../components/pagination/Pagination";
 import Label from "../../components/form/Label";
 import Input from "../../components/form/input/InputField";
 import { useToast } from "../../context/ToastContext";
+import { useConfirm } from "../../context/ConfirmContext";
 import {
   Table,
   TableBody,
@@ -305,6 +306,7 @@ const EMPTY_FORM: MerchantReviewUpsertRequest = {
 
 function ReviewsTab({ merchantId }: { merchantId: string }) {
   const toast = useToast();
+  const confirm = useConfirm();
   const [items, setItems] = useState<MerchantReviewItem[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -406,7 +408,7 @@ function ReviewsTab({ merchantId }: { merchantId: string }) {
   };
 
   const handleDelete = async (it: MerchantReviewItem) => {
-    if (!window.confirm(`确认删除评价「${it.title}」？`)) return;
+    if (!(await confirm({ title: "删除评价", message: `确认删除评价「${it.title}」？`, confirmText: "删除", danger: true }))) return;
     try {
       await deleteMerchantReview(merchantId, it.id);
       await load();

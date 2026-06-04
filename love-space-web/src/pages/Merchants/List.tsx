@@ -9,6 +9,7 @@ import Badge from "../../components/ui/badge/Badge";
 import Button from "../../components/ui/button/Button";
 import { useToast } from "../../context/ToastContext";
 import DataTable, { Column } from "../../components/datatable/DataTable";
+import { useConfirm } from "../../context/ConfirmContext";
 import {
   deleteMerchant,
   getMerchant,
@@ -49,6 +50,7 @@ export default function MerchantList() {
   const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(false);
   const toast = useToast();
+  const confirm = useConfirm();
   const navigate = useNavigate();
   const [cities, setCities] = useState<CityItem[]>([]);
   const [categories, setCategories] = useState<CategoryItem[]>([]);
@@ -154,7 +156,7 @@ export default function MerchantList() {
   };
 
   const handleDelete = async (it: MerchantItem) => {
-    if (!window.confirm(`确认删除商户「${it.name}」？`)) return;
+    if (!(await confirm({ title: "删除商户", message: `确认删除商户「${it.name}」？`, confirmText: "删除", danger: true }))) return;
     try {
       await deleteMerchant(it.id);
       await load();

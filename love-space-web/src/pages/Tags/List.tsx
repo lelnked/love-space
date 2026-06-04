@@ -4,6 +4,8 @@ import FilterBar, { FilterField, FilterValues } from "../../components/filter/Fi
 import Pagination from "../../components/pagination/Pagination";
 import { useToast } from "../../context/ToastContext";
 import DataTable, { Column } from "../../components/datatable/DataTable";
+import { useConfirm } from "../../context/ConfirmContext";
+import Badge from "../../components/ui/badge/Badge";
 import {
   createTag,
   deleteTag,
@@ -53,6 +55,7 @@ export default function TagList() {
   const [items, setItems] = useState<TagItem[]>([]);
   const [loading, setLoading] = useState(false);
   const toast = useToast();
+  const confirm = useConfirm();
   const [newName, setNewName] = useState("");
   const [creating, setCreating] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -149,7 +152,7 @@ export default function TagList() {
   };
 
   const handleDelete = async (it: TagItem) => {
-    if (!window.confirm(`确认删除标签「${it.name}」？`)) return;
+    if (!(await confirm({ title: "删除标签", message: `确认删除标签「${it.name}」？`, confirmText: "删除", danger: true }))) return;
     try {
       await deleteTag(it.id);
       // 局部移除该行，无需整表 reload
@@ -186,9 +189,9 @@ export default function TagList() {
       header: "上架",
       width: "8rem",
       render: (it) => (
-        <span className={it.online ? "text-success-500" : "text-gray-400"}>
+        <Badge size="sm" color={it.online ? "success" : "error"}>
           {it.online ? "已上架" : "未上架"}
-        </span>
+        </Badge>
       ),
     },
     {

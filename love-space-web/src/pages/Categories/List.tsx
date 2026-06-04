@@ -5,6 +5,7 @@ import PageMeta from "../../components/common/PageMeta";
 import ComponentCard from "../../components/common/ComponentCard";
 import Button from "../../components/ui/button/Button";
 import { useToast } from "../../context/ToastContext";
+import { useConfirm } from "../../context/ConfirmContext";
 import { Modal } from "../../components/ui/modal";
 import Label from "../../components/form/Label";
 import Input from "../../components/form/input/InputField";
@@ -42,6 +43,7 @@ export default function CategoryList() {
   const [items, setItems] = useState<CategoryItem[]>([]);
   const [loading, setLoading] = useState(false);
   const toast = useToast();
+  const confirm = useConfirm();
   const [page, setPage] = useState(1);
   const [size, setSize] = useState(20);
 
@@ -142,7 +144,15 @@ export default function CategoryList() {
   };
 
   const handleDelete = async (it: CategoryItem) => {
-    if (!window.confirm(`确认删除分类「${it.name}」？\n注意：删除会下架该分类下所有商户。`)) return;
+    if (
+      !(await confirm({
+        title: "删除分类",
+        message: `确认删除分类「${it.name}」？\n注意：删除会下架该分类下所有商户。`,
+        confirmText: "删除",
+        danger: true,
+      }))
+    )
+      return;
     try {
       await deleteCategory(it.id);
       // 局部移除该行，无需整表 reload

@@ -5,6 +5,7 @@ import AppLayout from "./layout/AppLayout";
 import { ScrollToTop } from "./components/common/ScrollToTop";
 import { AuthProvider } from "./context/AuthContext";
 import { ToastProvider } from "./context/ToastContext";
+import { ConfirmProvider } from "./context/ConfirmContext";
 import RequireAuth from "./components/auth/RequireAuth";
 import ManagerList from "./pages/Managers/List";
 import CityList from "./pages/Cities/List";
@@ -22,6 +23,7 @@ export default function App() {
   return (
     <AuthProvider>
       <ToastProvider>
+      <ConfirmProvider>
       <Router basename="/love-space">
         <ScrollToTop />
         <Routes>
@@ -55,6 +57,7 @@ export default function App() {
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Router>
+      </ConfirmProvider>
       </ToastProvider>
     </AuthProvider>
   );

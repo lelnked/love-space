@@ -9,6 +9,7 @@ import Badge from "../../components/ui/badge/Badge";
 import Button from "../../components/ui/button/Button";
 import { useToast } from "../../context/ToastContext";
 import DataTable, { Column } from "../../components/datatable/DataTable";
+import { useConfirm } from "../../context/ConfirmContext";
 import {
   BannerListItem,
   BannerQuery,
@@ -65,6 +66,7 @@ export default function BannerList() {
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
   const toast = useToast();
+  const confirm = useConfirm();
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -98,7 +100,7 @@ export default function BannerList() {
   };
 
   const handleDelete = async (item: BannerListItem) => {
-    if (!window.confirm(`确认删除 banner「${item.name}」？`)) return;
+    if (!(await confirm({ title: "删除 Banner", message: `确认删除 banner「${item.name}」？`, confirmText: "删除", danger: true }))) return;
     try {
       await deleteBanner(item.id);
       await load();
