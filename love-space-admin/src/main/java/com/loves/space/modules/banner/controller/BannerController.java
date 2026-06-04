@@ -88,7 +88,7 @@ public class BannerController {
     /**
      * 切换 banner 上下架。
      * <p>当 banner 类型为 {@code CITY} 且目标 {@code online=true} 时，
-     * 服务端校验关联城市必须为 online，否则返回 400 {@code BANNER_LINKED_CITY_OFFLINE}。
+     * 服务端校验关联城市必须存在且为 online，否则返回 400（关联城市不存在或已下架）。
      */
     @PostMapping("/{id}/online")
     @OperationLog("banner:set-online")

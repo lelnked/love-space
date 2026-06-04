@@ -79,7 +79,7 @@ public class BannerService {
      */
     public BannerDetailResponse update(UUID id, BannerUpdateRequest request) {
         if (request.online() != null) {
-            throw new IllegalArgumentException("BANNER_ONLINE_NOT_EDITABLE_HERE");
+            throw new IllegalArgumentException("更新 banner 时不可修改上下架状态，请使用上下架操作");
         }
         Banner banner = bannerRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("banner 不存在：" + id));
@@ -128,17 +128,17 @@ public class BannerService {
     }
 
     /**
-     * 切换 banner 上下架：当 {@code type=CITY && online=true} 时校验关联城市为 online；
-     * 否则抛 {@link IllegalArgumentException} {@code BANNER_LINKED_CITY_OFFLINE}。
+     * 切换 banner 上下架：当 {@code type=CITY && online=true} 时校验关联城市存在且为 online；
+     * 城市不存在或已下架时抛 {@link IllegalArgumentException}。
      */
     public BannerDetailResponse setOnline(UUID id, boolean online) {
         Banner banner = bannerRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("banner 不存在：" + id));
         if (online && banner.getType() == BannerType.CITY) {
             City city = cityRepository.findById(banner.getLinkedEntityId())
-                    .orElseThrow(() -> new IllegalArgumentException("BANNER_LINKED_CITY_NOT_FOUND"));
+                    .orElseThrow(() -> new IllegalArgumentException("关联城市不存在或已删除，无法上架"));
             if (!city.isOnline()) {
-                throw new IllegalArgumentException("BANNER_LINKED_CITY_OFFLINE");
+                throw new IllegalArgumentException("关联城市已下架，无法上架");
             }
         }
         banner.setOnline(online);
@@ -166,7 +166,7 @@ public class BannerService {
     private void validateLink(BannerType type, UUID linkedEntityId) {
         if (type == BannerType.CITY) {
             if (!cityRepository.existsById(linkedEntityId)) {
-                throw new IllegalArgumentException("BANNER_LINKED_CITY_NOT_FOUND");
+                throw new IllegalArgumentException("关联城市不存在或已删除");
             }
         }
     }
