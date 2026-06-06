@@ -8,12 +8,16 @@ import java.util.UUID;
  *
  * @param id        分类 ID
  * @param name      分类名称
+ * @param sortOrder 排序权重，越小越靠前
+ * @param online    是否上架
  * @param createdAt 创建时间
  * @param updatedAt 更新时间
  */
 public record CategoryItemResponse(
         UUID id,
         String name,
+        Integer sortOrder,
+        boolean online,
         OffsetDateTime createdAt,
         OffsetDateTime updatedAt
 ) {

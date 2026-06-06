@@ -58,7 +58,7 @@ class CategoryServiceTest extends AbstractPostgresIntegrationTest {
     @Test
     void deleteCategoryOfflinesAndDetachesItsMerchants() {
         CategoryItemResponse category = categoryService.create(
-                new CategoryUpsertRequest("测试分类-" + UUID.randomUUID()));
+                new CategoryUpsertRequest("测试分类-" + UUID.randomUUID(), 0, false));
 
         UUID cityId = cityService.create(new CityCreateRequest(
                 "城-" + UUID.randomUUID(), "EN", "省", "Province", null, true)).id();
@@ -82,5 +82,31 @@ class CategoryServiceTest extends AbstractPostgresIntegrationTest {
         Merchant reloaded = merchantRepository.findById(merchant.id()).orElseThrow();
         assertThat(reloaded.isOnline()).isFalse();
         assertThat(reloaded.getCategoryId()).isNull();
+    }
+
+    @Test
+    void createAndUpdatePersistSortOrderAndOnline() {
+        CategoryItemResponse created = categoryService.create(
+                new CategoryUpsertRequest("分A-" + UUID.randomUUID(), 7, true));
+        assertThat(created.sortOrder()).isEqualTo(7);
+        assertThat(created.online()).isTrue();
+
+        CategoryItemResponse updated = categoryService.update(created.id(),
+                new CategoryUpsertRequest("分A改-" + UUID.randomUUID(), 3, false));
+        assertThat(updated.sortOrder()).isEqualTo(3);
+        assertThat(updated.online()).isFalse();
+    }
+
+    @Test
+    void listKeepsCreatedAtDescOrder() {
+        categoryService.create(new CategoryUpsertRequest("先-" + UUID.randomUUID(), 0, false));
+        categoryService.create(new CategoryUpsertRequest("后-" + UUID.randomUUID(), 1, true));
+
+        List<CategoryItemResponse> list = categoryService.list();
+        assertThat(list).hasSizeGreaterThanOrEqualTo(2);
+        // createdAt 单调非增（DESC）
+        for (int i = 1; i < list.size(); i++) {
+            assertThat(list.get(i - 1).createdAt()).isAfterOrEqualTo(list.get(i).createdAt());
+        }
     }
 }

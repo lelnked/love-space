@@ -9,6 +9,8 @@ import { useConfirm } from "../../context/ConfirmContext";
 import { Modal } from "../../components/ui/modal";
 import Label from "../../components/form/Label";
 import Input from "../../components/form/input/InputField";
+import Switch from "../../components/form/switch/Switch";
+import Badge from "../../components/ui/badge/Badge";
 import DataTable, { Column } from "../../components/datatable/DataTable";
 import {
   CategoryItem,
@@ -62,6 +64,8 @@ export default function CategoryList() {
   const [modalMode, setModalMode] = useState<"create" | "edit">("create");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formName, setFormName] = useState("");
+  const [formSortOrder, setFormSortOrder] = useState("0");
+  const [formOnline, setFormOnline] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [formFieldErrors, setFormFieldErrors] = useState<Record<string, string>>({});
 
@@ -89,6 +93,8 @@ export default function CategoryList() {
     setModalMode("create");
     setEditingId(null);
     setFormName("");
+    setFormSortOrder("0");
+    setFormOnline(false);
     setFormFieldErrors({});
     setModalOpen(true);
   };
@@ -97,6 +103,8 @@ export default function CategoryList() {
     setModalMode("edit");
     setEditingId(it.id);
     setFormName(it.name);
+    setFormSortOrder(String(it.sortOrder));
+    setFormOnline(it.online);
     setFormFieldErrors({});
     setModalOpen(true);
   };
@@ -119,13 +127,19 @@ export default function CategoryList() {
       setFormFieldErrors({ name: `名称最多 ${MAX_NAME_CODE_POINTS} 个字符` });
       return;
     }
+    const sortOrder = Number(formSortOrder);
+    if (!Number.isInteger(sortOrder) || sortOrder < 0) {
+      setFormFieldErrors({ sortOrder: "排序值需为不小于 0 的整数" });
+      return;
+    }
     setSubmitting(true);
     try {
+      const payload = { name, sortOrder, online: formOnline };
       if (modalMode === "edit") {
         if (!editingId) throw new Error("缺少目标分类");
-        await updateCategory(editingId, { name });
+        await updateCategory(editingId, payload);
       } else {
-        await createCategory({ name });
+        await createCategory(payload);
       }
       setModalOpen(false);
       await load();
@@ -169,6 +183,22 @@ export default function CategoryList() {
       header: "名称",
       width: "16rem",
       className: "font-medium text-gray-800 dark:text-white/90",
+    },
+    {
+      key: "sortOrder",
+      header: "排序值",
+      width: "7rem",
+      render: (it) => it.sortOrder,
+    },
+    {
+      key: "online",
+      header: "上架",
+      width: "7rem",
+      render: (it) => (
+        <Badge size="sm" color={it.online ? "success" : "error"}>
+          {it.online ? "已上架" : "未上架"}
+        </Badge>
+      ),
     },
     {
       key: "createdAt",
@@ -250,6 +280,29 @@ export default function CategoryList() {
                 }
                 error={Boolean(formFieldErrors.name)}
                 hint={formFieldErrors.name}
+              />
+            </div>
+
+            <div>
+              <Label>排序值</Label>
+              <Input
+                type="number"
+                min="0"
+                step={1}
+                placeholder="数值越小越靠前（默认 0）"
+                value={formSortOrder}
+                onChange={(e) => setFormSortOrder(e.target.value)}
+                error={Boolean(formFieldErrors.sortOrder)}
+                hint={formFieldErrors.sortOrder}
+              />
+            </div>
+
+            <div>
+              <Label>上架</Label>
+              <Switch
+                label={formOnline ? "已上架" : "未上架"}
+                defaultChecked={formOnline}
+                onChange={setFormOnline}
               />
             </div>
 

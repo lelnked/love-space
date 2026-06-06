@@ -36,6 +36,8 @@ public class CategoryService {
         }
         Category category = new Category();
         category.setName(request.name());
+        category.setSortOrder(request.sortOrder() == null ? 0 : request.sortOrder());
+        category.setOnline(request.online() != null && request.online());
         return toItem(categoryRepository.save(category));
     }
 
@@ -47,6 +49,8 @@ public class CategoryService {
             throw new IllegalArgumentException("分类名已存在：" + request.name());
         }
         category.setName(request.name());
+        category.setSortOrder(request.sortOrder() == null ? 0 : request.sortOrder());
+        category.setOnline(request.online() != null && request.online());
         return toItem(category);
     }
 
@@ -84,6 +88,8 @@ public class CategoryService {
         return new CategoryItemResponse(
                 category.getId(),
                 category.getName(),
+                category.getSortOrder(),
+                category.isOnline(),
                 category.getCreatedAt(),
                 category.getUpdatedAt());
     }

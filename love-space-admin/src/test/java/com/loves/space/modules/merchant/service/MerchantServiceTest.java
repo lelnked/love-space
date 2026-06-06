@@ -73,7 +73,7 @@ class MerchantServiceTest extends AbstractPostgresIntegrationTest {
 
     /** 创建一个分类，返回其 ID。 */
     private UUID categoryId() {
-        return categoryService.create(new CategoryUpsertRequest("类-" + UUID.randomUUID())).id();
+        return categoryService.create(new CategoryUpsertRequest("类-" + UUID.randomUUID(), 0, false)).id();
     }
 
     /** 构造合法 upsert 请求；name/score/story/images 可在调用前替换。 */

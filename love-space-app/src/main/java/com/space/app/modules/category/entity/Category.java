@@ -1,6 +1,6 @@
-package com.loves.space.modules.category.entity;
+package com.space.app.modules.category.entity;
 
-import com.loves.space.common.entity.BaseAuditEntity;
+import com.space.app.common.entity.BaseAuditEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
@@ -9,8 +9,8 @@ import lombok.Getter;
 import lombok.Setter;
 
 /**
- * 商户分类实体：对应 {@code category} 表。
- * <p>含名称（唯一）、排序权重、上架状态与审计列。
+ * 商户分类实体：对应 {@code loves_category} 表。
+ * <p>App 端只读；仅映射菜单查询所需列（name/sortOrder/online）。
  */
 @Entity
 @Table(name = "loves_category", uniqueConstraints = @UniqueConstraint(name = "ux_loves_category_name", columnNames = "name"))
@@ -22,7 +22,7 @@ public class Category extends BaseAuditEntity {
     @Column(name = "name", nullable = false)
     private String name;
 
-    /** 排序权重，越小越靠前（App 分类菜单按其升序）。 */
+    /** 排序权重，越小越靠前（菜单按其升序）。 */
     @Column(name = "sort_order", nullable = false)
     private Integer sortOrder = 0;
 

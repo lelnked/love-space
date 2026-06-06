@@ -3,12 +3,16 @@ import { apiClient } from "./client";
 export interface CategoryItem {
   id: string;
   name: string;
+  sortOrder: number;
+  online: boolean;
   createdAt: string;
   updatedAt: string;
 }
 
 export interface CategoryUpsertRequest {
   name: string;
+  sortOrder: number;
+  online: boolean;
 }
 
 export async function listCategories(): Promise<CategoryItem[]> {
