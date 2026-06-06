@@ -58,8 +58,9 @@ class CategoryServiceTest extends AbstractPostgresIntegrationTest {
 
     @Test
     void deleteCategoryOfflinesAndDetachesItsMerchants() {
+        // 商户上架要求所属分类已上架（commit 82f2276），故前置分类需 online=true
         CategoryItemResponse category = categoryService.create(
-                new CategoryUpsertRequest("测试分类-" + UUID.randomUUID(), 0, false));
+                new CategoryUpsertRequest("测试分类-" + UUID.randomUUID(), 0, true));
 
         UUID cityId = cityService.create(new CityCreateRequest(
                 "城-" + UUID.randomUUID(), "EN", "省", "Province", null, true)).id();
