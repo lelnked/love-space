@@ -1,6 +1,8 @@
 package com.loves.space.modules.merchant.dto;
 
 import com.loves.space.common.enums.Period;
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -40,7 +42,11 @@ public record MerchantUpsertRequest(
                 message = "logo 仅接受 OSS objectKey（images/<id>.<ext> 或 bound/<id>.<ext>）")
         String logo,
         @NotBlank(message = "详细地址不能为空") String address,
+        @DecimalMin(value = "-180", message = "经度不能小于 -180")
+        @DecimalMax(value = "180", message = "经度不能大于 180")
         BigDecimal longitude,
+        @DecimalMin(value = "-90", message = "纬度不能小于 -90")
+        @DecimalMax(value = "90", message = "纬度不能大于 90")
         BigDecimal latitude,
         @NotNull(message = "所属城市不能为空") UUID cityId,
         UUID categoryId,

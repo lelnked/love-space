@@ -158,6 +158,20 @@ export default function MerchantForm() {
     checkScore("businessRightsScore", businessRightsScore, 25, "经营权益分");
     checkScore("experienceFriendlyScore", experienceFriendlyScore, 25, "体验友好分");
     checkScore("socialContributionScore", socialContributionScore, 20, "社会贡献分");
+    const checkCoord = (
+      field: string,
+      raw: string,
+      limit: number,
+      label: string,
+    ) => {
+      if (raw === "") return;
+      const v = Number(raw);
+      if (!Number.isFinite(v) || v < -limit || v > limit) {
+        errs[field] = `${label}需为 -${limit} 到 ${limit} 之间的数值`;
+      }
+    };
+    checkCoord("longitude", longitude, 180, "经度");
+    checkCoord("latitude", latitude, 90, "纬度");
     if (story.length > 5000) errs.story = "故事最多 5000 字";
     if (Object.keys(errs).length > 0) {
       setFieldErrors(errs);
@@ -245,19 +259,29 @@ export default function MerchantForm() {
                 />
               </div>
               <div>
-                <Label>经度</Label>
+                <Label>经度（-180 ~ 180）</Label>
                 <Input
                   type="number"
                   value={longitude}
                   onChange={(e) => setLongitude(e.target.value)}
+                  min="-180"
+                  max="180"
+                  step={0.000001}
+                  error={Boolean(fieldErrors.longitude)}
+                  hint={fieldErrors.longitude}
                 />
               </div>
               <div>
-                <Label>纬度</Label>
+                <Label>纬度（-90 ~ 90）</Label>
                 <Input
                   type="number"
                   value={latitude}
                   onChange={(e) => setLatitude(e.target.value)}
+                  min="-90"
+                  max="90"
+                  step={0.000001}
+                  error={Boolean(fieldErrors.latitude)}
+                  hint={fieldErrors.latitude}
                 />
               </div>
             </div>
