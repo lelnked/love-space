@@ -86,6 +86,17 @@ export default function CityList() {
 
   const handleToggleOnline = async (item: CityItem) => {
     const next = !item.online;
+    // 下架会级联下架该城市下全部商户，先确认
+    if (
+      !next &&
+      !(await confirm({
+        title: "下架城市",
+        message: `确认下架城市「${item.chineseName}」？\n注意：下架会同时下架该城市下的全部商户和 Banner。`,
+        confirmText: "下架",
+        danger: true,
+      }))
+    )
+      return;
     try {
       await setCityOnline(item.id, next);
       // 乐观更新：仅改本行，避免整表 reload 抖动
