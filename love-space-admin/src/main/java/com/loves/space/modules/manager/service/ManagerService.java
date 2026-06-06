@@ -10,6 +10,7 @@ import com.loves.space.modules.manager.dto.ManagerItem;
 import com.loves.space.modules.manager.dto.ManagerQuery;
 import com.loves.space.modules.manager.dto.PasswordResetRequest;
 import com.loves.space.modules.manager.entity.Manager;
+import com.loves.space.modules.manager.entity.Manager_;
 import com.loves.space.modules.manager.repository.ManagerRepository;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.domain.Pageable;
@@ -53,24 +54,24 @@ public class ManagerService {
         Specification<Manager> specification = (root, cq, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
             if (StringUtils.hasText(query.username())) {
-                predicates.add(cb.like(root.get("username"), "%" + query.username() + "%"));
+                predicates.add(cb.like(root.get(Manager_.username), "%" + query.username() + "%"));
             }
             if (StringUtils.hasText(query.role())) {
-                predicates.add(cb.equal(root.get("role"), Role.valueOf(query.role())));
+                predicates.add(cb.equal(root.get(Manager_.role), Role.valueOf(query.role())));
             }
             if (query.enable() != null) {
-                predicates.add(cb.equal(root.get("enable"), query.enable()));
+                predicates.add(cb.equal(root.get(Manager_.enable), query.enable()));
             }
             if (query.createdAtFrom() != null) {
-                predicates.add(cb.greaterThanOrEqualTo(root.get("createdAt"), query.createdAtFrom()));
+                predicates.add(cb.greaterThanOrEqualTo(root.get(Manager_.createdAt), query.createdAtFrom()));
             }
             if (query.createdAtTo() != null) {
-                predicates.add(cb.lessThanOrEqualTo(root.get("createdAt"), query.createdAtTo()));
+                predicates.add(cb.lessThanOrEqualTo(root.get(Manager_.createdAt), query.createdAtTo()));
             }
             return cb.and(predicates.toArray(new Predicate[0]));
         };
 
-        Pageable sorted = PageQuery.normalize(pageable, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Pageable sorted = PageQuery.normalize(pageable, Sort.by(Sort.Direction.DESC, Manager_.CREATED_AT));
         return PageResponseMapper.map(managerRepository.findAll(specification, sorted), ManagerService::toItem);
     }
 

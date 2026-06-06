@@ -16,6 +16,7 @@ import com.loves.space.modules.merchant.dto.MerchantQuery;
 import com.loves.space.modules.merchant.dto.MerchantUpsertRequest;
 import com.loves.space.modules.merchant.entity.Merchant;
 import com.loves.space.modules.merchant.entity.MerchantTag;
+import com.loves.space.modules.merchant.entity.Merchant_;
 import com.loves.space.modules.merchant.repository.MerchantRepository;
 import com.loves.space.modules.merchant.repository.MerchantReviewRepository;
 import com.loves.space.modules.merchant.repository.MerchantTagRepository;
@@ -125,27 +126,27 @@ public class MerchantService {
         Specification<Merchant> spec = (root, cq, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
             if (query.cityId() != null) {
-                predicates.add(cb.equal(root.get("cityId"), query.cityId()));
+                predicates.add(cb.equal(root.get(Merchant_.cityId), query.cityId()));
             }
             if (query.categoryId() != null) {
-                predicates.add(cb.equal(root.get("categoryId"), query.categoryId()));
+                predicates.add(cb.equal(root.get(Merchant_.categoryId), query.categoryId()));
             }
             if (query.online() != null) {
-                predicates.add(cb.equal(root.get("online"), query.online()));
+                predicates.add(cb.equal(root.get(Merchant_.online), query.online()));
             }
             if (StringUtils.hasText(query.name())) {
-                predicates.add(cb.like(root.get("name"), "%" + query.name() + "%"));
+                predicates.add(cb.like(root.get(Merchant_.name), "%" + query.name() + "%"));
             }
             if (query.period() != null) {
                 // periods 列为 jsonb 字符串数组，用 PostgreSQL jsonb_exists 判断是否包含该周期枚举名
                 predicates.add(cb.isTrue(cb.function(
                         "jsonb_exists", Boolean.class,
-                        root.get("periods"),
+                        root.get(Merchant_.periods),
                         cb.literal(query.period().name()))));
             }
             return cb.and(predicates.toArray(new Predicate[0]));
         };
-        Pageable sorted = PageQuery.normalize(pageable, Sort.by(Sort.Order.desc("weight"), Sort.Order.desc("createdAt")));
+        Pageable sorted = PageQuery.normalize(pageable, Sort.by(Sort.Order.desc(Merchant_.WEIGHT), Sort.Order.desc(Merchant_.CREATED_AT)));
         Page<Merchant> page = merchantRepository.findAll(spec, sorted);
         return PageResponseMapper.map(page, this::toAdminItem);
     }

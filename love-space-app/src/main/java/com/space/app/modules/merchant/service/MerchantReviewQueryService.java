@@ -3,6 +3,7 @@ package com.space.app.modules.merchant.service;
 import com.space.app.common.exception.ResourceNotFoundException;
 import com.space.app.modules.merchant.dto.ReviewItemResponse;
 import com.space.app.modules.merchant.entity.MerchantReview;
+import com.space.app.modules.merchant.entity.MerchantReview_;
 import com.space.app.modules.merchant.repository.MerchantRepository;
 import com.space.app.modules.merchant.repository.MerchantReviewRepository;
 import org.springframework.data.domain.Sort;
@@ -43,11 +44,11 @@ public class MerchantReviewQueryService {
         if (!merchantRepository.existsByIdAndOnlineTrue(merchantId)) {
             throw new ResourceNotFoundException("merchant not found: " + merchantId);
         }
-        Specification<MerchantReview> spec = (root, query, cb) -> cb.equal(root.get("merchantId"), merchantId);
+        Specification<MerchantReview> spec = (root, query, cb) -> cb.equal(root.get(MerchantReview_.merchantId), merchantId);
         if (recommended != null) {
-            spec = spec.and((root, query, cb) -> cb.equal(root.get("recommended"), recommended));
+            spec = spec.and((root, query, cb) -> cb.equal(root.get(MerchantReview_.recommended), recommended));
         }
-        Sort sort = Sort.by(Sort.Direction.ASC, "sortOrder");
+        Sort sort = Sort.by(Sort.Direction.ASC, MerchantReview_.SORT_ORDER);
         return merchantReviewRepository.findAll(spec, sort).stream()
                 .map(r -> new ReviewItemResponse(r.getNickname(), r.getTitle(), r.getContent()))
                 .toList();

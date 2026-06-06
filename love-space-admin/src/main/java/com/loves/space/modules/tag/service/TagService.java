@@ -4,6 +4,7 @@ import com.loves.space.modules.tag.dto.TagItemResponse;
 import com.loves.space.modules.tag.dto.TagQuery;
 import com.loves.space.modules.tag.dto.TagUpsertRequest;
 import com.loves.space.modules.tag.entity.Tag;
+import com.loves.space.modules.tag.entity.Tag_;
 import com.loves.space.modules.tag.event.TagDeletedEvent;
 import com.loves.space.modules.tag.event.TagOnlineChangedEvent;
 import com.loves.space.modules.tag.repository.TagRepository;
@@ -79,14 +80,14 @@ public class TagService {
         Specification<Tag> spec = (root, cq, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
             if (query.online() != null) {
-                predicates.add(cb.equal(root.get("online"), query.online()));
+                predicates.add(cb.equal(root.get(Tag_.online), query.online()));
             }
             if (StringUtils.hasText(query.name())) {
-                predicates.add(cb.like(root.get("name"), "%" + query.name() + "%"));
+                predicates.add(cb.like(root.get(Tag_.name), "%" + query.name() + "%"));
             }
             return cb.and(predicates.toArray(new Predicate[0]));
         };
-        return tagRepository.findAll(spec, Sort.by(Sort.Direction.DESC, "createdAt"))
+        return tagRepository.findAll(spec, Sort.by(Sort.Direction.DESC, Tag_.CREATED_AT))
                 .stream().map(TagService::toItem).toList();
     }
 

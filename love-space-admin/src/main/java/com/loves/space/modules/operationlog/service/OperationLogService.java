@@ -6,6 +6,7 @@ import com.loves.space.common.page.PageResponseMapper.PageResponse;
 import com.loves.space.modules.operationlog.dto.OperationLogItem;
 import com.loves.space.modules.operationlog.dto.OperationLogQuery;
 import com.loves.space.modules.operationlog.entity.OperationLog;
+import com.loves.space.modules.operationlog.entity.OperationLog_;
 import com.loves.space.modules.operationlog.repository.OperationLogRepository;
 import jakarta.persistence.criteria.Predicate;
 import org.slf4j.Logger;
@@ -79,7 +80,7 @@ public class OperationLogService {
     @Transactional(readOnly = true)
     public PageResponse<OperationLogItem> page(OperationLogQuery query, Pageable pageable) {
         Specification<OperationLog> spec = buildSpec(query);
-        Pageable sorted = PageQuery.normalize(pageable, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Pageable sorted = PageQuery.normalize(pageable, Sort.by(Sort.Direction.DESC, OperationLog_.CREATED_AT));
         Page<OperationLog> entities = operationLogRepository.findAll(spec, sorted);
         return PageResponseMapper.map(entities, e -> new OperationLogItem(
                 e.getId(),
@@ -96,16 +97,16 @@ public class OperationLogService {
         return (root, cq, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
             if (query.username() != null && !query.username().isBlank()) {
-                predicates.add(cb.like(root.get("username"), "%" + query.username().trim() + "%"));
+                predicates.add(cb.like(root.get(OperationLog_.username), "%" + query.username().trim() + "%"));
             }
             if (query.module() != null && !query.module().isBlank()) {
-                predicates.add(cb.equal(root.get("module"), query.module().trim()));
+                predicates.add(cb.equal(root.get(OperationLog_.module), query.module().trim()));
             }
             if (query.createdAtFrom() != null) {
-                predicates.add(cb.greaterThanOrEqualTo(root.get("createdAt"), query.createdAtFrom()));
+                predicates.add(cb.greaterThanOrEqualTo(root.get(OperationLog_.createdAt), query.createdAtFrom()));
             }
             if (query.createdAtTo() != null) {
-                predicates.add(cb.lessThanOrEqualTo(root.get("createdAt"), query.createdAtTo()));
+                predicates.add(cb.lessThanOrEqualTo(root.get(OperationLog_.createdAt), query.createdAtTo()));
             }
             return cb.and(predicates.toArray(new Predicate[0]));
         };
