@@ -1,7 +1,9 @@
 package com.loves.space.modules.category.controller;
 
 import com.loves.space.common.annotation.OperationLog;
+import com.loves.space.common.dto.OnlineStatusRequest;
 import com.loves.space.modules.category.dto.CategoryItemResponse;
+import com.loves.space.modules.category.dto.CategoryQuery;
 import com.loves.space.modules.category.dto.CategoryUpsertRequest;
 import com.loves.space.modules.category.service.CategoryService;
 import jakarta.validation.Valid;
@@ -12,6 +14,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -30,10 +33,10 @@ public class CategoryController {
         this.categoryService = categoryService;
     }
 
-    /** 分类列表。 */
+    /** 分类列表，支持按名称模糊检索。 */
     @GetMapping
-    public List<CategoryItemResponse> list() {
-        return categoryService.list();
+    public List<CategoryItemResponse> list(@RequestParam(required = false) String name) {
+        return categoryService.list(new CategoryQuery(name));
     }
 
     /** 单个分类详情。 */
@@ -55,6 +58,14 @@ public class CategoryController {
     public CategoryItemResponse update(@PathVariable UUID id,
                                       @Valid @RequestBody CategoryUpsertRequest request) {
         return categoryService.update(id, request);
+    }
+
+    /** 切换上下架（下架时级联下架该分类下的全部商户）。 */
+    @PutMapping("/{id}/online")
+    @OperationLog("category:set-online")
+    public CategoryItemResponse setOnline(@PathVariable UUID id,
+                                          @Valid @RequestBody OnlineStatusRequest request) {
+        return categoryService.setOnline(id, request.online());
     }
 
     /** 删除分类（同时下架该分类下的全部商户）。 */

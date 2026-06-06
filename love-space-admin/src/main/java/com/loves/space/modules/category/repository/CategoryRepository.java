@@ -2,13 +2,14 @@ package com.loves.space.modules.category.repository;
 
 import com.loves.space.modules.category.entity.Category;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 import java.util.UUID;
 
 /**
- * 分类仓储：CRUD 与唯一性校验。
+ * 分类仓储：CRUD、唯一性校验，以及按名称过滤的 Specification 查询。
  */
-public interface CategoryRepository extends JpaRepository<Category, UUID> {
+public interface CategoryRepository extends JpaRepository<Category, UUID>, JpaSpecificationExecutor<Category> {
 
     /** 是否已存在同名分类。 */
     boolean existsByName(String name);

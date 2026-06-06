@@ -1,5 +1,6 @@
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { AxiosError } from "axios";
+import FilterBar, { FilterField, FilterValues } from "../../components/filter/FilterBar";
 import Pagination from "../../components/pagination/Pagination";
 import PageMeta from "../../components/common/PageMeta";
 import ComponentCard from "../../components/common/ComponentCard";
@@ -14,15 +15,27 @@ import Badge from "../../components/ui/badge/Badge";
 import DataTable, { Column } from "../../components/datatable/DataTable";
 import {
   CategoryItem,
+  CategoryQuery,
   createCategory,
   deleteCategory,
   listCategories,
+  setCategoryOnline,
   updateCategory,
 } from "../../api/categories";
 
 interface FieldError {
   field: string;
   message: string;
+}
+
+const FILTER_FIELDS: FilterField[] = [
+  { name: "name", label: "名称", type: "text", placeholder: "模糊匹配" },
+];
+
+function buildQuery(filters: FilterValues): CategoryQuery {
+  const q: CategoryQuery = {};
+  if (filters.name) q.name = filters.name;
+  return q;
 }
 
 /** 分类名称最大长度（code-point，中文/emoji 均按 1 计），与后端 codePointCount ≤ 10 对齐。 */
@@ -42,6 +55,7 @@ function formatDateTime(value: string): string {
 }
 
 export default function CategoryList() {
+  const [filters, setFilters] = useState<FilterValues>({});
   const [items, setItems] = useState<CategoryItem[]>([]);
   const [loading, setLoading] = useState(false);
   const toast = useToast();
@@ -72,18 +86,16 @@ export default function CategoryList() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await listCategories();
-      const sorted = [...data].sort((a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-      );
-      setItems(sorted);
+      // 后端已按 createdAt DESC 排序并按 name 过滤
+      const data = await listCategories(buildQuery(filters));
+      setItems(data);
     } catch (err) {
       const ax = err as AxiosError<{ detail?: string }>;
       toast.error(ax.response?.data?.detail ?? "加载失败");
     } finally {
       setLoading(false);
     }
-  }, [toast]);
+  }, [filters, toast]);
 
   useEffect(() => {
     void load();
@@ -157,6 +169,31 @@ export default function CategoryList() {
     }
   };
 
+  const handleToggleOnline = async (it: CategoryItem) => {
+    const next = !it.online;
+    // 下架会级联下架该分类下全部商户，先确认
+    if (
+      !next &&
+      !(await confirm({
+        title: "下架分类",
+        message: `确认下架分类「${it.name}」？\n注意：下架会同时下架该分类下的全部商户。`,
+        confirmText: "下架",
+        danger: true,
+      }))
+    )
+      return;
+    try {
+      await setCategoryOnline(it.id, next);
+      // 乐观更新：仅改本行，避免整表 reload 抖动
+      setItems((prev) =>
+        prev.map((c) => (c.id === it.id ? { ...c, online: next } : c)),
+      );
+    } catch (err) {
+      const ax = err as AxiosError<{ detail?: string }>;
+      toast.error(ax.response?.data?.detail ?? "操作失败");
+    }
+  };
+
   const handleDelete = async (it: CategoryItem) => {
     if (
       !(await confirm({
@@ -209,11 +246,14 @@ export default function CategoryList() {
     {
       key: "actions",
       header: "操作",
-      width: "12rem",
+      width: "16rem",
       render: (it) => (
         <div className="flex gap-2">
           <Button size="sm" variant="primary" onClick={() => openEdit(it)}>
             编辑
+          </Button>
+          <Button size="sm" variant="primary" onClick={() => handleToggleOnline(it)}>
+            {it.online ? "下架" : "上架"}
           </Button>
           <Button size="sm" variant="primary" onClick={() => handleDelete(it)}>
             删除
@@ -237,6 +277,19 @@ export default function CategoryList() {
       </div>
       <div className="space-y-6">
         <ComponentCard title="分类列表">
+          <FilterBar
+            fields={FILTER_FIELDS}
+            initialValues={filters}
+            onApply={(v) => {
+              setFilters(v);
+              setPage(1);
+            }}
+            onReset={() => {
+              setFilters({});
+              setPage(1);
+            }}
+          />
+
           <DataTable
             columns={columns}
             rows={pagedItems}

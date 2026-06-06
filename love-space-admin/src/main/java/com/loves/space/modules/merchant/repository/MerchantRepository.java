@@ -33,4 +33,15 @@ public interface MerchantRepository extends JpaRepository<Merchant, UUID>, JpaSp
     @Modifying
     @Query("update Merchant m set m.online = false where m.cityId = :cityId")
     int offlineAllByCityId(@Param("cityId") UUID cityId);
+
+    /**
+     * 将指定分类下的全部商户置为下架（用于分类下线时的级联下架）。
+     * <p>与 {@link #offlineAndDetachCategory} 不同：仅下架，<b>保留</b> categoryId 绑定。
+     *
+     * @param categoryId 分类 ID
+     * @return 受影响行数
+     */
+    @Modifying
+    @Query("update Merchant m set m.online = false where m.categoryId = :categoryId")
+    int offlineAllByCategoryId(@Param("categoryId") UUID categoryId);
 }

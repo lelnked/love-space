@@ -3,6 +3,7 @@ package com.loves.space.modules.category.service;
 import com.loves.space.infrastructure.storage.ImageUrlSigner;
 import com.loves.space.infrastructure.storage.ObjectKeyValidator;
 import com.loves.space.modules.category.dto.CategoryItemResponse;
+import com.loves.space.modules.category.dto.CategoryQuery;
 import com.loves.space.modules.category.dto.CategoryUpsertRequest;
 import com.loves.space.modules.city.dto.CityCreateRequest;
 import com.loves.space.modules.city.service.CityService;
@@ -102,11 +103,52 @@ class CategoryServiceTest extends AbstractPostgresIntegrationTest {
         categoryService.create(new CategoryUpsertRequest("先-" + UUID.randomUUID(), 0, false));
         categoryService.create(new CategoryUpsertRequest("后-" + UUID.randomUUID(), 1, true));
 
-        List<CategoryItemResponse> list = categoryService.list();
+        List<CategoryItemResponse> list = categoryService.list(new CategoryQuery(null));
         assertThat(list).hasSizeGreaterThanOrEqualTo(2);
         // createdAt 单调非增（DESC）
         for (int i = 1; i < list.size(); i++) {
             assertThat(list.get(i - 1).createdAt()).isAfterOrEqualTo(list.get(i).createdAt());
         }
+    }
+
+    @Test
+    void listFiltersByName() {
+        String token = "唯一" + UUID.randomUUID();
+        categoryService.create(new CategoryUpsertRequest(token, 0, false));
+        categoryService.create(new CategoryUpsertRequest("无关-" + UUID.randomUUID(), 0, false));
+
+        List<CategoryItemResponse> matched = categoryService.list(new CategoryQuery(token));
+        assertThat(matched).hasSize(1);
+        assertThat(matched.getFirst().name()).isEqualTo(token);
+    }
+
+    @Test
+    void setOfflineCascadesMerchantsButKeepsCategoryBinding() {
+        CategoryItemResponse category = categoryService.create(
+                new CategoryUpsertRequest("上架分类-" + UUID.randomUUID(), 0, true));
+
+        UUID cityId = cityService.create(new CityCreateRequest(
+                "城-" + UUID.randomUUID(), "EN", "省", "Province", null, true)).id();
+        MerchantUpsertRequest request = new MerchantUpsertRequest(
+                "分类下商户",
+                "https://example.com/logo.png",
+                "地址",
+                null, null,
+                cityId,
+                category.id(),
+                (short) 20, (short) 15, (short) 15, (short) 10,
+                null, 0, true,
+                List.of(), List.of(),
+                List.of("https://example.com/1.png")
+        );
+        MerchantDetailResponse merchant = merchantService.upsert(null, request);
+        assertThat(merchantRepository.findById(merchant.id()).orElseThrow().isOnline()).isTrue();
+
+        categoryService.setOnline(category.id(), false);
+
+        Merchant reloaded = merchantRepository.findById(merchant.id()).orElseThrow();
+        assertThat(reloaded.isOnline()).isFalse();
+        // 仅下架，保留分类绑定（与删除分类清空 categoryId 区分）
+        assertThat(reloaded.getCategoryId()).isEqualTo(category.id());
     }
 }

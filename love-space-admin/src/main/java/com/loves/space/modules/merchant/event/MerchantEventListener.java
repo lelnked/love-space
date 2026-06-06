@@ -1,6 +1,7 @@
 package com.loves.space.modules.merchant.event;
 
 import com.loves.space.modules.category.event.CategoryDeletedEvent;
+import com.loves.space.modules.category.event.CategoryOnlineChangedEvent;
 import com.loves.space.modules.city.event.CityDeletedEvent;
 import com.loves.space.modules.city.event.CityOnlineChangedEvent;
 import com.loves.space.modules.merchant.repository.MerchantRepository;
@@ -24,6 +25,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
  * <p>级联规则：
  * <ul>
  *   <li>城市下线 / 删除 → 下架该城市下全部商户（城市为商户必填项，删除时仅下架不清空）。</li>
+ *   <li>分类下线 → 下架该分类下全部商户（保留 categoryId 绑定）。</li>
  *   <li>分类删除 → 清空商户 categoryId 并下架该分类下全部商户。</li>
  *   <li>标签删除 / 下架 → 清除该标签的全部 loves_merchant_tag 关联数据；不影响商户上架状态。</li>
  * </ul>
@@ -68,6 +70,22 @@ public class MerchantEventListener {
         } catch (Exception e) {
             log.error("Failed to offline merchants for deleted city {}: {}",
                     event.cityId(), e.getMessage(), e);
+        }
+    }
+
+    /** 分类下线时批量下架该分类下全部商户（保留 categoryId）；分类上线不会自动上架商户。 */
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void onCategoryOnlineChanged(CategoryOnlineChangedEvent event) {
+        if (event.currentOnline()) {
+            return;
+        }
+        try {
+            int affected = merchantRepository.offlineAllByCategoryId(event.categoryId());
+            log.info("Category {} went offline, offlined {} merchant(s)", event.categoryId(), affected);
+        } catch (Exception e) {
+            log.error("Failed to offline merchants for offlined category {}: {}",
+                    event.categoryId(), e.getMessage(), e);
         }
     }
 
