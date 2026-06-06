@@ -11,7 +11,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -96,7 +95,8 @@ class AliyunOssObjectKeyValidatorTest {
 
         assertThat(result).isEqualTo("bound/abc.png");
         verify(oss).copyObject(BUCKET, "images/abc.png", BUCKET, "bound/abc.png");
-        verify(oss).deleteObject(BUCKET, "images/abc.png");
+        // 事务安全：copy 后保留 images/ 原图（不删除），由 OSS lifecycle 异步回收。
+        verify(oss, never()).deleteObject(BUCKET, "images/abc.png");
     }
 
     @Test
@@ -113,16 +113,17 @@ class AliyunOssObjectKeyValidatorTest {
     }
 
     @Test
-    void deleteFailureTolerated() {
+    void originalImagesObjectRetainedForRollbackSafety() {
         ObjectMetadata meta = new ObjectMetadata();
         meta.setContentType("image/webp");
         meta.setContentLength(1024);
         when(oss.getObjectMetadata(eq(BUCKET), eq("images/x.webp"))).thenReturn(meta);
-        doThrow(new RuntimeException("network glitch"))
-                .when(oss).deleteObject(BUCKET, "images/x.webp");
 
         String result = validator.validateAndBind("images/x.webp");
 
         assertThat(result).isEqualTo("bound/x.webp");
+        verify(oss).copyObject(BUCKET, "images/x.webp", BUCKET, "bound/x.webp");
+        // 绝不删除 images/ 原图——这是事务回滚后可用同一 objectKey 重试的前提。
+        verify(oss, never()).deleteObject(any(), any());
     }
 }

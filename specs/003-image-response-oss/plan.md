@@ -9,9 +9,9 @@
 把 admin 后台的图片"先服务端 multipart 上传"模型重构为"前端 STS 直传 OSS + 业务绑定时服务端校验"模型：
 1. 新增 `POST /api/admin/files/upload-credentials`，服务端通过 STS `AssumeRole` 拿临时凭证，用其在服务端计算 PostObject V4 签名（`OSS4-HMAC-SHA256`），并预生成 `objectKey`（`images/<uuidv7>.<ext>`）一并下发；`accessKeySecret` 不下发。
 2. 前端用 `multipart/form-data` 表单 POST 直传 OSS，不经过 admin 进程。
-3. 业务实体创建/更新时把 objectKey 提交给业务接口；服务端 `headObject` 做存在性 + MIME + 大小校验后入库。
+3. 业务实体创建/更新时把 objectKey 提交给业务接口；服务端 `headObject` 做存在性 + MIME + 大小校验后，`copyObject` 到 `bound/<uuid>.<ext>`（**只 copy 不删**），入库存归档 key。
 4. 所有读接口的图片字段统一返回 `ImageResponse(id, url)`，`url` 由 `ImageUrlSigner` 即时签名（默认 30 分钟）。
-5. 孤儿对象由 OSS bucket lifecycle 规则（`images/` 前缀，未带 `bound=true` tag 且超过 24 小时）自动删除；绑定成功时服务端给对象打 `bound=true` tag。
+5. 孤儿对象由 OSS bucket lifecycle 规则（`images/` 前缀，24 小时后过期）自动删除（无 tag 过滤，绑定与否一律按前缀回收）；绑定成功只把对象 copy 到 `bound/` 前缀（lifecycle 不覆盖），不删 `images/` 原对象，使绑定无不可回滚副作用。
 6. 在 `love-space-app` 复制读路径（`ImageResponse` + `ImageUrlSigner`）；app 端无写入。
 
 ## Technical Context
@@ -21,13 +21,13 @@
 **Primary Dependencies**:
 - 已有：Spring Boot 4.0.6、Spring Data JPA、Spring Security、Liquibase、Lombok、`com.github.f4b6a3:uuid-creator`、`hibernate-jpamodelgen`。
 - 新增（admin + app 各一份）：
-  - `com.aliyun.oss:aliyun-sdk-oss:3.18.1`（OSS 客户端：headObject、签名、tagging）。
+  - `com.aliyun.oss:aliyun-sdk-oss:3.18.1`（OSS 客户端：headObject、copyObject、签名）。
   - `com.aliyun:aliyun-java-sdk-core:4.7.1` + `com.aliyun:aliyun-java-sdk-sts:3.1.2`（STS AssumeRole；仅 admin 真正调用，app 只读不需要 STS 但 admin 必须）。
   - 实际上 app 端只需 `aliyun-sdk-oss`（签名 GET URL 不需要 STS）。
 - 前端：无需 OSS SDK，用浏览器原生 `FormData` + `XMLHttpRequest` 表单 POST 直传。
 
 **Storage**:
-- 阿里云 OSS bucket，配置 lifecycle 规则：`images/` 前缀，按 object tag `bound != "true"` 且对象创建后 24 小时过期删除。
+- 阿里云 OSS bucket，配置 lifecycle 规则：`images/` 前缀，对象创建后 24 小时过期删除（无 tag 过滤；`bound/` 前缀不在范围内）。
 - PostgreSQL：现有列 `loves_banner.image_urls`(jsonb)、`loves_merchant.logo`(text)、`loves_merchant_image.image_url`(text)、`loves_city.background_image`(text) 改为存 OSS 对象 key（即 `images/<uuid>.<ext>`）；列名/类型不变。
 
 **Testing**: JUnit 5 + Spring Boot Test (MockMvc) + Mockito。所有阿里云 SDK 客户端（OSSClient、STS 调用、ImageUrlSigner、ObjectKeyValidator）通过接口在测试中以 stub 注入，不需要真实 OSS / STS。前端用 Vitest + Testing Library（如已用），表单 POST 直传逻辑在测试中 mock（XHR / fetch）。
@@ -84,10 +84,10 @@ specs/003-image-response-oss/
 │   ├── business-binding.md              # admin REST：业务实体创建/更新时的 objectKey 校验契约
 │   ├── ImageUrlSigner.md                # 内部接口：根据 objectKey 即时签名 GET URL
 │   ├── StsCredentialIssuer.md           # 内部接口：调 STS AssumeRole 下发临时凭证
-│   ├── ObjectKeyValidator.md            # 内部接口：headObject + MIME/大小校验 + 打 bound tag
+│   ├── ObjectKeyValidator.md            # 内部接口：headObject + MIME/大小校验 + copy 到 bound/ 前缀
 │   ├── api-admin-read.md                # admin 读响应 schema 变更
 │   ├── api-app-read.md                  # app 读响应 schema 变更
-│   └── bucket-lifecycle.md              # OSS bucket lifecycle 与 tag 机制说明（运维配置 + 服务端绑定时的 tag 行为）
+│   └── bucket-lifecycle.md              # OSS bucket lifecycle 与前缀策略说明（运维配置 + 服务端绑定时 copy 到 bound/ 行为）
 └── checklists/requirements.md           # 已存在
 ```
 
@@ -104,7 +104,7 @@ love-space-admin/                                                # admin 后端�
     │   ├── StsCredentialIssuer.java                             # 新：接口
     │   ├── AliyunStsCredentialIssuer.java                       # 新：AssumeRole 实现
     │   ├── ObjectKeyValidator.java                              # 新：接口
-    │   ├── AliyunOssObjectKeyValidator.java                     # 新：headObject + tag 打标实现
+    │   ├── AliyunOssObjectKeyValidator.java                     # 新：headObject + copy 到 bound/ 前缀实现（只 copy 不删）
     │   ├── ImageUrlSigner.java                                  # 新：接口
     │   ├── AliyunOssImageUrlSigner.java                         # 新：预签名 GET URL 实现
     │   ├── FileStorage.java                                     # 删（直传不再需要"服务端落盘"抽象）
@@ -166,10 +166,10 @@ love-space-web/                                                  # React 19 + Vi
 
 研究主题：
 1. **阿里云 STS Java SDK 版本与 AssumeRole 流程**：sdk-core + sdk-sts 推荐版本；AssumeRole 入参（RoleArn、RoleSessionName、DurationSeconds、Policy 内嵌限制）；返回 `Credentials{ AccessKeyId, AccessKeySecret, SecurityToken, Expiration }` 的解析与序列化。
-2. **RAM Role policy 设计**：限制 action 仅 `oss:PutObject` + `oss:PutObjectTagging`（后者可选，留给绑定时打 tag 用，但绑定打 tag 应由服务端主 AK 而非客户端，故 policy 只需 `PutObject`）；资源限定 `acs:oss:*:*:<bucket>/images/*`；可在 AssumeRole 时内嵌额外 Policy 进一步收敛到本次预生成的 objectKey。
+2. **RAM Role policy 设计**：限制 action 仅 `oss:PutObject`（绑定归档由服务端主 AK 的 `CopyObject` 完成，客户端 STS Role 无需写 `bound/`）；资源限定 `acs:oss:*:*:<bucket>/images/*`；可在 AssumeRole 时内嵌额外 Policy 进一步收敛到本次预生成的 objectKey。
 3. **objectKey 预生成 & 扩展名映射**：`png → png`、`jpeg → jpg`、`webp → webp`；服务端用 `UuidV7Generator.next()` + content-type 反查；客户端 PUT 时 `Content-Type` 必须与 contentType 一致。
-4. **业务绑定时校验**：`OSSClient.getObjectMetadata(bucket, key)` 拿 `Content-Type` + `Content-Length` + 存在性；不通过则抛 `ValidationException`。通过后用 `OSSClient.setObjectTagging(bucket, key, [bound=true])` 标记保留。
-5. **bucket lifecycle 与 bound tag**：阿里云 OSS Lifecycle 支持基于 tag 的过滤；规则示例：`Filter.tagSet[bound != "true"]` + `Days=1`。运维需在控制台 / Terraform 准备；plan 把规则配置写入 `bucket-lifecycle.md`。
+4. **业务绑定时校验**：`OSSClient.getObjectMetadata(bucket, key)` 拿 `Content-Type` + `Content-Length` + 存在性；不通过则抛 `ValidationException`。通过后用 `OSSClient.copyObject(bucket, images/<uuid>, bucket, bound/<uuid>)` 归档（**只 copy 不删 `images/` 原对象**，使绑定无不可回滚副作用、回滚后可用同一 objectKey 幂等重试）。
+5. **bucket lifecycle 与前缀策略**：规则示例：`Prefix=images/` + `Days=1`（按前缀过期，无 tag 过滤）；`bound/` 前缀不在范围内、永久保留。运维需在控制台 / Terraform 准备；plan 把规则配置写入 `bucket-lifecycle.md`。
 6. **读路径签名**：仍用 `OSSClient.generatePresignedUrl(GetObject, expiration)`，默认 30 分钟。
 7. **前端表单直传接入**：服务端用 STS 临时凭证计算 PostObject V4 签名（`OSS4-HMAC-SHA256`），前端用 `FormData`（`key` / `policy` / `x-oss-signature` / `x-oss-credential` / `x-oss-date` / `x-oss-security-token` / `success_action_status` / `file`）POST 到 `host`；不向浏览器下发 `accessKeySecret`，也不让前端自选 key。
 8. **测试策略**：所有 SDK 接入点用接口替身；StsCredentialIssuer 在测试中返回固定 `Credentials`；ObjectKeyValidator 用 in-memory map 模拟 OSS metadata；ImageUrlSigner 直接拼装伪 URL。
@@ -189,10 +189,10 @@ love-space-web/                                                  # React 19 + Vi
    - 请求 / 响应 DTO 矩阵。
 2. **contracts/**：
    - `upload-credentials-endpoint.md`：admin REST 契约（method、path、auth、request body、response body、错误码）。
-   - `business-binding.md`：业务接口接收 objectKey 时的统一校验流程契约（前置：String 形态合法性；中置：`ObjectKeyValidator.validateAndMarkBound`；后置：失败错误码）。
+   - `business-binding.md`：业务接口接收 objectKey 时的统一校验流程契约（前置：String 形态合法性；中置：`ObjectKeyValidator.validateAndBind`（copy 到 `bound/`，只 copy 不删）；后置：失败错误码）。
    - `StsCredentialIssuer.md`、`ObjectKeyValidator.md`、`ImageUrlSigner.md`：三个内部接口的输入 / 输出 / 错误语义。
    - `api-admin-read.md` / `api-app-read.md`：响应 schema 变更。
-   - `bucket-lifecycle.md`：OSS lifecycle 规则 JSON 与控制台操作清单 + 服务端在绑定成功时打 `bound=true` 的行为约定。
+   - `bucket-lifecycle.md`：OSS lifecycle 规则 JSON（`images/` 前缀 + `Days=1`，无 tag 过滤）与控制台操作清单 + 服务端绑定成功时 copy 到 `bound/` 前缀（只 copy 不删）的行为约定。
 3. **quickstart.md**：从准备 OSS bucket + RAM Role + lifecycle 开始，到本地启动 admin + web，到端到端 6 步流程演示，到测试命令。
 4. **agent context update**：`CLAUDE.md` SPECKIT 块已指向本 plan，无需再改（仍是 `specs/003-image-response-oss/plan.md`）。
 

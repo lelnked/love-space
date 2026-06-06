@@ -128,6 +128,8 @@
   - 服务端绑定时调 `OSSClient.copyObject(bucket, srcKey, bucket, "bound/<uuid>.<ext>")` 然后 `deleteObject(srcKey)`；DB 持久化的是 `bound/<uuid>.<ext>`。
 - lifecycle 只覆盖 `images/` 前缀，`bound/` 前缀永久保留。
 
+> **事后修订（事务安全）**：绑定后的 `deleteObject(srcKey)` 已移除——只 `copyObject`、保留 `images/` 原对象，由 lifecycle 24h 统一回收。原因：`deleteObject` 是无法随业务 DB 事务回滚的副作用，若绑定之后（如多图中某张校验失败、上线资格校验失败）事务回滚，被删的 `images/` 原图无法复原，用户用同一表单重试会永远卡在"图片对象不可用"。去掉 delete 后 `copyObject` 幂等、原图保留，任何失败路径都可安全重试。代价：放宽了"objectKey 一次性失效"语义（同一已绑定 key 在 24h 内幂等可重绑）。详见 `contracts/ObjectKeyValidator.md`、`contracts/business-binding.md`、`contracts/bucket-lifecycle.md` 与 `quickstart.md` SC-005。
+
 **Rationale**: OSS lifecycle 对 NotTag 支持有限，"反 tag"路径在不增加服务端运维负担的前提下不可靠。把已绑定对象搬到新前缀，是工业上更稳的隔离手段（与 spec 内 Q2 中拒绝的 "pending → final" 方案在表现上类似，但触发点不同：Q2 是为了避免脏 key 进主目录，本规则是为了在 OSS lifecycle 能力受限的情况下实现"已绑定永不过期"）。复制 + 删除一次开销约 30–80 ms。
 
 **Spec 影响 & Clarifications 反查**：spec Clarifications Q2 选了"直传 final"，但已绑定对象由 lifecycle 兜底的具体机制（tag vs 移动前缀）spec FR-018 已声明留给 plan 细化。本研究决定走"移动前缀"路径——**该决策不与 spec Q2 冲突**（spec Q2 反对的是"上传前就分 pending/final"的两阶段直传；本决策的复制是发生在业务绑定时，对客户端透明，仍保持"直传 final"语义）。

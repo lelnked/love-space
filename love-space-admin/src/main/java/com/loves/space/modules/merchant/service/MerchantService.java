@@ -73,8 +73,17 @@ public class MerchantService {
                 : merchantRepository.findById(id)
                         .orElseThrow(() -> new IllegalArgumentException("商户不存在：" + id));
 
+        // 先做所有可能抛异常的纯校验（无任何不可回滚副作用）。
+        // 关键：上线资格校验必须排在图片 validateAndBind 之前——validateAndBind 会把 images/ 原图
+        // 复制到 bound/ 并删除原图，这是无法随 DB 事务回滚的 OSS 副作用。若校验在图片绑定之后失败、
+        // 事务回滚，被消费掉的 objectKey 无法复原，用户用同一表单重试时会永远卡在“图片对象不可用”，
+        // 真正的失败原因（如城市未上架）也被掩盖。
+        boolean targetOnline = request.online() != null && request.online();
+        if (targetOnline) {
+            validateOnlineEligibility(request.cityId(), request.categoryId());
+        }
+
         merchant.setName(request.name());
-        merchant.setLogo(objectKeyValidator.validateAndBind(request.logo()));
         merchant.setAddress(request.address());
         merchant.setLongitude(request.longitude());
         merchant.setLatitude(request.latitude());
@@ -86,14 +95,13 @@ public class MerchantService {
         merchant.setSocialContributionScore(request.socialContributionScore());
         merchant.setStory(request.story());
         merchant.setWeight(request.weight() == null ? 0 : request.weight());
-        boolean targetOnline = request.online() != null && request.online();
-        if (targetOnline) {
-            validateOnlineEligibility(merchant.getCityId(), merchant.getCategoryId());
-        }
         merchant.setOnline(targetOnline);
+        merchant.setPeriods(toPeriodNames(request.periods()));
+
+        // 所有校验通过后，最后再绑定图片对象（带不可回滚的 OSS 副作用），紧邻 save。
+        merchant.setLogo(objectKeyValidator.validateAndBind(request.logo()));
         merchant.setImages(new ArrayList<>(request.images().stream()
                 .map(objectKeyValidator::validateAndBind).toList()));
-        merchant.setPeriods(toPeriodNames(request.periods()));
 
         Merchant saved = merchantRepository.save(merchant);
         UUID merchantId = saved.getId();

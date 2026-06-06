@@ -16,8 +16,15 @@ import java.util.regex.Pattern;
  * <ol>
  *     <li>正则前置校验，拒绝路径穿越 / 非白名单扩展名</li>
  *     <li>{@code headObject} 校验存在性、MIME 白名单、字节大小</li>
- *     <li>若为 {@code images/} 前缀，copy 到 {@code bound/} 并 best-effort 删除原对象</li>
+ *     <li>若为 {@code images/} 前缀，copy 到 {@code bound/}（保留 images/ 原对象）</li>
  * </ol>
+ *
+ * <p><b>事务安全：</b>本方法只做 {@code headObject}（只读）与 {@code copyObject}（幂等），
+ * 不删除 {@code images/} 原对象——因此对调用方而言完全无不可回滚的副作用。若调用方 DB 事务
+ * 在绑定之后回滚，原图仍在 {@code images/}，用户用同一 objectKey 重试时 {@code headObject} 与
+ * {@code copyObject} 都能再次成功（copy 幂等，目标 key 由源 key 的 UUID 唯一决定）。已被复制走的
+ * {@code images/} 临时对象由 OSS 生命周期规则（lifecycle，按 {@code images/} 前缀过期）异步回收，
+ * 不在请求链路里同步删除。
  *
  * <p>所有对外抛出的 {@link IllegalArgumentException} 文案统一为 {@code "图片对象不可用"}，
  * 具体原因（不存在 / MIME 错 / 太大 / copy 失败）只记入日志。
@@ -81,16 +88,14 @@ public class AliyunOssObjectKeyValidator implements ObjectKeyValidator {
         }
 
         String boundKey = ossProperties.boundKeyPrefix() + "/" + uuidPart + "." + ext;
+        // 只 copy、不 delete：copyObject 幂等，images/ 原图保留，使本方法不产生任何无法随调用方
+        // DB 事务回滚的副作用（回滚后原图仍在，重试可再次成功）。images/ 临时对象由 OSS lifecycle
+        // 按前缀过期回收，不在此处同步删除。
         try {
             ossClient.copyObject(ossProperties.bucket(), rawObjectKey, ossProperties.bucket(), boundKey);
         } catch (RuntimeException e) {
             LOG.error("OSS copyObject 失败 src={} dst={}", rawObjectKey, boundKey, e);
             throw new IllegalStateException("OSS copyObject 失败", e);
-        }
-        try {
-            ossClient.deleteObject(ossProperties.bucket(), rawObjectKey);
-        } catch (RuntimeException e) {
-            LOG.warn("OSS deleteObject best-effort 失败 key={}（由 lifecycle 兜底）", rawObjectKey, e);
         }
         return boundKey;
     }

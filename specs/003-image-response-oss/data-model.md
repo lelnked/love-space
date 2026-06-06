@@ -125,7 +125,7 @@ public interface ObjectKeyValidator {
    - `Content-Type` 不在白名单 → `ValidationException`。
    - `Content-Length > maxImageBytes` → `ValidationException`。
 3. `oss.copyObject(bucket, srcKey, bucket, boundKey)`，`boundKey = boundKeyPrefix + "/" + uuidPart + "." + ext`（uuidPart 取自 srcKey）。
-4. `oss.deleteObject(bucket, srcKey)`（best-effort；失败仅记日志，srcKey 反正会被 lifecycle 24h 删）。
+4. **不** `deleteObject(srcKey)`：保留 `images/` 原对象（事务安全，回滚后可用同一 objectKey 重试），由 lifecycle 24h 回收。
 5. 返回 `boundKey`。
 
 ### 3.3 `ImageUrlSigner`（admin + app）
@@ -186,10 +186,10 @@ DTO 字段名（`imageUrls` / `logo` / `images` / `backgroundImage`）保持不�
 OSS 对象在系统内的"状态"由前缀决定：
 
 ```text
-                client PUT                 server validate + copy + delete
+                client PUT                 server validate + copy（保留 images/）
   (不存在) ─────────────────► images/<uuid>.<ext> ───────────────────────► bound/<uuid>.<ext>
                                        │                                       │
-                                       │ 24h 未绑定                            │ 永不过期（lifecycle 不覆盖此前缀）
+                                       │ 24h 后回收（绑定与否均删）            │ 永不过期（lifecycle 不覆盖此前缀）
                                        ▼                                       ▼
                                   lifecycle 删除                          业务表持有
 ```

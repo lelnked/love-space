@@ -24,18 +24,19 @@
 
 - 规则**只覆盖 `images/` 前缀**；`bound/` 永远不在 lifecycle 删除范围内。
 - 1 天为 OSS lifecycle 最小粒度（按 UTC 自然日计算，实际寿命 24–48h，可接受）。
-- 服务端 bind 时 `delete images/<uuid>.<ext>` 是 best-effort；删除失败由该 lifecycle 兜底。
+- 服务端 bind 时**不删除** `images/<uuid>.<ext>`（只 copy 到 `bound/`）；`images/` 原对象一律由该 lifecycle 在 24h 后回收。这样 bind 不产生不可回滚副作用，业务事务回滚后原图仍在、可重试。
 
 ## 服务端绑定时行为
 
 - `ObjectKeyValidator.validateAndBind`：
-  - 输入 `images/<uuid>.<ext>` → `copyObject` 到 `bound/<uuid>.<ext>` → `deleteObject(images/<uuid>.<ext>)` → 返回 `bound/<uuid>.<ext>`
+  - 输入 `images/<uuid>.<ext>` → `copyObject` 到 `bound/<uuid>.<ext>`（**保留 `images/` 原对象，不 delete**）→ 返回 `bound/<uuid>.<ext>`。`images/` 原对象交给 lifecycle 24h 回收。
   - 输入 `bound/<uuid>.<ext>` → head 校验存在 → 直接返回
+- **bound/ 孤儿**：业务请求若在绑定后回滚（如多图中某张校验失败），先前已 `copyObject` 到 `bound/` 的对象会暂时无业务引用。因 `boundKey` 由源 `uuid` 唯一决定，用同一 objectKey 重试成功时会复用该对象（不产生新孤儿）；仅彻底放弃提交才残留。`bound/` 不在 lifecycle 范围，如需清理可另配长周期规则或定期巡检（非本特性强约束）。
 
 ## RAM Role 权限
 
 - STS Role 仅授权 `oss:PutObject` 到 `acs:oss:*:*:<bucket>/images/*`（资源前缀限定）。
-- 服务端主账号 AK 拥有 `oss:GetObjectMeta`、`oss:GetObject`（用于签名）、`oss:CopyObject`、`oss:DeleteObject`，作用于整个 bucket。
+- 服务端主账号 AK 拥有 `oss:GetObjectMeta`、`oss:GetObject`（用于签名）、`oss:CopyObject`，作用于整个 bucket。（绑定不再调用 `DeleteObject`；`images/` 回收交给 lifecycle，主 AK 不需要删权限。）
 
 ## 监控建议（非本特性强约束）
 

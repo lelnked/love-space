@@ -45,6 +45,7 @@ description: "Tasks for 阿里 OSS STS 直传 + 统一 ImageResponse"
 - [X] T012 [P] 在 `love-space-admin/src/main/java/com/loves/space/infrastructure/storage/ImageUrlSigner.java` 新建接口（`String sign(String objectKey)`）；中文 JavaDoc
 - [X] T013 在 `love-space-admin/src/main/java/com/loves/space/infrastructure/storage/AliyunStsCredentialIssuer.java` 实现：用 `IAcsClient` 调 `AssumeRoleRequest`，拼装 inline policy（限 `oss:PutObject` 到单 objectKey 资源 ARN），返回 `StsCredential`；中文 JavaDoc
 - [X] T014 在 `love-space-admin/src/main/java/com/loves/space/infrastructure/storage/AliyunOssObjectKeyValidator.java` 实现：正则前置校验 → `oss.getObjectMetadata` → MIME / size 校验 → `images/` 分支 `copyObject` 到 `bound/` 并 best-effort `deleteObject`；外部错误统一为 `ValidationException("图片对象不可用")`
+  > 事后修订：`deleteObject` 已移除（只 copy 不删，`images/` 由 lifecycle 回收），以保证绑定无不可回滚副作用、失败可重试。详见 research.md「事后修订（事务安全）」。
 - [X] T015 在 `love-space-admin/src/main/java/com/loves/space/infrastructure/storage/AliyunOssImageUrlSigner.java` 实现：`oss.generatePresignedUrl(bucket, objectKey, expiration, GET)`；null / blank 返回 null
 - [X] T016 [P] 在 `love-space-admin/src/main/java/com/loves/space/common/dto/ImageResponse.java` 确认或新建 record `ImageResponse(String id, String url)`；中文 JavaDoc
 - [X] T017 [P] 在 `love-space-admin/src/main/java/com/loves/space/common/util/ImageResponses.java` 新建工具：`ImageResponse from(String objectKey, ImageUrlSigner)`、`List<ImageResponse> fromList(List<String>, ImageUrlSigner)`；中文 JavaDoc

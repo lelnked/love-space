@@ -7,7 +7,7 @@
 ```java
 public interface ObjectKeyValidator {
     /**
-     * 校验客户端提交的 objectKey，并在业务实体绑定时把对象迁移到 bound 前缀。
+     * 校验客户端提交的 objectKey，并在业务实体绑定时把对象复制到 bound 前缀（保留 images/ 原对象）。
      *
      * @param rawObjectKey 客户端提交的 objectKey；可以是 {@code images/<uuid>.<ext>}（新上传）
      *                     或 {@code bound/<uuid>.<ext>}（旧图保留）
@@ -38,12 +38,12 @@ public interface ObjectKeyValidator {
    - 若是 `images/...` 形态：
      a. `boundKey = ossProperties.boundKeyPrefix + "/" + uuidPart + "." + ext`（uuidPart 与 ext 从 rawObjectKey 解析）。
      b. `oss.copyObject(bucket, rawObjectKey, bucket, boundKey)`。失败 → `IllegalStateException`（500）。
-     c. `oss.deleteObject(bucket, rawObjectKey)` —— best-effort，失败仅记日志，依靠 lifecycle 兜底。
+     c. **不删除** `images/<uuid>` 原对象。事务安全：`copyObject` 幂等且不产生任何不可回滚副作用，业务事务回滚后原图仍在、可用同一 objectKey 重试；`images/` 原对象由 lifecycle 24h 兜底回收。
      d. 返回 `boundKey`。
 
 ### 并发与一致性
 
-- 同一 `images/<uuid>` 在并发情况下被两个请求同时绑定：CopyObject 会成功两次（无锁），DeleteObject 第二次返回 NoSuchKey 但不影响主流程；两条业务记录都会持有同一 `bound/<uuid>`。本特性允许该行为（图片去重不在范围内）。
+- 同一 `images/<uuid>` 被并发绑定，或同一 objectKey 在 lifecycle 回收前被重复提交：`copyObject` 幂等（同源同目标可成功多次），且不删原图，因此均安全；多条业务记录会持有同一 `bound/<uuid>`。本特性允许该行为（图片去重不在范围内）。
 
 ### 错误信息脱敏
 
@@ -56,6 +56,6 @@ public interface ObjectKeyValidator {
   - MIME 错 → throws
   - 太大 → throws
   - 路径穿越 → throws
-  - 合法 images/ → 返回 bound/，map 内 src 被删
+  - 合法 images/ → 返回 bound/，src 仍保留（绑定不删 images/ 原对象）
   - 已是 bound/ + 存在 → 返回原值
   - 已是 bound/ + 不存在 → throws

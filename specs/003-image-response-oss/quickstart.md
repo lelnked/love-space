@@ -62,13 +62,13 @@ npm run dev -- --mode test  # 端口 21424
 4. 提交 banner 创建：`POST /api/admin/banners { imageUrls: ["images/<uuid>.png", ...] }`。
 5. 服务端校验：
    - DTO 正则通过
-   - `ObjectKeyValidator.validateAndBind`：head OSS 对象、校验 MIME / size → copy 到 `bound/<uuid>.png` → delete `images/<uuid>.png`
+   - `ObjectKeyValidator.validateAndBind`：head OSS 对象、校验 MIME / size → copy 到 `bound/<uuid>.png`（保留 `images/<uuid>.png`，由 lifecycle 24h 回收）
    - 业务表写入 `bound/<uuid>.png`
 6. 列表 / 详情接口返回 `ImageResponse[]`，每个 `url` 是签名 URL；新标签页打开应能显示图片。
 7. 同上验证 Merchant（logo + images）与 City（backgroundImage）。
 8. 复制 url 去掉 `Signature` query → 应得 `AccessDenied`，满足 SC-002。
 9. 直传后**不**提交业务 → 24h 后 OSS 控制台确认 `images/<uuid>.png` 已被 lifecycle 删除，满足 SC-007。
-10. 用旧 objectKey（已被绑定后从 `images/` 删除）再次提交 → 应得 422 "图片对象不可用"，满足 SC-005。
+10. SC-005（绑定阻断，已放宽 objectKey 一次性语义）：提交一个**不存在 / MIME 非白名单 / >20MB** 的 objectKey → 422 "图片对象不可用" 且业务表零写入。注：绑定不再删 `images/` 原对象，故同一已绑定 objectKey 在 24h 内重复提交会**幂等成功**（复用同一 `bound/<uuid>`），不再返回 422；超过 24h 原对象被 lifecycle 回收后再提交才会失败。
 
 ## 5. 测试
 
@@ -87,6 +87,6 @@ cd love-space-web   && npm run lint && npm run build
 | 启动失败 `OssProperties …` / `StsProperties …` 校验错 | 检查环境变量是否齐备；不要写进 yml。 |
 | 前端直传 403 InvalidAccessKeyId | STS 过期（>15min）；重新调 `upload-credentials`。 |
 | 前端直传 403 AccessDenied | RAM Role 策略未覆盖该 objectKey；检查 inline policy 拼接是否正确。 |
-| 提交业务 422 "图片对象不可用" | objectKey 不存在 / MIME 错 / 太大 / 重复提交已绑定 key。 |
+| 提交业务 422 "图片对象不可用" | objectKey 不存在（含已被 lifecycle 回收的 `images/`）/ MIME 错 / 太大。重复提交未过期的已绑定 key 现为幂等成功，不再 422。 |
 | 列表 url 401 / 403 | 签名过期（默认 30min）→ 重新拉取列表 / 详情。 |
 | 前端直传 CORS 报错 | 在 OSS bucket → CORS 配置中加入前端 origin，允许 PUT/GET/HEAD + 常用 header。 |
