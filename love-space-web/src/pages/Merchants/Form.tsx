@@ -16,7 +16,7 @@ import {
   MerchantUpsertRequest,
   updateMerchant,
 } from "../../api/merchants";
-import { CityItem, listCities } from "../../api/cities";
+import { CityItem, listOnlineCities, getCity } from "../../api/cities";
 import { CategoryItem, listCategories } from "../../api/categories";
 import { listTags, TagItem } from "../../api/tags";
 import { PERIOD_LABEL, PERIOD_VALUES, Period } from "../../api/types";
@@ -69,10 +69,13 @@ export default function MerchantForm() {
   const toast = useToast();
 
   useEffect(() => {
-    void listCities().then(setCities).catch(() => undefined);
+    // 新增时只展示已上线城市；编辑时城市选项由商户加载逻辑负责（含已下架城市兜底）
+    if (!id) {
+      void listOnlineCities().then(setCities).catch(() => undefined);
+    }
     void listCategories().then(setCategories).catch(() => undefined);
     void listTags({ online: true }).then(setTags).catch(() => undefined);
-  }, []);
+  }, [id]);
 
   useEffect(() => {
     if (!id) return;
@@ -97,6 +100,18 @@ export default function MerchantForm() {
         setStory(d.story ?? "");
         setWeight(d.weight);
         setOnline(d.online);
+        // 城市选项：默认只展示已上线城市；若绑定城市已下架则单独取回并保留标注
+        void listOnlineCities()
+          .then((online) => {
+            if (online.some((c) => c.id === d.cityId)) {
+              setCities(online);
+            } else {
+              return getCity(d.cityId)
+                .then((c) => setCities([c, ...online]))
+                .catch(() => setCities(online));
+            }
+          })
+          .catch(() => undefined);
       })
       .catch((err: AxiosError<{ detail?: string }>) => {
         toast.error(err.response?.data?.detail ?? "加载失败");
@@ -309,6 +324,7 @@ export default function MerchantForm() {
                   {cities.map((c) => (
                     <option key={c.id} value={c.id}>
                       {c.chineseName}
+                      {c.online ? "" : "（已下架）"}
                     </option>
                   ))}
                 </select>
