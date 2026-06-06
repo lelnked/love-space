@@ -7,6 +7,7 @@ import com.loves.space.common.page.PageResponseMapper.PageResponse;
 import com.loves.space.common.util.ImageResponses;
 import com.loves.space.infrastructure.storage.ImageUrlSigner;
 import com.loves.space.infrastructure.storage.ObjectKeyValidator;
+import com.loves.space.modules.category.entity.Category;
 import com.loves.space.modules.category.repository.CategoryRepository;
 import com.loves.space.modules.city.entity.City;
 import com.loves.space.modules.city.repository.CityRepository;
@@ -208,7 +209,7 @@ public class MerchantService {
     }
 
     /**
-     * 校验商户上架资格：所属城市必须存在且已上架；若指定了分类，分类必须存在。
+     * 校验商户上架资格：所属城市必须存在且已上架；若指定了分类，分类必须存在且已上架。
      *
      * @param cityId     商户所属城市 ID
      * @param categoryId 商户所属分类 ID（可空）
@@ -219,8 +220,12 @@ public class MerchantService {
         if (!city.isOnline()) {
             throw new IllegalArgumentException("商户所属城市未上架，无法上架商户");
         }
-        if (categoryId != null && !categoryRepository.existsById(categoryId)) {
-            throw new IllegalArgumentException("商户所属分类不存在，无法上架");
+        if (categoryId != null) {
+            Category category = categoryRepository.findById(categoryId)
+                    .orElseThrow(() -> new IllegalArgumentException("商户所属分类不存在，无法上架"));
+            if (!category.isOnline()) {
+                throw new IllegalArgumentException("商户所属分类未上架，无法上架商户");
+            }
         }
     }
 

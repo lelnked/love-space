@@ -71,8 +71,13 @@ class MerchantServiceTest extends AbstractPostgresIntegrationTest {
                 "城-" + UUID.randomUUID(), "EN", "省", "Province", null, false)).id();
     }
 
-    /** 创建一个分类，返回其 ID。 */
+    /** 创建一个已上架分类，返回其 ID（上架商户的前置条件）。 */
     private UUID categoryId() {
+        return categoryService.create(new CategoryUpsertRequest("类-" + UUID.randomUUID(), 0, true)).id();
+    }
+
+    /** 创建一个未上架分类，返回其 ID。 */
+    private UUID offlineCategoryId() {
         return categoryService.create(new CategoryUpsertRequest("类-" + UUID.randomUUID(), 0, false)).id();
     }
 
@@ -236,6 +241,21 @@ class MerchantServiceTest extends AbstractPostgresIntegrationTest {
     @Test
     void setOnlineSucceedsWhenCityOnline() {
         UUID merchantId = offlineMerchant(onlineCityId(), null);
+        MerchantDetailResponse updated = merchantService.setOnline(merchantId, true);
+        assertThat(updated.online()).isTrue();
+    }
+
+    @Test
+    void setOnlineRejectsWhenCategoryNotOnline() {
+        UUID merchantId = offlineMerchant(onlineCityId(), offlineCategoryId());
+        assertThatThrownBy(() -> merchantService.setOnline(merchantId, true))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThat(merchantRepository.findById(merchantId).orElseThrow().isOnline()).isFalse();
+    }
+
+    @Test
+    void setOnlineSucceedsWhenCategoryOnline() {
+        UUID merchantId = offlineMerchant(onlineCityId(), categoryId());
         MerchantDetailResponse updated = merchantService.setOnline(merchantId, true);
         assertThat(updated.online()).isTrue();
     }
