@@ -13,6 +13,7 @@ export interface BannerListItem {
   link: string;
   linkedCityName: string | null;
   online: boolean;
+  sortOrder: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -34,6 +35,7 @@ export interface BannerUpsertRequest {
   type: BannerType;
   imageUrls: string[];
   link: string;
+  sortOrder: number;
 }
 
 function buildParams(query: BannerQuery): Record<string, string | number | boolean> {

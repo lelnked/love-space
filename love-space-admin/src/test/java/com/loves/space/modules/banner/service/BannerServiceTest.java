@@ -68,7 +68,7 @@ class BannerServiceTest extends AbstractPostgresIntegrationTest {
         when(imageUrlSigner.sign("bound/bbb.jpg")).thenReturn("https://signed/bbb");
 
         BannerDetailResponse detail = bannerService.create(new BannerCreateRequest(
-                "banner-1", "HOME", BannerType.CITY, List.of("images/aaa.png", "bound/bbb.jpg"), cityId));
+                "banner-1", "HOME", BannerType.CITY, List.of("images/aaa.png", "bound/bbb.jpg"), cityId, 0));
 
         Banner persisted = bannerRepository.findById(detail.id()).orElseThrow();
         assertThat(persisted.getImageUrls()).containsExactly("bound/aaa.png", "bound/bbb.jpg");
@@ -82,7 +82,7 @@ class BannerServiceTest extends AbstractPostgresIntegrationTest {
         when(imageUrlSigner.sign("bound/aaa.png")).thenReturn("https://signed/aaa");
 
         BannerDetailResponse detail = bannerService.create(new BannerCreateRequest(
-                "banner-city-delete", "HOME", BannerType.CITY, List.of("images/aaa.png"), cityId));
+                "banner-city-delete", "HOME", BannerType.CITY, List.of("images/aaa.png"), cityId, 0));
         bannerService.setOnline(detail.id(), true);
         assertThat(bannerRepository.findById(detail.id()).orElseThrow().isOnline()).isTrue();
 
@@ -100,7 +100,7 @@ class BannerServiceTest extends AbstractPostgresIntegrationTest {
         long before = bannerRepository.count();
 
         assertThatThrownBy(() -> bannerService.create(new BannerCreateRequest(
-                "banner-bad", "HOME", BannerType.CITY, List.of("images/legal.png", "images/bad.png"), cityId)))
+                "banner-bad", "HOME", BannerType.CITY, List.of("images/legal.png", "images/bad.png"), cityId, 0)))
                 .isInstanceOf(IllegalArgumentException.class);
 
         assertThat(bannerRepository.count()).isEqualTo(before);

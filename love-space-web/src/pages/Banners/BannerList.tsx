@@ -130,6 +130,12 @@ export default function BannerList() {
       render: (it) => it.linkedCityName ?? "-",
     },
     {
+      key: "sortOrder",
+      header: "排序",
+      width: "6rem",
+      render: (it) => it.sortOrder,
+    },
+    {
       key: "online",
       header: "上下架",
       width: "8rem",

@@ -78,4 +78,39 @@ class BannerReadIT extends AbstractPostgresIntegrationTest {
                 .andExpect(jsonPath("$[0].image[1].id").value("bound/y.png"))
                 .andExpect(jsonPath("$[0].image[1].url").value("https://signed.example.com/bound/y.png"));
     }
+
+    @Test
+    void listOrdersBySortOrderAscending() throws Exception {
+        City city = new City();
+        city.setChineseName("北京-" + UUID.randomUUID());
+        city.setEnglishName("beijing-app-sort-it");
+        city.setChineseProvince("北京");
+        city.setEnglishProvince("beijing");
+        city.setOnline(true);
+        cityRepository.save(city);
+
+        saveBanner("banner-sort-2", "home_sort", 2, city.getId());
+        saveBanner("banner-sort-0", "home_sort", 0, city.getId());
+        saveBanner("banner-sort-1", "home_sort", 1, city.getId());
+
+        mockMvc.perform(get("/api/app/banners")
+                        .param("positionCode", "home_sort")
+                        .header("X-API-Key", TEST_API_KEY))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].name").value("banner-sort-0"))
+                .andExpect(jsonPath("$[1].name").value("banner-sort-1"))
+                .andExpect(jsonPath("$[2].name").value("banner-sort-2"));
+    }
+
+    private void saveBanner(String name, String positionCode, int sortOrder, UUID cityId) {
+        Banner banner = new Banner();
+        banner.setName(name);
+        banner.setPositionCode(positionCode);
+        banner.setOnline(true);
+        banner.setType(BannerType.CITY);
+        banner.setLinkedEntityId(cityId);
+        banner.setImageUrls(List.of("bound/x.png"));
+        banner.setSortOrder(sortOrder);
+        bannerRepository.save(banner);
+    }
 }

@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 
 import java.util.List;
@@ -23,6 +24,7 @@ public record BannerUpdateRequest(
         @NotEmpty(message = "至少上传一张图片") List<@NotBlank(message = "图片不能为空") @Pattern(regexp = "^(images|bound)/[\\w-]+\\.(png|jpg|webp)$",
                 message = "imageUrls 仅接受 OSS objectKey（images/<id>.<ext> 或 bound/<id>.<ext>）") String> imageUrls,
         @JsonProperty("link") @NotNull(message = "请选择关联城市") UUID linkedEntityId,
+        @NotNull(message = "排序值不能为空") @PositiveOrZero(message = "排序值不能为负") Integer sortOrder,
         /** 仅为捕获非法字段使用：JSON 中若显式传入会被 service 抛错；正常请求不传。 */
         Boolean online
 ) {

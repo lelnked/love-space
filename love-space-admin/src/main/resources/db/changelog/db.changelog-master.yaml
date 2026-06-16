@@ -14,3 +14,5 @@ databaseChangeLog:
       file: db/changelog/changes/005-add-banner-name-unique.sql
   - include:
       file: db/changelog/changes/006-add-category-sort-online.sql
+  - include:
+      file: db/changelog/changes/007-add-banner-sort-order.sql

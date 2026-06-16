@@ -69,6 +69,7 @@ public class BannerService {
         banner.setType(request.type());
         banner.setImageUrls(bindImageObjectKeys(request.imageUrls()));
         banner.setLinkedEntityId(request.linkedEntityId());
+        banner.setSortOrder(request.sortOrder());
         banner.setOnline(false);
         Banner saved = bannerRepository.save(banner);
         return toDetail(saved, lookupCityName(saved));
@@ -90,6 +91,7 @@ public class BannerService {
         banner.setType(request.type());
         banner.setImageUrls(bindImageObjectKeys(request.imageUrls()));
         banner.setLinkedEntityId(request.linkedEntityId());
+        banner.setSortOrder(request.sortOrder());
         return toDetail(banner, lookupCityName(banner));
     }
 
@@ -110,7 +112,7 @@ public class BannerService {
     }
 
     /**
-     * 分页查询 banner 列表，按 {@code updatedAt DESC} 排序；批量装配关联城市名。
+     * 分页查询 banner 列表，按 {@code createdAt DESC} 排序；批量装配关联城市名。
      */
     @Transactional(readOnly = true)
     public PageResponse<BannerListItemResponse> page(BannerQuery query, Pageable pageable) {
@@ -121,7 +123,7 @@ public class BannerService {
                 BannerSpecifications.onlineEquals(query.online())
         ).filter(Objects::nonNull).toList();
         Specification<Banner> spec = Specification.allOf(specs);
-        Pageable sorted = PageQuery.normalize(pageable, Sort.by(Sort.Direction.DESC, Banner_.UPDATED_AT));
+        Pageable sorted = PageQuery.normalize(pageable, Sort.by(Sort.Direction.DESC, Banner_.CREATED_AT));
         Page<Banner> page = bannerRepository.findAll(spec, sorted);
         Map<UUID, String> cityNames = batchLoadCityNames(page.getContent());
         return PageResponseMapper.map(page, banner -> toItem(banner, cityNames.get(banner.getLinkedEntityId())));
@@ -207,6 +209,7 @@ public class BannerService {
                 banner.getLinkedEntityId(),
                 linkedCityName,
                 banner.isOnline(),
+                banner.getSortOrder(),
                 banner.getCreatedAt(),
                 banner.getUpdatedAt()
         );
@@ -222,6 +225,7 @@ public class BannerService {
                 banner.getLinkedEntityId(),
                 linkedCityName,
                 banner.isOnline(),
+                banner.getSortOrder(),
                 banner.getCreatedAt(),
                 banner.getUpdatedAt()
         );

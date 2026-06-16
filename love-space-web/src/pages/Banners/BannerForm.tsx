@@ -36,6 +36,7 @@ export default function BannerForm() {
   const [type, setType] = useState<BannerType>("CITY");
   const [images, setImages] = useState<ImageListItem[]>([]);
   const [link, setLink] = useState<string>("");
+  const [sortOrder, setSortOrder] = useState("0");
 
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -52,6 +53,7 @@ export default function BannerForm() {
         setType(d.type);
         setImages(d.imageUrls.map((im) => ({ objectKey: im.id, previewUrl: im.url })));
         setLink(d.link);
+        setSortOrder(String(d.sortOrder));
       })
       .catch((err: AxiosError<{ detail?: string }>) => {
         toast.error(err.response?.data?.detail ?? "加载失败");
@@ -69,6 +71,8 @@ export default function BannerForm() {
     if (!positionCode.trim()) errs.positionCode = "位置标识不能为空";
     if (images.length === 0) errs.imageUrls = "至少上传 1 张图片";
     if (!link) errs.link = "请选择关联城市";
+    const sortValue = Number(sortOrder);
+    if (!Number.isInteger(sortValue) || sortValue < 0) errs.sortOrder = "排序值需为非负整数";
     if (Object.keys(errs).length > 0) {
       setFieldErrors(errs);
       return;
@@ -80,6 +84,7 @@ export default function BannerForm() {
       type,
       imageUrls: images.map((it) => it.objectKey),
       link,
+      sortOrder: sortValue,
     };
 
     setSubmitting(true);
@@ -132,6 +137,20 @@ export default function BannerForm() {
               onChange={(e) => setPositionCode(e.target.value)}
               error={Boolean(fieldErrors.positionCode)}
               hint={fieldErrors.positionCode}
+            />
+          </div>
+
+          <div>
+            <Label>
+              排序（越小越靠前） <span className="text-error-500">*</span>
+            </Label>
+            <Input
+              type="number"
+              min="0"
+              value={sortOrder}
+              onChange={(e) => setSortOrder(e.target.value)}
+              error={Boolean(fieldErrors.sortOrder)}
+              hint={fieldErrors.sortOrder}
             />
           </div>
 

@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
  * <p>规则：
  * <ul>
  *   <li>仅返回 {@code online=true} 的 banner。</li>
- *   <li>按 {@code updatedAt DESC} 排序（最近更新的优先）。</li>
+ *   <li>按 {@code sortOrder ASC} 排序（越小越靠前），相同则按 {@code createdAt ASC}。</li>
  *   <li>{@code data} 字段按 {@link BannerType} 由对应 {@link BannerDataResolver} 装配，
  *       解析器负责批量预加载关联实体（防 N+1）并决定是否剔除条目
  *       （如 CITY 关联城市离线/缺失）。</li>
@@ -67,7 +67,8 @@ public class BannerQueryService {
                 BannerSpecifications.hasPositionCode(positionCode),
                 BannerSpecifications.linkedTo(linkedEntityId)
         );
-        List<Banner> banners = bannerRepository.findAll(spec, Sort.by(Sort.Direction.DESC, Banner_.UPDATED_AT));
+        List<Banner> banners = bannerRepository.findAll(spec,
+                Sort.by(Sort.Order.asc(Banner_.SORT_ORDER), Sort.Order.asc(Banner_.CREATED_AT)));
 
         // 同类型聚合后整体交给解析器批量预加载，避免逐条 N+1。
         Map<BannerType, BannerDataResolver.Prepared> preparedByType = new EnumMap<>(BannerType.class);

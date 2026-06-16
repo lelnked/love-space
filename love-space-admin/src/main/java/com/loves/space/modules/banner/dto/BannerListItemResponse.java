@@ -18,6 +18,7 @@ import java.util.UUID;
  * @param linkedEntityId  关联实体 ID（JSON 字段 {@code link}）
  * @param linkedCityName  关联城市中文名（{@code type=CITY} 时填充；其它类型为 null）
  * @param online          是否上架
+ * @param sortOrder       排序权重（越小越靠前）
  * @param createdAt       创建时间
  * @param updatedAt       更新时间
  */
@@ -30,6 +31,7 @@ public record BannerListItemResponse(
         @JsonProperty("link") UUID linkedEntityId,
         String linkedCityName,
         boolean online,
+        int sortOrder,
         OffsetDateTime createdAt,
         OffsetDateTime updatedAt
 ) {

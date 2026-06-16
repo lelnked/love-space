@@ -62,4 +62,8 @@ public class Banner extends BaseAuditEntity {
      */
     @Column(name = "linked_entity_id", nullable = false)
     private UUID linkedEntityId;
+
+    /** 排序权重（越小越靠前），非空，默认 0；app 端按此升序展示。 */
+    @Column(name = "sort_order", nullable = false)
+    private int sortOrder = 0;
 }

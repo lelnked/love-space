@@ -51,4 +51,8 @@ public class Banner extends BaseAuditEntity {
     /** 关联实体的 UUID 主键值（{@code type=CITY} 时为 {@code loves_city.id}）。 */
     @Column(name = "linked_entity_id", nullable = false)
     private UUID linkedEntityId;
+
+    /** 排序权重（越小越靠前）；app 查询按此升序返回。 */
+    @Column(name = "sort_order", nullable = false)
+    private int sortOrder = 0;
 }

@@ -20,6 +20,7 @@ public record BannerDetailResponse(
         @JsonProperty("link") UUID linkedEntityId,
         String linkedCityName,
         boolean online,
+        int sortOrder,
         OffsetDateTime createdAt,
         OffsetDateTime updatedAt
 ) {
