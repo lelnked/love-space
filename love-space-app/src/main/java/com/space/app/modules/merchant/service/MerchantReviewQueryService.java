@@ -11,6 +11,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -42,7 +43,7 @@ public class MerchantReviewQueryService {
      */
     public List<ReviewItemResponse> list(UUID merchantId, Boolean recommended) {
         if (!merchantRepository.existsByIdAndOnlineTrue(merchantId)) {
-            throw new ResourceNotFoundException("merchant not found: " + merchantId);
+            return Collections.emptyList();
         }
         Specification<MerchantReview> spec = (root, query, cb) -> cb.equal(root.get(MerchantReview_.merchantId), merchantId);
         if (recommended != null) {

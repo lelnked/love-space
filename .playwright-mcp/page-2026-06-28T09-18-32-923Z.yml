@@ -1,0 +1,7 @@
+- generic [ref=e4]:
+  - heading "codeing-admin" [level=1] [ref=e5]
+  - paragraph [ref=e6]: React + TS + Tailwind + shadcn/ui 环境就绪
+  - generic [ref=e7]:
+    - button "主按钮" [ref=e8]
+    - button "次按钮" [ref=e9]
+    - button "描边" [ref=e10]
