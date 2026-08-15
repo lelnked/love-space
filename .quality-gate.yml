@@ -1,0 +1,33 @@
+# 质量门禁（OpenSpec 版：love-space，npm + Maven Wrapper）
+# 分工：本门禁管「数字达标」（覆盖率/通过率/构建/安全）；/opsx:verify 管「代码符合 spec」；
+# scripts/generate-traceability-matrix.js 管「追溯闭环」。三者不重叠，互不替代。
+# 命令均来自各子项目的真实 scripts/插件；无现成脚本的项标 TODO，不臆造。
+version: '1.0'
+
+frontend:            # love-space-web（React 19 + Vite 6 + TS）
+  lint:        { command: "cd love-space-web && npm run lint", required: true }
+  build:       { command: "cd love-space-web && npm run build", required: true }   # tsc -b && vite build（含类型检查）
+  unit-test:   { command: "TODO: web 侧暂无单测框架，引入 vitest 后补", required: false }
+
+backend-admin:       # love-space-admin（Spring Boot 4 + Java 25，Maven）
+  unit-test:   { command: "cd love-space-admin && ./mvnw test", pass_rate: 100, required: true }
+  it-test:     { command: "cd love-space-admin && ./mvnw -Dtest='*IT' test", pass_rate: 100, required: true }  # 无 failsafe，*IT 需显式指定
+  build:       { command: "cd love-space-admin && ./mvnw -DskipTests package", required: true }
+  coverage:    { command: "TODO: 未接 JaCoCo，接入后补覆盖率阈值", required: false }
+
+backend-app:         # love-space-app（Spring Boot 4 + Java 25，Maven）
+  unit-test:   { command: "cd love-space-app && ./mvnw test", pass_rate: 100, required: true }
+  it-test:     { command: "cd love-space-app && ./mvnw -Dtest='*IT' test", pass_rate: 100, required: true }
+  build:       { command: "cd love-space-app && ./mvnw -DskipTests package", required: true }
+
+# ⚠ admin 与 app 的 IT 共享同一 Testcontainers reuse 容器，不要并行跑（relation already exists 撞库）。
+
+integration-test:    # IT：api-test-runner 直驱 HTTP，后端启动即可跑
+  command: "/run-api-test --change <change-id>（交付轮）或 /regression-test --module <domain>（回归轮）"
+  pass_rate: 100
+  required: true
+  note: "执行后回写 tests/{domain}/it.md；WEB 由 /run-web-test 回写 tests/{domain}/web.md"
+
+security:
+  npm-audit-frontend: { command: "cd love-space-web && npm audit --audit-level=high", required: true }
+  backend-deps:       { command: "TODO: 未接 dependency-check/oss-index，需要时再加", required: false }

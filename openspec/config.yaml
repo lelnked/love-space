@@ -1,0 +1,32 @@
+schema: fullstack
+
+context: |
+  全栈项目 love-space（外层单 git 仓库，三个子项目）：
+  - love-space-web —— 运营后台前端（React 19 + TypeScript + Vite 6 + Tailwind v4），端口 5173，
+    base 路径 /love-space/，通过 VITE_ADMIN_API_BASE 调用 admin 后端。npm。
+  - love-space-admin —— 运营后台后端（Spring Boot 4 + Java 25 + JPA + PostgreSQL，Maven Wrapper），
+    端口 8080，REST 前缀 /api/admin/*，JWT 认证；test profile 端口 21423。
+  - love-space-app —— 移动端 App 后端（同栈），端口 8081，REST 前缀 /api/app/*，API-key 认证
+    （请求头，key 来自 APP_SECURITY_API_KEYS）。
+  运营账号统一称 Manager（不用 user）；数据库表一律 loves_ 前缀；Liquibase formatted-SQL，
+  schema 由 admin 端统一管理（app 端 liquibase 关闭）。admin 与 app 的 API 面严格分离，不互相跨接。
+  接口契约：contracts/api-spec.json（OpenAPI 3.0，项目级 living 文件）。
+  域注册表：tests/modules.md——新行为必须先归属域（同 slug 镜像 openspec/specs/{domain}/、
+  tests/{domain}/、test-evidence/regression/{domain}/）。
+  测试用例 living 文件：tests/{domain}/{it,web}.md，runner 独占回写状态字段。
+
+rules:
+  proposal:
+    - 涉及界面的变更，正文逐字粘贴 ui-spec.md 的 ASCII 线框原文（保留 ← 编号），禁止改写成散文
+  specs:
+    - Scenario 一律 GIVEN/WHEN/THEN；界面行为的 THEN 按线框区域口径断言
+    - Requirement 改名必须用 RENAMED（FROM:/TO:），禁止在 MODIFIED 内改名；改名后同步更新 tests/{domain}/ 所有 关联需求 字段
+  design:
+    - 新增/修改接口必须同步更新 contracts/api-spec.json，operation 加 x-requirement 反链（值为 "{domain}/{Requirement 名}"）
+    - 界面实现映射：每个 ← 线框区域映射到真实组件/文件路径，不漏块
+  tasks:
+    - 每个 ← 线框区域至少一个 UI 任务，逐控件列绑定字段与空态/loading/错误落点
+    - UT 任务标注锚定的 Scenario（测试代码 @scenario 注释，格式 {domain}/{Requirement 名}#{Scenario 名}）
+  test-cases:
+    - 归属域必须已在 tests/modules.md 登记，未登记先补注册表
+    - 绝不用 ⬜ 覆盖 runner 已回写的状态字段（增量合并）

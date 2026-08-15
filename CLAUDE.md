@@ -65,8 +65,3 @@ Lombok is enabled with annotation processing wired into the compiler plugin — 
 - When a change touches both web and admin (e.g. a new admin API), update the Java controller/DTO first, then mirror types/clients in the React app. There is no shared schema/codegen yet.
 - The outer directory is a single git repo, so commits can legitimately span multiple subprojects. Scope commit messages with a prefix (e.g. `web:`, `admin:`, `app:`) to keep history readable.
 
-<!-- SPECKIT START -->
-For additional context about technologies to be used, project structure,
-shell commands, and other important information, read the current plan:
-`specs/003-image-response-oss/plan.md`
-<!-- SPECKIT END -->
