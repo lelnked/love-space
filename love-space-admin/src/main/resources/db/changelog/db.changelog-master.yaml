@@ -24,3 +24,7 @@ databaseChangeLog:
       file: db/changelog/changes/010-create-ambassador-route.sql
   - include:
       file: db/changelog/changes/011-create-activity.sql
+  - include:
+      file: db/changelog/changes/012-create-article.sql
+  - include:
+      file: db/changelog/changes/013-create-featured-item.sql

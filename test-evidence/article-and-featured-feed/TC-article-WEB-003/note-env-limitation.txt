@@ -1,0 +1,4 @@
+test profile（:21423）使用 StubObjectKeyValidator，仅正则改写 objectKey 为 bound/ 前缀、不执行 OSS copyObject，
+因此本环境所有 bound/ 签名 URL 均 404（IT 种子数据同样如此，已 curl 验证）。
+「图片正常渲染」在本环境降级验证为：富文本 img 节点回显且 src 为后端下发的签名 bound URL。
+实际回显 src: http://love-space-test-0524.oss-cn-hangzhou.aliyuncs.com/bound/01a00baa-093e-7a84-abd5-48b0f235bdb0.png?Expires=1786903889&OSSAccessKeyId=LTAI5t7p1oaVfmzDSvrF7mQm&Signature=hYBuyf3cWXiexr07hGdERa3dflg%3D

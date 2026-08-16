@@ -91,3 +91,18 @@
 **执行方式**: api-test-runner
 **执行存证**: `test-evidence/ambassador-route-activity/TC-city-IT-006/`
 **最后更新**: 2026-08-16
+
+### TC-city-IT-007: 城市下架后 app 端精选推荐不可见（级联）
+**关联需求**: city/地图下架对精选推荐级联生效#下架城市后 app 端精选推荐不可见
+**关联契约**: api-spec.json#/paths/~1api~1app~1featured-items/get
+**来源**: article-and-featured-feed
+**优先级**: P0
+**测试步骤**:
+1. 前置：某上架城市关联有上线的精选推荐，GET http://localhost:8081/api/app/featured-items（请求头带 X-API-Key）能返回该条目
+2. admin 侧通过既有城市下架接口将该城市下架
+3. 再次 GET http://localhost:8081/api/app/featured-items（请求头带 X-API-Key）
+**预期结果**: 下架后信息流列表不含该城市的推荐条目（可见性 = 条目上线 ∧ 城市上架）
+**状态**: ✅ 通过
+**执行方式**: api-test-runner
+**执行存证**: `test-evidence/article-and-featured-feed/TC-city-IT-007/`
+**最后更新**: 2026-08-16

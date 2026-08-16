@@ -6,8 +6,14 @@
     "version": "2026.08.16"
   },
   "servers": [
-    { "url": "http://localhost:8080", "description": "love-space-admin（JWT 认证，/api/admin/*）" },
-    { "url": "http://localhost:8081", "description": "love-space-app（API-key 认证，/api/app/*）" }
+    {
+      "url": "http://localhost:8080",
+      "description": "love-space-admin（JWT 认证，/api/admin/*）"
+    },
+    {
+      "url": "http://localhost:8081",
+      "description": "love-space-app（API-key 认证，/api/app/*）"
+    }
   ],
   "paths": {
     "/api/admin/merchants": {
@@ -50,10 +56,35 @@
       "get": {
         "summary": "推荐清单分页列表，支持 cityId/keyword 过滤，sortOrder 升序",
         "parameters": [
-          { "name": "cityId", "in": "query", "schema": { "type": "string", "format": "uuid" } },
-          { "name": "keyword", "in": "query", "schema": { "type": "string" } },
-          { "name": "page", "in": "query", "schema": { "type": "integer" } },
-          { "name": "size", "in": "query", "schema": { "type": "integer" } }
+          {
+            "name": "cityId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "keyword",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          }
         ],
         "x-requirement": "recommend-list/推荐清单管理"
       }
@@ -64,7 +95,9 @@
         "requestBody": {
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/RecommendListCreateRequest" }
+              "schema": {
+                "$ref": "#/components/schemas/RecommendListCreateRequest"
+              }
             }
           }
         },
@@ -93,7 +126,9 @@
             "application/json": {
               "schema": {
                 "type": "array",
-                "items": { "$ref": "#/components/schemas/RecommendListMerchantItem" }
+                "items": {
+                  "$ref": "#/components/schemas/RecommendListMerchantItem"
+                }
               }
             }
           }
@@ -105,7 +140,15 @@
       "get": {
         "summary": "App 按城市查询清单列表（仅上架城市，sortOrder 升序）",
         "parameters": [
-          { "name": "cityId", "in": "query", "required": true, "schema": { "type": "string", "format": "uuid" } }
+          {
+            "name": "cityId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
         ],
         "x-requirement": "recommend-list/App 端清单查询"
       }
@@ -120,9 +163,27 @@
       "get": {
         "summary": "爱女大使分页列表，支持 keyword 过滤",
         "parameters": [
-          { "name": "keyword", "in": "query", "schema": { "type": "string" } },
-          { "name": "page", "in": "query", "schema": { "type": "integer" } },
-          { "name": "size", "in": "query", "schema": { "type": "integer" } }
+          {
+            "name": "keyword",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          }
         ],
         "x-requirement": "route/爱女大使管理"
       }
@@ -133,7 +194,9 @@
         "requestBody": {
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/AmbassadorUpsertRequest" }
+              "schema": {
+                "$ref": "#/components/schemas/AmbassadorUpsertRequest"
+              }
             }
           }
         },
@@ -141,9 +204,18 @@
       }
     },
     "/api/admin/ambassadors/{id}": {
-      "get": { "summary": "大使详情", "x-requirement": "route/爱女大使管理" },
-      "put": { "summary": "更新大使", "x-requirement": "route/爱女大使管理" },
-      "delete": { "summary": "物理删除大使", "x-requirement": "route/爱女大使管理" }
+      "get": {
+        "summary": "大使详情",
+        "x-requirement": "route/爱女大使管理"
+      },
+      "put": {
+        "summary": "更新大使",
+        "x-requirement": "route/爱女大使管理"
+      },
+      "delete": {
+        "summary": "物理删除大使",
+        "x-requirement": "route/爱女大使管理"
+      }
     },
     "/api/admin/ambassadors/{id}/online": {
       "put": {
@@ -155,10 +227,35 @@
       "get": {
         "summary": "路线分页列表，支持 cityId/keyword 过滤，sortOrder 升序",
         "parameters": [
-          { "name": "cityId", "in": "query", "schema": { "type": "string", "format": "uuid" } },
-          { "name": "keyword", "in": "query", "schema": { "type": "string" } },
-          { "name": "page", "in": "query", "schema": { "type": "integer" } },
-          { "name": "size", "in": "query", "schema": { "type": "integer" } }
+          {
+            "name": "cityId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "keyword",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          }
         ],
         "x-requirement": "route/路线管理"
       }
@@ -169,7 +266,9 @@
         "requestBody": {
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/RouteUpsertRequest" }
+              "schema": {
+                "$ref": "#/components/schemas/RouteUpsertRequest"
+              }
             }
           }
         },
@@ -177,15 +276,32 @@
       }
     },
     "/api/admin/routes/{id}": {
-      "get": { "summary": "路线详情（含地点列表）", "x-requirement": "route/路线管理" },
-      "put": { "summary": "更新路线（cityId 不可变）", "x-requirement": "route/路线管理" },
-      "delete": { "summary": "物理删除路线（连带地点）", "x-requirement": "route/路线管理" }
+      "get": {
+        "summary": "路线详情（含地点列表）",
+        "x-requirement": "route/路线管理"
+      },
+      "put": {
+        "summary": "更新路线（cityId 不可变）",
+        "x-requirement": "route/路线管理"
+      },
+      "delete": {
+        "summary": "物理删除路线（连带地点）",
+        "x-requirement": "route/路线管理"
+      }
     },
     "/api/app/routes": {
       "get": {
         "summary": "App 按城市查路线列表（城市上架且大使上线才可见，sortOrder 升序）",
         "parameters": [
-          { "name": "cityId", "in": "query", "required": true, "schema": { "type": "string", "format": "uuid" } }
+          {
+            "name": "cityId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
         ],
         "x-requirement": "route/App 端路线查询"
       }
@@ -200,10 +316,35 @@
       "get": {
         "summary": "活动分页列表，支持 cityId/keyword 过滤",
         "parameters": [
-          { "name": "cityId", "in": "query", "schema": { "type": "string", "format": "uuid" } },
-          { "name": "keyword", "in": "query", "schema": { "type": "string" } },
-          { "name": "page", "in": "query", "schema": { "type": "integer" } },
-          { "name": "size", "in": "query", "schema": { "type": "integer" } }
+          {
+            "name": "cityId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "keyword",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          }
         ],
         "x-requirement": "activity/活动管理"
       }
@@ -214,7 +355,9 @@
         "requestBody": {
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/ActivityUpsertRequest" }
+              "schema": {
+                "$ref": "#/components/schemas/ActivityUpsertRequest"
+              }
             }
           }
         },
@@ -222,9 +365,18 @@
       }
     },
     "/api/admin/activities/{id}": {
-      "get": { "summary": "活动详情（detailHtml 读时 img src 替换为签名 URL）", "x-requirement": "activity/活动管理" },
-      "put": { "summary": "更新活动（cityId 不可变）", "x-requirement": "activity/活动管理" },
-      "delete": { "summary": "物理删除活动", "x-requirement": "activity/活动管理" }
+      "get": {
+        "summary": "活动详情（detailHtml 读时 img src 替换为签名 URL）",
+        "x-requirement": "activity/活动管理"
+      },
+      "put": {
+        "summary": "更新活动（cityId 不可变）",
+        "x-requirement": "activity/活动管理"
+      },
+      "delete": {
+        "summary": "物理删除活动",
+        "x-requirement": "activity/活动管理"
+      }
     },
     "/api/admin/activities/{id}/online": {
       "put": {
@@ -236,7 +388,15 @@
       "get": {
         "summary": "App 按城市查活动列表（城市上架且活动上线才可见）",
         "parameters": [
-          { "name": "cityId", "in": "query", "required": true, "schema": { "type": "string", "format": "uuid" } }
+          {
+            "name": "cityId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
         ],
         "x-requirement": "activity/App 端活动查询"
       }
@@ -246,91 +406,594 @@
         "summary": "App 活动详情含富文本 detailHtml（城市下架或活动下线 → 404）",
         "x-requirement": "activity/App 端活动查询"
       }
+    },
+    "/api/admin/article-categories": {
+      "get": {
+        "summary": "栏目列表（sortOrder 升序）",
+        "x-requirement": "article/文章栏目管理"
+      },
+      "post": {
+        "summary": "创建栏目",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ArticleCategoryUpsertRequest"
+              }
+            }
+          }
+        },
+        "x-requirement": "article/文章栏目管理"
+      }
+    },
+    "/api/admin/article-categories/{id}": {
+      "put": {
+        "summary": "更新栏目",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ArticleCategoryUpsertRequest"
+              }
+            }
+          }
+        },
+        "x-requirement": "article/文章栏目管理"
+      },
+      "delete": {
+        "summary": "删除栏目（物理删除，不回写文章 categoryIds）",
+        "x-requirement": "article/文章栏目管理"
+      }
+    },
+    "/api/admin/articles/page": {
+      "get": {
+        "summary": "文章分页",
+        "parameters": [
+          {
+            "name": "categoryId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "keyword",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "x-requirement": "article/文章管理"
+      }
+    },
+    "/api/admin/articles": {
+      "post": {
+        "summary": "创建文章（contentHtml 内 img src 存 objectKey，保存时逐个 validateAndBind）",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ArticleUpsertRequest"
+              }
+            }
+          }
+        },
+        "x-requirement": "article/文章管理"
+      }
+    },
+    "/api/admin/articles/{id}": {
+      "get": {
+        "summary": "文章详情（contentHtml 读时签名替换）",
+        "x-requirement": "article/文章管理"
+      },
+      "put": {
+        "summary": "更新文章",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ArticleUpsertRequest"
+              }
+            }
+          }
+        },
+        "x-requirement": "article/文章管理"
+      },
+      "delete": {
+        "summary": "删除文章（物理删除）",
+        "x-requirement": "article/文章管理"
+      }
+    },
+    "/api/admin/articles/{id}/online": {
+      "put": {
+        "summary": "文章上下线 {online}",
+        "x-requirement": "article/文章管理"
+      }
+    },
+    "/api/app/article-categories": {
+      "get": {
+        "summary": "App 栏目列表（sortOrder 升序）",
+        "x-requirement": "article/App 端文章查询"
+      }
+    },
+    "/api/app/articles": {
+      "get": {
+        "summary": "App 按栏目查文章列表（上线且栏目存在才可见，sortOrder 升序）",
+        "parameters": [
+          {
+            "name": "categoryId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "x-requirement": "article/App 端文章查询"
+      }
+    },
+    "/api/app/articles/{id}": {
+      "get": {
+        "summary": "App 文章详情（不可见 404，contentHtml 签名替换）",
+        "x-requirement": "article/App 端文章查询"
+      }
+    },
+    "/api/admin/featured-items/page": {
+      "get": {
+        "summary": "精选推荐分页",
+        "parameters": [
+          {
+            "name": "cityId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "x-requirement": "featured/精选推荐管理"
+      }
+    },
+    "/api/admin/featured-items": {
+      "post": {
+        "summary": "创建精选推荐（cityId 必选且创建后不可变）",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FeaturedItemUpsertRequest"
+              }
+            }
+          }
+        },
+        "x-requirement": "featured/精选推荐管理"
+      }
+    },
+    "/api/admin/featured-items/{id}": {
+      "get": {
+        "summary": "精选推荐详情",
+        "x-requirement": "featured/精选推荐管理"
+      },
+      "put": {
+        "summary": "更新精选推荐（忽略 cityId 变更）",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FeaturedItemUpsertRequest"
+              }
+            }
+          }
+        },
+        "x-requirement": "featured/精选推荐管理"
+      },
+      "delete": {
+        "summary": "删除精选推荐（物理删除）",
+        "x-requirement": "featured/精选推荐管理"
+      }
+    },
+    "/api/admin/featured-items/{id}/online": {
+      "put": {
+        "summary": "精选推荐上下线 {online}",
+        "x-requirement": "featured/精选推荐管理"
+      }
+    },
+    "/api/app/featured-items": {
+      "get": {
+        "summary": "App 精选推荐信息流（条目上线∧城市上架，创建时间倒序，含城市 id/名称）",
+        "x-requirement": "featured/App 端精选推荐查询"
+      }
     }
   },
   "components": {
     "schemas": {
       "RecommendListCreateRequest": {
         "type": "object",
-        "required": ["title", "cityId"],
+        "required": [
+          "title",
+          "cityId"
+        ],
         "properties": {
-          "title": { "type": "string", "description": "清单标题，必填" },
-          "introduction": { "type": "string", "description": "清单介绍" },
-          "cityId": { "type": "string", "format": "uuid", "description": "所属城市，创建后不可变" },
-          "sortOrder": { "type": "integer", "default": 0, "description": "清单间排序，升序" }
+          "title": {
+            "type": "string",
+            "description": "清单标题，必填"
+          },
+          "introduction": {
+            "type": "string",
+            "description": "清单介绍"
+          },
+          "cityId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "所属城市，创建后不可变"
+          },
+          "sortOrder": {
+            "type": "integer",
+            "default": 0,
+            "description": "清单间排序，升序"
+          }
         }
       },
       "RecommendListMerchantItem": {
         "type": "object",
-        "required": ["merchantId", "sortOrder"],
+        "required": [
+          "merchantId",
+          "sortOrder"
+        ],
         "properties": {
-          "merchantId": { "type": "string", "format": "uuid" },
-          "sortOrder": { "type": "integer", "description": "清单内商户排序，升序" }
+          "merchantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sortOrder": {
+            "type": "integer",
+            "description": "清单内商户排序，升序"
+          }
         }
       },
       "AmbassadorUpsertRequest": {
         "type": "object",
-        "required": ["avatar", "name"],
+        "required": [
+          "avatar",
+          "name"
+        ],
         "properties": {
-          "avatar": { "type": "string", "description": "头像 objectKey，1 张，必填" },
-          "name": { "type": "string", "description": "大使名称，必填" },
-          "tags": { "type": "array", "maxItems": 3, "items": { "type": "string" }, "description": "标签，最多 3 条" },
-          "online": { "type": "boolean", "description": "上线/下线" }
+          "avatar": {
+            "type": "string",
+            "description": "头像 objectKey，1 张，必填"
+          },
+          "name": {
+            "type": "string",
+            "description": "大使名称，必填"
+          },
+          "tags": {
+            "type": "array",
+            "maxItems": 3,
+            "items": {
+              "type": "string"
+            },
+            "description": "标签，最多 3 条"
+          },
+          "online": {
+            "type": "boolean",
+            "description": "上线/下线"
+          }
         }
       },
       "RouteSpot": {
         "type": "object",
-        "required": ["name", "image", "introduction"],
+        "required": [
+          "name",
+          "image",
+          "introduction"
+        ],
         "properties": {
-          "name": { "type": "string", "description": "地点名称" },
-          "image": { "type": "string", "description": "地点图片 objectKey，1 张" },
-          "introduction": { "type": "string", "description": "地点介绍" }
+          "name": {
+            "type": "string",
+            "description": "地点名称"
+          },
+          "image": {
+            "type": "string",
+            "description": "地点图片 objectKey，1 张"
+          },
+          "introduction": {
+            "type": "string",
+            "description": "地点介绍"
+          }
         }
       },
       "RouteUpsertRequest": {
         "type": "object",
-        "required": ["cityId", "title", "thumbnail", "images", "ambassadorId"],
+        "required": [
+          "cityId",
+          "title",
+          "thumbnail",
+          "images",
+          "ambassadorId"
+        ],
         "properties": {
-          "cityId": { "type": "string", "format": "uuid", "description": "所属地图（城市），创建后不可变" },
-          "sortOrder": { "type": "integer", "default": 0, "description": "路线间排序，升序" },
-          "title": { "type": "string", "description": "主标题，必填" },
-          "ambassadorNote": { "type": "string", "description": "爱女大使说" },
-          "thumbnail": { "type": "string", "description": "缩略图 objectKey，1 张，必填" },
-          "images": { "type": "array", "minItems": 1, "items": { "type": "string" }, "description": "路线图片 objectKey，≥1 张" },
-          "travelTime": { "type": "string", "description": "旅行时间，文本" },
-          "season": { "type": "string", "description": "适合季节，文本" },
-          "travelStatus": { "type": "string", "description": "旅行状态，文本" },
-          "ambassadorId": { "type": "string", "format": "uuid", "description": "关联爱女大使，必填单选" },
-          "spots": { "type": "array", "items": { "$ref": "#/components/schemas/RouteSpot" }, "description": "地点列表，按添加顺序" }
+          "cityId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "所属地图（城市），创建后不可变"
+          },
+          "sortOrder": {
+            "type": "integer",
+            "default": 0,
+            "description": "路线间排序，升序"
+          },
+          "title": {
+            "type": "string",
+            "description": "主标题，必填"
+          },
+          "ambassadorNote": {
+            "type": "string",
+            "description": "爱女大使说"
+          },
+          "thumbnail": {
+            "type": "string",
+            "description": "缩略图 objectKey，1 张，必填"
+          },
+          "images": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string"
+            },
+            "description": "路线图片 objectKey，≥1 张"
+          },
+          "travelTime": {
+            "type": "string",
+            "description": "旅行时间，文本"
+          },
+          "season": {
+            "type": "string",
+            "description": "适合季节，文本"
+          },
+          "travelStatus": {
+            "type": "string",
+            "description": "旅行状态，文本"
+          },
+          "ambassadorId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "关联爱女大使，必填单选"
+          },
+          "spots": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RouteSpot"
+            },
+            "description": "地点列表，按添加顺序"
+          }
         }
       },
       "ActivityItineraryItem": {
         "type": "object",
-        "required": ["title", "content"],
+        "required": [
+          "title",
+          "content"
+        ],
         "properties": {
-          "title": { "type": "string", "description": "如 Day1" },
-          "content": { "type": "string", "description": "如 到成都天府机场集合" }
+          "title": {
+            "type": "string",
+            "description": "如 Day1"
+          },
+          "content": {
+            "type": "string",
+            "description": "如 到成都天府机场集合"
+          }
         }
       },
       "ActivityUpsertRequest": {
         "type": "object",
-        "required": ["cityId", "title", "images"],
+        "required": [
+          "cityId",
+          "title",
+          "images"
+        ],
         "properties": {
-          "cityId": { "type": "string", "format": "uuid", "description": "所属地图（城市），创建后不可变" },
-          "images": { "type": "array", "minItems": 1, "items": { "type": "string" }, "description": "活动图片 objectKey，≥1 张" },
-          "title": { "type": "string", "description": "活动标题，必填" },
-          "tags": { "type": "array", "items": { "type": "string" }, "description": "活动标签，多个" },
-          "periods": { "type": "array", "items": { "type": "string", "enum": ["MENSTRUAL", "FOLLICULAR", "OVULATION", "LUTEAL"] }, "description": "适合周期，多选" },
-          "level": { "type": "string", "enum": ["L1", "L2", "L3"], "description": "活动级别，单选" },
-          "introduction": { "type": "string", "description": "活动简介" },
-          "editorNote": { "type": "string", "description": "编辑说" },
-          "gatheringPlace": { "type": "string", "description": "集合地" },
-          "dismissalPlace": { "type": "string", "description": "解散地" },
-          "transportation": { "type": "string", "description": "交通" },
-          "visa": { "type": "string", "description": "签证" },
-          "itinerary": { "type": "array", "items": { "$ref": "#/components/schemas/ActivityItineraryItem" }, "description": "路线子条目，按添加顺序" },
-          "detailHtml": { "type": "string", "description": "活动详情说明，富文本 HTML；img src 存 objectKey" },
-          "online": { "type": "boolean", "description": "上线/下线" }
+          "cityId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "所属地图（城市），创建后不可变"
+          },
+          "images": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string"
+            },
+            "description": "活动图片 objectKey，≥1 张"
+          },
+          "title": {
+            "type": "string",
+            "description": "活动标题，必填"
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "活动标签，多个"
+          },
+          "periods": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "MENSTRUAL",
+                "FOLLICULAR",
+                "OVULATION",
+                "LUTEAL"
+              ]
+            },
+            "description": "适合周期，多选"
+          },
+          "level": {
+            "type": "string",
+            "enum": [
+              "L1",
+              "L2",
+              "L3"
+            ],
+            "description": "活动级别，单选"
+          },
+          "introduction": {
+            "type": "string",
+            "description": "活动简介"
+          },
+          "editorNote": {
+            "type": "string",
+            "description": "编辑说"
+          },
+          "gatheringPlace": {
+            "type": "string",
+            "description": "集合地"
+          },
+          "dismissalPlace": {
+            "type": "string",
+            "description": "解散地"
+          },
+          "transportation": {
+            "type": "string",
+            "description": "交通"
+          },
+          "visa": {
+            "type": "string",
+            "description": "签证"
+          },
+          "itinerary": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ActivityItineraryItem"
+            },
+            "description": "路线子条目，按添加顺序"
+          },
+          "detailHtml": {
+            "type": "string",
+            "description": "活动详情说明，富文本 HTML；img src 存 objectKey"
+          },
+          "online": {
+            "type": "boolean",
+            "description": "上线/下线"
+          }
+        }
+      },
+      "ArticleCategoryUpsertRequest": {
+        "type": "object",
+        "required": [
+          "name",
+          "icon"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "icon": {
+            "type": "string",
+            "description": "objectKey"
+          },
+          "sortOrder": {
+            "type": "integer"
+          }
+        }
+      },
+      "ArticleUpsertRequest": {
+        "type": "object",
+        "required": [
+          "image",
+          "title"
+        ],
+        "properties": {
+          "image": {
+            "type": "string",
+            "description": "objectKey"
+          },
+          "title": {
+            "type": "string"
+          },
+          "subtitle": {
+            "type": "string"
+          },
+          "contentHtml": {
+            "type": "string",
+            "description": "富文本 HTML，img src 为 objectKey"
+          },
+          "sortOrder": {
+            "type": "integer"
+          },
+          "categoryIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "online": {
+            "type": "boolean"
+          }
+        }
+      },
+      "FeaturedItemUpsertRequest": {
+        "type": "object",
+        "required": [
+          "cityId",
+          "banner"
+        ],
+        "properties": {
+          "cityId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "banner": {
+            "type": "string",
+            "description": "objectKey，比例不校验"
+          },
+          "description": {
+            "type": "string"
+          },
+          "online": {
+            "type": "boolean"
+          }
         }
       }
     }

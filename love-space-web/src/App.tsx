@@ -25,6 +25,10 @@ import RouteList from "./pages/Routes/List";
 import RouteForm from "./pages/Routes/Form";
 import ActivityList from "./pages/Activities/List";
 import ActivityForm from "./pages/Activities/Form";
+import ArticleCategoryList from "./pages/ArticleCategories/List";
+import ArticleList from "./pages/Articles/List";
+import ArticleForm from "./pages/Articles/Form";
+import FeaturedItemList from "./pages/FeaturedItems/List";
 import LogList from "./pages/Logs/List";
 
 export default function App() {
@@ -69,6 +73,11 @@ export default function App() {
             <Route path="/activities" element={<ActivityList />} />
             <Route path="/activities/create" element={<ActivityForm />} />
             <Route path="/activities/:id/edit" element={<ActivityForm />} />
+            <Route path="/article-categories" element={<ArticleCategoryList />} />
+            <Route path="/articles" element={<ArticleList />} />
+            <Route path="/articles/create" element={<ArticleForm />} />
+            <Route path="/articles/:id/edit" element={<ArticleForm />} />
+            <Route path="/featured-items" element={<FeaturedItemList />} />
             <Route path="/logs" element={<LogList />} />
           </Route>
 
