@@ -21,7 +21,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 /**
  * {@link MerchantReviewController} 集成测试：MockMvc + Testcontainers Postgres。
- * 覆盖 recommended 过滤、sortOrder 升序、emoji 透传、商户下架/不存在 404。
+ * 覆盖 recommended 过滤、sortOrder 升序、emoji 透传、商户下架/不存在返回空列表。
  */
 @AutoConfigureMockMvc
 class MerchantReviewControllerWebMvcTest extends AbstractPostgresIntegrationTest {
@@ -116,17 +116,19 @@ class MerchantReviewControllerWebMvcTest extends AbstractPostgresIntegrationTest
     }
 
     @Test
-    void offline_or_missing_merchant_returns_404() throws Exception {
+    void offline_or_missing_merchant_returns_empty_list() throws Exception {
         Merchant offline = merchantRepository.findById(merchantId).orElseThrow();
         offline.setOnline(false);
         merchantRepository.save(offline);
 
         mockMvc.perform(get("/api/app/merchants/{merchantId}/reviews", merchantId)
                         .header("X-API-Key", TEST_API_KEY))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
 
         mockMvc.perform(get("/api/app/merchants/{merchantId}/reviews", UUID.randomUUID())
                         .header("X-API-Key", TEST_API_KEY))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
     }
 }

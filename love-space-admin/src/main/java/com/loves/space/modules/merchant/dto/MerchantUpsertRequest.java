@@ -8,6 +8,7 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -29,6 +30,7 @@ import java.util.UUID;
  * @param experienceFriendlyScore 体验友好分（0-25）
  * @param socialContributionScore 社会贡献分（0-20）
  * @param story                   商户故事（≤ 5000 字符，可空）
+ * @param recommendReason         编辑推荐理由（纯文本，≤ 2000 字符，可空）
  * @param weight                  排序权重（默认 0）
  * @param online                  是否上架（默认 false）
  * @param periods                 推荐生理周期列表（可空，service 视为空集合）
@@ -55,6 +57,7 @@ public record MerchantUpsertRequest(
         @NotNull(message = "体验友好分不能为空") @Min(value = 0, message = "体验友好分不能小于 0") @Max(value = 25, message = "体验友好分不能超过 25") Short experienceFriendlyScore,
         @NotNull(message = "社会贡献分不能为空") @Min(value = 0, message = "社会贡献分不能小于 0") @Max(value = 20, message = "社会贡献分不能超过 20") Short socialContributionScore,
         String story,
+        @Size(max = 2000, message = "推荐理由长度不能超过 2000 个字符") String recommendReason,
         Integer weight,
         Boolean online,
         List<Period> periods,

@@ -72,6 +72,7 @@ class MerchantReadIT extends AbstractPostgresIntegrationTest {
         merchant.setExperienceFriendlyScore((short) 20);
         merchant.setSocialContributionScore((short) 16);
         merchant.setStory("故事");
+        merchant.setRecommendReason("适合安静约会");
         merchant.setWeight(10);
         merchant.setOnline(true);
         merchant.getImages().addAll(List.of("bound/a.png", "bound/b.png"));
@@ -102,5 +103,14 @@ class MerchantReadIT extends AbstractPostgresIntegrationTest {
                 .andExpect(jsonPath("$.images[0].url").value("https://signed.example.com/bound/a.png"))
                 .andExpect(jsonPath("$.images[1].id").value("bound/b.png"))
                 .andExpect(jsonPath("$.images[1].url").value("https://signed.example.com/bound/b.png"));
+    }
+
+    // @scenario: merchant/商户编辑推荐理由#app 端商户详情返回推荐理由
+    @Test
+    void detailReturnsRecommendReason() throws Exception {
+        mockMvc.perform(get("/api/app/merchants/{id}", merchantId)
+                        .header("X-API-Key", TEST_API_KEY))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.recommendReason").value("适合安静约会"));
     }
 }

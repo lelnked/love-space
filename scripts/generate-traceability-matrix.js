@@ -107,7 +107,7 @@ function extractUtScenarios() {
       const p = path.join(dir, e.name);
       if (e.isDirectory()) { if (e.name !== 'node_modules' && e.name !== 'generated') walk(p); continue; }
       if (!/(\.(spec|test)\.(ts|tsx|js|jsx)|(Test|IT)\.java)$/.test(e.name)) continue;
-      const re = /@scenario\s+(\S+#[^\n*]+)/g;
+      const re = /@scenario:?\s+(\S[^\n*#]*#[^\n*]+)/g;
       let m; const c = read(p);
       while ((m = re.exec(c)) !== null) found.add(m[1].trim());
     }

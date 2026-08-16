@@ -1,6 +1,5 @@
 package com.space.app.modules.merchant.service;
 
-import com.space.app.common.exception.ResourceNotFoundException;
 import com.space.app.modules.merchant.dto.ReviewItemResponse;
 import com.space.app.modules.merchant.entity.MerchantReview;
 import com.space.app.modules.merchant.entity.MerchantReview_;
@@ -19,7 +18,7 @@ import java.util.UUID;
  * 商户评价查询服务（App 端只读）。
  *
  * <p>评价由运营在后台配置；客户端固定五星展示，仅返回 nickname / title / content，
- * 按 {@code sortOrder} 升序。先校验商户存在且上架，否则 404（不暴露下架商户的评价）。
+ * 按 {@code sortOrder} 升序。先校验商户存在且上架，否则返回空列表（不暴露下架商户的评价）。
  */
 @Service
 @Transactional(readOnly = true)
@@ -37,7 +36,7 @@ public class MerchantReviewQueryService {
     /**
      * 查询某商户的评价列表。
      *
-     * @param merchantId  商户 ID（必须存在且上架，否则 404）
+     * @param merchantId  商户 ID（不存在或未上架时返回空列表）
      * @param recommended 可选过滤；为 null 时返回全部，否则按该值过滤
      * @return 评价列表，按 {@code sortOrder} 升序
      */

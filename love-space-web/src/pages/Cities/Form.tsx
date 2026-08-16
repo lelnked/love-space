@@ -30,6 +30,7 @@ export default function CityForm() {
   const [englishProvince, setEnglishProvince] = useState("");
   const [backgroundImageKey, setBackgroundImageKey] = useState("");
   const [backgroundImagePreview, setBackgroundImagePreview] = useState("");
+  const [editorNote, setEditorNote] = useState("");
   const [online, setOnline] = useState(false);
 
   const [loading, setLoading] = useState(false);
@@ -48,6 +49,7 @@ export default function CityForm() {
         setEnglishProvince(d.englishProvince);
         setBackgroundImageKey(d.backgroundImage?.id ?? "");
         setBackgroundImagePreview(d.backgroundImage?.url ?? "");
+        setEditorNote(d.editorNote ?? "");
         setOnline(d.online);
       })
       .catch((err: AxiosError<{ detail?: string }>) => {
@@ -66,6 +68,7 @@ export default function CityForm() {
     if (!englishName.trim()) errs.englishName = "英文名不能为空";
     if (!chineseProvince.trim()) errs.chineseProvince = "中文省份不能为空";
     if (!englishProvince.trim()) errs.englishProvince = "英文省份不能为空";
+    if (editorNote.length > 200) errs.editorNote = "编辑说最多 200 字";
     if (Object.keys(errs).length > 0) {
       setFieldErrors(errs);
       return;
@@ -77,6 +80,7 @@ export default function CityForm() {
       chineseProvince: chineseProvince.trim(),
       englishProvince: englishProvince.trim(),
       backgroundImage: backgroundImageKey.trim() || null,
+      editorNote: editorNote.trim() || null,
       online,
     };
 
@@ -102,7 +106,7 @@ export default function CityForm() {
   return (
     <div>
       <h1 className="text-xl font-semibold text-gray-800 dark:text-white/90 mb-4">
-        {editing ? "编辑城市" : "新增城市"}
+        {editing ? "编辑地图" : "新增地图"}
       </h1>
 
       {loading ? (
@@ -161,6 +165,20 @@ export default function CityForm() {
               onChange={setBackgroundImageKey}
               className="h-40 w-full max-w-md"
             />
+          </div>
+          <div>
+            <Label>编辑说</Label>
+            <textarea
+              placeholder="编辑说（≤200 字，选填，App 端展示）"
+              value={editorNote}
+              onChange={(e) => setEditorNote(e.target.value)}
+              maxLength={200}
+              className="border rounded px-3 py-2 text-sm w-full min-h-[100px]"
+            />
+            {fieldErrors.editorNote && (
+              <div className="text-error-500 text-xs mt-1">{fieldErrors.editorNote}</div>
+            )}
+            <div className="text-xs text-gray-400 mt-1">{editorNote.length} / 200</div>
           </div>
           <div>
             <Label>上架</Label>

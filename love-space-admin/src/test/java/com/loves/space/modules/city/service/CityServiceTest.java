@@ -45,7 +45,7 @@ class CityServiceTest extends AbstractPostgresIntegrationTest {
 
     private CityCreateRequest createReq(String name, String backgroundImage) {
         return new CityCreateRequest(name, "EN-" + name, "省", "Province",
-                backgroundImage, true);
+                backgroundImage, null, true);
     }
 
     @Test
@@ -71,6 +71,16 @@ class CityServiceTest extends AbstractPostgresIntegrationTest {
         assertThat(city.backgroundImage().url()).isEqualTo("https://signed.example.com/bound/bg.png");
     }
 
+    // @scenario: city/地图编辑说#admin 保存编辑说
+    @Test
+    void createPersistsEditorNote() {
+        CityDetailResponse created = cityService.create(new CityCreateRequest(
+                "城-note-" + UUID.randomUUID(), "EN-note", "省", "Province",
+                null, "适合傍晚沿江漫步", true));
+        assertThat(created.editorNote()).isEqualTo("适合傍晚沿江漫步");
+        assertThat(cityService.get(created.id()).editorNote()).isEqualTo("适合傍晚沿江漫步");
+    }
+
     @Test
     void updateClearsBackgroundImageWhenSetToNull() {
         CityDetailResponse created = cityService.create(
@@ -78,7 +88,7 @@ class CityServiceTest extends AbstractPostgresIntegrationTest {
 
         CityDetailResponse updated = cityService.update(created.id(), new CityUpdateRequest(
                 created.chineseName(), created.englishName(), "省", "Province",
-                null, true));
+                null, null, true));
 
         assertThat(updated.backgroundImage()).isNull();
     }

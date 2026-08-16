@@ -96,6 +96,7 @@ public class MerchantService {
         merchant.setExperienceFriendlyScore(request.experienceFriendlyScore());
         merchant.setSocialContributionScore(request.socialContributionScore());
         merchant.setStory(request.story());
+        merchant.setRecommendReason(request.recommendReason());
         merchant.setWeight(request.weight() == null ? 0 : request.weight());
         merchant.setOnline(targetOnline);
         merchant.setPeriods(toPeriodNames(request.periods()));
@@ -176,6 +177,7 @@ public class MerchantService {
                 merchant.getExperienceFriendlyScore(),
                 merchant.getSocialContributionScore(),
                 merchant.getStory(),
+                merchant.getRecommendReason(),
                 merchant.getWeight(),
                 merchant.isOnline(),
                 toPeriods(merchant.getPeriods()),

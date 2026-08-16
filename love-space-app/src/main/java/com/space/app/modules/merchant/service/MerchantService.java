@@ -140,6 +140,7 @@ public class MerchantService {
                         merchant.getBusinessRightsScore(),
                         merchant.getExperienceFriendlyScore(),
                         merchant.getSocialContributionScore()),
-                Objects.toString(merchant.getStory(), null));
+                Objects.toString(merchant.getStory(), null),
+                merchant.getRecommendReason());
     }
 }

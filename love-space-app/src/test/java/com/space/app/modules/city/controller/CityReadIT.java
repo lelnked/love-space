@@ -59,6 +59,23 @@ class CityReadIT extends AbstractPostgresIntegrationTest {
                 .andExpect(jsonPath("$[0].backgroundImage.url").value("https://signed.example.com/bound/bg.png"));
     }
 
+    // @scenario: city/地图编辑说#app 端城市数据返回编辑说
+    @Test
+    void listReturnsEditorNote() throws Exception {
+        City city = new City();
+        city.setChineseName("苏州-app-it");
+        city.setEnglishName("suzhou-app-it");
+        city.setChineseProvince("江苏");
+        city.setEnglishProvince("jiangsu");
+        city.setEditorNote("适合傍晚沿江漫步");
+        city.setOnline(true);
+        cityRepository.save(city);
+
+        mockMvc.perform(get("/api/app/cities").header("X-API-Key", TEST_API_KEY))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].editorNote").value("适合傍晚沿江漫步"));
+    }
+
     @Test
     void listReturnsNullBackgroundImageWhenAbsent() throws Exception {
         City noBg = new City();

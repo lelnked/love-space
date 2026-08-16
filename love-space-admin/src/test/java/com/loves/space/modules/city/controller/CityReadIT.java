@@ -80,6 +80,7 @@ class CityReadIT extends AbstractPostgresIntegrationTest {
                 "上海",
                 "shanghai",
                 "images/bg.png",
+                null,
                 true
         );
         String body = objectMapper.writeValueAsString(request);
@@ -114,6 +115,7 @@ class CityReadIT extends AbstractPostgresIntegrationTest {
                 "hangzhou-it",
                 "浙江",
                 "zhejiang",
+                null,
                 null,
                 true
         );

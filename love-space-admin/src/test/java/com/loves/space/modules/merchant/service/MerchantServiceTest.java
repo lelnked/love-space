@@ -62,13 +62,13 @@ class MerchantServiceTest extends AbstractPostgresIntegrationTest {
     /** 创建一个已上架城市，返回其 ID（上架商户的前置条件）。 */
     private UUID onlineCityId() {
         return cityService.create(new CityCreateRequest(
-                "城-" + UUID.randomUUID(), "EN", "省", "Province", null, true)).id();
+                "城-" + UUID.randomUUID(), "EN", "省", "Province", null, null, true)).id();
     }
 
     /** 创建一个未上架城市，返回其 ID。 */
     private UUID offlineCityId() {
         return cityService.create(new CityCreateRequest(
-                "城-" + UUID.randomUUID(), "EN", "省", "Province", null, false)).id();
+                "城-" + UUID.randomUUID(), "EN", "省", "Province", null, null, false)).id();
     }
 
     /** 创建一个已上架分类，返回其 ID（上架商户的前置条件）。 */
@@ -96,6 +96,7 @@ class MerchantServiceTest extends AbstractPostgresIntegrationTest {
                 (short) 15,
                 (short) 10,
                 "故事",
+                null,
                 10,
                 true,
                 List.of(),
@@ -112,7 +113,7 @@ class MerchantServiceTest extends AbstractPostgresIntegrationTest {
                 tooLong, base.logo(), base.address(), null, null, base.cityId(), base.categoryId(),
                 base.safetyEnvironmentScore(), base.businessRightsScore(),
                 base.experienceFriendlyScore(), base.socialContributionScore(),
-                base.story(), base.weight(), base.online(),
+                base.story(), base.recommendReason(), base.weight(), base.online(),
                 base.periods(), base.tagIds(), base.images());
 
         assertThatThrownBy(() -> merchantService.upsert(null, bad))
@@ -126,7 +127,7 @@ class MerchantServiceTest extends AbstractPostgresIntegrationTest {
                 base.name(), base.logo(), base.address(), null, null, base.cityId(), base.categoryId(),
                 (short) 31, base.businessRightsScore(),
                 base.experienceFriendlyScore(), base.socialContributionScore(),
-                base.story(), base.weight(), base.online(),
+                base.story(), base.recommendReason(), base.weight(), base.online(),
                 base.periods(), base.tagIds(), base.images());
 
         assertThatThrownBy(() -> merchantService.upsert(null, bad))
@@ -140,7 +141,7 @@ class MerchantServiceTest extends AbstractPostgresIntegrationTest {
                 base.name(), base.logo(), base.address(), null, null, base.cityId(), base.categoryId(),
                 base.safetyEnvironmentScore(), base.businessRightsScore(),
                 base.experienceFriendlyScore(), base.socialContributionScore(),
-                base.story(), base.weight(), base.online(),
+                base.story(), base.recommendReason(), base.weight(), base.online(),
                 base.periods(), base.tagIds(), List.of());
 
         assertThatThrownBy(() -> merchantService.upsert(null, bad))
@@ -155,7 +156,7 @@ class MerchantServiceTest extends AbstractPostgresIntegrationTest {
                 base.name(), base.logo(), base.address(), null, null, base.cityId(), base.categoryId(),
                 base.safetyEnvironmentScore(), base.businessRightsScore(),
                 base.experienceFriendlyScore(), base.socialContributionScore(),
-                tooLong, base.weight(), base.online(),
+                tooLong, base.recommendReason(), base.weight(), base.online(),
                 base.periods(), base.tagIds(), base.images());
 
         assertThatThrownBy(() -> merchantService.upsert(null, bad))
@@ -171,7 +172,7 @@ class MerchantServiceTest extends AbstractPostgresIntegrationTest {
                 "测试地址",
                 null, null, cityId, null,
                 (short) 25, (short) 20, (short) 20, (short) 15,
-                null, 0, true,
+                null, null, 0, true,
                 List.of(), List.of(),
                 List.of("images/aaa.png", "bound/bbb.jpg"));
 
@@ -199,7 +200,7 @@ class MerchantServiceTest extends AbstractPostgresIntegrationTest {
                 "上海市浦东新区",
                 null, null, cityId, categoryId,
                 (short) 25, (short) 20, (short) 20, (short) 15,
-                "故事内容", 100, true,
+                "故事内容", null, 100, true,
                 List.of(Period.MENSTRUAL, Period.LUTEAL),
                 List.of(tagId),
                 List.of("https://example.com/1.png", "https://example.com/2.png")
@@ -213,12 +214,28 @@ class MerchantServiceTest extends AbstractPostgresIntegrationTest {
         assertThat(merchantTagRepository.findAllByMerchantId(detail.id())).hasSize(1);
     }
 
+    // @scenario: merchant/商户编辑推荐理由#admin 创建/更新商户时保存推荐理由
+    @Test
+    void upsertPersistsRecommendReason() {
+        MerchantUpsertRequest request = new MerchantUpsertRequest(
+                "理由商户", "https://example.com/logo.png", "地址", null, null,
+                onlineCityId(), categoryId(),
+                (short) 20, (short) 15, (short) 15, (short) 10,
+                null, "适合安静约会", 0, true, List.of(), List.of(),
+                List.of("https://example.com/a.png"));
+
+        MerchantDetailResponse created = merchantService.upsert(null, request);
+
+        assertThat(created.recommendReason()).isEqualTo("适合安静约会");
+        assertThat(merchantService.detail(created.id()).recommendReason()).isEqualTo("适合安静约会");
+    }
+
     /** 构造一个下架商户（绕过上架校验），返回其 ID。 */
     private UUID offlineMerchant(UUID cityId, UUID categoryId) {
         MerchantUpsertRequest req = new MerchantUpsertRequest(
                 "商户", "https://example.com/logo.png", "地址", null, null, cityId, categoryId,
                 (short) 20, (short) 15, (short) 15, (short) 10,
-                null, 0, false, List.of(), List.of(),
+                null, null, 0, false, List.of(), List.of(),
                 List.of("https://example.com/a.png"));
         return merchantService.upsert(null, req).id();
     }
@@ -266,7 +283,7 @@ class MerchantServiceTest extends AbstractPostgresIntegrationTest {
         MerchantUpsertRequest bad = new MerchantUpsertRequest(
                 "商户", "https://example.com/logo.png", "地址", null, null, cityId, null,
                 (short) 20, (short) 15, (short) 15, (short) 10,
-                null, 0, true, List.of(), List.of(),
+                null, null, 0, true, List.of(), List.of(),
                 List.of("https://example.com/a.png"));
         assertThatThrownBy(() -> merchantService.upsert(null, bad))
                 .isInstanceOf(IllegalArgumentException.class);

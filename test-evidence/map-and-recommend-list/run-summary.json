@@ -1,0 +1,33 @@
+{
+  "date": "2026-08-16",
+  "results": [
+    {
+      "tc": "TC-city-WEB-001",
+      "status": "PASS"
+    },
+    {
+      "tc": "TC-city-WEB-002",
+      "status": "PASS"
+    },
+    {
+      "tc": "TC-merchant-WEB-001",
+      "status": "PASS"
+    },
+    {
+      "tc": "TC-merchant-WEB-002",
+      "status": "PASS"
+    },
+    {
+      "tc": "TC-recommend-list-WEB-001",
+      "status": "PASS"
+    },
+    {
+      "tc": "TC-recommend-list-WEB-002",
+      "status": "PASS"
+    },
+    {
+      "tc": "TC-recommend-list-WEB-003",
+      "status": "PASS"
+    }
+  ]
+}

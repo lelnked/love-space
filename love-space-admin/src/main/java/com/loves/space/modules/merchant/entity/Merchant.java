@@ -83,6 +83,10 @@ public class Merchant extends BaseAuditEntity {
     @Column(name = "story")
     private String story;
 
+    /** 编辑推荐理由（纯文本，≤ 2000 个字符，可空）。 */
+    @Column(name = "recommend_reason")
+    private String recommendReason;
+
     /** 排序权重；数值越大越靠前。 */
     @Column(name = "weight", nullable = false)
     private Integer weight = 0;

@@ -12,6 +12,7 @@ import jakarta.validation.constraints.Size;
  * @param chineseProvince 中文省份（必填）
  * @param englishProvince 英文省份（必填）
  * @param backgroundImage 背景图 URL（可空）
+ * @param editorNote      地图编辑说（≤ 200 字符，可空）
  * @param online          是否上架（可空，默认 false）
  */
 public record CityCreateRequest(
@@ -22,6 +23,7 @@ public record CityCreateRequest(
         @Pattern(regexp = "^(images|bound)/[\\w-]+\\.(png|jpg|webp)$",
                 message = "backgroundImage 仅接受 OSS objectKey（images/<id>.<ext> 或 bound/<id>.<ext>）")
         String backgroundImage,
+        @Size(max = 200, message = "编辑说长度不能超过 200 个字符") String editorNote,
         Boolean online
 ) {
 }

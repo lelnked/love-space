@@ -102,6 +102,7 @@ class MerchantReadIT extends AbstractPostgresIntegrationTest {
                 (short) 20,
                 (short) 16,
                 "故事",
+                null,
                 10,
                 true,
                 List.of(Period.OVULATION),

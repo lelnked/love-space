@@ -88,6 +88,7 @@ public class CityService {
         city.setChineseProvince(request.chineseProvince());
         city.setEnglishProvince(request.englishProvince());
         city.setBackgroundImage(bindBackgroundImage(request.backgroundImage()));
+        city.setEditorNote(request.editorNote());
         if (request.online() != null) {
             city.setOnline(request.online());
         }
@@ -181,6 +182,7 @@ public class CityService {
         city.setChineseProvince(request.chineseProvince());
         city.setEnglishProvince(request.englishProvince());
         city.setBackgroundImage(boundBackgroundImage);
+        city.setEditorNote(request.editorNote());
         city.setOnline(request.online() != null && request.online());
     }
 
@@ -193,6 +195,7 @@ public class CityService {
                 city.getChineseProvince(),
                 city.getEnglishProvince(),
                 ImageResponses.from(city.getBackgroundImage(), imageUrlSigner),
+                city.getEditorNote(),
                 city.isOnline(),
                 city.getCreatedAt(),
                 city.getUpdatedAt());
@@ -207,6 +210,7 @@ public class CityService {
                 city.getChineseProvince(),
                 city.getEnglishProvince(),
                 ImageResponses.from(city.getBackgroundImage(), imageUrlSigner),
+                city.getEditorNote(),
                 city.isOnline(),
                 city.getCreatedAt(),
                 city.getUpdatedAt());

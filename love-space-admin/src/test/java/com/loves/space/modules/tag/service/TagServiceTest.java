@@ -63,12 +63,12 @@ class TagServiceTest extends AbstractPostgresIntegrationTest {
     /** 创建一个绑定指定标签且上架的商户，返回其 ID。 */
     private UUID merchantWithTag(UUID tagId) {
         UUID cityId = cityService.create(new CityCreateRequest(
-                "城-" + UUID.randomUUID(), "EN", "省", "Province", null, true)).id();
+                "城-" + UUID.randomUUID(), "EN", "省", "Province", null, null, true)).id();
         MerchantUpsertRequest request = new MerchantUpsertRequest(
                 "带标签商户", "https://example.com/logo.png", "地址", null, null,
                 cityId, null,
                 (short) 20, (short) 15, (short) 15, (short) 10,
-                null, 0, true,
+                null, null, 0, true,
                 List.of(), List.of(tagId),
                 List.of("https://example.com/1.png"));
         return merchantService.upsert(null, request).id();

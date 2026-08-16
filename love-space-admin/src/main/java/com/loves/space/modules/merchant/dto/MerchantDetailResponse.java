@@ -24,6 +24,7 @@ import java.util.UUID;
  * @param experienceFriendlyScore 体验友好原始分
  * @param socialContributionScore 社会贡献原始分
  * @param story                   商户故事
+ * @param recommendReason         编辑推荐理由（纯文本，可空）
  * @param weight                  排序权重
  * @param online                  是否上架
  * @param periods                 推荐生理周期列表
@@ -46,6 +47,7 @@ public record MerchantDetailResponse(
         Short experienceFriendlyScore,
         Short socialContributionScore,
         String story,
+        String recommendReason,
         Integer weight,
         boolean online,
         List<Period> periods,

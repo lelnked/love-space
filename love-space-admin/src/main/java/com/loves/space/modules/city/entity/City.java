@@ -39,6 +39,10 @@ public class City extends BaseAuditEntity {
     @Column(name = "background_image")
     private String backgroundImage;
 
+    /** 地图编辑说（≤ 200 个字符，可空）。 */
+    @Column(name = "editor_note")
+    private String editorNote;
+
     /** 是否上架（仅上架城市对 App 可见）。 */
     @Column(name = "online", nullable = false)
     private boolean online = false;

@@ -5,6 +5,7 @@ import com.aliyun.oss.OSSException;
 import com.aliyun.oss.model.ObjectMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import java.util.Set;
@@ -30,6 +31,7 @@ import java.util.regex.Pattern;
  * 具体原因（不存在 / MIME 错 / 太大 / copy 失败）只记入日志。
  */
 @Component
+@Profile("!test")
 public class AliyunOssObjectKeyValidator implements ObjectKeyValidator {
 
     private static final Logger LOG = LoggerFactory.getLogger(AliyunOssObjectKeyValidator.class);

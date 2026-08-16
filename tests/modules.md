@@ -14,6 +14,9 @@
 | city | 城市管理（含级联上下架） | `/api/admin/cities/*`、`/api/app/cities/*` | web | `/love-space/cities` | `tests/city/{it,web}.md` |
 | merchant | 商户管理（含分类/标签/图片/营业时段/评价） | `/api/admin/merchants/*`、`/api/admin/categories/*`、`/api/admin/tags/*`、`/api/app/merchants/*`、`/api/app/categories/*` | web | `/love-space/merchants`、`/love-space/categories`、`/love-space/tags` | `tests/merchant/{it,web}.md` |
 | banner | Banner 管理（含排序） | `/api/admin/banners/*`、`/api/app/banners/*` | web | `/love-space/banners` | `tests/banner/{it,web}.md` |
+| recommend-list | 推荐清单（地图下运营编辑的商户清单） | `/api/admin/recommend-lists/*`、`/api/app/recommend-lists/*` | web | `/love-space/recommend-lists` | `tests/recommend-list/{it,web}.md` |
+| route | 爱女大使与路线（大使为路线作者，下线级联隐藏路线） | `/api/admin/ambassadors/*`、`/api/admin/routes/*`、`/api/app/routes/*` | web | `/love-space/ambassadors`、`/love-space/routes` | `tests/route/{it,web}.md` |
+| activity | 活动管理（含富文本详情、上下架） | `/api/admin/activities/*`、`/api/app/activities/*` | web | `/love-space/activities` | `tests/activity/{it,web}.md` |
 
 跨域全链路 smoke（极少数）落 `tests/flows/web.md`，不注册为业务域。
 （二期新模块——地图/推荐清单/路线/大使/活动/文章/精选信息流——落地时在此先登记新域再产用例。）

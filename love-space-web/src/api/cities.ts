@@ -8,6 +8,7 @@ export interface CityItem {
   chineseProvince: string;
   englishProvince: string;
   backgroundImage: ImageResponse | null;
+  editorNote: string | null;
   online: boolean;
   createdAt: string;
   updatedAt: string;
@@ -26,6 +27,7 @@ export interface CityUpsertRequest {
   chineseProvince: string;
   englishProvince: string;
   backgroundImage?: string | null;
+  editorNote?: string | null;
   online?: boolean;
 }
 

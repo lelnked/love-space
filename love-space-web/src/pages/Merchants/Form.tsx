@@ -52,8 +52,9 @@ export default function MerchantForm() {
   const [businessRightsScore, setBusinessRightsScore] = useState<number>(0);
   const [experienceFriendlyScore, setExperienceFriendlyScore] = useState<number>(0);
   const [socialContributionScore, setSocialContributionScore] = useState<number>(0);
-  // 故事
+  // 故事 + 编辑推荐理由
   const [story, setStory] = useState("");
+  const [recommendReason, setRecommendReason] = useState("");
   // 权重+上下架
   const [weight, setWeight] = useState<number>(0);
   const [online, setOnline] = useState(false);
@@ -98,6 +99,7 @@ export default function MerchantForm() {
         setExperienceFriendlyScore(d.experienceFriendlyScore);
         setSocialContributionScore(d.socialContributionScore);
         setStory(d.story ?? "");
+        setRecommendReason(d.recommendReason ?? "");
         setWeight(d.weight);
         setOnline(d.online);
         // 城市选项：默认只展示已上线城市；若绑定城市已下架则单独取回并保留标注
@@ -173,6 +175,7 @@ export default function MerchantForm() {
     checkCoord("longitude", longitude, 180, "经度");
     checkCoord("latitude", latitude, 90, "纬度");
     if (story.length > 5000) errs.story = "故事最多 5000 字";
+    if (recommendReason.length > 2000) errs.recommendReason = "推荐理由最多 2000 字";
     if (Object.keys(errs).length > 0) {
       setFieldErrors(errs);
       return;
@@ -191,6 +194,7 @@ export default function MerchantForm() {
       experienceFriendlyScore,
       socialContributionScore,
       story: story.trim() || null,
+      recommendReason: recommendReason.trim() || null,
       weight,
       online,
       periods,
@@ -490,6 +494,22 @@ export default function MerchantForm() {
               <div className="text-error-500 text-xs mt-1">{fieldErrors.story}</div>
             )}
             <div className="text-xs text-gray-400 mt-1">{story.length} / 5000</div>
+          </fieldset>
+
+          {/* 9. 编辑推荐理由 */}
+          <fieldset className={sectionClass}>
+            <legend className={sectionTitleClass}>编辑推荐理由</legend>
+            <textarea
+              placeholder="编辑推荐理由（≤2000 字，选填，在推荐清单中展示）"
+              value={recommendReason}
+              onChange={(e) => setRecommendReason(e.target.value)}
+              maxLength={2000}
+              className="border rounded px-3 py-2 text-sm w-full min-h-[140px]"
+            />
+            {fieldErrors.recommendReason && (
+              <div className="text-error-500 text-xs mt-1">{fieldErrors.recommendReason}</div>
+            )}
+            <div className="text-xs text-gray-400 mt-1">{recommendReason.length} / 2000</div>
           </fieldset>
 
           <div className="flex gap-3">

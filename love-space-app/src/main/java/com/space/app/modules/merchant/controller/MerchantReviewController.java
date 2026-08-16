@@ -15,7 +15,7 @@ import java.util.UUID;
  * 商户评价只读 API：{@code GET /api/app/merchants/{merchantId}/reviews}。
  * <ul>
  *   <li>{@code recommended} 可选过滤，缺省返回全部；</li>
- *   <li>按 {@code sortOrder} 升序；商户下架/不存在返回 404。</li>
+ *   <li>按 {@code sortOrder} 升序；商户下架/不存在返回空列表。</li>
  * </ul>
  */
 @RestController

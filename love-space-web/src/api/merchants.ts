@@ -29,6 +29,7 @@ export interface MerchantDetail {
   experienceFriendlyScore: number;
   socialContributionScore: number;
   story: string | null;
+  recommendReason: string | null;
   weight: number;
   online: boolean;
   periods: Period[];
@@ -61,6 +62,7 @@ export interface MerchantUpsertRequest {
   experienceFriendlyScore: number;
   socialContributionScore: number;
   story?: string | null;
+  recommendReason?: string | null;
   weight?: number;
   online?: boolean;
   periods?: Period[];
