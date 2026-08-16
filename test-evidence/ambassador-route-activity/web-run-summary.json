@@ -1,0 +1,33 @@
+{
+  "date": "2026-08-16",
+  "runner": "web-test-runner (playwright-core fallback, @playwright/mcp 不可用)",
+  "results": [
+    {
+      "tc": "TC-route-WEB-001",
+      "status": "PASS",
+      "note": "2026-08-16 复测通过：修复后成功路径弹 toast「已下线」，全部断言通过"
+    },
+    {
+      "tc": "TC-route-WEB-002",
+      "status": "PASS"
+    },
+    {
+      "tc": "TC-route-WEB-003",
+      "status": "PASS"
+    },
+    {
+      "tc": "TC-activity-WEB-001",
+      "status": "PASS",
+      "note": "2026-08-16 复测通过：修复后成功路径弹 toast「已下线」，全部断言通过"
+    },
+    {
+      "tc": "TC-activity-WEB-002",
+      "status": "PASS",
+      "note": "「图片正常渲染」在 test 实例降级为 img 节点 + 签名 URL 断言，见 TC-activity-WEB-002/env-note.txt"
+    },
+    {
+      "tc": "TC-city-WEB-003",
+      "status": "PASS"
+    }
+  ]
+}

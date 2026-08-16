@@ -17,6 +17,14 @@ import TagList from "./pages/Tags/List";
 import MerchantList from "./pages/Merchants/List";
 import MerchantForm from "./pages/Merchants/Form";
 import MerchantDetailPage from "./pages/Merchants/Detail";
+import RecommendListList from "./pages/RecommendLists/List";
+import RecommendListForm from "./pages/RecommendLists/Form";
+import RecommendListMerchants from "./pages/RecommendLists/Merchants";
+import AmbassadorList from "./pages/Ambassadors/List";
+import RouteList from "./pages/Routes/List";
+import RouteForm from "./pages/Routes/Form";
+import ActivityList from "./pages/Activities/List";
+import ActivityForm from "./pages/Activities/Form";
 import LogList from "./pages/Logs/List";
 
 export default function App() {
@@ -50,6 +58,17 @@ export default function App() {
             <Route path="/merchants/create" element={<MerchantForm />} />
             <Route path="/merchants/:id/edit" element={<MerchantForm />} />
             <Route path="/merchants/:id" element={<MerchantDetailPage />} />
+            <Route path="/recommend-lists" element={<RecommendListList />} />
+            <Route path="/recommend-lists/create" element={<RecommendListForm />} />
+            <Route path="/recommend-lists/:id/edit" element={<RecommendListForm />} />
+            <Route path="/recommend-lists/:id/merchants" element={<RecommendListMerchants />} />
+            <Route path="/ambassadors" element={<AmbassadorList />} />
+            <Route path="/routes" element={<RouteList />} />
+            <Route path="/routes/create" element={<RouteForm />} />
+            <Route path="/routes/:id/edit" element={<RouteForm />} />
+            <Route path="/activities" element={<ActivityList />} />
+            <Route path="/activities/create" element={<ActivityForm />} />
+            <Route path="/activities/:id/edit" element={<ActivityForm />} />
             <Route path="/logs" element={<LogList />} />
           </Route>
 

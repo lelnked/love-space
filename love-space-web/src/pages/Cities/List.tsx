@@ -90,8 +90,8 @@ export default function CityList() {
     if (
       !next &&
       !(await confirm({
-        title: "下架城市",
-        message: `确认下架城市「${item.chineseName}」？\n注意：下架会同时下架该城市下的全部商户和 Banner。`,
+        title: "下架地图",
+        message: `确认下架地图「${item.chineseName}」？\n注意：下架会同时下架该城市下的全部商户和 Banner，该城市的推荐清单、路线、活动也将在 App 端不可见。`,
         confirmText: "下架",
         danger: true,
       }))
@@ -110,7 +110,7 @@ export default function CityList() {
   };
 
   const handleDelete = async (item: CityItem) => {
-    if (!(await confirm({ title: "删除城市", message: `确认删除城市「${item.chineseName}」？`, confirmText: "删除", danger: true }))) return;
+    if (!(await confirm({ title: "删除地图", message: `确认删除地图「${item.chineseName}」？`, confirmText: "删除", danger: true }))) return;
     try {
       await deleteCity(item.id);
       // 局部移除该行，无需整表 reload
@@ -168,17 +168,17 @@ export default function CityList() {
 
   return (
     <>
-      <PageMeta title="城市管理 | Love Space Admin" description="城市列表与管理" />
+      <PageMeta title="地图管理 | Love Space Admin" description="地图（城市）列表与管理" />
       <div className="flex items-center justify-end mb-6">
         <Link
           to="/cities/create"
           className="px-4 py-2 text-sm rounded-lg bg-brand-500 text-white hover:bg-brand-600"
         >
-          新增城市
+          新增地图
         </Link>
       </div>
       <div className="space-y-6">
-        <ComponentCard title="城市列表">
+        <ComponentCard title="地图列表">
           <FilterBar
             fields={FILTER_FIELDS}
             initialValues={filters}

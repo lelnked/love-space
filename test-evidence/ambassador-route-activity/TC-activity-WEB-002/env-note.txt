@@ -1,0 +1,5 @@
+「图片正常渲染」断言在 test 实例降级为「img 节点回显且 src 为 bound/ 签名 URL」：
+test profile 的 StubObjectKeyValidator 只做前缀改写（images/ -> bound/），不执行真实 copyObject，
+对象实际仍在 OSS 的 images/ 前缀下，bound 签名 URL 404，图片像素无法在测试环境渲染。
+属环境限制而非应用缺陷；生产 profile 由 AliyunOssObjectKeyValidator 执行真实搬运。
+富文本 img src 的 objectKey 存储与签名 URL 替换已由 TC-activity-IT-006 / IT-009 在 API 层验证通过。

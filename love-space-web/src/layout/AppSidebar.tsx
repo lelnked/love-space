@@ -4,14 +4,18 @@ import { Link, useLocation } from "react-router";
 // Assume these icons are imported from an icon library
 import {
   BoxCubeIcon,
+  CalenderIcon,
   ChevronDownIcon,
   FolderIcon,
   GridIcon,
   GroupIcon,
   HorizontaLDots,
+  ListIcon,
   ShootingStarIcon,
+  TaskIcon,
   TimeIcon,
   UserCircleIcon,
+  UserIcon,
 } from "../icons";
 import { useSidebar } from "../context/SidebarContext";
 import { useAuth } from "../hooks/useAuth";
@@ -32,7 +36,7 @@ const navItems: NavItem[] = [
   },
   {
     icon: <GridIcon />,
-    name: "城市管理",
+    name: "地图管理",
     path: "/cities",
   },
   {
@@ -54,6 +58,26 @@ const navItems: NavItem[] = [
     icon: <GroupIcon />,
     name: "商户管理",
     path: "/merchants",
+  },
+  {
+    icon: <ListIcon />,
+    name: "推荐清单",
+    path: "/recommend-lists",
+  },
+  {
+    icon: <UserIcon />,
+    name: "爱女大使",
+    path: "/ambassadors",
+  },
+  {
+    icon: <TaskIcon />,
+    name: "路线管理",
+    path: "/routes",
+  },
+  {
+    icon: <CalenderIcon />,
+    name: "活动管理",
+    path: "/activities",
   },
   {
     icon: <TimeIcon />,

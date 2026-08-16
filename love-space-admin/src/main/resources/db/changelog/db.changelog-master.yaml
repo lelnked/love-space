@@ -16,3 +16,11 @@ databaseChangeLog:
       file: db/changelog/changes/006-add-category-sort-online.sql
   - include:
       file: db/changelog/changes/007-add-banner-sort-order.sql
+  - include:
+      file: db/changelog/changes/008-add-merchant-recommend-reason-city-editor-note.sql
+  - include:
+      file: db/changelog/changes/009-create-recommend-list.sql
+  - include:
+      file: db/changelog/changes/010-create-ambassador-route.sql
+  - include:
+      file: db/changelog/changes/011-create-activity.sql

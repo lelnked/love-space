@@ -9,6 +9,8 @@ interface ButtonProps {
   onClick?: () => void; // Click handler
   disabled?: boolean; // Disabled state
   className?: string; // Disabled state
+  /** 原生 button type；表单内的非提交按钮需显式传 "button"。缺省沿浏览器默认（submit）。 */
+  type?: "button" | "submit";
 }
 
 const Button: React.FC<ButtonProps> = ({
@@ -20,6 +22,7 @@ const Button: React.FC<ButtonProps> = ({
   onClick,
   className = "",
   disabled = false,
+  type,
 }) => {
   // Size Classes
   const sizeClasses = {
@@ -42,6 +45,7 @@ const Button: React.FC<ButtonProps> = ({
       } ${variantClasses[variant]} ${
         disabled ? "cursor-not-allowed opacity-50" : ""
       }`}
+      type={type}
       onClick={onClick}
       disabled={disabled}
     >
