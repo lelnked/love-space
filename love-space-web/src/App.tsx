@@ -29,6 +29,7 @@ import ArticleCategoryList from "./pages/ArticleCategories/List";
 import ArticleList from "./pages/Articles/List";
 import ArticleForm from "./pages/Articles/Form";
 import FeaturedItemList from "./pages/FeaturedItems/List";
+import FeaturedCycleItemList from "./pages/FeaturedCycleItems/List";
 import LogList from "./pages/Logs/List";
 
 export default function App() {
@@ -78,6 +79,7 @@ export default function App() {
             <Route path="/articles/create" element={<ArticleForm />} />
             <Route path="/articles/:id/edit" element={<ArticleForm />} />
             <Route path="/featured-items" element={<FeaturedItemList />} />
+            <Route path="/featured-cycle-items" element={<FeaturedCycleItemList />} />
             <Route path="/logs" element={<LogList />} />
           </Route>
 

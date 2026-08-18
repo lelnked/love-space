@@ -18,7 +18,7 @@
 | route | 爱女大使与路线（大使为路线作者，下线级联隐藏路线） | `/api/admin/ambassadors/*`、`/api/admin/routes/*`、`/api/app/routes/*` | web | `/love-space/ambassadors`、`/love-space/routes` | `tests/route/{it,web}.md` |
 | activity | 活动管理（含富文本详情、上下架） | `/api/admin/activities/*`、`/api/app/activities/*` | web | `/love-space/activities` | `tests/activity/{it,web}.md` |
 | article | 文章栏目与文章（富文本、多栏目关联、上下架） | `/api/admin/article-categories/*`、`/api/admin/articles/*`、`/api/app/article-categories`、`/api/app/articles/*` | web | `/love-space/article-categories`、`/love-space/articles` | `tests/article/{it,web}.md` |
-| featured | 精选·地图上新推荐（关联城市信息流，与 Banner 独立） | `/api/admin/featured-items/*`、`/api/app/featured-items` | web | `/love-space/featured-items` | `tests/featured/{it,web}.md` |
+| featured | 精选信息流：地图上新推荐（关联城市，与 Banner 独立）+ 周期推荐（四周期全局配置，内容取自活动/路线/文章） | `/api/admin/featured-items/*`、`/api/app/featured-items`、`/api/admin/featured-cycle-items/*`、`/api/app/featured-cycle-items` | web | `/love-space/featured-items`、`/love-space/featured-cycle-items` | `tests/featured/{it,web}.md` |
 
 跨域全链路 smoke（极少数）落 `tests/flows/web.md`，不注册为业务域。
 （二期新模块——地图/推荐清单/路线/大使/活动/文章/精选信息流——落地时在此先登记新域再产用例。）

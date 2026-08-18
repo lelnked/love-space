@@ -3,7 +3,7 @@
   "info": {
     "title": "love-space API 契约（项目级 living 文件）",
     "description": "登记 OpenSpec change 触及的接口；operation 通过 x-requirement 反链到 openspec specs 的 {domain}/{Requirement 名}。存量未被 change 触及的接口暂不回溯登记。",
-    "version": "2026.08.16"
+    "version": "2026.08.18"
   },
   "servers": [
     {
@@ -641,6 +641,96 @@
         "summary": "App 精选推荐信息流（条目上线∧城市上架，创建时间倒序，含城市 id/名称）",
         "x-requirement": "featured/App 端精选推荐查询"
       }
+    },
+    "/api/admin/featured-cycle-items/page": {
+      "get": {
+        "summary": "周期推荐分页（phase/type 过滤，sortOrder 升序）",
+        "parameters": [
+          {
+            "name": "phase",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/Period"
+            }
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/FeaturedCycleItemType"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "x-requirement": "featured/周期推荐条目管理"
+      }
+    },
+    "/api/admin/featured-cycle-items": {
+      "post": {
+        "summary": "创建周期推荐（phase/type 必选且创建后不可变）",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FeaturedCycleItemUpsertRequest"
+              }
+            }
+          }
+        },
+        "x-requirement": "featured/周期推荐条目管理"
+      }
+    },
+    "/api/admin/featured-cycle-items/{id}": {
+      "get": {
+        "summary": "周期推荐详情",
+        "x-requirement": "featured/周期推荐条目管理"
+      },
+      "put": {
+        "summary": "更新周期推荐（忽略 phase/type 变更）",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FeaturedCycleItemUpsertRequest"
+              }
+            }
+          }
+        },
+        "x-requirement": "featured/周期推荐条目管理"
+      },
+      "delete": {
+        "summary": "删除周期推荐（物理删除）",
+        "x-requirement": "featured/周期推荐条目管理"
+      }
+    },
+    "/api/admin/featured-cycle-items/{id}/online": {
+      "put": {
+        "summary": "周期推荐上下线 {online}",
+        "x-requirement": "featured/周期推荐条目管理"
+      }
+    },
+    "/api/app/featured-cycle-items": {
+      "get": {
+        "summary": "App 周期推荐（四周期分组恒在，条目上线∧关联实体可见，组内 sortOrder 升序）",
+        "x-requirement": "featured/App 端周期推荐查询"
+      }
     }
   },
   "components": {
@@ -995,6 +1085,85 @@
             "type": "boolean"
           }
         }
+      },
+      "FeaturedCycleItemType": {
+        "type": "string",
+        "enum": [
+          "ACTIVITY",
+          "ROUTE",
+          "ARTICLE"
+        ],
+        "description": "tripperclub活动/路线体验/周期生活法"
+      },
+      "FeaturedCycleItemUpsertRequest": {
+        "type": "object",
+        "required": [
+          "phase",
+          "type",
+          "banner"
+        ],
+        "description": "宽 record：必填性按 type 在服务端分派校验；不属于该 type 的字段被忽略且不落库",
+        "properties": {
+          "phase": {
+            "$ref": "#/components/schemas/Period"
+          },
+          "type": {
+            "$ref": "#/components/schemas/FeaturedCycleItemType"
+          },
+          "banner": {
+            "type": "string",
+            "description": "objectKey，比例不校验"
+          },
+          "sortOrder": {
+            "type": "integer",
+            "default": 0
+          },
+          "online": {
+            "type": "boolean",
+            "default": false
+          },
+          "activityId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "type=ACTIVITY 必填"
+          },
+          "routeId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "type=ROUTE 必填"
+          },
+          "articleId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "type=ARTICLE 必填"
+          },
+          "title": {
+            "type": "string",
+            "description": "type=ROUTE 主标题必填；type=ARTICLE 主标题必填"
+          },
+          "subtitle": {
+            "type": "string",
+            "description": "type=ROUTE 副标题必填"
+          },
+          "description": {
+            "type": "string",
+            "description": "推荐说明；type=ACTIVITY/ROUTE 必填"
+          },
+          "note": {
+            "type": "string",
+            "description": "活动说明；type=ACTIVITY 选填"
+          }
+        }
+      },
+      "Period": {
+        "type": "string",
+        "enum": [
+          "MENSTRUAL",
+          "FOLLICULAR",
+          "OVULATION",
+          "LUTEAL"
+        ],
+        "description": "生理周期：经期/卵泡期/排卵期/黄体期（复用既有 common/enums/Period）"
       }
     }
   }

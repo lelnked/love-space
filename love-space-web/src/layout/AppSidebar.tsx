@@ -97,6 +97,11 @@ const navItems: NavItem[] = [
     path: "/featured-items",
   },
   {
+    icon: <PageIcon />,
+    name: "周期推荐",
+    path: "/featured-cycle-items",
+  },
+  {
     icon: <TimeIcon />,
     name: "操作日志",
     path: "/logs",
