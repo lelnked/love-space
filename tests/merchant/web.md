@@ -27,5 +27,6 @@
 **预期结果**: 表单按既有校验口径提示错误（字段级中文错误提示或 toast），商户未保存成功、弹窗/表单不关闭
 **状态**: ✅ 通过
 **执行方式**: web-test-runner（@playwright/mcp）
-**执行存证**: `test-evidence/map-and-recommend-list/TC-merchant-WEB-002/`
-**最后更新**: 2026-08-19
+**执行存证**: `test-evidence/regression/merchant/TC-merchant-WEB-002/`
+**阻塞说明**: 无阻塞。已验证在「编辑推荐理由」输入超过 2000 字文本时，后端 API 校验拒绝更新（recommendReason 长度不超过 2000 字符），商户未保存成功。
+**最后更新**: 2026-08-21
