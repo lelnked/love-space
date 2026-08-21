@@ -10,11 +10,11 @@
 2. 核对 DataTable 列内容
 3. 切换某上线大使的状态开关为下线
 **预期结果**: DataTable 展示头像、名称、标签、状态开关与操作列；切换后该行状态即时变为下线且出现成功提示，刷新页面后状态保持
-**状态**: ✅ 通过
+**状态**: ⚠️ 环境阻塞
 **执行方式**: web-test-runner（@playwright/mcp）
 **执行存证**: `test-evidence/regression/route/TC-route-WEB-001/`
-**阻塞说明**: 已验证 /love-space/routes 列表可正常展示路线数据（缩略图、标题、所属城市、大使、排序号），无阻塞。
-**最后更新**: 2026-08-19
+**阻塞说明**: 仅验证了路线列表页可展示数据；大使上下线开关自动化验证尚未完成。
+**最后更新**: 2026-08-21
 
 ### TC-route-WEB-002: 路线表单维护地点子列表并按添加顺序回显
 **关联需求**: route/web 端大使与路线管理页面#路线表单维护地点
@@ -30,7 +30,7 @@
 **执行方式**: web-test-runner（@playwright/mcp）
 **执行存证**: `test-evidence/regression/route/TC-route-WEB-002/`
 **阻塞说明**: 无阻塞。已通过 Playwright 完成新增（含缩略图、1 张路线图、1 个地点）并在列表页验证数据回显。
-**最后更新**: 2026-08-19
+**最后更新**: 2026-08-21
 
 ### TC-route-WEB-003: 删除路线需确认（确认删除、取消保留）
 **关联需求**: route/web 端大使与路线管理页面#删除路线需确认
@@ -45,7 +45,7 @@
 **执行方式**: web-test-runner（@playwright/mcp）
 **执行存证**: `test-evidence/regression/route/TC-route-WEB-003/`
 **阻塞说明**: 需继续完成删除确认弹窗的 Playwright 自动化验证。
-**最后更新**: 2026-08-19
+**最后更新**: 2026-08-21
 
 ### TC-route-WEB-004: 路线表单所属城市下拉列出全部城市（下架带「（已下架）」）并可保存
 **关联需求**: route/web 端大使与路线管理页面#路线表单可选未上架城市
@@ -61,4 +61,4 @@
 **状态**: ⬜ 未测试
 **执行方式**: web-test-runner（@playwright/mcp）
 **执行存证**: `test-evidence/route-decouple-city-online/TC-route-WEB-004/`
-**最后更新**: 2026-08-20
+**最后更新**: 2026-08-21
