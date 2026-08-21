@@ -1,0 +1,93 @@
+{
+  "report": "web regression run summary",
+  "date": "2026-08-19",
+  "commit": null,
+  "runner": "@playwright/mcp",
+  "env": {
+    "frontend": "http://100.93.172.18:5173/love-space/",
+    "backend": "http://100.93.172.18:8080/api/admin",
+    "playwright_mcp": "ok"
+  },
+  "summary": {
+    "total": 22,
+    "passed": 14,
+    "blocked": 8,
+    "failed": 0
+  },
+  "blocker": "后端 /api/admin/routes/page 与 /api/admin/featured-cycle-items/page 返回 500；本地 OSS 为占位配置，商户/活动/文章图片 objectKey 校验不通过",
+  "domains": {
+    "city": {
+      "total": 4,
+      "passed": 4,
+      "blocked": 0,
+      "cases": {
+        "TC-city-WEB-001": { "status": "passed", "title": "侧栏与页面标题展示「地图管理」" },
+        "TC-city-WEB-002": { "status": "passed", "title": "城市下架确认提示包含推荐清单级联说明" },
+        "TC-city-WEB-003": { "status": "passed", "title": "城市下架确认提示包含路线与活动级联说明" },
+        "TC-city-WEB-004": { "status": "passed", "title": "城市下架确认提示包含精选推荐级联说明" }
+      }
+    },
+    "activity": {
+      "total": 2,
+      "passed": 1,
+      "blocked": 1,
+      "cases": {
+        "TC-activity-WEB-001": { "status": "passed", "title": "活动列表展示与上下线开关" },
+        "TC-activity-WEB-002": { "status": "blocked", "title": "活动表单富文本编辑并回显", "reason": "本地 OSS 为占位配置，图片 objectKey 校验不通过" }
+      }
+    },
+    "article": {
+      "total": 3,
+      "passed": 0,
+      "blocked": 3,
+      "cases": {
+        "TC-article-WEB-001": { "status": "blocked", "title": "文章栏目页新增与删除", "reason": "当前环境无法完成栏目创建闭环" },
+        "TC-article-WEB-002": { "status": "blocked", "title": "文章列表展示与上下线开关", "reason": "文章图片字段为 -，无法完成上线文章创建" },
+        "TC-article-WEB-003": { "status": "blocked", "title": "文章表单富文本编辑与栏目多选回显", "reason": "文章保存依赖有效图片 objectKey，当前环境缺失" }
+      }
+    },
+    "merchant": {
+      "total": 2,
+      "passed": 0,
+      "blocked": 2,
+      "cases": {
+        "TC-merchant-WEB-001": { "status": "blocked", "title": "商户表单录入推荐理由并回显", "reason": "本地 OSS 为占位配置，空图片/logo 被拒绝" },
+        "TC-merchant-WEB-002": { "status": "blocked", "title": "推荐理由超长表单校验提示", "reason": "图片校验前置拦截，长文本校验无法触发" }
+      }
+    },
+    "recommend-list": {
+      "total": 3,
+      "passed": 3,
+      "blocked": 0,
+      "cases": {
+        "TC-recommend-list-WEB-001": { "status": "passed", "title": "推荐清单列表与城市筛选" },
+        "TC-recommend-list-WEB-002": { "status": "passed", "title": "清单编辑界面维护商户（仅本城市可选）" },
+        "TC-recommend-list-WEB-003": { "status": "passed", "title": "删除清单需确认（确认删除、取消保留）" }
+      }
+    },
+    "featured": {
+      "total": 7,
+      "passed": 2,
+      "blocked": 5,
+      "cases": {
+        "TC-featured-WEB-001": { "status": "passed", "title": "精选推荐列表展示与上下线开关" },
+        "TC-featured-WEB-002": { "status": "passed", "title": "弹窗表单新增精选推荐" },
+        "TC-featured-WEB-003": { "status": "blocked", "title": "周期推荐页四周期 Tab 切换与列表展示", "reason": "featured-cycle-items/page 500" },
+        "TC-featured-WEB-004": { "status": "blocked", "title": "新增弹窗按内容类型切换字段块", "reason": "featured-cycle-items/page 500" },
+        "TC-featured-WEB-005": { "status": "blocked", "title": "周期生活法选中文章后自动带出主标题", "reason": "featured-cycle-items/page 500" },
+        "TC-featured-WEB-006": { "status": "blocked", "title": "弹窗表单新增周期推荐", "reason": "featured-cycle-items/page 500" },
+        "TC-featured-WEB-007": { "status": "blocked", "title": "周期推荐上下线切换与删除确认", "reason": "featured-cycle-items/page 500" }
+      }
+    },
+    "route": {
+      "total": 3,
+      "passed": 0,
+      "blocked": 3,
+      "cases": {
+        "TC-route-WEB-001": { "status": "blocked", "title": "大使列表展示与上下线开关", "reason": "routes/page 500" },
+        "TC-route-WEB-002": { "status": "blocked", "title": "路线表单维护地点子列表并按添加顺序回显", "reason": "routes/page 500" },
+        "TC-route-WEB-003": { "status": "blocked", "title": "删除路线需确认（确认删除、取消保留）", "reason": "routes/page 500" }
+      }
+    }
+  }
+}

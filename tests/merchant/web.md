@@ -4,7 +4,7 @@
 **关联需求**: merchant/商户编辑推荐理由#web 商户表单录入推荐理由
 **来源**: map-and-recommend-list
 **优先级**: P1
-**前置条件**: Manager 账号可登录 http://100.100.117.79:5173/love-space/signin；已存在至少一个上架城市与可编辑商户
+**前置条件**: Manager 账号可登录 http://100.93.172.18:5173/love-space/signin；已存在至少一个上架城市与可编辑商户
 **测试步骤**:
 1. 登录后台，进入 /love-space/merchants，打开某商户编辑表单
 2. 在「编辑推荐理由」多行文本框输入「适合傍晚散步的江边小馆」并保存
@@ -13,7 +13,7 @@
 **状态**: ✅ 通过
 **执行方式**: web-test-runner（@playwright/mcp）
 **执行存证**: `test-evidence/map-and-recommend-list/TC-merchant-WEB-001/`
-**最后更新**: 2026-08-16
+**最后更新**: 2026-08-19
 
 ### TC-merchant-WEB-002: 推荐理由超长表单校验提示
 **关联需求**: merchant/商户编辑推荐理由#web 商户表单录入推荐理由
@@ -27,4 +27,4 @@
 **状态**: ✅ 通过
 **执行方式**: web-test-runner（@playwright/mcp）
 **执行存证**: `test-evidence/map-and-recommend-list/TC-merchant-WEB-002/`
-**最后更新**: 2026-08-16
+**最后更新**: 2026-08-19

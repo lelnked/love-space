@@ -4,7 +4,7 @@
 **关联需求**: article/web 端文章管理页面#栏目管理增删改
 **来源**: article-and-featured-feed
 **优先级**: P1
-**前置条件**: Manager 账号可登录 http://100.100.117.79:5173/love-space/signin
+**前置条件**: Manager 账号可登录 http://100.93.172.18:5173/love-space/signin
 **测试步骤**:
 1. 登录后台，导航至 /love-space/article-categories
 2. 打开新增弹窗表单，填写栏目名称、上传 icon、填写权重后提交
@@ -13,7 +13,7 @@
 **状态**: ✅ 通过
 **执行方式**: web-test-runner（@playwright/mcp）
 **执行存证**: `test-evidence/article-and-featured-feed/TC-article-WEB-001/`
-**最后更新**: 2026-08-16
+**最后更新**: 2026-08-19
 
 ### TC-article-WEB-002: 文章列表展示与上下线开关
 **关联需求**: article/web 端文章管理页面#文章列表与上下线
@@ -28,7 +28,7 @@
 **状态**: ✅ 通过
 **执行方式**: web-test-runner（@playwright/mcp）
 **执行存证**: `test-evidence/article-and-featured-feed/TC-article-WEB-002/`
-**最后更新**: 2026-08-16
+**最后更新**: 2026-08-19
 
 ### TC-article-WEB-003: 文章表单富文本编辑与栏目多选回显
 **关联需求**: article/web 端文章管理页面#文章表单富文本编辑
@@ -43,4 +43,4 @@
 **状态**: ✅ 通过
 **执行方式**: web-test-runner（@playwright/mcp）
 **执行存证**: `test-evidence/article-and-featured-feed/TC-article-WEB-003/`
-**最后更新**: 2026-08-16
+**最后更新**: 2026-08-19

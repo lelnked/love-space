@@ -4,7 +4,7 @@
 **关联需求**: recommend-list/web 端推荐清单管理页面#清单列表与筛选
 **来源**: map-and-recommend-list
 **优先级**: P1
-**前置条件**: Manager 账号可登录 http://100.100.117.79:5173/love-space/signin；城市 A 下已存在多个清单（sortOrder 各异），城市 B 下无清单或数量不同
+**前置条件**: Manager 账号可登录 http://100.93.172.18:5173/love-space/signin；城市 A 下已存在多个清单（sortOrder 各异），城市 B 下无清单或数量不同
 **测试步骤**:
 1. 登录后台，导航至 /love-space/recommend-lists
 2. 在城市筛选控件选择城市 A
@@ -13,7 +13,7 @@
 **状态**: ✅ 通过
 **执行方式**: web-test-runner（@playwright/mcp）
 **执行存证**: `test-evidence/map-and-recommend-list/TC-recommend-list-WEB-001/`
-**最后更新**: 2026-08-16
+**最后更新**: 2026-08-19
 
 ### TC-recommend-list-WEB-002: 清单编辑界面维护商户（仅本城市可选）
 **关联需求**: recommend-list/web 端推荐清单管理页面#维护清单商户
@@ -28,7 +28,7 @@
 **状态**: ✅ 通过
 **执行方式**: web-test-runner（@playwright/mcp）
 **执行存证**: `test-evidence/map-and-recommend-list/TC-recommend-list-WEB-002/`
-**最后更新**: 2026-08-16
+**最后更新**: 2026-08-19
 
 ### TC-recommend-list-WEB-003: 删除清单需确认（确认删除、取消保留）
 **关联需求**: recommend-list/web 端推荐清单管理页面#删除清单需确认
@@ -42,4 +42,4 @@
 **状态**: ✅ 通过
 **执行方式**: web-test-runner（@playwright/mcp）
 **执行存证**: `test-evidence/map-and-recommend-list/TC-recommend-list-WEB-003/`
-**最后更新**: 2026-08-16
+**最后更新**: 2026-08-19

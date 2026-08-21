@@ -1,21 +1,21 @@
 ---
 name: run-web-test
-description: 手动触发 web-test-runner 执行 WEB 用例（OpenSpec 版），并自动把浏览器访问地址固定为本机 Tailscale IP 100.100.117.79(而非 localhost)。因为本环境的 Playwright 是远程浏览器，访问不了本机 localhost——前端 URL 与前端调用的后端 API base 都必须用 100.100.117.79 才可达。本 skill 负责：解析执行范围(--change/--module)、探测真实端口、校验前端 API base 是否指向该 IP、调起 web-test-runner 并把 IP 注入执行指令、最后跑生成脚本刷新追溯矩阵(runner 自身不会刷新)。当用户说「跑 WEB / 跑 E2E / 执行 web-test-runner / 手动触发 web 测试」时使用。（原 run-e2e-test，随测试端插件化更名）
+description: 手动触发 web-test-runner 执行 WEB 用例（OpenSpec 版），并自动把浏览器访问地址固定为本机 Tailscale IP 100.93.172.18(而非 localhost)。因为本环境的 Playwright 是远程浏览器，访问不了本机 localhost——前端 URL 与前端调用的后端 API base 都必须用 100.93.172.18 才可达。本 skill 负责：解析执行范围(--change/--module)、探测真实端口、校验前端 API base 是否指向该 IP、调起 web-test-runner 并把 IP 注入执行指令、最后跑生成脚本刷新追溯矩阵(runner 自身不会刷新)。当用户说「跑 WEB / 跑 E2E / 执行 web-test-runner / 手动触发 web 测试」时使用。（原 run-e2e-test，随测试端插件化更名）
 metadata:
   author: codeing-test-workflow
-  browser_ip: 100.100.117.79
+  browser_ip: 100.93.172.18
 ---
 
-# 手动触发 web-test-runner(浏览器 IP 固定为 100.100.117.79，OpenSpec 版)
+# 手动触发 web-test-runner(浏览器 IP 固定为 100.93.172.18，OpenSpec 版)
 
 本 skill 把「调起 web-test-runner 跑 WEB 用例」标准化，关键是解决本环境的固有约束：
 
 > **Playwright 运行在远程机器上(经 Tailscale)。远程浏览器的 `localhost` 不是本机**。因此：
-> 1. 浏览器导航的前端地址必须是 `http://100.100.117.79:<前端端口>/love-space/`，**不能用 localhost / 127.0.0.1**。
-> 2. 被测前端实例调用后端的 `VITE_ADMIN_API_BASE` 必须指向 `http://100.100.117.79:<后端端口>`，否则浏览器侧请求会 `ERR_CONNECTION_REFUSED`。
+> 1. 浏览器导航的前端地址必须是 `http://100.93.172.18:<前端端口>/love-space/`，**不能用 localhost / 127.0.0.1**。
+> 2. 被测前端实例调用后端的 `VITE_ADMIN_API_BASE` 必须指向 `http://100.93.172.18:<后端端口>`，否则浏览器侧请求会 `ERR_CONNECTION_REFUSED`。
 
 默认参数(可被入参覆盖)：
-- 浏览器/服务 IP：`100.100.117.79`(本机 Tailscale IP，见 frontmatter `browser_ip`)
+- 浏览器/服务 IP：`100.93.172.18`(本机 Tailscale IP，见 frontmatter `browser_ip`)
 - 被测前端 love-space-web：**不按端口号固定优先级，而是探测各实例的 `VITE_ADMIN_API_BASE`，优先选指向目标 IP 的实例**(候选端口 `5173`/`5174`/`5175` 仅作扫描范围)；base 路径 `/love-space/`
 - 被测后端 love-space-admin：`8080`(dev)或 `21423`(test profile，e2e 专用库)，REST 前缀 `/api/admin/*`
 - baseUrl 必须命中 `tests/modules.md` 白名单；探测到白名单外的实例一律不测。
@@ -26,7 +26,7 @@ metadata:
 
 - `--change <change-id>`：**交付轮**。按 `openspec/changes/<id>/test-cases.md` 受影响清单跑其中的 WEB 用例；缺省时 `openspec/changes/` 下(不含 archive)恰好唯一则提示「默认用 <id>，确认?」，否则要求明确指定。
 - `--module <domain>`：**回归轮**。跑 `tests/<domain>/web.md` 全部用例。
-- `--ip`：覆盖默认 `100.100.117.79`。
+- `--ip`：覆盖默认 `100.93.172.18`。
 - `--fe-port` / `--be-port`：跳过自动探测，直接指定端口。
 - `--cases`：只跑指定用例(完整 TC ID，如 `TC-auth-WEB-001`)。
 
@@ -42,10 +42,10 @@ metadata:
 
 > ⚠️ **核心原则**：同一份代码可能有多个前端实例在跑，它们的 `VITE_ADMIN_API_BASE` 可能一个指 `localhost`(远程浏览器**不可达**)、一个指 IP(可达)。**绝不能按端口号固定优先级选**——必须逐个候选探测其 vite 进程的真实 `VITE_ADMIN_API_BASE`，**优先选指向目标 IP 的那个**。这是踩坑(误选 localhost 实例)后的硬性修正。
 
-设 `IP=<--ip 或 100.100.117.79>`。后端先锁定(任一 HTTP 状态码即视为可达，含 401/404)：
+设 `IP=<--ip 或 100.93.172.18>`。后端先锁定(任一 HTTP 状态码即视为可达，含 401/404)：
 
 ```bash
-IP=100.100.117.79
+IP=100.93.172.18
 BE_PORT=""
 for p in 8080 21423; do
   code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 2 "http://$IP:$p/actuator/health" 2>/dev/null)
@@ -58,7 +58,7 @@ echo "后端锁定 → http://$IP:$BE_PORT (REST 前缀 /api/admin)"
 **第一优先**选指向 `http://$IP:$BE_PORT` 的实例；次选指向该 IP(端口不同)的；**坚决排除**指向 `localhost`/`127.0.0.1` 的实例。
 
 ```bash
-IP=100.100.117.79
+IP=100.93.172.18
 declare -A FE_API   # 端口 -> 该实例的 API base
 for pid in $(pgrep -f "vite" 2>/dev/null); do
   args=$(tr '\0' ' ' < /proc/$pid/cmdline 2>/dev/null)

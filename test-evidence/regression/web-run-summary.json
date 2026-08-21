@@ -1,0 +1,20 @@
+{
+  "runner": "playwright-mcp",
+  "targets": {
+    "frontend": "http://100.93.172.18:5173/love-space/",
+    "backend": "http://100.93.172.18:8080/api/admin"
+  },
+  "total": 22,
+  "passed": 14,
+  "blocked": 8,
+  "blockers": {
+    "TC-route-WEB-001": "后端 /api/admin/routes/page 返回 500，列表行数/上下线闭环无法继续",
+    "TC-route-WEB-002": "同上，表单-保存-回显链路依赖路线列表",
+    "TC-route-WEB-003": "同上，删除确认需先能列出路线",
+    "TC-featured-WEB-003": "后端 /api/admin/featured-cycle-items/page 返回 500",
+    "TC-featured-WEB-004": "同上，周期推荐新增弹窗依赖列表能力",
+    "TC-featured-WEB-005": "同上，文章带出标题依赖周期推荐新增表单",
+    "TC-featured-WEB-006": "同上，新增周期推荐依赖服务端列表/持久化正常",
+    "TC-featured-WEB-007": "同上，上下线/删除依赖周期推荐列表接口"
+  }
+}

@@ -1,0 +1,2 @@
+- [x] `/love-space/featured-items` DataTable 展示 banner、关联城市、推荐说明、状态、操作
+- [x] 切换状态后该行状态即时更新且出现成功提示

@@ -35,9 +35,9 @@ runner 只允许对下列地址发请求/导航（回归轮必校验；不在名
 |---|---|---|
 | admin 后端 IT（api-test-runner） | `http://localhost:8080` | love-space-admin，本机直连，路径 `/api/admin/*`，JWT 认证 |
 | admin 后端 IT（test profile） | `http://localhost:21423` | `application-test.yml` 实例，e2e 专用库 |
-| admin 后端 IT（备用，Tailscale） | `http://100.100.117.79:8080` | 远程浏览器侧核对网络请求用（test profile 为 `:21423`） |
+| admin 后端 IT（备用，Tailscale） | `http://100.93.172.18:8080` | 远程浏览器侧核对网络请求用（test profile 为 `:21423`） |
 | app 后端 IT（api-test-runner） | `http://localhost:8081` | love-space-app，路径 `/api/app/*`，请求头 API-key 认证（`APP_SECURITY_API_KEYS`） |
-| 前端 WEB（web-test-runner） | `http://100.100.117.79:5173/love-space/` | 远程 Playwright 浏览器不可达 localhost，必须用本机 Tailscale IP；Vite 需 `--host` 启动 |
+| 前端 WEB（web-test-runner） | `http://100.93.172.18:5173/love-space/` | 远程 Playwright 浏览器不可达 localhost，必须用本机 Tailscale IP；Vite 需 `--host` 启动 |
 
 ⚠️ 干扰项（绝不要测）：本机其他端口挂着的别的项目实例；执行前先确认目标前端实例的
 `VITE_ADMIN_API_BASE` 指向上表 admin 后端地址（探测方法见 run-web-test skill）。
