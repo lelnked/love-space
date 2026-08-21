@@ -71,8 +71,8 @@ public class FeaturedCycleItemQueryService {
         Set<UUID> onlineAmbassadorIds = ambassadorRepository.findAll().stream()
                 .filter(Ambassador::isOnline)
                 .map(Ambassador::getId).collect(Collectors.toSet());
+        // 路线可见性只看大使是否上线——城市未上架不影响，运营可在地图上线前先投放该城市的路线
         Set<UUID> visibleRouteIds = routeRepository.findAll().stream()
-                .filter(route -> onlineCityIds.contains(route.getCityId()))
                 .filter(route -> onlineAmbassadorIds.contains(route.getAmbassadorId()))
                 .map(Route::getId).collect(Collectors.toSet());
         Set<UUID> visibleArticleIds = articleRepository.findAll().stream()

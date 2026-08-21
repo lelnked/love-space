@@ -8,7 +8,7 @@ import ImageUploader from "../../components/form/ImageUploader";
 import ImageUploaderList, { ImageListItem } from "../../components/form/ImageUploaderList";
 import { createRoute, getRoute, RouteUpsertRequest, updateRoute } from "../../api/routes";
 import { AmbassadorItem, pageAmbassadors } from "../../api/ambassadors";
-import { CityItem, getCity, listOnlineCities } from "../../api/cities";
+import { CityItem, getCity, listCities } from "../../api/cities";
 import { useToast } from "../../context/ToastContext";
 
 interface FieldError {
@@ -56,7 +56,8 @@ export default function RouteForm() {
       .then((d) => setAmbassadors(d.content))
       .catch(() => undefined);
     if (!id) {
-      void listOnlineCities().then(setCities).catch(() => undefined);
+      // 列全部城市（含下架）——城市地图未上线时也要能配该城市的路线
+      void listCities().then(setCities).catch(() => undefined);
       return;
     }
     setLoading(true);

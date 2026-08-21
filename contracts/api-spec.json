@@ -38,6 +38,10 @@
       "put": {
         "summary": "更新城市/地图（DTO 新增 editorNote）",
         "x-requirement": "city/地图编辑说"
+      },
+      "delete": {
+        "summary": "删除城市/地图（该城市下仍有路线时返回 400 中文业务错误，拒绝删除）",
+        "x-requirement": "city/城市下存在路线时禁止删除"
       }
     },
     "/api/app/cities": {
@@ -291,7 +295,7 @@
     },
     "/api/app/routes": {
       "get": {
-        "summary": "App 按城市查路线列表（城市上架且大使上线才可见，sortOrder 升序）",
+        "summary": "App 按城市查路线列表（仅大使上线即可见，城市上架与否不影响，sortOrder 升序）",
         "parameters": [
           {
             "name": "cityId",
@@ -308,7 +312,7 @@
     },
     "/api/app/routes/{id}": {
       "get": {
-        "summary": "App 路线详情含地点与大使信息（城市下架或大使下线 → 404）",
+        "summary": "App 路线详情含地点、大使信息与所属城市名 cityName（城市记录已删除时为 null；大使下线 → 404，城市下架不影响）",
         "x-requirement": "route/App 端路线查询"
       }
     },

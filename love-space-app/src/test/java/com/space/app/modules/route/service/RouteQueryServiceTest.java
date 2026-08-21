@@ -26,7 +26,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 /**
- * {@link RouteQueryService} 集成测试：城市下架/大使下线级联可见性、排序、地点明细。
+ * {@link RouteQueryService} 集成测试：大使下线级联可见性（城市上架状态不参与）、排序、地点明细、cityName。
  */
 class RouteQueryServiceTest extends AbstractPostgresIntegrationTest {
 
@@ -122,14 +122,38 @@ class RouteQueryServiceTest extends AbstractPostgresIntegrationTest {
         assertThat(detail.ambassador().tags()).containsExactly("向导");
     }
 
-    // @scenario: city/地图下架对路线与活动级联生效#下架城市后 app 端路线与活动不可见
+    // @scenario: route/App 端路线查询#未上架城市的路线仍可见
+    // @scenario: city/地图下架对活动级联生效#下架城市后 app 端路线仍可见
     @Test
-    void offlineCityRoutesInvisible() {
+    void offlineCityRoutesStillVisible() {
         UUID cityId = city(false);
         UUID routeId = route(cityId, ambassador(true), 0, List.of());
 
-        assertThat(routeQueryService.listByCity(cityId)).isEmpty();
-        assertThatThrownBy(() -> routeQueryService.detail(routeId))
-                .isInstanceOf(ResourceNotFoundException.class);
+        assertThat(routeQueryService.listByCity(cityId))
+                .extracting(r -> r.id())
+                .containsExactly(routeId);
+        assertThat(routeQueryService.detail(routeId).id()).isEqualTo(routeId);
+    }
+
+    // @scenario: route/App 端路线查询#未上架城市的路线仍可见
+    @Test
+    void detailReturnsCityName() {
+        UUID cityId = city(false);
+        String expected = cityRepository.findById(cityId).orElseThrow().getChineseName();
+        UUID routeId = route(cityId, ambassador(true), 0, List.of());
+
+        assertThat(routeQueryService.detail(routeId).cityName()).isEqualTo(expected);
+    }
+
+    // @scenario: route/App 端路线查询#未上架城市的路线仍可见
+    @Test
+    void detailReturnsNullCityNameWhenCityMissing() {
+        // loves_route 无外键，可直接构造 cityId 悬空的存量路线（新数据由 admin 侧禁止删除城市来杜绝）
+        UUID routeId = route(UUID.randomUUID(), ambassador(true), 0, List.of());
+
+        RouteDetailResponse detail = routeQueryService.detail(routeId);
+
+        assertThat(detail.cityName()).isNull();
+        assertThat(detail.id()).isEqualTo(routeId);
     }
 }

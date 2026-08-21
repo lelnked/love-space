@@ -5,6 +5,7 @@ import com.space.app.common.util.ImageResponses;
 import com.space.app.infrastructure.storage.ImageUrlSigner;
 import com.space.app.modules.ambassador.entity.Ambassador;
 import com.space.app.modules.ambassador.repository.AmbassadorRepository;
+import com.space.app.modules.city.entity.City;
 import com.space.app.modules.city.repository.CityRepository;
 import com.space.app.modules.route.dto.AmbassadorView;
 import com.space.app.modules.route.dto.RouteDetailResponse;
@@ -24,8 +25,9 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
- * 路线查询服务（App 端只读）：仅上架城市且关联大使在线的路线可见，按 sortOrder 升序。
- * 城市下架与大使下线的级联都靠查询过滤，不落库。
+ * 路线查询服务（App 端只读）：路线可见性仅取决于关联大使是否在线，与所属城市是否上架无关，
+ * 按 sortOrder 升序。大使下线的级联靠查询过滤，不落库。
+ * <p>城市仅用于取展示用的 cityName，不参与可见性判定。
  */
 @Service
 @Transactional(readOnly = true)
@@ -46,11 +48,8 @@ public class RouteQueryService {
         this.imageUrlSigner = imageUrlSigner;
     }
 
-    /** 按城市查询路线列表；城市不存在/未上架返回空列表；大使下线的路线被过滤。 */
+    /** 按城市查询路线列表；城市是否上架不影响结果；大使下线的路线被过滤。 */
     public List<RouteItemResponse> listByCity(UUID cityId) {
-        if (cityRepository.findByIdAndOnlineTrue(cityId).isEmpty()) {
-            return List.of();
-        }
         List<Route> routes = routeRepository.findAllByCityIdOrderBySortOrderAsc(cityId);
         Map<UUID, Ambassador> onlineAmbassadors = routes.isEmpty() ? Map.of()
                 : ambassadorRepository.findAllById(
@@ -74,13 +73,10 @@ public class RouteQueryService {
                 .toList();
     }
 
-    /** 路线详情；路线不存在、所属城市下架或关联大使下线均抛 404。 */
+    /** 路线详情；路线不存在或关联大使下线抛 404，所属城市是否上架不影响可见性。 */
     public RouteDetailResponse detail(UUID id) {
         Route route = routeRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("route not found: " + id));
-        if (cityRepository.findByIdAndOnlineTrue(route.getCityId()).isEmpty()) {
-            throw new ResourceNotFoundException("route not found: " + id);
-        }
         Ambassador ambassador = ambassadorRepository.findById(route.getAmbassadorId())
                 .filter(Ambassador::isOnline)
                 .orElseThrow(() -> new ResourceNotFoundException("route not found: " + id));
@@ -91,6 +87,7 @@ public class RouteQueryService {
         return new RouteDetailResponse(
                 route.getId(),
                 route.getCityId(),
+                cityRepository.findById(route.getCityId()).map(City::getChineseName).orElse(null),
                 route.getSortOrder(),
                 route.getTitle(),
                 route.getAmbassadorNote(),

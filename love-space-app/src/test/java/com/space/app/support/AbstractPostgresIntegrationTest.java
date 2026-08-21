@@ -14,10 +14,13 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @Testcontainers
 public abstract class AbstractPostgresIntegrationTest {
 
+    // 库名与 admin 侧（love_space）刻意不同：reuse 容器按配置哈希匹配，同名会让两端共用一个容器，
+    // 而本类的 ddl-auto=create-drop 收尾时会 drop 掉所有实体表、却留下 admin 的 databasechangelog，
+    // 导致随后跑 admin 测试时 validate 报 missing table。
     @SuppressWarnings("resource")
     protected static final PostgreSQLContainer<?> POSTGRES =
             new PostgreSQLContainer<>("postgres:16-alpine")
-                    .withDatabaseName("love_space")
+                    .withDatabaseName("love_space_app")
                     .withUsername("love_space")
                     .withPassword("love_space")
                     .withReuse(true);

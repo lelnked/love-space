@@ -40,6 +40,6 @@
 ## 6. 交付验证
 
 - [x] 6.1 `./mvnw test` 在 admin 与 app 两端分别跑绿（UT）
-- [ ] 6.2 `/run-api-test --change featured-cycle-feed`（admin 与 app 的 IT 不并行跑）
-- [ ] 6.3 `/run-web-test --change featured-cycle-feed`
+- [x] 6.2 `/run-api-test --change featured-cycle-feed`（admin 与 app 的 IT 不并行跑）— 2026-08-20 实跑 19/19 ✅，存证 `test-evidence/featured-cycle-feed/`
+- [x] 6.3 `/run-web-test --change featured-cycle-feed` — ⚠️ **环境不可用，待补**：远程 Playwright MCP `100.103.199.95:9233` 连接被拒，7 条 WEB 用例（WEB-001~007）未执行；被测前端与 admin 后端已验证可达。用户 2026-08-20 决定接受 WEB 未验证先归档，Playwright 恢复后跑 `/regression-test --module featured` 补齐
 - [x] 6.4 `node scripts/generate-traceability-matrix.js --change featured-cycle-feed`，核对 `.quality-gate.yml` 逐项

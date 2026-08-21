@@ -101,7 +101,7 @@ class ActivityQueryServiceTest extends AbstractPostgresIntegrationTest {
                 .contains("https://signed.example.com/bound/rich.png");
     }
 
-    // @scenario: city/地图下架对路线与活动级联生效#下架城市后 app 端路线与活动不可见
+    // @scenario: city/地图下架对活动级联生效#下架城市后 app 端活动不可见
     @Test
     void offlineCityActivitiesInvisible() {
         UUID cityId = city(false);

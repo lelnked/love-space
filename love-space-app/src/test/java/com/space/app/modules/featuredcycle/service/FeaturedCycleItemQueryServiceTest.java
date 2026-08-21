@@ -32,7 +32,8 @@ import static org.mockito.Mockito.when;
 
 /**
  * {@link FeaturedCycleItemQueryService} 集成测试：四周期分组恒在、
- * 关联实体可见性级联（活动下线/城市下架/文章下线/大使下线/实体删除）、组内排序。
+ * 关联实体可见性级联（活动下线/活动所属城市下架/文章下线/大使下线/实体删除）、组内排序。
+ * 注意：ROUTE 类条目不受城市下架影响，只看大使是否上线。
  */
 class FeaturedCycleItemQueryServiceTest extends AbstractPostgresIntegrationTest {
 
@@ -182,14 +183,24 @@ class FeaturedCycleItemQueryServiceTest extends AbstractPostgresIntegrationTest 
 
     // @scenario: featured/App 端周期推荐查询#大使下线连带隐藏路线类条目
     @Test
-    void routeItemHiddenWhenAmbassadorOfflineOrCityOffline() {
+    void routeItemHiddenWhenAmbassadorOffline() {
         City onlineCity = city(true);
         item(Period.OVULATION, FeaturedCycleItemType.ROUTE,
                 route(onlineCity.getId(), ambassador(false).getId()).getId(), true, 0);
-        item(Period.OVULATION, FeaturedCycleItemType.ROUTE,
-                route(city(false).getId(), ambassador(true).getId()).getId(), true, 0);
         UUID visible = item(Period.OVULATION, FeaturedCycleItemType.ROUTE,
                 route(onlineCity.getId(), ambassador(true).getId()).getId(), true, 0);
+
+        Map<Period, List<FeaturedCycleItemResponse>> feed = featuredCycleItemQueryService.feed();
+
+        assertThat(feed.get(Period.OVULATION)).extracting(FeaturedCycleItemResponse::id)
+                .containsExactly(visible);
+    }
+
+    // @scenario: featured/App 端周期推荐查询#城市未上架不影响路线类条目
+    @Test
+    void routeItemVisibleWhenCityOffline() {
+        UUID visible = item(Period.OVULATION, FeaturedCycleItemType.ROUTE,
+                route(city(false).getId(), ambassador(true).getId()).getId(), true, 0);
 
         Map<Period, List<FeaturedCycleItemResponse>> feed = featuredCycleItemQueryService.feed();
 

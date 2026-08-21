@@ -13,4 +13,7 @@ public interface RouteRepository extends JpaRepository<Route, UUID>, JpaSpecific
 
     /** 是否有路线仍关联指定大使（大使删除前校验）。 */
     boolean existsByAmbassadorId(UUID ambassadorId);
+
+    /** 是否有路线仍归属指定城市（城市删除前校验，防止 cityId 悬空）。 */
+    boolean existsByCityId(UUID cityId);
 }
