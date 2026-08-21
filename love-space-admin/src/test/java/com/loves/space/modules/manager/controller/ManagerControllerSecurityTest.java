@@ -51,12 +51,14 @@ class ManagerControllerSecurityTest extends AbstractPostgresIntegrationTest {
         return managerRepository.save(manager);
     }
 
+    // @scenario: auth/JWT 会话与授权链#无 token 访问受保护接口
     @Test
     void anonymousAccessReturns401() throws Exception {
         mockMvc.perform(get("/api/admin/managers/page"))
                 .andExpect(status().isUnauthorized());
     }
 
+    // @scenario: auth/JWT 会话与授权链#角色不足返回 403
     @Test
     void memberAccessReturns403() throws Exception {
         Manager member = createManager(Role.MEMBER);
@@ -66,6 +68,7 @@ class ManagerControllerSecurityTest extends AbstractPostgresIntegrationTest {
                 .andExpect(status().isForbidden());
     }
 
+    // @scenario: manager/运营账号分页查询#列表按创建时间倒序
     @Test
     void adminAccessReturns200() throws Exception {
         Manager admin = managerRepository.findByUsername("admin").orElseGet(() -> createManager(Role.ADMIN));

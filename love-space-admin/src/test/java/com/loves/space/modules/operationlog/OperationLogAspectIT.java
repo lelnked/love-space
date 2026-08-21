@@ -40,6 +40,7 @@ class OperationLogAspectIT extends AbstractPostgresIntegrationTest {
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
 
+    // @scenario: operation-log/运营写操作留痕#创建城市后异步留痕
     @Test
     void writesOperationLogAsynchronouslyAfterCityCreate() throws Exception {
         operationLogRepository.deleteAll();

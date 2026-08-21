@@ -85,6 +85,7 @@ class BannerControllerIT extends AbstractPostgresIntegrationTest {
                 .thenAnswer(inv -> "https://signed.example.com/" + inv.getArgument(0));
     }
 
+    // @scenario: banner/Banner 管理#创建后默认下架
     @Test
     void createReturnsImageResponseWithSignedUrl() throws Exception {
         String body = objectMapper.writeValueAsString(new BannerCreateRequest("banner-it-1", "HOME", BannerType.CITY, List.of("images/abc123.png"), cityId, 0));
@@ -98,6 +99,7 @@ class BannerControllerIT extends AbstractPostgresIntegrationTest {
                 .andExpect(jsonPath("$.imageUrls[0].url").value("https://signed.example.com/bound/abc123.png"));
     }
 
+    // @scenario: banner/Banner 管理#图片 objectKey 格式非法被拒绝
     @Test
     void createReturns400ForInvalidObjectKeyPattern() throws Exception {
         String body = objectMapper.writeValueAsString(new BannerCreateRequest(

@@ -16,6 +16,7 @@ class RichTextImagesTest {
                         + "<div><img class=\"x\" src=\"https://cdn/bound/b.jpg?sig=1\" alt=\"图\"></div>");
     }
 
+    // @scenario: file/objectKey 两段式生命周期与绑定校验#已绑定图片重复提交不再复制
     @Test
     void noImageHtmlAndNullPassThrough() {
         assertThat(RichTextImages.rewriteSrc("<p>纯文字</p>", src -> "X")).isEqualTo("<p>纯文字</p>");
@@ -23,6 +24,7 @@ class RichTextImagesTest {
         assertThat(RichTextImages.rewriteSrc("  ", src -> "X")).isEqualTo("  ");
     }
 
+    // @scenario: file/objectKey 两段式生命周期与绑定校验#未绑定图片在业务保存时被绑定
     @Test
     void normalizeToObjectKeyStripsSignedUrlButKeepsPlainKey() {
         assertThat(RichTextImages.normalizeToObjectKey("https://bucket.oss.example.com/bound/a.png?Expires=1&Signature=x"))

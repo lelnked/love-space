@@ -38,6 +38,7 @@ class AuthControllerWebMvcTest extends AbstractPostgresIntegrationTest {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    // @scenario: auth/运营账号登录#内置管理员登录成功
     @Test
     void adminLoginSucceeds() throws Exception {
         mockMvc.perform(post("/api/admin/auth/login")
@@ -49,6 +50,7 @@ class AuthControllerWebMvcTest extends AbstractPostgresIntegrationTest {
                 .andExpect(jsonPath("$.manager.role").value("ADMIN"));
     }
 
+    // @scenario: auth/运营账号登录#密码错误被拒绝
     @Test
     void wrongPasswordReturns401() throws Exception {
         mockMvc.perform(post("/api/admin/auth/login")
@@ -57,6 +59,7 @@ class AuthControllerWebMvcTest extends AbstractPostgresIntegrationTest {
                 .andExpect(status().isUnauthorized());
     }
 
+    // @scenario: auth/运营账号登录#停用账号无法登录
     @Test
     void disabledManagerCannotLogin() throws Exception {
         String username = "disabled_" + UUID.randomUUID().toString().substring(0, 8);

@@ -50,6 +50,7 @@ class BannerReadIT extends AbstractPostgresIntegrationTest {
                 .thenAnswer(inv -> "https://signed.example.com/" + inv.getArgument(0));
     }
 
+    // @scenario: banner/App 端 Banner 查询#按展示位查询上架 Banner
     @Test
     void listReturnsBannerImageAsImageResponseList() throws Exception {
         City city = new City();
@@ -79,6 +80,7 @@ class BannerReadIT extends AbstractPostgresIntegrationTest {
                 .andExpect(jsonPath("$[0].image[1].url").value("https://signed.example.com/bound/y.png"));
     }
 
+    // @scenario: banner/App 端 Banner 查询#按展示位查询上架 Banner
     @Test
     void listOrdersBySortOrderAscending() throws Exception {
         City city = new City();

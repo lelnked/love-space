@@ -60,6 +60,7 @@ class BannerServiceTest extends AbstractPostgresIntegrationTest {
         cityId = cityRepository.save(city).getId();
     }
 
+    // @scenario: file/objectKey 两段式生命周期与绑定校验#未绑定图片在业务保存时被绑定
     @Test
     void createBindsImagesAndPersistsBoundKeys() {
         when(objectKeyValidator.validateAndBind("images/aaa.png")).thenReturn("bound/aaa.png");
@@ -76,6 +77,7 @@ class BannerServiceTest extends AbstractPostgresIntegrationTest {
         assertThat(detail.imageUrls()).extracting("url").containsExactly("https://signed/aaa", "https://signed/bbb");
     }
 
+    // @scenario: banner/城市状态变更对 Banner 级联生效#删除城市只下架不删除 Banner
     @Test
     void deletingCityOfflinesItsBanners() {
         when(objectKeyValidator.validateAndBind("images/aaa.png")).thenReturn("bound/aaa.png");
@@ -91,6 +93,7 @@ class BannerServiceTest extends AbstractPostgresIntegrationTest {
         assertThat(bannerRepository.findById(detail.id()).orElseThrow().isOnline()).isFalse();
     }
 
+    // @scenario: file/objectKey 两段式生命周期与绑定校验#业务保存失败后源图仍可重试
     @Test
     void validationFailureRollsBack() {
         when(objectKeyValidator.validateAndBind("images/legal.png")).thenReturn("bound/legal.png");

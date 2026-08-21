@@ -67,6 +67,7 @@ class OperationLogControllerWebMvcTest extends AbstractPostgresIntegrationTest {
         );
     }
 
+    // @scenario: operation-log/操作日志查询#按操作人与模块组合过滤
     @Test
     void filtersByUsernameAndModule() throws Exception {
         OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
@@ -84,6 +85,7 @@ class OperationLogControllerWebMvcTest extends AbstractPostgresIntegrationTest {
                 .andExpect(jsonPath("$.content[0].module").value("city"));
     }
 
+    // @scenario: operation-log/操作日志查询#时间区间含边界
     @Test
     void filtersByCreatedAtRange() throws Exception {
         OffsetDateTime base = OffsetDateTime.now(ZoneOffset.UTC).withNano(0);

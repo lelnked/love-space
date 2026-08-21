@@ -53,6 +53,7 @@ class FileControllerIT extends AbstractPostgresIntegrationTest {
                 .thenReturn(new StsCredential("STS-AK", "STS-SK", "STS-TOKEN", "2026-05-23T08:00:00Z"));
     }
 
+    // @scenario: file/图片上传凭证签发#签发合法图片类型的上传凭证
     @Test
     void issueCredentialReturns200ForValidContentType() throws Exception {
         String body = objectMapper.writeValueAsString(new UploadCredentialRequest("image/png"));
@@ -70,6 +71,7 @@ class FileControllerIT extends AbstractPostgresIntegrationTest {
                 .andExpect(jsonPath("$.objectKey").value(org.hamcrest.Matchers.matchesRegex("^images/[0-9a-f-]+\\.png$")));
     }
 
+    // @scenario: file/图片上传凭证签发#非图片类型被拒绝
     @Test
     void issueCredentialReturns400ForInvalidContentType() throws Exception {
         String body = objectMapper.writeValueAsString(new UploadCredentialRequest("application/pdf"));
@@ -81,6 +83,7 @@ class FileControllerIT extends AbstractPostgresIntegrationTest {
                 .andExpect(status().isBadRequest());
     }
 
+    // @scenario: file/图片上传凭证签发#未登录无法获取凭证
     @Test
     void issueCredentialReturns401WithoutToken() throws Exception {
         String body = objectMapper.writeValueAsString(new UploadCredentialRequest("image/png"));

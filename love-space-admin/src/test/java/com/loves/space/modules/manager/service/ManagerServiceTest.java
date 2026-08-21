@@ -41,6 +41,7 @@ class ManagerServiceTest extends AbstractPostgresIntegrationTest {
         return "u_" + UUID.randomUUID().toString().substring(0, 8);
     }
 
+    // @scenario: manager/运营账号管理#创建账号强制为 MEMBER 角色
     @Test
     void createForcesMemberRole() {
         ManagerCreateRequest request = new ManagerCreateRequest(randomUsername(), "InitPass123", "测试管理员");
@@ -50,6 +51,7 @@ class ManagerServiceTest extends AbstractPostgresIntegrationTest {
         assertThat(created.role()).isEqualTo("MEMBER");
     }
 
+    // @scenario: manager/运营账号管理#用户名重复被拒绝
     @Test
     void duplicateUsernameThrowsValidationException() {
         String username = randomUsername();
@@ -59,6 +61,7 @@ class ManagerServiceTest extends AbstractPostgresIntegrationTest {
                 .hasMessageContaining("用户名已存在");
     }
 
+    // @scenario: manager/账号启停与内置管理员保护#启停可往复切换
     @Test
     void setEnableTogglesFlag() {
         ManagerDetailResponse created = managerService.create(
@@ -69,6 +72,7 @@ class ManagerServiceTest extends AbstractPostgresIntegrationTest {
         assertThat(managerRepository.findById(created.id()).orElseThrow().isEnable()).isTrue();
     }
 
+    // @scenario: manager/账号启停与内置管理员保护#内置 admin 不可停用
     @Test
     void setEnableRejectsDisablingBuiltinAdmin() {
         UUID adminId = managerRepository.findByUsername("admin").orElseThrow().getId();
@@ -78,6 +82,7 @@ class ManagerServiceTest extends AbstractPostgresIntegrationTest {
         assertThat(managerRepository.findById(adminId).orElseThrow().isEnable()).isTrue();
     }
 
+    // @scenario: manager/运营账号管理#重置密码后旧密码失效
     @Test
     void resetPasswordReplacesHash() {
         String oldPassword = "InitPass123";

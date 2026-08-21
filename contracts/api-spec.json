@@ -735,6 +735,271 @@
         "summary": "App 周期推荐（四周期分组恒在，条目上线∧关联实体可见，组内 sortOrder 升序）",
         "x-requirement": "featured/App 端周期推荐查询"
       }
+    },
+    "/api/admin/auth/login": {
+      "post": {
+        "summary": "运营账号登录（免认证）；失败统一 401「用户名或密码错误，或账号已停用」",
+        "x-requirement": "auth/运营账号登录"
+      }
+    },
+    "/api/admin/auth/logout": {
+      "post": {
+        "summary": "登出，返回 204；无状态 JWT 不吊销，仅记审计日志",
+        "x-requirement": "auth/当前登录人查询与登出"
+      }
+    },
+    "/api/admin/auth/me": {
+      "get": {
+        "summary": "当前登录人信息（id/username/nickname/role）",
+        "x-requirement": "auth/当前登录人查询与登出"
+      }
+    },
+    "/api/admin/managers/page": {
+      "get": {
+        "summary": "运营账号分页列表（ADMIN）；username 模糊、role/enable 精确、创建时间闭区间；createdAt 倒序",
+        "parameters": [
+          {
+            "name": "username",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "role",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "enable",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "createdAtFrom",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "createdAtTo",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "x-requirement": "manager/运营账号分页查询"
+      }
+    },
+    "/api/admin/managers": {
+      "post": {
+        "summary": "创建运营账号（ADMIN），返回 201；强制 role=MEMBER、enable=true",
+        "x-requirement": "manager/运营账号管理"
+      }
+    },
+    "/api/admin/managers/{id}": {
+      "get": {
+        "summary": "运营账号详情（ADMIN）；不存在返回 400",
+        "x-requirement": "manager/运营账号分页查询"
+      }
+    },
+    "/api/admin/managers/{id}/enable": {
+      "put": {
+        "summary": "启用账号（ADMIN），返回 204",
+        "x-requirement": "manager/账号启停与内置管理员保护"
+      }
+    },
+    "/api/admin/managers/{id}/disable": {
+      "put": {
+        "summary": "停用账号（ADMIN），返回 204；内置 admin 不可停用",
+        "x-requirement": "manager/账号启停与内置管理员保护"
+      }
+    },
+    "/api/admin/managers/{id}/password": {
+      "put": {
+        "summary": "重置账号密码（ADMIN），返回 204；不校验旧密码",
+        "x-requirement": "manager/运营账号管理"
+      }
+    },
+    "/api/admin/banners/page": {
+      "get": {
+        "summary": "Banner 分页列表；name/positionCode 模糊、type/online 精确；createdAt 倒序",
+        "parameters": [
+          {
+            "name": "keyword",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "positionCode",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "online",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "x-requirement": "banner/Banner 管理"
+      }
+    },
+    "/api/admin/banners": {
+      "post": {
+        "summary": "创建 Banner，返回 200；强制 online=false；imageUrls 经 objectKey 绑定",
+        "x-requirement": "banner/Banner 管理"
+      }
+    },
+    "/api/admin/banners/{id}": {
+      "get": {
+        "summary": "Banner 详情；不存在返回 400",
+        "x-requirement": "banner/Banner 管理"
+      },
+      "put": {
+        "summary": "更新 Banner（全字段覆盖）；请求体带 online 返回 400，上下架须走专用接口",
+        "x-requirement": "banner/Banner 管理"
+      },
+      "delete": {
+        "summary": "物理删除 Banner，返回 200 空 body",
+        "x-requirement": "banner/Banner 管理"
+      }
+    },
+    "/api/admin/banners/{id}/online": {
+      "post": {
+        "summary": "Banner 上下架；上架要求关联城市存在且已上架，否则 400",
+        "x-requirement": "banner/Banner 上架前置校验"
+      }
+    },
+    "/api/app/banners": {
+      "get": {
+        "summary": "App 按展示位查上架 Banner（数组，sortOrder 升序）；关联城市不可见时整条剔除",
+        "parameters": [
+          {
+            "name": "positionCode",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "linkedEntityId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "x-requirement": "banner/App 端 Banner 查询"
+      }
+    },
+    "/api/admin/logs/page": {
+      "get": {
+        "summary": "操作日志分页查询（不限 ADMIN）；username 模糊、module 精确、时间闭区间；createdAt 倒序；响应不含 payload",
+        "parameters": [
+          {
+            "name": "username",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "module",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "createdAtFrom",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "createdAtTo",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "x-requirement": "operation-log/操作日志查询"
+      }
+    },
+    "/api/admin/files/upload-credentials": {
+      "post": {
+        "summary": "签发 OSS 直传上传凭证；仅接受 image/png|jpeg|webp，否则 400；权限收敛到单一 objectKey",
+        "x-requirement": "file/图片上传凭证签发"
+      }
     }
   },
   "components": {

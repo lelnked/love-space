@@ -37,18 +37,21 @@ class AliyunOssImageUrlSignerTest {
         signer = new AliyunOssImageUrlSigner(oss, properties);
     }
 
+    // @scenario: file/图片签名访问地址#空图片字段不生成地址
     @Test
     void nullReturnsNull() {
         assertThat(signer.sign(null)).isNull();
         verifyNoInteractions(oss);
     }
 
+    // @scenario: file/图片签名访问地址#空图片字段不生成地址
     @Test
     void blankReturnsNull() {
         assertThat(signer.sign("   ")).isNull();
         verifyNoInteractions(oss);
     }
 
+    // @scenario: file/图片签名访问地址#业务详情返回签名地址
     @Test
     void legalKeyReturnsSignedUrl() throws Exception {
         URL stub = new URL("https://oss-test.example.com/bound/abc.png?Expires=1");

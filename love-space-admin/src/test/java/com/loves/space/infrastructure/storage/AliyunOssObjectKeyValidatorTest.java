@@ -37,6 +37,7 @@ class AliyunOssObjectKeyValidatorTest {
         validator = new AliyunOssObjectKeyValidator(oss, properties);
     }
 
+    // @scenario: file/objectKey 两段式生命周期与绑定校验#非法 objectKey 格式被拒绝
     @Test
     void nullOrBlankRejected() {
         assertThatThrownBy(() -> validator.validateAndBind(null))
@@ -45,6 +46,7 @@ class AliyunOssObjectKeyValidatorTest {
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
+    // @scenario: file/objectKey 两段式生命周期与绑定校验#非法 objectKey 格式被拒绝
     @Test
     void illegalPatternRejected() {
         assertThatThrownBy(() -> validator.validateAndBind("other/abc.png"))
@@ -55,6 +57,7 @@ class AliyunOssObjectKeyValidatorTest {
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
+    // @scenario: file/图片链路的自动化覆盖边界#测试档位下绑定校验不访问存储
     @Test
     void nonExistentObjectRejected() {
         when(oss.getObjectMetadata(eq(BUCKET), anyString()))
@@ -64,6 +67,7 @@ class AliyunOssObjectKeyValidatorTest {
                 .hasMessageContaining("图片对象不可用");
     }
 
+    // @scenario: file/objectKey 两段式生命周期与绑定校验#非法 objectKey 格式被拒绝
     @Test
     void wrongMimeRejected() {
         ObjectMetadata meta = new ObjectMetadata();
@@ -74,6 +78,7 @@ class AliyunOssObjectKeyValidatorTest {
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
+    // @scenario: file/objectKey 两段式生命周期与绑定校验#非法 objectKey 格式被拒绝
     @Test
     void oversizeRejected() {
         ObjectMetadata meta = new ObjectMetadata();
@@ -84,6 +89,7 @@ class AliyunOssObjectKeyValidatorTest {
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
+    // @scenario: file/objectKey 两段式生命周期与绑定校验#未绑定图片在业务保存时被绑定
     @Test
     void legalImagesKeyCopiedToBound() {
         ObjectMetadata meta = new ObjectMetadata();
@@ -99,6 +105,7 @@ class AliyunOssObjectKeyValidatorTest {
         verify(oss, never()).deleteObject(BUCKET, "images/abc.png");
     }
 
+    // @scenario: file/objectKey 两段式生命周期与绑定校验#已绑定图片重复提交不再复制
     @Test
     void existingBoundKeyReturnedAsIs() {
         ObjectMetadata meta = new ObjectMetadata();
@@ -112,6 +119,7 @@ class AliyunOssObjectKeyValidatorTest {
         verify(oss, never()).copyObject(any(), any(), any(), any());
     }
 
+    // @scenario: file/objectKey 两段式生命周期与绑定校验#业务保存失败后源图仍可重试
     @Test
     void originalImagesObjectRetainedForRollbackSafety() {
         ObjectMetadata meta = new ObjectMetadata();
