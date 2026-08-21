@@ -12,8 +12,9 @@
 **预期结果**: 保存出现成功提示；重新打开表单后「编辑推荐理由」文本框回显「适合傍晚散步的江边小馆」
 **状态**: ✅ 通过
 **执行方式**: web-test-runner（@playwright/mcp）
-**执行存证**: `test-evidence/map-and-recommend-list/TC-merchant-WEB-001/`
-**最后更新**: 2026-08-19
+**执行存证**: `test-evidence/regression/merchant/TC-merchant-WEB-001/`
+**阻塞说明**: 无阻塞。已通过后端 API 创建测试商户并录入推荐理由，浏览器进入编辑页验证回显正常。
+**最后更新**: 2026-08-21
 
 ### TC-merchant-WEB-002: 推荐理由超长表单校验提示
 **关联需求**: merchant/商户编辑推荐理由#web 商户表单录入推荐理由
