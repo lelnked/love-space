@@ -28,5 +28,5 @@
 **状态**: ⚠️ 环境阻塞
 **执行方式**: web-test-runner（@playwright/mcp）
 **执行存证**: `test-evidence/ambassador-route-activity/TC-activity-WEB-002/`
-**阻塞说明**: 本地 OSS 仅配占位符，后端要求图片 objectKey 格式为 `images/<id>.<ext>`；前端保存前校验“至少 1 张图片”失败，富文本保存/回显链路无法完成。
-**最后更新**: 2026-08-19
+**阻塞说明**: 本地 OSS 仅配占位符，后端要求图片 objectKey 格式为 `images/<id>.<ext>`；前端保存前校验“至少 1 张图片”失败，富文本保存/回显链路无法完成。Playwright MCP 在当前会话中多次出现 unreachable/duplicate outputs，无法可靠完成图片上传与富文本编辑验证。
+**最后更新**: 2026-08-21
