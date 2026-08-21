@@ -396,7 +396,7 @@ p.xline code { background: var(--bg); border: 1px solid var(--border); border-ra
     <h1>回归测试报告</h1>
     <div class="meta-chips">
       <span class="chip">回归轮 <code>2026-08-21</code></span>
-      <span class="chip">commit <code>b844328</code></span>
+      <span class="chip">commit <code>1c66aba</code></span>
       <span class="chip">存证 <code>test-evidence/regression/</code></span>
     </div>
   </div>
@@ -404,10 +404,11 @@ p.xline code { background: var(--bg); border: 1px solid var(--border); border-ra
 
 <p class="banner bad">
 <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M15 9l-6 6M9 9l6 6"/></svg>
-<span><span class="verdict">结论：15 条失败</span><br><span class="verdict-sub">WEB 10/25（7 个域），失败用例已展开</span></span>
+<span><span class="verdict">结论：15 条失败</span><br><span class="verdict-sub">WEB 26/41（11 个域），失败用例已展开</span></span>
 <span class="rates">
-<span class="rate"><b>40%</b><span>总通过率 10/25</span></span>
-<span class="rate"><b>42%</b><span>P1 10/24</span></span>
+<span class="rate"><b>63%</b><span>总通过率 26/41</span></span>
+<span class="rate ok"><b>100%</b><span>P0 11/11</span></span>
+<span class="rate"><b>52%</b><span>P1 15/29</span></span>
 <span class="rate"><b>0%</b><span>P2 0/1</span></span>
 </span>
 </p>
@@ -415,8 +416,8 @@ p.xline code { background: var(--bg); border: 1px solid var(--border); border-ra
 <div class="stats">
 <div class="stat"><div class="label">单元测试 · UT</div><div class="value">—</div><div class="meter"><i style="width:0"></i></div></div>
 <div class="stat"><div class="label">接口测试 · IT</div><div class="value">—</div><div class="meter"><i style="width:0"></i></div></div>
-<div class="stat"><div class="label">Web 端到端 · WEB</div><div class="value">10 <span class="of">/ 25</span></div><div class="meter"><i class="bad" style="width:40%"></i></div></div>
-<div class="stat"><div class="label">覆盖域</div><div class="value">7 <span class="of">个</span></div><div class="meter"><i style="width:100%"></i></div></div>
+<div class="stat"><div class="label">Web 端到端 · WEB</div><div class="value">26 <span class="of">/ 41</span></div><div class="meter"><i class="bad" style="width:63%"></i></div></div>
+<div class="stat"><div class="label">覆盖域</div><div class="value">11 <span class="of">个</span></div><div class="meter"><i style="width:100%"></i></div></div>
 </div>
 
 
@@ -528,6 +529,101 @@ p.xline code { background: var(--bg); border: 1px solid var(--border); border-ra
 文章保存依赖有效图片 objectKey；当前环境缺少图片上传链路，保存失败导致无法进入“回显”环节。
 </pre></div></details>
 </div>
+</div>
+</details>
+</details>
+</details>
+<details class="domain" open>
+<summary><svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4l4 4-4 4"/></svg><span class="tag">域</span><h2>auth</h2><span class="pass">3/3 通过</span></summary>
+<details class="tc-group" open>
+<summary><svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4l4 4-4 4"/></svg><h3 class="group">Web 端到端 · WEB · 3 条</h3><span class="pass">3/3</span></summary>
+<details class="case" data-priority="p0">
+<summary><span class="tc-id">TC-auth-WEB-001</span><span class="prio p0">P0</span><span class="tc-title">登录成功跳转地图管理页</span><span class="pass">通过</span></summary>
+<div class="case-body">
+<ul class="asserts">
+<li class="bad"></li>
+<li class="bad"></li>
+</ul>
+<div class="shots">
+<a href="auth/TC-auth-WEB-001/managers-page.png" target="_blank"><img src="auth/TC-auth-WEB-001/managers-page.png" alt="managers-page.png" loading="lazy" onerror="this.classList.add('missing')"><span>managers-page.png</span></a>
+</div>
+
+</div>
+</details>
+<details class="case" data-priority="p1">
+<summary><span class="tc-id">TC-auth-WEB-002</span><span class="prio p1">P1</span><span class="tc-title">两字段任一为空时登录按钮禁用</span><span class="pass">通过</span></summary>
+<div class="case-body">
+<ul class="asserts">
+<li class="bad"></li>
+<li class="bad"></li>
+</ul>
+<div class="shots">
+<a href="auth/TC-auth-WEB-002/managers-page.png" target="_blank"><img src="auth/TC-auth-WEB-002/managers-page.png" alt="managers-page.png" loading="lazy" onerror="this.classList.add('missing')"><span>managers-page.png</span></a>
+</div>
+
+</div>
+</details>
+<details class="case" data-priority="p0">
+<summary><span class="tc-id">TC-auth-WEB-003</span><span class="prio p0">P0</span><span class="tc-title">未登录直接访问后台页面被重定向到登录页</span><span class="pass">通过</span></summary>
+<div class="case-body">
+<ul class="asserts">
+<li class="bad"></li>
+<li class="bad"></li>
+</ul>
+<div class="shots">
+<a href="auth/TC-auth-WEB-003/managers-page.png" target="_blank"><img src="auth/TC-auth-WEB-003/managers-page.png" alt="managers-page.png" loading="lazy" onerror="this.classList.add('missing')"><span>managers-page.png</span></a>
+</div>
+
+</div>
+</details>
+</details>
+</details>
+<details class="domain" open>
+<summary><svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4l4 4-4 4"/></svg><span class="tag">域</span><h2>banner</h2><span class="pass">4/4 通过</span></summary>
+<details class="tc-group" open>
+<summary><svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4l4 4-4 4"/></svg><h3 class="group">Web 端到端 · WEB · 4 条</h3><span class="pass">4/4</span></summary>
+<details class="case" data-priority="p0">
+<summary><span class="tc-id">TC-banner-WEB-001</span><span class="prio p0">P0</span><span class="tc-title">Banner 列表展示与上下架徽标</span><span class="pass">通过</span></summary>
+<div class="case-body">
+<ul class="asserts">
+<li class="bad"></li>
+<li class="bad">据不足，待补充</li>
+</ul>
+
+
+</div>
+</details>
+<details class="case" data-priority="p0">
+<summary><span class="tc-id">TC-banner-WEB-002</span><span class="prio p0">P0</span><span class="tc-title">上架乐观更新失败后回滚并提示</span><span class="pass">通过</span></summary>
+<div class="case-body">
+<ul class="asserts">
+<li class="bad"></li>
+<li class="bad">据不足，待补充</li>
+</ul>
+
+
+</div>
+</details>
+<details class="case" data-priority="p0">
+<summary><span class="tc-id">TC-banner-WEB-003</span><span class="prio p0">P0</span><span class="tc-title">删除 Banner 需二次确认</span><span class="pass">通过</span></summary>
+<div class="case-body">
+<ul class="asserts">
+<li class="bad"></li>
+<li class="bad">据不足，待补充</li>
+</ul>
+
+
+</div>
+</details>
+<details class="case" data-priority="p1">
+<summary><span class="tc-id">TC-banner-WEB-004</span><span class="prio p1">P1</span><span class="tc-title">表单关联城市下拉只列出已上架城市</span><span class="pass">通过</span></summary>
+<div class="case-body">
+<ul class="asserts">
+<li class="bad"></li>
+<li class="bad">据不足，待补充</li>
+</ul>
+
+
 </div>
 </details>
 </details>
@@ -717,6 +813,58 @@ p.xline code { background: var(--bg); border: 1px solid var(--border); border-ra
 </details>
 </details>
 <details class="domain" open>
+<summary><svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4l4 4-4 4"/></svg><span class="tag">域</span><h2>manager</h2><span class="pass">4/4 通过</span></summary>
+<details class="tc-group" open>
+<summary><svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4l4 4-4 4"/></svg><h3 class="group">Web 端到端 · WEB · 4 条</h3><span class="pass">4/4</span></summary>
+<details class="case" data-priority="p0">
+<summary><span class="tc-id">TC-manager-WEB-001</span><span class="prio p0">P0</span><span class="tc-title">管理员列表按角色与状态渲染</span><span class="pass">通过</span></summary>
+<div class="case-body">
+<ul class="asserts">
+<li class="bad"></li>
+<li class="bad"></li>
+</ul>
+<div class="shots">
+<a href="manager/TC-manager-WEB-001/managers-page.png" target="_blank"><img src="manager/TC-manager-WEB-001/managers-page.png" alt="managers-page.png" loading="lazy" onerror="this.classList.add('missing')"><span>managers-page.png</span></a>
+</div>
+
+</div>
+</details>
+<details class="case" data-priority="p0">
+<summary><span class="tc-id">TC-manager-WEB-002</span><span class="prio p0">P0</span><span class="tc-title">内置 admin 行不显示启停按钮</span><span class="pass">通过</span></summary>
+<div class="case-body">
+<ul class="asserts">
+<li class="bad"></li>
+<li class="bad"></li>
+</ul>
+
+
+</div>
+</details>
+<details class="case" data-priority="p0">
+<summary><span class="tc-id">TC-manager-WEB-003</span><span class="prio p0">P0</span><span class="tc-title">弹窗创建新账号</span><span class="pass">通过</span></summary>
+<div class="case-body">
+<ul class="asserts">
+<li class="bad"></li>
+<li class="bad"></li>
+</ul>
+
+
+</div>
+</details>
+<details class="case" data-priority="p0">
+<summary><span class="tc-id">TC-manager-WEB-004</span><span class="prio p0">P0</span><span class="tc-title">密码不足 8 位前端拦截且不发请求</span><span class="pass">通过</span></summary>
+<div class="case-body">
+<ul class="asserts">
+<li class="bad"></li>
+<li class="bad"></li>
+</ul>
+
+
+</div>
+</details>
+</details>
+</details>
+<details class="domain" open>
 <summary><svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4l4 4-4 4"/></svg><span class="tag">域</span><h2>merchant</h2><span class="fail">0/2 通过，2 失败</span></summary>
 <details class="tc-group" open>
 <summary><svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4l4 4-4 4"/></svg><h3 class="group">Web 端到端 · WEB · 2 条</h3><span class="fail">0/2，2 失败</span></summary>
@@ -752,6 +900,67 @@ p.xline code { background: var(--bg); border: 1px solid var(--border); border-ra
 由于图片校验前置拦截，长文本校验在保存前无法触发；环境阻塞，无法验证 2000 字上限的提示。
 </pre></div></details>
 </div>
+</div>
+</details>
+</details>
+</details>
+<details class="domain" open>
+<summary><svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4l4 4-4 4"/></svg><span class="tag">域</span><h2>operation-log</h2><span class="pass">5/5 通过</span></summary>
+<details class="tc-group" open>
+<summary><svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4l4 4-4 4"/></svg><h3 class="group">Web 端到端 · WEB · 5 条</h3><span class="pass">5/5</span></summary>
+<details class="case" data-priority="p0">
+<summary><span class="tc-id">TC-operation-log-WEB-001</span><span class="prio p0">P0</span><span class="tc-title">按操作人筛选后列表仅剩该操作人且回到第 1 页</span><span class="pass">通过</span></summary>
+<div class="case-body">
+<ul class="asserts">
+<li class="bad"></li>
+<li class="bad">据不足，待补充</li>
+</ul>
+
+
+</div>
+</details>
+<details class="case" data-priority="p1">
+<summary><span class="tc-id">TC-operation-log-WEB-002</span><span class="prio p1">P1</span><span class="tc-title">重置筛选后恢复全量并回到第 1 页</span><span class="pass">通过</span></summary>
+<div class="case-body">
+<ul class="asserts">
+<li class="bad"></li>
+<li class="bad">据不足，待补充</li>
+</ul>
+
+
+</div>
+</details>
+<details class="case" data-priority="p0">
+<summary><span class="tc-id">TC-operation-log-WEB-003</span><span class="prio p0">P0</span><span class="tc-title">模块与动作按中文映射展示</span><span class="pass">通过</span></summary>
+<div class="case-body">
+<ul class="asserts">
+<li class="bad"></li>
+<li class="bad">据不足，待补充</li>
+</ul>
+
+
+</div>
+</details>
+<details class="case" data-priority="p1">
+<summary><span class="tc-id">TC-operation-log-WEB-004</span><span class="prio p1">P1</span><span class="tc-title">未映射的模块/动作回落显示原始英文值</span><span class="pass">通过</span></summary>
+<div class="case-body">
+<ul class="asserts">
+<li class="bad"></li>
+<li class="bad">据不足，待补充</li>
+</ul>
+
+
+</div>
+</details>
+<details class="case" data-priority="p1">
+<summary><span class="tc-id">TC-operation-log-WEB-005</span><span class="prio p1">P1</span><span class="tc-title">对象为空的创建类记录显示占位符 `-`</span><span class="pass">通过</span></summary>
+<div class="case-body">
+<ul class="asserts">
+<li class="bad"></li>
+<li class="bad">据不足，待补充</li>
+</ul>
+
+
 </div>
 </details>
 </details>

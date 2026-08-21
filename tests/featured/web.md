@@ -40,7 +40,7 @@
 3. 点击「卵泡期」Tab
 4. 点击「排卵期」Tab
 **预期结果**: 顶部展示经期/卵泡期/排卵期/黄体期四个 Tab；列表区列含 banner 缩略图、内容类型徽标、标题、关联实体名、排序号、状态开关与操作列，行按排序号升序；切到卵泡期后仅展示该周期的 1 条；切到排卵期展示空态文案「该周期暂无推荐」而非空白或报错
-**状态**: 🔴 后端阻塞
+**状态**: ⚠️ 环境阻塞
 **执行方式**: web-test-runner（@playwright/mcp）
 **执行存证**: `test-evidence/regression/featured/TC-featured-WEB-003/`
 **阻塞说明**: 后端 `/api/admin/featured-cycle-items/page` 返回 500，周期推荐列表接口异常；Tab 切换与列表展示无法验证。
@@ -57,7 +57,7 @@
 3. 内容类型切到「路线体验」，核对字段块
 4. 内容类型切到「周期生活法」，核对字段块
 **预期结果**: 弹窗顶部固定展示内容类型选择器、banner 上传与排序号；选活动时字段块为 活动下拉 + 推荐说明 + 活动说明（标注选填）；切到路线体验后活动专属字段消失，出现 路线下拉 + 主标题 + 副标题 + 推荐说明；切到周期生活法后仅剩 文章下拉 + 主标题；每次切换下方字段块内容被清空，不残留上一类型已填内容
-**状态**: 🔴 后端阻塞
+**状态**: ⚠️ 环境阻塞
 **执行方式**: web-test-runner（@playwright/mcp）
 **执行存证**: `test-evidence/regression/featured/TC-featured-WEB-004/`
 **阻塞说明**: 后端 `/api/admin/featured-cycle-items/page` 返回 500，新增周期推荐表单依赖的服务端列表/选项异常，无法完成内容类型切换校验。
@@ -74,7 +74,7 @@
 3. 在文章下拉中选中一篇文章
 4. 在主标题输入框末尾追加文字
 **预期结果**: 选中文章后主标题输入框自动填入该文章标题；输入框仍可编辑，追加文字生效且不被下拉选择重置
-**状态**: 🔴 后端阻塞
+**状态**: ⚠️ 环境阻塞
 **执行方式**: web-test-runner（@playwright/mcp）
 **执行存证**: `test-evidence/regression/featured/TC-featured-WEB-005/`
 **阻塞说明**: 后端 `/api/admin/featured-cycle-items/page` 返回 500，文章下拉选项依赖服务端正常响应，自动带出主标题无法验证。
@@ -89,7 +89,7 @@
 1. 进入 /love-space/featured-cycle-items，停留在「经期」Tab，打开新增弹窗
 2. 内容类型选「tripperclub活动」，选一个活动，填推荐说明，上传 banner，填排序号后提交
 **预期结果**: 保存成功有提示；弹窗关闭，经期列表即时刷新出现新条目，展示所上传 banner、类型徽标「tripperclub活动」、所选活动名与填写的排序号
-**状态**: 🔴 后端阻塞
+**状态**: ⚠️ 环境阻塞
 **执行方式**: web-test-runner（@playwright/mcp）
 **执行存证**: `test-evidence/regression/featured/TC-featured-WEB-006/`
 **阻塞说明**: 后端 `/api/admin/featured-cycle-items/page` 返回 500，周期推荐新增保存后列表刷新依赖服务端正常，无法完成闭环。
@@ -106,7 +106,7 @@
 3. 刷新页面核对状态
 4. 对第二个条目点击删除，在确认弹窗中确认
 **预期结果**: 切换后该行状态即时更新并出现成功提示，刷新后状态保持；删除需经确认弹窗二次确认，确认后该条目从列表消失并出现成功提示
-**状态**: 🔴 后端阻塞
+**状态**: ⚠️ 环境阻塞
 **执行方式**: web-test-runner（@playwright/mcp）
 **执行存证**: `test-evidence/regression/featured/TC-featured-WEB-007/`
 **阻塞说明**: 后端 `/api/admin/featured-cycle-items/page` 返回 500，周期推荐列表接口异常，无法进入上下线/删除确认验证。

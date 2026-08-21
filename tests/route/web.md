@@ -10,7 +10,7 @@
 2. 核对 DataTable 列内容
 3. 切换某上线大使的状态开关为下线
 **预期结果**: DataTable 展示头像、名称、标签、状态开关与操作列；切换后该行状态即时变为下线且出现成功提示，刷新页面后状态保持
-**状态**: 🔴 后端阻塞
+**状态**: ⚠️ 环境阻塞
 **执行方式**: web-test-runner（@playwright/mcp）
 **执行存证**: `test-evidence/ambassador-route-activity/TC-route-WEB-001/`
 **阻塞说明**: 后端 `/api/admin/routes/page` 返回 500，路线列表接口异常；本次回归无法进入路线列表与删除闭环。
@@ -26,7 +26,7 @@
 2. 在地点子列表依次添加 2 个地点（各填名称、图片、介绍，顺序为 S1、S2）并保存
 3. 重新打开该路线的编辑表单
 **预期结果**: 保存成功有提示；重新打开后地点子列表按 S1→S2 添加顺序回显，各项名称/图片/介绍与录入一致
-**状态**: 🔴 后端阻塞
+**状态**: ⚠️ 环境阻塞
 **执行方式**: web-test-runner（@playwright/mcp）
 **执行存证**: `test-evidence/ambassador-route-activity/TC-route-WEB-002/`
 **阻塞说明**: 后端 `/api/admin/routes/page` 返回 500，路线列表接口异常；本次回归无法进入路线表单保存与回显闭环。
@@ -41,7 +41,7 @@
 1. 对路线 X 点击删除，在确认弹窗点「取消」
 2. 对路线 X 再次点击删除，在确认弹窗点「确认」
 **预期结果**: 步骤 1 后弹窗关闭、路线 X 仍在列表中；步骤 2 后路线 X 从 DataTable 消失，列表行数减 1
-**状态**: 🔴 后端阻塞
+**状态**: ⚠️ 环境阻塞
 **执行方式**: web-test-runner（@playwright/mcp）
 **执行存证**: `test-evidence/ambassador-route-activity/TC-route-WEB-003/`
 **阻塞说明**: 后端 `/api/admin/routes/page` 返回 500，路线列表接口异常；本次回归无法进入删除确认闭环。
