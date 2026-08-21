@@ -89,11 +89,11 @@
 1. 进入 /love-space/featured-cycle-items，停留在「经期」Tab，打开新增弹窗
 2. 内容类型选「tripperclub活动」，选一个活动，填推荐说明，上传 banner，填排序号后提交
 **预期结果**: 保存成功有提示；弹窗关闭，经期列表即时刷新出现新条目，展示所上传 banner、类型徽标「tripperclub活动」、所选活动名与填写的排序号
-**状态**: ⚠️ 环境阻塞
+**状态**: ✅ 通过
 **执行方式**: web-test-runner（@playwright/mcp）
 **执行存证**: `test-evidence/regression/featured/TC-featured-WEB-006/`
-**阻塞说明**: 后端 `/api/admin/featured-cycle-items/page` 返回 500，周期推荐新增保存后列表刷新依赖服务端正常，无法完成闭环。
-**最后更新**: 2026-08-19
+**阻塞说明**: 无阻塞。已通过 Playwright 完成新增（活动类型、banner 上传、推荐说明）并在列表页验证数据回显；新条目默认状态为「已下线」。
+**最后更新**: 2026-08-21
 
 ### TC-featured-WEB-007: 周期推荐上下线切换与删除确认
 **关联需求**: featured/web 端周期推荐页面#周期推荐上下线与删除
