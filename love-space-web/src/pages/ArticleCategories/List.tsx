@@ -187,10 +187,16 @@ export default function ArticleCategoryList() {
         </ComponentCard>
       </div>
 
-      <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} className="max-w-lg m-4 p-6">
-        <h2 className="text-lg font-semibold text-gray-800 dark:text-white/90 mb-5">
-          {editingId ? "编辑栏目" : "新增栏目"}
-        </h2>
+      <Modal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        showBackdrop={false}
+        className="max-w-[520px] m-4 -translate-y-[100px] shadow-2xl ring-1 ring-gray-200 dark:ring-gray-800"
+      >
+        <div className="relative w-full rounded-3xl bg-white p-6 dark:bg-gray-900 lg:p-8">
+          <h4 className="mb-5 text-xl font-semibold text-gray-800 dark:text-white/90">
+            {editingId ? "编辑栏目" : "新增栏目"}
+          </h4>
         <div className="space-y-5">
           <div>
             <Label>
@@ -228,7 +234,7 @@ export default function ArticleCategoryList() {
             />
           </div>
 
-          <div className="flex gap-3 pt-2">
+          <div className="flex justify-end gap-3 pt-2">
             <Button size="sm" disabled={submitting} onClick={() => void handleSubmit()}>
               {submitting ? "提交中..." : editingId ? "保存" : "创建"}
             </Button>
@@ -242,7 +248,8 @@ export default function ArticleCategoryList() {
             </Button>
           </div>
         </div>
-      </Modal>
+      </div>
+    </Modal>
     </>
   );
 }
