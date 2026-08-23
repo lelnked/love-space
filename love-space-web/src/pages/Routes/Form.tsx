@@ -29,7 +29,6 @@ export default function RouteForm() {
   const { id } = useParams<{ id?: string }>();
   const editing = Boolean(id);
 
-  const [cityId, setCityId] = useState("");
   const [mapName, setMapName] = useState("");
   const [sortOrder, setSortOrder] = useState<number>(0);
   const [title, setTitle] = useState("");

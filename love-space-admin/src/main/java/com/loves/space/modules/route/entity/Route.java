@@ -15,17 +15,13 @@ import java.util.UUID;
 
 /**
  * 路线实体：对应 {@code loves_route} 表。
- * <p>图片与地点内联 jsonb，无外键；city/ambassador 存在性由 service 层保证。
+ * <p>图片与地点内联 jsonb，无外键。
  */
 @Entity
 @Table(name = "loves_route")
 @Getter
 @Setter
 public class Route extends BaseAuditEntity {
-
-    /** 所属地图（城市），创建后不可变。 */
-    @Column(name = "city_id", nullable = false)
-    private UUID cityId;
 
     /** 路线间排序，升序。 */
     @Column(name = "sort_order", nullable = false)

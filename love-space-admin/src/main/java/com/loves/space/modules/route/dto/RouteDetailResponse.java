@@ -6,12 +6,9 @@ import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * 路线详情响应。
- */
+/** 路线详情响应。 */
 public record RouteDetailResponse(
         UUID id,
-        UUID cityId,
         int sortOrder,
         String title,
         String ambassadorNote,
@@ -20,7 +17,6 @@ public record RouteDetailResponse(
         String travelTime,
         String season,
         String travelStatus,
-        UUID ambassadorId,
         String ambassadorName,
         List<RouteSpotResponse> spots,
         OffsetDateTime createdAt,

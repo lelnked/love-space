@@ -9,9 +9,8 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * 路线创建/更新请求（更新时 cityId 不可变，传入值被忽略）。
+ * 路线创建/更新请求。
  *
- * @param cityId         所属地图（城市），必填
  * @param sortOrder      路线间排序（可空，默认 0）
  * @param title          主标题，必填
  * @param ambassadorNote 爱女大使说
@@ -24,7 +23,6 @@ import java.util.UUID;
  * @param spots          地点列表，按添加顺序
  */
 public record RouteUpsertRequest(
-        @NotNull(message = "所属地图不能为空") UUID cityId,
         Integer sortOrder,
         @NotBlank(message = "路线标题不能为空") String title,
         String ambassadorNote,
