@@ -19,4 +19,7 @@ public interface RecommendListMerchantRepository extends JpaRepository<Recommend
 
     /** 清单内商户数。 */
     long countByRecommendListId(UUID recommendListId);
+
+    /** 某商户关联的全部清单 ID（去重）。 */
+    List<UUID> findDistinctRecommendListIdByMerchantId(UUID merchantId);
 }

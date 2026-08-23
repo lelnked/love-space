@@ -9,6 +9,7 @@ import Button from "../../components/ui/button/Button";
 import { useToast } from "../../context/ToastContext";
 import DataTable, { Column } from "../../components/datatable/DataTable";
 import { useConfirm } from "../../context/ConfirmContext";
+import Badge from "../../components/ui/badge/Badge";
 import {
   deleteRecommendList,
   pageRecommendLists,
@@ -109,28 +110,35 @@ export default function RecommendListList() {
     {
       key: "title",
       header: "标题",
-      width: "14rem",
+      width: "12rem",
       className: "font-medium text-gray-800 dark:text-white/90",
     },
     {
       key: "cityId",
       header: "所属城市",
-      width: "9rem",
+      width: "8rem",
       render: (it) => cityName[it.cityId] ?? "-",
     },
     { key: "sortOrder", header: "排序号", width: "6rem" },
     { key: "merchantCount", header: "商户数", width: "6rem" },
     {
+      key: "status",
+      header: "状态",
+      width: "6rem",
+      render: (it) => (
+        <Badge size="sm" color={it.status === "ONLINE" ? "success" : "error"}>
+          {it.status === "ONLINE" ? "已上架" : "已下架"}
+        </Badge>
+      ),
+    },
+    {
       key: "actions",
       header: "操作",
-      width: "16rem",
+      width: "10rem",
       render: (it) => (
         <div className="flex gap-2">
           <Link to={`/recommend-lists/${it.id}/edit`}>
             <Button size="sm" variant="primary">编辑</Button>
-          </Link>
-          <Link to={`/recommend-lists/${it.id}/merchants`}>
-            <Button size="sm" variant="primary">商户维护</Button>
           </Link>
           <Button size="sm" variant="primary" onClick={() => handleDelete(it)}>
             删除

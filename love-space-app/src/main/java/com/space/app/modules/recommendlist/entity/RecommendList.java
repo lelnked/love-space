@@ -33,4 +33,8 @@ public class RecommendList extends BaseAuditEntity {
     /** 清单间排序号，升序展示。 */
     @Column(name = "sort_order", nullable = false)
     private Integer sortOrder = 0;
+
+    /** 上架状态：ONLINE / OFFLINE，默认 ONLINE。 */
+    @Column(name = "status", nullable = false, length = 32)
+    private String status = "ONLINE";
 }

@@ -54,7 +54,7 @@ public class RecommendListQueryService {
         if (cityRepository.findByIdAndOnlineTrue(cityId).isEmpty()) {
             return List.of();
         }
-        return recommendListRepository.findAllByCityIdOrderBySortOrderAsc(cityId).stream()
+        return recommendListRepository.findByCityIdAndStatusOrderBySortOrderAsc(cityId, "ONLINE").stream()
                 .map(list -> new RecommendListItemResponse(
                         list.getId(), list.getTitle(), list.getIntroduction(),
                         list.getCityId(), list.getSortOrder()))

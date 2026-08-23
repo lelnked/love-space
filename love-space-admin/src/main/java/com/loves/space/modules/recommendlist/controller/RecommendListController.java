@@ -5,7 +5,6 @@ import com.loves.space.common.page.PageResponseMapper.PageResponse;
 import com.loves.space.modules.recommendlist.dto.RecommendListCreateRequest;
 import com.loves.space.modules.recommendlist.dto.RecommendListDetailResponse;
 import com.loves.space.modules.recommendlist.dto.RecommendListItemResponse;
-import com.loves.space.modules.recommendlist.dto.RecommendListMerchantItemRequest;
 import com.loves.space.modules.recommendlist.dto.RecommendListUpdateRequest;
 import com.loves.space.modules.recommendlist.service.RecommendListService;
 import jakarta.validation.Valid;
@@ -20,7 +19,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
 import java.util.UUID;
 
 /**
@@ -62,7 +60,7 @@ public class RecommendListController {
         return recommendListService.create(request);
     }
 
-    /** 更新清单（cityId 不可变）。 */
+    /** 更新清单（cityId/status 可变）。 */
     @PutMapping("/{id}")
     @OperationLog("recommend-list:update")
     public RecommendListDetailResponse update(@PathVariable UUID id,
@@ -77,11 +75,10 @@ public class RecommendListController {
         recommendListService.delete(id);
     }
 
-    /** 全量替换清单商户。 */
-    @PutMapping("/{id}/merchants")
-    @OperationLog("recommend-list:replace-merchants")
-    public RecommendListDetailResponse replaceMerchants(@PathVariable UUID id,
-                                                        @RequestBody List<@Valid RecommendListMerchantItemRequest> items) {
-        return recommendListService.replaceMerchants(id, items);
+    /** 人工恢复清单为 ONLINE；仅当当前无已下架商户时允许。 */
+    @PostMapping("/{id}/online")
+    @OperationLog("recommend-list:online")
+    public RecommendListDetailResponse online(@PathVariable UUID id) {
+        return recommendListService.online(id);
     }
 }

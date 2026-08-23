@@ -27,11 +27,15 @@ public class RecommendList extends BaseAuditEntity {
     @Column(name = "introduction")
     private String introduction;
 
-    /** 所属城市 ID（创建后不可变，无 FK）。 */
+    /** 所属城市 ID（创建后可修改，无 FK）。 */
     @Column(name = "city_id", nullable = false)
     private UUID cityId;
 
     /** 清单间排序号，升序展示。 */
     @Column(name = "sort_order", nullable = false)
     private Integer sortOrder = 0;
+
+    /** 上架状态：ONLINE / OFFLINE，默认 ONLINE。 */
+    @Column(name = "status", nullable = false, length = 32)
+    private String status = "ONLINE";
 }

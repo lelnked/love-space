@@ -11,6 +11,7 @@ export interface RecommendListItem {
   merchantCount: number;
   createdAt: string;
   updatedAt: string;
+  status: string;
 }
 
 export interface RecommendListMerchant {
@@ -31,6 +32,7 @@ export interface RecommendListDetail {
   merchants: RecommendListMerchant[];
   createdAt: string;
   updatedAt: string;
+  status: string;
 }
 
 export interface RecommendListQuery {
@@ -45,6 +47,8 @@ export interface RecommendListUpsertRequest {
   introduction?: string | null;
   cityId?: string;
   sortOrder?: number;
+  status?: string;
+  merchantIds?: string[];
 }
 
 export interface RecommendListMerchantItemRequest {
@@ -92,15 +96,4 @@ export async function updateRecommendList(
 
 export async function deleteRecommendList(id: string): Promise<void> {
   await apiClient.delete<void>(`/api/admin/recommend-lists/${id}`);
-}
-
-export async function replaceRecommendListMerchants(
-  id: string,
-  items: RecommendListMerchantItemRequest[],
-): Promise<RecommendListDetail> {
-  const { data } = await apiClient.put<RecommendListDetail>(
-    `/api/admin/recommend-lists/${id}/merchants`,
-    items,
-  );
-  return data;
 }

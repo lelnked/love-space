@@ -19,7 +19,6 @@ import MerchantForm from "./pages/Merchants/Form";
 import MerchantDetailPage from "./pages/Merchants/Detail";
 import RecommendListList from "./pages/RecommendLists/List";
 import RecommendListForm from "./pages/RecommendLists/Form";
-import RecommendListMerchants from "./pages/RecommendLists/Merchants";
 import AmbassadorList from "./pages/Ambassadors/List";
 import RouteList from "./pages/Routes/List";
 import RouteForm from "./pages/Routes/Form";
@@ -66,7 +65,6 @@ export default function App() {
             <Route path="/recommend-lists" element={<RecommendListList />} />
             <Route path="/recommend-lists/create" element={<RecommendListForm />} />
             <Route path="/recommend-lists/:id/edit" element={<RecommendListForm />} />
-            <Route path="/recommend-lists/:id/merchants" element={<RecommendListMerchants />} />
             <Route path="/ambassadors" element={<AmbassadorList />} />
             <Route path="/routes" element={<RouteList />} />
             <Route path="/routes/create" element={<RouteForm />} />
