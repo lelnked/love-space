@@ -30,6 +30,7 @@ export default function RouteForm() {
   const editing = Boolean(id);
 
   const [mapName, setMapName] = useState("");
+  const [cityId, setCityId] = useState("");
   const [sortOrder, setSortOrder] = useState<number>(0);
   const [title, setTitle] = useState("");
   const [ambassadorNote, setAmbassadorNote] = useState("");

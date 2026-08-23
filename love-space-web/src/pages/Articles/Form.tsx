@@ -6,7 +6,7 @@ import Input from "../../components/form/input/InputField";
 import Button from "../../components/ui/button/Button";
 import ImageUploader from "../../components/form/ImageUploader";
 import Checkbox from "../../components/form/input/Checkbox";
-import RichTextEditor from "../../components/form/RichTextEditor";
+import ArticleRichTextEditor from "../../components/form/ArticleRichTextEditor";
 import {
   ArticleUpsertRequest,
   createArticle,
@@ -194,7 +194,7 @@ export default function ArticleForm() {
           {/* 3. 文章内容（富文本） */}
           <fieldset className={sectionClass}>
             <legend className={sectionTitleClass}>文章内容</legend>
-            <RichTextEditor initialValue={contentHtml} onChange={setContentHtml} />
+            <ArticleRichTextEditor initialValue={contentHtml} onChange={setContentHtml} />
           </fieldset>
 
           <div className="flex gap-3">
