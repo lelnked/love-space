@@ -238,14 +238,14 @@ export default function ArticleCategoryList() {
             <Button size="sm" disabled={submitting} onClick={() => void handleSubmit()}>
               {submitting ? "提交中..." : editingId ? "保存" : "创建"}
             </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={submitting}
+            <button
+              type="button"
               onClick={() => setModalOpen(false)}
+              disabled={submitting}
+              className="px-4 py-3 text-sm rounded-lg bg-white text-gray-700 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-400 dark:ring-gray-700"
             >
               取消
-            </Button>
+            </button>
           </div>
         </div>
       </div>
