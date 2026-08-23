@@ -70,11 +70,8 @@ public class RouteService {
         return toDetail(find(id));
     }
 
-    /** 创建路线：校验城市与大使存在。 */
+    /** 创建路线：不再校验城市库，允许自由输入地图名称/ID。 */
     public RouteDetailResponse create(RouteUpsertRequest request) {
-        if (!cityRepository.existsById(request.cityId())) {
-            throw new IllegalArgumentException("所属城市不存在：" + request.cityId());
-        }
         Route route = new Route();
         route.setCityId(request.cityId());
         apply(route, request);

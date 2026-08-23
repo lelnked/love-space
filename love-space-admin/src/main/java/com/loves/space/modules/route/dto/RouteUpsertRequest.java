@@ -24,7 +24,7 @@ import java.util.UUID;
  * @param spots          地点列表，按添加顺序
  */
 public record RouteUpsertRequest(
-        @NotNull(message = "所属城市不能为空") UUID cityId,
+        @NotNull(message = "所属地图不能为空") UUID cityId,
         Integer sortOrder,
         @NotBlank(message = "路线标题不能为空") String title,
         String ambassadorNote,

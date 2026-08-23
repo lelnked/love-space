@@ -30,6 +30,7 @@ export default function RouteForm() {
   const editing = Boolean(id);
 
   const [cityId, setCityId] = useState("");
+  const [mapName, setMapName] = useState("");
   const [sortOrder, setSortOrder] = useState<number>(0);
   const [title, setTitle] = useState("");
   const [ambassadorNote, setAmbassadorNote] = useState("");
@@ -56,7 +57,7 @@ export default function RouteForm() {
       .then((d) => setAmbassadors(d.content))
       .catch(() => undefined);
     if (!id) {
-      // 列全部城市（含下架）——城市地图未上线时也要能配该城市的路线
+      // 仍拉城市列表做历史兼容回显
       void listCities().then(setCities).catch(() => undefined);
       return;
     }
@@ -82,7 +83,7 @@ export default function RouteForm() {
             introduction: s.introduction,
           })),
         );
-        // 编辑时城市不可改，只需回显绑定城市名
+        // 仅用于历史 cityId 的回显对照，不再参与选择
         void getCity(d.cityId)
           .then((c) => setCities([c]))
           .catch(() => undefined);
@@ -102,7 +103,10 @@ export default function RouteForm() {
     setFieldErrors({});
 
     const errs: Record<string, string> = {};
-    if (!cityId) errs.cityId = "请选择所属城市";
+    if (!/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/.test(mapName.trim())) {
+      errs.mapName = "请输入合法的地图 ID（UUID 格式）";
+    }
+    if (!cityId) errs.cityId = "请选择或输入所属地图 ID";
     if (!title.trim()) errs.title = "路线标题不能为空";
     if (!thumbnailKey.trim()) errs.thumbnail = "请上传缩略图";
     if (images.length === 0) errs.images = "至少上传 1 张图片";
@@ -117,8 +121,12 @@ export default function RouteForm() {
       return;
     }
 
+    let resolvedCityId = cityId;
+    if (!resolvedCityId && mapName.trim()) {
+      resolvedCityId = mapName.trim();
+    }
     const payload: RouteUpsertRequest = {
-      cityId,
+      cityId: resolvedCityId,
       sortOrder,
       title: title.trim(),
       ambassadorNote: ambassadorNote.trim() || null,
@@ -193,24 +201,32 @@ export default function RouteForm() {
               </div>
               <div>
                 <Label>
-                  所属城市 <span className="text-error-500">*</span>
+                  所属地图 <span className="text-error-500">*</span>
                 </Label>
-                <select
-                  className="border rounded px-3 py-2 text-sm w-full h-11 disabled:bg-gray-100 disabled:text-gray-500"
-                  value={cityId}
-                  onChange={(e) => setCityId(e.target.value)}
+                <Input
+                  value={editing ? cities[0]?.chineseName ?? cityId : mapName}
+                  onChange={(e) => {
+                    setMapName(e.target.value);
+                    if (!editing) setCityId("");
+                  }}
                   disabled={editing}
-                >
-                  <option value="">请选择</option>
-                  {cities.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.chineseName}
-                      {c.online ? "" : "（已下架）"}
-                    </option>
-                  ))}
-                </select>
+                  placeholder="可输入任意地图名称，无需系统校验"
+                />
+                {!editing && (
+                  <div className="text-xs text-gray-400 mt-1">
+                    输入后以“所属地图 ID”保存，不再校验城市库。
+                  </div>
+                )}
                 {editing && (
-                  <div className="text-xs text-gray-400 mt-1">路线创建后所属城市不可修改</div>
+                  <div className="text-xs text-gray-400 mt-1">路线创建后所属地图不可修改</div>
+                )}
+                <input
+                  type="hidden"
+                  value={editing ? cityId : (mapName.trim() ? mapName.trim() : "")}
+                  onChange={() => {}}
+                />
+                {fieldErrors.mapName && (
+                  <div className="text-error-500 text-xs mt-1">{fieldErrors.mapName}</div>
                 )}
                 {fieldErrors.cityId && (
                   <div className="text-error-500 text-xs mt-1">{fieldErrors.cityId}</div>
