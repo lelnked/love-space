@@ -153,7 +153,7 @@ export default function RecommendListForm() {
 
     const errs: Record<string, string> = {};
     if (!title.trim()) errs.title = "清单标题不能为空";
-    if (!editing && !cityId) errs.cityId = "请选择所属城市";
+    if (!editing && !cityId) errs.cityId = "请选择所属地图";
     if (!selectedMerchants.length) errs.merchants = "请至少选择一个商户";
     if (Object.keys(errs).length > 0) {
       setFieldErrors(errs);
@@ -224,7 +224,7 @@ export default function RecommendListForm() {
           </div>
           <div>
             <Label>
-              所属城市 <span className="text-error-500">*</span>
+              所属地图 <span className="text-error-500">*</span>
             </Label>
             <select
               className="border rounded px-3 py-2 text-sm w-full h-11 disabled:bg-gray-100 disabled:text-gray-500"
@@ -240,7 +240,7 @@ export default function RecommendListForm() {
               ))}
             </select>
             {editing && (
-              <div className="text-xs text-gray-400 mt-1">修改城市时，请确保清单内现有商户均属于新城市，否则保存会失败</div>
+              <div className="text-xs text-gray-400 mt-1">修改地图时，请确保清单内现有商户均属于新地图，否则保存会失败</div>
             )}
             {fieldErrors.cityId && (
               <div className="text-error-500 text-xs mt-1">{fieldErrors.cityId}</div>
@@ -303,7 +303,7 @@ export default function RecommendListForm() {
               )}
             </div>
             {!cityId && (
-              <div className="text-xs text-gray-400 mt-1">请先选择所属城市</div>
+              <div className="text-xs text-gray-400 mt-1">请先选择所属地图</div>
             )}
             {fieldErrors.merchants && (
               <div className="text-error-500 text-xs mt-1">{fieldErrors.merchants}</div>

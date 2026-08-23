@@ -126,7 +126,7 @@ export default function BannerList() {
     },
     {
       key: "linkedCityName",
-      header: "关联城市",
+      header: "关联地图",
       render: (it) => it.linkedCityName ?? "-",
     },
     {

@@ -46,7 +46,7 @@ export default function RecommendListList() {
       { name: "keyword", label: "标题", type: "text", placeholder: "模糊匹配" },
       {
         name: "cityId",
-        label: "所属城市",
+        label: "所属地图",
         type: "select",
         options: cities.map((c) => ({ label: c.chineseName, value: c.id })),
       },
@@ -115,7 +115,7 @@ export default function RecommendListList() {
     },
     {
       key: "cityId",
-      header: "所属城市",
+      header: "所属地图",
       width: "8rem",
       render: (it) => cityName[it.cityId] ?? "-",
     },
