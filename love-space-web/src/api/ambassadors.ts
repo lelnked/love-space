@@ -7,6 +7,7 @@ export interface AmbassadorItem {
   avatar: ImageResponse | null;
   name: string;
   tags: string[];
+  weight: number;
   online: boolean;
   createdAt: string;
   updatedAt: string;
@@ -24,6 +25,8 @@ export interface AmbassadorUpsertRequest {
   name: string;
   /** 标签，最多 3 条。 */
   tags?: string[];
+  /** 排序权重，app 端列表按其倒序取前 N 条；默认 0。 */
+  weight?: number;
   online?: boolean;
 }
 

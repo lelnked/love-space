@@ -47,29 +47,40 @@ class AmbassadorServiceTest extends AbstractPostgresIntegrationTest {
     @Test
     void createKeepsTagOrderAndBindsAvatar() {
         AmbassadorResponse created = ambassadorService.create(new AmbassadorUpsertRequest(
-                "images/avatar.png", "小蓝", List.of("向导", "美食", "摄影"), null));
+                "images/avatar.png", "小蓝", List.of("向导", "美食", "摄影"), null, null));
         assertThat(created.id()).isNotNull();
         assertThat(created.name()).isEqualTo("小蓝");
         assertThat(created.tags()).containsExactly("向导", "美食", "摄影");
         assertThat(created.online()).isFalse();
         assertThat(created.avatar().url()).contains("bound/images/avatar.png");
+        assertThat(created.weight()).isZero();
+    }
+
+    @Test
+    void weightIsPersistedAndDefaultsToZero() {
+        AmbassadorResponse withWeight = ambassadorService.create(new AmbassadorUpsertRequest(
+                "images/avatar.png", "高权重", null, 30, null));
+        assertThat(withWeight.weight()).isEqualTo(30);
+        assertThat(ambassadorService.detail(withWeight.id()).weight()).isEqualTo(30);
+        assertThat(ambassadorService.update(withWeight.id(), new AmbassadorUpsertRequest(
+                "images/avatar.png", "高权重", null, null, null)).weight()).isZero();
     }
 
     // @scenario: route/爱女大使管理#标签超过 3 条被拒绝
     @Test
     void tagsOverThreeRejectedByValidation() {
         var violations = VALIDATOR.validate(new AmbassadorUpsertRequest(
-                "images/avatar.png", "小蓝", List.of("一", "二", "三", "四"), null));
+                "images/avatar.png", "小蓝", List.of("一", "二", "三", "四"), null, null));
         assertThat(violations).extracting(v -> v.getMessage()).contains("大使标签最多 3 条");
         assertThat(VALIDATOR.validate(new AmbassadorUpsertRequest(
-                "images/avatar.png", "小蓝", List.of("一", "二", "三"), null))).isEmpty();
+                "images/avatar.png", "小蓝", List.of("一", "二", "三"), null, null))).isEmpty();
     }
 
     // @scenario: route/爱女大使管理#大使上下线切换
     @Test
     void setOnlineToggles() {
         AmbassadorResponse created = ambassadorService.create(new AmbassadorUpsertRequest(
-                "images/avatar.png", "开关大使", null, null));
+                "images/avatar.png", "开关大使", null, null, null));
         assertThat(ambassadorService.setOnline(created.id(), true).online()).isTrue();
         assertThat(ambassadorService.setOnline(created.id(), false).online()).isFalse();
     }

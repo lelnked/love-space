@@ -94,6 +94,7 @@ public class AmbassadorService {
         ambassador.setAvatar(objectKeyValidator.validateAndBind(request.avatar()));
         ambassador.setName(request.name());
         ambassador.setTags(new ArrayList<>(request.tags() == null ? List.of() : request.tags()));
+        ambassador.setWeight(request.weight() == null ? 0 : request.weight());
         ambassador.setOnline(Boolean.TRUE.equals(request.online()));
     }
 
@@ -103,6 +104,7 @@ public class AmbassadorService {
                 ImageResponses.from(ambassador.getAvatar(), imageUrlSigner),
                 ambassador.getName(),
                 ambassador.getTags(),
+                ambassador.getWeight(),
                 ambassador.isOnline(),
                 ambassador.getCreatedAt(),
                 ambassador.getUpdatedAt());

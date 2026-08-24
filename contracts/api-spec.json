@@ -50,6 +50,88 @@
         "x-requirement": "city/地图编辑说"
       }
     },
+    "/api/app/cities/{id}": {
+      "get": {
+        "summary": "App 城市详情（仅上架城市，字段同列表项；不存在或未上架返回 404）",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "x-requirement": "city/地图编辑说"
+      }
+    },
+    "/api/app/merchants/page": {
+      "get": {
+        "summary": "App 商户列表分页（cityId 必填；period / categoryId / recommendListId 可选）",
+        "parameters": [
+          {
+            "name": "cityId",
+            "in": "query",
+            "required": true,
+            "description": "城市 ID，必填",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "period",
+            "in": "query",
+            "required": false,
+            "description": "生理周期，可选",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "categoryId",
+            "in": "query",
+            "required": false,
+            "description": "分类 ID，可选",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "recommendListId",
+            "in": "query",
+            "required": false,
+            "description": "推荐清单 ID，可选；传入时仅返回该清单内的上架商户，并按清单内 sortOrder 升序，响应项带回 recommendSortOrder",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "description": "页码，从 1 开始，默认 1",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "description": "每页条数，默认 20",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "x-requirement": "recommend-list/App 端清单查询"
+      }
+    },
     "/api/app/merchants/{id}": {
       "get": {
         "summary": "App 商户详情（响应新增 recommendReason）",
@@ -227,6 +309,41 @@
         "x-requirement": "route/爱女大使管理"
       }
     },
+    "/api/app/ambassadors": {
+      "get": {
+        "summary": "App 爱女大使列表：仅上线大使，weight DESC + createdAt DESC，limit 条（默认 3，最大 20，非法值回落默认）",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 3,
+              "maximum": 20
+            }
+          }
+        ],
+        "x-requirement": "route/爱女大使管理"
+      }
+    },
+    "/api/app/ambassadors/{id}": {
+      "get": {
+        "summary": "App 爱女大使详情（仅上线大使；下线或不存在返回 404）",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "x-requirement": "route/爱女大使管理"
+      }
+    },
     "/api/admin/routes/page": {
       "get": {
         "summary": "路线分页列表，支持 cityId/keyword 过滤，sortOrder 升序",
@@ -301,7 +418,7 @@
             "name": "cityName",
             "in": "query",
             "required": false,
-            "description": "城市中文名，可选；不传则不按城市过滤，城市不存在返回空数组",
+            "description": "城市中文名，可选；与路线上的城市名原样匹配，不做城市库校验；城市表中无同名城市时该路线的 city 为 null",
             "schema": {
               "type": "string"
             }
@@ -380,7 +497,7 @@
     },
     "/api/admin/activities/{id}": {
       "get": {
-        "summary": "活动详情（detailHtml 读时 img src 替换为签名 URL）",
+        "summary": "活动详情（含 landscape 景观；detailHtml 读时 img src 替换为签名 URL）",
         "x-requirement": "activity/活动管理"
       },
       "put": {
@@ -417,7 +534,7 @@
     },
     "/api/app/activities/{id}": {
       "get": {
-        "summary": "App 活动详情含富文本 detailHtml（城市下架或活动下线 → 404）",
+        "summary": "App 活动详情含 landscape 景观与富文本 detailHtml（城市下架或活动下线 → 404）",
         "x-requirement": "activity/App 端活动查询"
       }
     },
@@ -742,7 +859,18 @@
     },
     "/api/app/featured-cycle-items": {
       "get": {
-        "summary": "App 周期推荐（四周期分组恒在，条目上线∧关联实体可见，组内 sortOrder 升序）",
+        "summary": "App 周期推荐（type 可选过滤；四周期分组恒在，条目上线∧关联实体可见，组内 sortOrder 升序）",
+        "parameters": [
+          {
+            "name": "type",
+            "in": "query",
+            "required": false,
+            "description": "内容类型，可选；不传则下发全部类型，非法值返回 400",
+            "schema": {
+              "$ref": "#/components/schemas/FeaturedCycleItemType"
+            }
+          }
+        ],
         "x-requirement": "featured/App 端周期推荐查询"
       }
     },
@@ -1081,6 +1209,10 @@
             },
             "description": "标签，最多 3 条"
           },
+          "weight": {
+            "type": "integer",
+            "description": "排序权重，默认 0；app 端列表按其倒序取前 N 条"
+          },
           "online": {
             "type": "boolean",
             "description": "上线/下线"
@@ -1269,6 +1401,10 @@
           "visa": {
             "type": "string",
             "description": "签证"
+          },
+          "landscape": {
+            "type": "string",
+            "description": "景观"
           },
           "itinerary": {
             "type": "array",

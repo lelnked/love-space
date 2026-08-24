@@ -52,6 +52,7 @@ export default function AmbassadorList() {
   const [avatarKey, setAvatarKey] = useState("");
   const [avatarPreview, setAvatarPreview] = useState("");
   const [tags, setTags] = useState<string[]>([]);
+  const [weight, setWeight] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
@@ -82,6 +83,7 @@ export default function AmbassadorList() {
     setAvatarKey("");
     setAvatarPreview("");
     setTags([]);
+    setWeight(0);
     setFieldErrors({});
     setModalOpen(true);
   };
@@ -92,6 +94,7 @@ export default function AmbassadorList() {
     setAvatarKey(it.avatar?.id ?? "");
     setAvatarPreview(it.avatar?.url ?? "");
     setTags(it.tags);
+    setWeight(it.weight);
     setFieldErrors({});
     setModalOpen(true);
   };
@@ -113,7 +116,7 @@ export default function AmbassadorList() {
 
     setSubmitting(true);
     try {
-      const payload = { avatar: avatarKey.trim(), name: name.trim(), tags: cleanTags };
+      const payload = { avatar: avatarKey.trim(), name: name.trim(), tags: cleanTags, weight };
       if (editingId) await updateAmbassador(editingId, payload);
       else await createAmbassador(payload);
       setModalOpen(false);
@@ -201,6 +204,7 @@ export default function AmbassadorList() {
           "-"
         ),
     },
+    { key: "weight", header: "权重", width: "6rem" },
     {
       key: "online",
       header: "状态",
@@ -338,6 +342,16 @@ export default function AmbassadorList() {
               {fieldErrors.tags && (
                 <div className="text-error-500 text-xs mt-1">{fieldErrors.tags}</div>
               )}
+            </div>
+            <div>
+              <Label>权重</Label>
+              <Input
+                type="number"
+                value={String(weight)}
+                onChange={(e) => setWeight(Number(e.target.value))}
+                error={Boolean(fieldErrors.weight)}
+                hint={fieldErrors.weight}
+              />
             </div>
 
             <div className="flex justify-end gap-3 pt-2">

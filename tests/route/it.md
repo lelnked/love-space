@@ -90,17 +90,17 @@
 **执行存证**: `test-evidence/ambassador-route-activity/TC-route-IT-006/`
 **最后更新**: 2026-08-16
 
-### TC-route-IT-007: POST /api/admin/routes 缺必填或城市/大使不存在被拒绝
+### TC-route-IT-007: POST /api/admin/routes 缺必填或大使不存在被拒绝（城市名不校验）
 **关联需求**: route/路线管理#缺少必填项被拒绝
 **关联契约**: api-spec.json#/paths/~1api~1admin~1routes/post
 **来源**: ambassador-route-activity
 **优先级**: P0
 **测试步骤**:
 1. POST /api/admin/routes，body 缺 title（其余合法）
-2. POST /api/admin/routes，body cityId 为不存在的 UUID
-3. POST /api/admin/routes，body ambassadorId 为不存在的 UUID
-**预期结果**: 三次均返回 400，响应 `message` 为中文错误信息；路线均未创建
-**状态**: ✅ 通过
+2. POST /api/admin/routes，body ambassadorId 为不存在的 UUID
+3. POST /api/admin/routes，body cityName 为城市表中不存在的「不存在城」（其余合法）
+**预期结果**: 步骤 1、2 返回 400，响应 `message` 为中文错误信息且路线未创建；步骤 3 返回 200，详情 `cityName` 原样为「不存在城」
+**状态**: ⏳ 待执行
 **执行方式**: api-test-runner
 **执行存证**: `test-evidence/ambassador-route-activity/TC-route-IT-007/`
 **最后更新**: 2026-08-16
@@ -268,16 +268,76 @@
 **执行存证**: `test-evidence/app-route-query-filters/TC-route-IT-018/`
 **最后更新**: 2026-08-24
 
-### TC-route-IT-019: GET /api/app/routes?cityName= 城市不存在返回空数组
-**关联需求**: route/App 端路线查询#城市名不存在返回空数组
+### TC-route-IT-019: GET /api/app/routes?cityName= 城市表无同名城市时仍返回路线且 city 为 null
+**关联需求**: route/App 端路线查询#城市表中无同名城市时仍返回路线且 city 为 null
 **关联契约**: api-spec.json#/paths/~1api~1app~1routes/get
 **来源**: app-route-query-filters
 **优先级**: P1
 **测试步骤**:
-1. 前置：城市表中不存在中文名为「不存在城」的城市，且系统内至少有一条可见路线
+1. 前置：admin 侧创建一条路线，cityName 填「不存在城」（城市表中无同名城市），关联大使 online=true
 2. GET http://localhost:8081/api/app/routes?cityName=不存在城（请求头带 X-API-Key）
-**预期结果**: 返回 200 且 body 为空数组（不是 404，也不是全部路线）
-**状态**: ✅ 通过
+**预期结果**: 返回 200，body 含该路线，其 `city` 为 `null`
+**状态**: ⏳ 待执行
 **执行方式**: api-test-runner
 **执行存证**: `test-evidence/app-route-query-filters/TC-route-IT-019/`
+**最后更新**: 2026-08-24
+
+### TC-route-IT-020: GET /api/app/ambassadors 默认返回权重最高的 3 位上线大使
+**关联需求**: route/爱女大使管理
+**关联契约**: api-spec.json#/paths/~1api~1app~1ambassadors/get
+**来源**: 直接实现（未走 change）
+**优先级**: P0
+**测试步骤**:
+1. 前置：创建 4 位 online=true 的大使，weight 分别为 30/20/10/1；另创建 1 位 weight=40 但 online=false
+2. GET /api/app/ambassadors（不传 limit，请求头带 X-API-Key）
+**预期结果**: 返回 200，数组长度 3，顺序为 weight 30 → 20 → 10；下线大使不出现
+**状态**: ✅ 通过
+**执行方式**: AmbassadorReadIT#listReturnsTop3OnlineByWeightDescWhenLimitAbsent
+**执行存证**: `love-space-app/target/surefire-reports/com.space.app.modules.ambassador.controller.AmbassadorReadIT.txt`
+**最后更新**: 2026-08-24
+
+### TC-route-IT-021: GET /api/app/ambassadors?limit= 生效且上限 20、非法值回落 3
+**关联需求**: route/爱女大使管理
+**关联契约**: api-spec.json#/paths/~1api~1app~1ambassadors/get
+**来源**: 直接实现（未走 change）
+**优先级**: P0
+**测试步骤**:
+1. 前置：25 位 online=true 大使，weight 依次 0..24
+2. GET /api/app/ambassadors?limit=5
+3. GET /api/app/ambassadors?limit=100
+4. GET /api/app/ambassadors?limit=0
+**预期结果**: 步骤 2 返回 5 条且首条为 weight 最大者；步骤 3 收敛为 20 条；步骤 4 回落为 3 条（与 PageQuery 的非法值回落口径一致，不返回 400）
+**状态**: ✅ 通过
+**执行方式**: AmbassadorReadIT#listHonoursLimitAndClampsAt20
+**执行存证**: `love-space-app/target/surefire-reports/com.space.app.modules.ambassador.controller.AmbassadorReadIT.txt`
+**最后更新**: 2026-08-24
+
+### TC-route-IT-022: GET /api/app/ambassadors/{id} 详情与 404 口径
+**关联需求**: route/爱女大使管理
+**关联契约**: api-spec.json#/paths/~1api~1app~1ambassadors~1{id}/get
+**来源**: 直接实现（未走 change）
+**优先级**: P0
+**测试步骤**:
+1. GET /api/app/ambassadors/{id}，id 指向 online=true 的大使
+2. GET /api/app/ambassadors/{id}，id 指向 online=false 的大使
+3. GET /api/app/ambassadors/{随机 UUID}
+**预期结果**: 步骤 1 返回 200，含 id/avatar{id,url}/name/tags；步骤 2、3 均返回 404
+**状态**: ✅ 通过
+**执行方式**: AmbassadorReadIT#detailReturnsOnlineAmbassador、AmbassadorReadIT#detailReturns404WhenOfflineOrMissing
+**执行存证**: `love-space-app/target/surefire-reports/com.space.app.modules.ambassador.controller.AmbassadorReadIT.txt`
+**最后更新**: 2026-08-24
+
+### TC-route-IT-023: admin 大使创建/更新写入排序权重
+**关联需求**: route/爱女大使管理
+**关联契约**: api-spec.json#/paths/~1api~1admin~1ambassadors/post
+**来源**: 直接实现（未走 change）
+**优先级**: P1
+**测试步骤**:
+1. POST /api/admin/ambassadors，body 含 `"weight": 30`
+2. GET /api/admin/ambassadors/{id}
+3. PUT /api/admin/ambassadors/{id}，body 不传 weight
+**预期结果**: 步骤 1、2 响应 `weight` 为 30；步骤 3 后 `weight` 回落为默认 0
+**状态**: ✅ 通过
+**执行方式**: AmbassadorServiceTest#weightIsPersistedAndDefaultsToZero
+**执行存证**: `love-space-admin/target/surefire-reports/com.loves.space.modules.ambassador.service.AmbassadorServiceTest.txt`
 **最后更新**: 2026-08-24

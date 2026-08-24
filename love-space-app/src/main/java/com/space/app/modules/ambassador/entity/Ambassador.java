@@ -35,6 +35,10 @@ public class Ambassador extends BaseAuditEntity {
     @Column(name = "tags", nullable = false, columnDefinition = "jsonb")
     private List<String> tags = new ArrayList<>();
 
+    /** 排序权重，列表按其倒序排列。 */
+    @Column(name = "weight", nullable = false)
+    private int weight;
+
     /** 上线状态。 */
     @Column(name = "online", nullable = false)
     private boolean online;
