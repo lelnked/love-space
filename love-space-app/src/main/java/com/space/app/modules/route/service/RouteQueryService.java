@@ -28,6 +28,7 @@ import java.util.stream.Collectors;
 /**
  * 路线查询服务（App 端只读）：路线可见性仅取决于关联大使是否在线，与所属城市是否上架无关，
  * 按 sortOrder 升序。大使下线的级联靠查询过滤，不落库。
+ * <p>列表支持可选的城市名与大使 ID 过滤（AND，均不传即不过滤）。
  * <p>城市信息由路线 cityName 反查城市表生成，城市记录删除时 city 为 null。
  */
 @Service
@@ -49,18 +50,25 @@ public class RouteQueryService {
         this.imageUrlSigner = imageUrlSigner;
     }
 
-    /** 按城市名查询路线列表；城市不存在返回空列表。 */
-    public List<RouteItemResponse> listByCity(String cityName) {
-        City city = cityRepository.findByChineseName(cityName).orElse(null);
-        if (city == null) {
+    /**
+     * 路线列表：cityName 与 ambassadorId 均为可选过滤条件，都不传则返回全部可见路线；
+     * cityName 指向的城市不存在时返回空列表。可见性仍仅取决于关联大使是否在线。
+     */
+    public List<RouteItemResponse> list(String cityName, UUID ambassadorId) {
+        if (cityName != null && cityRepository.findByChineseName(cityName).isEmpty()) {
             return List.of();
         }
-        List<Route> routes = routeRepository.findAllByCityNameOrderBySortOrderAsc(cityName);
-        Map<UUID, Ambassador> onlineAmbassadors = routes.isEmpty() ? Map.of()
-                : ambassadorRepository.findAllById(
+        List<Route> routes = routeRepository.search(cityName, ambassadorId);
+        if (routes.isEmpty()) {
+            return List.of();
+        }
+        Map<UUID, Ambassador> onlineAmbassadors = ambassadorRepository.findAllById(
                         routes.stream().map(Route::getAmbassadorId).distinct().toList()).stream()
                 .filter(Ambassador::isOnline)
                 .collect(Collectors.toMap(Ambassador::getId, Function.identity()));
+        Map<String, City> citiesByName = cityRepository.findAllByChineseNameIn(
+                        routes.stream().map(Route::getCityName).filter(Objects::nonNull).distinct().toList()).stream()
+                .collect(Collectors.toMap(City::getChineseName, Function.identity(), (a, b) -> a));
 
         return routes.stream()
                 .map(route -> {
@@ -68,13 +76,14 @@ public class RouteQueryService {
                     if (ambassador == null) {
                         return null;
                     }
+                    City city = route.getCityName() == null ? null : citiesByName.get(route.getCityName());
                     return new RouteItemResponse(
                             route.getId(),
                             route.getTitle(),
                             ImageResponses.from(route.getThumbnail(), imageUrlSigner),
                             route.getSortOrder(),
                             ambassador.getName(),
-                            new RouteCityResponse(city.getId(), city.getChineseName()));
+                            city == null ? null : new RouteCityResponse(city.getId(), city.getChineseName()));
                 })
                 .filter(Objects::nonNull)
                 .toList();

@@ -295,12 +295,22 @@
     },
     "/api/app/routes": {
       "get": {
-        "summary": "App 按城市查路线列表（仅大使上线即可见，城市上架与否不影响，sortOrder 升序）",
+        "summary": "App 查询路线列表（cityName / ambassadorId 均可选；仅大使上线即可见，城市上架与否不影响，sortOrder 升序）",
         "parameters": [
           {
-            "name": "cityId",
+            "name": "cityName",
             "in": "query",
-            "required": true,
+            "required": false,
+            "description": "城市中文名，可选；不传则不按城市过滤，城市不存在返回空数组",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "ambassadorId",
+            "in": "query",
+            "required": false,
+            "description": "爱女大使 ID，可选；不传则不按大使过滤",
             "schema": {
               "type": "string",
               "format": "uuid"

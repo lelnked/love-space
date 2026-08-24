@@ -165,35 +165,35 @@
 **执行存证**: `test-evidence/ambassador-route-activity/TC-route-IT-011/`
 **最后更新**: 2026-08-16
 
-### TC-route-IT-012: GET /api/app/routes 上架城市路线列表按 sortOrder 升序
+### TC-route-IT-012: GET /api/app/routes?cityName= 按城市名查路线列表并按 sortOrder 升序
 **关联需求**: route/App 端路线查询#查询上架城市的路线
 **关联契约**: api-spec.json#/paths/~1api~1app~1routes/get
-**来源**: ambassador-route-activity
+**来源**: app-route-query-filters
 **优先级**: P0
 **测试步骤**:
 1. 前置：上架城市下存在多条路线（sortOrder 5、1、3），关联大使均上线
-2. GET http://localhost:8081/api/app/routes?cityId={cityId}（请求头带 X-API-Key）
+2. GET http://localhost:8081/api/app/routes?cityName={cityName}（请求头带 X-API-Key）
 **预期结果**: 返回 200，含该城市全部可见路线，按 sortOrder 1→3→5 升序，每项含缩略图（签名 URL）、主标题与大使名称
 **状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**: `test-evidence/route-decouple-city-online/TC-route-IT-012/`
-**最后更新**: 2026-08-20
+**执行存证**: `test-evidence/app-route-query-filters/TC-route-IT-012/`
+**最后更新**: 2026-08-24
 
 ### TC-route-IT-013: GET /api/app/routes 大使下线后路线隐藏、详情 404
 **关联需求**: route/App 端路线查询#大使下线后路线隐藏
 **关联契约**: api-spec.json#/paths/~1api~1app~1routes~1{id}/get
-**来源**: ambassador-route-activity
+**来源**: app-route-query-filters
 **优先级**: P0
 **测试步骤**:
 1. 前置：上架城市下一条路线可见（app 列表能查到）
 2. admin 侧 PUT /api/admin/ambassadors/{ambassadorId}/online 将其关联大使下线
-3. GET http://localhost:8081/api/app/routes?cityId={cityId}（请求头带 X-API-Key）
+3. GET http://localhost:8081/api/app/routes?cityName={cityName}（请求头带 X-API-Key）
 4. GET http://localhost:8081/api/app/routes/{routeId}（请求头带 X-API-Key）
 **预期结果**: 下线后列表不含该路线；详情返回 404
 **状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**: `test-evidence/route-decouple-city-online/TC-route-IT-013/`
-**最后更新**: 2026-08-20
+**执行存证**: `test-evidence/app-route-query-filters/TC-route-IT-013/`
+**最后更新**: 2026-08-24
 
 ### TC-route-IT-014: GET /api/app/routes/{id} 路线详情返回地点明细与大使信息
 **关联需求**: route/App 端路线查询#路线详情返回地点明细
@@ -206,21 +206,78 @@
 **预期结果**: 返回 200；含路线图片列表（签名 URL）、地点按 S1→S2 顺序返回且每个含名称/图片/介绍；含大使信息（名称、头像签名 URL）
 **状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**: `test-evidence/route-decouple-city-online/TC-route-IT-014/`
-**最后更新**: 2026-08-20
+**执行存证**: `test-evidence/app-route-query-filters/TC-route-IT-014/`
+**最后更新**: 2026-08-24
 
 ### TC-route-IT-015: GET /api/app/routes 未上架城市的路线仍可见且详情返回 cityName
 **关联需求**: route/App 端路线查询#未上架城市的路线仍可见
 **关联契约**: api-spec.json#/paths/~1api~1app~1routes/get、api-spec.json#/paths/~1api~1app~1routes~1{id}/get
-**来源**: route-decouple-city-online
+**来源**: app-route-query-filters
 **优先级**: P0
 **测试步骤**:
 1. 前置：admin 侧创建一个城市（中文名「未上线城」）并保持**下架**状态；在该城市下创建一条路线，其关联大使 online=true
-2. GET http://localhost:8081/api/app/routes?cityId={cityId}（请求头带 X-API-Key）
+2. GET http://localhost:8081/api/app/routes?cityName={cityName}（请求头带 X-API-Key）
 3. GET http://localhost:8081/api/app/routes/{routeId}（请求头带 X-API-Key）
 4. admin 侧将该城市上架，重复步骤 2、3
 **预期结果**: 步骤 2 返回 200 且列表包含该路线（城市下架不再过滤）；步骤 3 返回 200，`cityName` = "未上线城"，其余字段（图片、地点、大使信息）与既有口径一致；步骤 4 城市上架后结果不变（可见性与城市状态无关）
 **状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**: `test-evidence/route-decouple-city-online/TC-route-IT-015/`
-**最后更新**: 2026-08-20
+**执行存证**: `test-evidence/app-route-query-filters/TC-route-IT-015/`
+**最后更新**: 2026-08-24
+
+### TC-route-IT-016: GET /api/app/routes 不带任何参数返回全部可见路线
+**关联需求**: route/App 端路线查询#不传任何过滤参数返回全部可见路线
+**关联契约**: api-spec.json#/paths/~1api~1app~1routes/get
+**来源**: app-route-query-filters
+**优先级**: P0
+**测试步骤**:
+1. 前置：城市甲、城市乙下各有一条路线（sortOrder 分别为 2、1），关联大使均上线
+2. GET http://localhost:8081/api/app/routes（不带任何查询参数，请求头带 X-API-Key）
+**预期结果**: 返回 200，同时包含两个城市的路线，按 sortOrder 1→2 升序；每项的 `city` 对象对应各自所属城市（id 与中文名）
+**状态**: ✅ 通过
+**执行方式**: api-test-runner
+**执行存证**: `test-evidence/app-route-query-filters/TC-route-IT-016/`
+**最后更新**: 2026-08-24
+
+### TC-route-IT-017: GET /api/app/routes?ambassadorId= 按大使过滤路线
+**关联需求**: route/App 端路线查询#按大使 ID 过滤路线
+**关联契约**: api-spec.json#/paths/~1api~1app~1routes/get
+**来源**: app-route-query-filters
+**优先级**: P0
+**测试步骤**:
+1. 前置：大使 A 上线且名下 2 条路线，大使 B 上线且名下 1 条路线
+2. GET http://localhost:8081/api/app/routes?ambassadorId={ambassadorA}（请求头带 X-API-Key）
+3. 将大使 A 下线后重复步骤 2
+**预期结果**: 步骤 2 返回 200 且仅含大使 A 的 2 条路线（不含 B 的路线），按 sortOrder 升序；步骤 3 返回 200 且为空数组（大使下线优先于过滤条件）
+**状态**: ✅ 通过
+**执行方式**: api-test-runner
+**执行存证**: `test-evidence/app-route-query-filters/TC-route-IT-017/`
+**最后更新**: 2026-08-24
+
+### TC-route-IT-018: GET /api/app/routes?cityName=&ambassadorId= 组合过滤取交集
+**关联需求**: route/App 端路线查询#城市名与大使 ID 组合过滤
+**关联契约**: api-spec.json#/paths/~1api~1app~1routes/get
+**来源**: app-route-query-filters
+**优先级**: P1
+**测试步骤**:
+1. 前置：大使 A 上线，在城市甲、城市乙各有 1 条路线；城市甲下另有大使 B 的 1 条路线
+2. GET http://localhost:8081/api/app/routes?cityName={城市甲中文名}&ambassadorId={ambassadorA}（请求头带 X-API-Key）
+**预期结果**: 返回 200，仅含 1 条路线（城市甲 + 大使 A 的那条），不含城市乙的 A 路线与城市甲的 B 路线
+**状态**: ✅ 通过
+**执行方式**: api-test-runner
+**执行存证**: `test-evidence/app-route-query-filters/TC-route-IT-018/`
+**最后更新**: 2026-08-24
+
+### TC-route-IT-019: GET /api/app/routes?cityName= 城市不存在返回空数组
+**关联需求**: route/App 端路线查询#城市名不存在返回空数组
+**关联契约**: api-spec.json#/paths/~1api~1app~1routes/get
+**来源**: app-route-query-filters
+**优先级**: P1
+**测试步骤**:
+1. 前置：城市表中不存在中文名为「不存在城」的城市，且系统内至少有一条可见路线
+2. GET http://localhost:8081/api/app/routes?cityName=不存在城（请求头带 X-API-Key）
+**预期结果**: 返回 200 且 body 为空数组（不是 404，也不是全部路线）
+**状态**: ✅ 通过
+**执行方式**: api-test-runner
+**执行存证**: `test-evidence/app-route-query-filters/TC-route-IT-019/`
+**最后更新**: 2026-08-24

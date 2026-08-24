@@ -93,7 +93,7 @@ class RouteQueryServiceTest extends AbstractPostgresIntegrationTest {
         UUID second = route(cityName, ambassadorId, 2, List.of());
         UUID first = route(cityName, ambassadorId, 1, List.of());
 
-        assertThat(routeQueryService.listByCity(cityName))
+        assertThat(routeQueryService.list(cityName, null))
                 .extracting(r -> r.city().name())
                 .containsExactly(cityName, cityName);
     }
@@ -104,7 +104,7 @@ class RouteQueryServiceTest extends AbstractPostgresIntegrationTest {
         String cityName = city(true);
         UUID routeId = route(cityName, ambassador(false), 0, List.of());
 
-        assertThat(routeQueryService.listByCity(cityName)).isEmpty();
+        assertThat(routeQueryService.list(cityName, null)).isEmpty();
         assertThatThrownBy(() -> routeQueryService.detail(routeId))
                 .isInstanceOf(ResourceNotFoundException.class);
     }
@@ -132,7 +132,7 @@ class RouteQueryServiceTest extends AbstractPostgresIntegrationTest {
         String cityName = city(false);
         UUID routeId = route(cityName, ambassador(true), 0, List.of());
 
-        assertThat(routeQueryService.listByCity(cityName))
+        assertThat(routeQueryService.list(cityName, null))
                 .extracting(r -> r.city().name())
                 .containsExactly(cityName);
         assertThat(routeQueryService.detail(routeId).cityName()).isEqualTo(cityName);
@@ -161,5 +161,70 @@ class RouteQueryServiceTest extends AbstractPostgresIntegrationTest {
 
         assertThat(detail.cityName()).isEqualTo("不存在的城市");
         assertThat(detail.city()).isNull();
+    }
+
+    // @scenario: route/App 端路线查询#不传任何过滤参数返回全部可见路线
+    @Test
+    void listWithoutFiltersReturnsAllVisibleRoutes() {
+        String cityA = city(true);
+        String cityB = city(false);
+        UUID ambassadorId = ambassador(true);
+        route(cityA, ambassadorId, 2, List.of());
+        route(cityB, ambassadorId, 1, List.of());
+
+        List<RouteItemResponse> all = routeQueryService.list(null, null);
+
+        assertThat(all).extracting(r -> r.city() == null ? null : r.city().name())
+                .contains(cityA, cityB);
+        assertThat(all.stream().map(RouteItemResponse::sortOrder).toList()).isSorted();
+    }
+
+    // @scenario: route/App 端路线查询#按大使 ID 过滤路线
+    @Test
+    void listFiltersByAmbassadorId() {
+        String cityName = city(true);
+        UUID ambassadorA = ambassador(true);
+        UUID ambassadorB = ambassador(true);
+        route(cityName, ambassadorA, 1, List.of());
+        route(cityName, ambassadorA, 2, List.of());
+        route(cityName, ambassadorB, 3, List.of());
+
+        assertThat(routeQueryService.list(null, ambassadorA)).hasSize(2);
+    }
+
+    // @scenario: route/App 端路线查询#按大使 ID 过滤路线
+    @Test
+    void listByOfflineAmbassadorReturnsEmpty() {
+        String cityName = city(true);
+        UUID offline = ambassador(false);
+        route(cityName, offline, 1, List.of());
+
+        assertThat(routeQueryService.list(null, offline)).isEmpty();
+    }
+
+    // @scenario: route/App 端路线查询#城市名与大使 ID 组合过滤
+    @Test
+    void listCombinesCityNameAndAmbassadorId() {
+        String cityA = city(true);
+        String cityB = city(true);
+        UUID ambassadorA = ambassador(true);
+        UUID ambassadorB = ambassador(true);
+        route(cityA, ambassadorA, 1, List.of());
+        route(cityB, ambassadorA, 2, List.of());
+        route(cityA, ambassadorB, 3, List.of());
+
+        List<RouteItemResponse> result = routeQueryService.list(cityA, ambassadorA);
+
+        assertThat(result).hasSize(1);
+        assertThat(result.getFirst().city().name()).isEqualTo(cityA);
+        assertThat(result.getFirst().ambassadorName()).isEqualTo("大使-在线");
+    }
+
+    // @scenario: route/App 端路线查询#城市名不存在返回空数组
+    @Test
+    void listWithUnknownCityNameReturnsEmpty() {
+        route(city(true), ambassador(true), 1, List.of());
+
+        assertThat(routeQueryService.list("不存在城-" + UUID.randomUUID(), null)).isEmpty();
     }
 }

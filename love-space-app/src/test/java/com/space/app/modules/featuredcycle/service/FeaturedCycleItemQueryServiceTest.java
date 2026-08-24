@@ -148,9 +148,9 @@ class FeaturedCycleItemQueryServiceTest extends AbstractPostgresIntegrationTest 
         item(Period.MENSTRUAL, FeaturedCycleItemType.ARTICLE, article(true).getId(), false, 0);
         item(Period.LUTEAL, FeaturedCycleItemType.ARTICLE, article(false).getId(), true, 0);
 
-        List<FeaturedCycleItemResponse> menstrual = featuredCycleItemQueryService.feed(Period.MENSTRUAL);
-        List<FeaturedCycleItemResponse> ovulation = featuredCycleItemQueryService.feed(Period.OVULATION);
-        List<FeaturedCycleItemResponse> luteal = featuredCycleItemQueryService.feed(Period.LUTEAL);
+        List<FeaturedCycleItemResponse> menstrual = featuredCycleItemQueryService.feed().getOrDefault(Period.MENSTRUAL, List.of());
+        List<FeaturedCycleItemResponse> ovulation = featuredCycleItemQueryService.feed().getOrDefault(Period.OVULATION, List.of());
+        List<FeaturedCycleItemResponse> luteal = featuredCycleItemQueryService.feed().getOrDefault(Period.LUTEAL, List.of());
 
         assertThat(menstrual).extracting(FeaturedCycleItemResponse::id)
                 .containsExactly(visibleActivityItem);
@@ -175,7 +175,7 @@ class FeaturedCycleItemQueryServiceTest extends AbstractPostgresIntegrationTest 
         UUID visible = item(Period.MENSTRUAL, FeaturedCycleItemType.ACTIVITY,
                 activity(onlineCity.getId(), true).getId(), true, 0);
 
-        List<FeaturedCycleItemResponse> menstrual = featuredCycleItemQueryService.feed(Period.MENSTRUAL);
+        List<FeaturedCycleItemResponse> menstrual = featuredCycleItemQueryService.feed().getOrDefault(Period.MENSTRUAL, List.of());
 
         assertThat(menstrual).extracting(FeaturedCycleItemResponse::id)
                 .containsExactly(visible);
@@ -190,7 +190,7 @@ class FeaturedCycleItemQueryServiceTest extends AbstractPostgresIntegrationTest 
         UUID visible = item(Period.OVULATION, FeaturedCycleItemType.ROUTE,
                 route(ambassador(true).getId()).getId(), true, 0);
 
-        List<FeaturedCycleItemResponse> ovulation = featuredCycleItemQueryService.feed(Period.OVULATION);
+        List<FeaturedCycleItemResponse> ovulation = featuredCycleItemQueryService.feed().getOrDefault(Period.OVULATION, List.of());
 
         assertThat(ovulation).extracting(FeaturedCycleItemResponse::id)
                 .containsExactly(visible);
@@ -202,7 +202,7 @@ class FeaturedCycleItemQueryServiceTest extends AbstractPostgresIntegrationTest 
         UUID visible = item(Period.OVULATION, FeaturedCycleItemType.ROUTE,
                 route(ambassador(true).getId()).getId(), true, 0);
 
-        List<FeaturedCycleItemResponse> ovulation = featuredCycleItemQueryService.feed(Period.OVULATION);
+        List<FeaturedCycleItemResponse> ovulation = featuredCycleItemQueryService.feed().getOrDefault(Period.OVULATION, List.of());
 
         assertThat(ovulation).extracting(FeaturedCycleItemResponse::id)
                 .containsExactly(visible);
@@ -219,7 +219,7 @@ class FeaturedCycleItemQueryServiceTest extends AbstractPostgresIntegrationTest 
         UUID third = item(Period.MENSTRUAL, FeaturedCycleItemType.ACTIVITY,
                 activity(city.getId(), true).getId(), true, 3);
 
-        List<FeaturedCycleItemResponse> menstrual = featuredCycleItemQueryService.feed(Period.MENSTRUAL);
+        List<FeaturedCycleItemResponse> menstrual = featuredCycleItemQueryService.feed().getOrDefault(Period.MENSTRUAL, List.of());
 
         assertThat(menstrual).extracting(FeaturedCycleItemResponse::id)
                 .containsExactly(first, second, third);
