@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { AxiosError } from "axios";
 import Label from "../../components/form/Label";
@@ -6,7 +6,9 @@ import Input from "../../components/form/input/InputField";
 import Button from "../../components/ui/button/Button";
 import ImageUploaderList, { ImageListItem } from "../../components/form/ImageUploaderList";
 import Checkbox from "../../components/form/input/Checkbox";
-import ArticleRichTextEditor from "../../components/form/ArticleRichTextEditor";
+import RichTextEditor, {
+  type RichTextEditorRef,
+} from "../../components/form/RichTextEditor";
 import {
   ACTIVITY_LEVELS,
   ACTIVITY_PERIOD_LABEL,
@@ -46,6 +48,7 @@ export default function ActivityForm() {
   const [landscape, setLandscape] = useState("");
   const [itinerary, setItinerary] = useState<ActivityItineraryItem[]>([]);
   const [detailHtml, setDetailHtml] = useState("");
+  const editorRef = useRef<RichTextEditorRef>(null);
 
   const [cities, setCities] = useState<CityItem[]>([]);
 
@@ -128,7 +131,7 @@ export default function ActivityForm() {
       visa: visa.trim() || null,
       landscape: landscape.trim() || null,
       itinerary: itinerary.map((it) => ({ title: it.title.trim(), content: it.content.trim() })),
-      detailHtml: detailHtml || null,
+      detailHtml: editorRef.current?.getHtmlForSubmit() || detailHtml || null,
     };
 
     setSubmitting(true);
@@ -412,7 +415,7 @@ export default function ActivityForm() {
           {/* 6. 活动详情说明（富文本） */}
           <fieldset className={sectionClass}>
             <legend className={sectionTitleClass}>活动详情说明</legend>
-            <ArticleRichTextEditor initialValue={detailHtml} onChange={setDetailHtml} />
+            <RichTextEditor ref={editorRef} initialValue={detailHtml} />
           </fieldset>
 
           <div className="flex gap-3">
