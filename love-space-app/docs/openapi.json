@@ -1,0 +1,2126 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Love Space App API",
+    "version": "1.0.0",
+    "description": "Love Space 移动端只读 API。由 `scripts/generate-app-openapi.js` 从 Java 源码生成，勿手改。\n\n## 鉴权\n所有 `/api/app/**` 接口必须携带 `X-API-Key` 请求头，缺失或不匹配返回 401（`application/problem+json`，RFC 7807）。\n\n## 错误响应\n- 401：未鉴权（filter 层），`application/problem+json`\n- 400 / 404 / 500：业务异常，统一为 `{status, error, message, path}`（`application/json`）\n\n## 图片\n所有图片字段均为 `ImageResponse`：`id` 为稳定 objectKey，`url` 为当次签名的临时访问地址，客户端请勿持久化 `url`。"
+  },
+  "servers": [
+    {
+      "url": "https://www.tripleyourlife.com/love-space/app",
+      "description": "生产环境（nginx 代理到 8081）"
+    },
+    {
+      "url": "http://localhost:8081",
+      "description": "本地开发"
+    }
+  ],
+  "security": [
+    {
+      "ApiKeyAuth": []
+    }
+  ],
+  "tags": [
+    {
+      "name": "Activity",
+      "description": "活动只读 API。\nGET /api/app/activities?cityId= → 200 上架城市的上线活动数组；\nGET /api/app/activities/{id} → 200 详情（detailHtml img src 为签名 URL），下线/城市下架/不存在 → 404。"
+    },
+    {
+      "name": "Ambassador",
+      "description": "爱女大使只读 API。\n- GET /api/app/ambassadors?limit=：上线大使列表，weight DESC, createdAt DESC，limit 默认 3、最大 20；\n- GET /api/app/ambassadors/{id}：详情，下线/不存在返回 404。"
+    },
+    {
+      "name": "ArticleCategory",
+      "description": "文章栏目只读 API。\nGET /api/app/article-categories → 200 栏目数组（sortOrder 升序，icon 为签名 URL）。"
+    },
+    {
+      "name": "Article",
+      "description": "文章只读 API。\nGET /api/app/articles?categoryId= → 200 该栏目上线文章数组（sortOrder 升序）；\nGET /api/app/articles/{id} → 200 详情（contentHtml img src 为签名 URL），下线/失去所有栏目/不存在 → 404。"
+    },
+    {
+      "name": "Banner",
+      "description": "App 端 Banner 只读 API：GET /api/app/banners。\n鉴权：沿用全局 X-API-Key 请求头校验（app.security.api-keys），\n缺失或非法返回 401（详见 project_app_auth_api_key）。\n默认仅返回 online=true 的 banner，关联 city 离线或被删除的条目会被过滤。"
+    },
+    {
+      "name": "Category",
+      "description": "分类只读 API。\nHTTP 语义：GET /api/app/categories/page → 200 返回上架分类分页，按 sortOrder ASC, createdAt ASC 排序。"
+    },
+    {
+      "name": "City",
+      "description": "城市只读 API。\nHTTP 语义：GET /api/app/cities → 200 返回上架城市数组，按 createdAt 倒序；\nGET /api/app/cities/{id} → 200 返回单个上架城市，不存在或未上架 → 404。"
+    },
+    {
+      "name": "FeaturedItem",
+      "description": "精选·地图上新推荐只读 API。\nGET /api/app/featured-items → 200 信息流数组（条目上线∧城市上架，创建时间倒序，\n含关联城市 id/名称，跳转由 App 端自行决定）。"
+    },
+    {
+      "name": "FeaturedCycleItem",
+      "description": "精选·周期推荐只读 API。\nGET /api/app/featured-cycle-items?type=（可选） → 200 四周期分组（键恒在，无条目为空数组；\n条目上线∧关联实体可见，组内 sortOrder 升序）。周期判定在客户端，服务端不按用户筛选。"
+    },
+    {
+      "name": "Merchant",
+      "description": "商户只读 API。\n- GET /api/app/merchants/page：列表分页（cityId 必填；period / categoryId / recommendListId 可选，\n传 recommendListId 时仅返回该推荐清单内的上架商户，按清单内 sortOrder 升序）；\n- GET /api/app/merchants/{id}：详情，下架/不存在返回 404。"
+    },
+    {
+      "name": "MerchantReview",
+      "description": "商户评价只读 API：GET /api/app/merchants/{merchantId/reviews}。\n- recommended 可选过滤，缺省返回全部；\n- 按 sortOrder 升序；商户下架/不存在返回空列表。"
+    },
+    {
+      "name": "RecommendList",
+      "description": "推荐清单只读 API。\nGET /api/app/recommend-lists?cityId= → 200 上架城市的清单数组（sortOrder 升序）；\nGET /api/app/recommend-lists/{id} → 200 详情（含上架商户），城市下架/清单不存在 → 404。"
+    },
+    {
+      "name": "Route",
+      "description": "路线只读 API。\nGET /api/app/routes?cityName=&ambassadorId=（均可选） → 200 可见路线数组（sortOrder 升序）；\nGET /api/app/routes/{id} → 200 详情（含地点与大使信息与城市对象），城市记录已删除时 city 为 null，大使下线 → 404。"
+    }
+  ],
+  "paths": {
+    "/api/app/activities": {
+      "get": {
+        "tags": [
+          "Activity"
+        ],
+        "summary": "按城市查询上线活动列表",
+        "description": "按城市查询上线活动列表。",
+        "operationId": "Activity_list",
+        "parameters": [
+          {
+            "name": "cityId",
+            "in": "query",
+            "required": true,
+            "description": "城市 ID",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ActivityItemResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/app/activities/{id}": {
+      "get": {
+        "tags": [
+          "Activity"
+        ],
+        "summary": "活动详情",
+        "description": "活动详情。",
+        "operationId": "Activity_detail",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "活动 ID",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActivityDetailResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/api/app/ambassadors": {
+      "get": {
+        "tags": [
+          "Ambassador"
+        ],
+        "summary": "大使列表：按权重倒序返回前 limit 条（默认 3，最大 20）",
+        "description": "大使列表：按权重倒序返回前 limit 条（默认 3，最大 20）。",
+        "operationId": "Ambassador_list",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "返回条数，默认 3，最大 20；非正数或缺省回落默认，超过上限收敛为 20",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AmbassadorItemResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/app/ambassadors/{id}": {
+      "get": {
+        "tags": [
+          "Ambassador"
+        ],
+        "summary": "大使详情",
+        "description": "大使详情；下线或不存在 → 404。",
+        "operationId": "Ambassador_detail",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "爱女大使 ID",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AmbassadorItemResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/api/app/article-categories": {
+      "get": {
+        "tags": [
+          "ArticleCategory"
+        ],
+        "summary": "栏目列表",
+        "description": "栏目列表。",
+        "operationId": "ArticleCategory_list",
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ArticleCategoryResponse"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/app/articles": {
+      "get": {
+        "tags": [
+          "Article"
+        ],
+        "summary": "按栏目查询上线文章列表",
+        "description": "按栏目查询上线文章列表。",
+        "operationId": "Article_list",
+        "parameters": [
+          {
+            "name": "categoryId",
+            "in": "query",
+            "required": true,
+            "description": "文章栏目 ID",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ArticleItemResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/app/articles/{id}": {
+      "get": {
+        "tags": [
+          "Article"
+        ],
+        "summary": "文章详情",
+        "description": "文章详情。",
+        "operationId": "Article_detail",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "文章 ID",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArticleDetailResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/api/app/banners": {
+      "get": {
+        "tags": [
+          "Banner"
+        ],
+        "summary": "查询展示用 banner 列表",
+        "description": "查询展示用 banner 列表。",
+        "operationId": "Banner_list",
+        "parameters": [
+          {
+            "name": "positionCode",
+            "in": "query",
+            "required": true,
+            "description": "展示位置标识码（必填，精确匹配）",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "linkedEntityId",
+            "in": "query",
+            "required": false,
+            "description": "关联实体过滤（可选），缺省时不过滤",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BannerItemResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/app/categories/page": {
+      "get": {
+        "tags": [
+          "Category"
+        ],
+        "summary": "上架分类分页查询：sortOrder ASC, createdAt ASC",
+        "description": "上架分类分页查询：sortOrder ASC, createdAt ASC。",
+        "operationId": "Category_page",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "description": "页码，从 1 开始；缺省或小于 1 回落 1",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "description": "每页大小，仅支持 20 或 30；其他值回落 20",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PageResponse_CategoryItemResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/app/cities": {
+      "get": {
+        "tags": [
+          "City"
+        ],
+        "summary": "获取所有上架城市",
+        "description": "获取所有上架城市。",
+        "operationId": "City_list",
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CityItemResponse"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/app/cities/{id}": {
+      "get": {
+        "tags": [
+          "City"
+        ],
+        "summary": "城市详情：仅上架城市可见，字段与列表项一致",
+        "description": "城市详情：仅上架城市可见，字段与列表项一致。",
+        "operationId": "City_detail",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "城市 ID",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CityItemResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/api/app/featured-items": {
+      "get": {
+        "tags": [
+          "FeaturedItem"
+        ],
+        "summary": "精选推荐信息流",
+        "description": "精选推荐信息流。",
+        "operationId": "FeaturedItem_list",
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/FeaturedItemResponse"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/app/featured-cycle-items": {
+      "get": {
+        "tags": [
+          "FeaturedCycleItem"
+        ],
+        "summary": "四周期推荐信息流",
+        "description": "四周期推荐信息流；type 可选，传入时仅下发该内容类型的条目，非法值由枚举转换失败返回 400。",
+        "operationId": "FeaturedCycleItem_feed",
+        "parameters": [
+          {
+            "name": "type",
+            "in": "query",
+            "required": false,
+            "description": "内容类型过滤；缺省返回全部类型",
+            "schema": {
+              "$ref": "#/components/schemas/FeaturedCycleItemType"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "键为 Period 枚举值，键恒在",
+                  "properties": {
+                    "MENSTRUAL": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/FeaturedCycleItemResponse"
+                      },
+                      "description": "月经期"
+                    },
+                    "FOLLICULAR": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/FeaturedCycleItemResponse"
+                      },
+                      "description": "卵泡期"
+                    },
+                    "OVULATION": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/FeaturedCycleItemResponse"
+                      },
+                      "description": "排卵期"
+                    },
+                    "LUTEAL": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/FeaturedCycleItemResponse"
+                      },
+                      "description": "黄体期"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/app/merchants/page": {
+      "get": {
+        "tags": [
+          "Merchant"
+        ],
+        "summary": "列表分页查询：weight DESC, createdAt DESC",
+        "description": "列表分页查询：weight DESC, createdAt DESC。",
+        "operationId": "Merchant_page",
+        "parameters": [
+          {
+            "name": "cityId",
+            "in": "query",
+            "required": true,
+            "description": "城市 ID",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "period",
+            "in": "query",
+            "required": false,
+            "description": "按推荐生理周期过滤；缺省不过滤",
+            "schema": {
+              "$ref": "#/components/schemas/Period"
+            }
+          },
+          {
+            "name": "categoryId",
+            "in": "query",
+            "required": false,
+            "description": "分类 ID",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "recommendListId",
+            "in": "query",
+            "required": false,
+            "description": "推荐清单 ID；传入时仅返回该清单内的上架商户，按清单内排序号升序",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "description": "页码，从 1 开始；缺省或小于 1 回落 1",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "description": "每页大小，仅支持 20 或 30；其他值回落 20",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PageResponse_MerchantListItemResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/app/merchants/{id}": {
+      "get": {
+        "tags": [
+          "Merchant"
+        ],
+        "summary": "商户详情",
+        "description": "商户详情；下架或不存在 → 404。",
+        "operationId": "Merchant_detail",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "商户 ID",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MerchantDetailResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/api/app/merchants/{merchantId}/reviews": {
+      "get": {
+        "tags": [
+          "MerchantReview"
+        ],
+        "summary": "查询商户评价列表",
+        "description": "查询商户评价列表；recommended 可选过滤。",
+        "operationId": "MerchantReview_list",
+        "parameters": [
+          {
+            "name": "merchantId",
+            "in": "path",
+            "required": true,
+            "description": "商户 ID",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "recommended",
+            "in": "query",
+            "required": false,
+            "description": "是否只看推荐评价；缺省返回全部",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ReviewItemResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/app/recommend-lists": {
+      "get": {
+        "tags": [
+          "RecommendList"
+        ],
+        "summary": "按城市查询清单列表",
+        "description": "按城市查询清单列表。",
+        "operationId": "RecommendList_list",
+        "parameters": [
+          {
+            "name": "cityId",
+            "in": "query",
+            "required": true,
+            "description": "城市 ID",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RecommendListItemResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/app/recommend-lists/{id}": {
+      "get": {
+        "tags": [
+          "RecommendList"
+        ],
+        "summary": "清单详情（含商户明细）",
+        "description": "清单详情（含商户明细）。",
+        "operationId": "RecommendList_detail",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "推荐清单 ID",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecommendListDetailResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/api/app/routes": {
+      "get": {
+        "tags": [
+          "Route"
+        ],
+        "summary": "路线列表",
+        "description": "路线列表；cityName 与 ambassadorId 均可选，都不传返回全部可见路线，城市不存在返回空数组。",
+        "operationId": "Route_list",
+        "parameters": [
+          {
+            "name": "cityName",
+            "in": "query",
+            "required": false,
+            "description": "城市中文名（精确匹配）；城市不存在时返回空数组",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "ambassadorId",
+            "in": "query",
+            "required": false,
+            "description": "爱女大使 ID",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RouteItemResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/app/routes/{id}": {
+      "get": {
+        "tags": [
+          "Route"
+        ],
+        "summary": "路线详情（含地点明细与大使信息）",
+        "description": "路线详情（含地点明细与大使信息）。",
+        "operationId": "Route_detail",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "路线 ID",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RouteDetailResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-Key",
+        "description": "预共享 API Key（app.security.api-keys）"
+      }
+    },
+    "responses": {
+      "BadRequest": {
+        "description": "参数缺失、类型不合法或业务规则校验失败",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            }
+          }
+        }
+      },
+      "Unauthorized": {
+        "description": "缺失或非法的 X-API-Key",
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "type": "object"
+            }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "资源不存在或对 App 端不可见（已下线 / 所属城市已下架）",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "ActivityDetailResponse": {
+        "type": "object",
+        "description": "活动详情响应（App 端；detailHtml 内 img src 已替换为签名 URL）。",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "ID（UUID）"
+          },
+          "cityId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "所属城市 ID"
+          },
+          "images": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ImageResponse"
+            },
+            "description": "图片列表（objectKey + 签名 URL）"
+          },
+          "title": {
+            "type": "string",
+            "description": "活动标题"
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "活动标签"
+          },
+          "periods": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "适合周期（Period 枚举名列表：MENSTRUAL/FOLLICULAR/OVULATION/LUTEAL）"
+          },
+          "level": {
+            "type": "string",
+            "description": "活动级别（L1/L2/L3）"
+          },
+          "introduction": {
+            "type": "string",
+            "description": "活动简介"
+          },
+          "editorNote": {
+            "type": "string",
+            "description": "编辑说"
+          },
+          "gatheringPlace": {
+            "type": "string",
+            "description": "集合地"
+          },
+          "dismissalPlace": {
+            "type": "string",
+            "description": "解散地"
+          },
+          "transportation": {
+            "type": "string",
+            "description": "交通"
+          },
+          "visa": {
+            "type": "string",
+            "description": "签证"
+          },
+          "landscape": {
+            "type": "string",
+            "description": "景观"
+          },
+          "itinerary": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ActivityItineraryItem"
+            },
+            "description": "路线子条目（按添加顺序）"
+          },
+          "detailHtml": {
+            "type": "string",
+            "description": "详情富文本 HTML（img src 已替换为签名 URL）"
+          }
+        }
+      },
+      "ActivityItemResponse": {
+        "type": "object",
+        "description": "活动列表项响应（App 端；images 为签名 URL）。",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "ID（UUID）"
+          },
+          "title": {
+            "type": "string",
+            "description": "活动标题"
+          },
+          "images": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ImageResponse"
+            },
+            "description": "图片列表（objectKey + 签名 URL）"
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "活动标签"
+          },
+          "periods": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "适合周期（Period 枚举名列表：MENSTRUAL/FOLLICULAR/OVULATION/LUTEAL）"
+          },
+          "level": {
+            "type": "string",
+            "description": "活动级别（L1/L2/L3）"
+          },
+          "introduction": {
+            "type": "string",
+            "description": "活动简介"
+          }
+        }
+      },
+      "ActivityItineraryItem": {
+        "type": "object",
+        "description": "活动路线子条目（jsonb 内联元素，顺序即数组顺序）。",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "子条目标题"
+          },
+          "content": {
+            "type": "string",
+            "description": "子条目内容"
+          }
+        }
+      },
+      "AmbassadorItemResponse": {
+        "type": "object",
+        "description": "爱女大使 Response（列表项与详情共用，字段一致）。",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "大使 ID"
+          },
+          "avatar": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ImageResponse"
+              }
+            ],
+            "description": "头像（objectKey + 签名 URL）"
+          },
+          "name": {
+            "type": "string",
+            "description": "大使名称"
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "大使标签（最多 3 条）"
+          }
+        }
+      },
+      "AmbassadorView": {
+        "type": "object",
+        "description": "路线上的大使信息（头像为签名 URL）。",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "大使名称"
+          },
+          "avatar": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ImageResponse"
+              }
+            ],
+            "description": "头像（objectKey + 签名 URL）"
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "大使标签（最多 3 条）"
+          }
+        }
+      },
+      "ArticleCategoryResponse": {
+        "type": "object",
+        "description": "文章栏目响应（App 端；icon 为签名 URL）。",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "ID（UUID）"
+          },
+          "name": {
+            "type": "string",
+            "description": "名称"
+          },
+          "icon": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ImageResponse"
+              }
+            ],
+            "description": "图标（objectKey + 签名 URL）"
+          },
+          "sortOrder": {
+            "type": "integer",
+            "format": "int32",
+            "description": "排序号，升序展示"
+          }
+        }
+      },
+      "ArticleDetailResponse": {
+        "type": "object",
+        "description": "文章详情响应（App 端；contentHtml 内 img src 已替换为签名 URL）。",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "ID（UUID）"
+          },
+          "image": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ImageResponse"
+              }
+            ],
+            "description": "图片（objectKey + 签名 URL）"
+          },
+          "title": {
+            "type": "string",
+            "description": "标题"
+          },
+          "subtitle": {
+            "type": "string",
+            "description": "副标题"
+          },
+          "contentHtml": {
+            "type": "string",
+            "description": "正文富文本 HTML（img src 已替换为签名 URL）"
+          },
+          "categoryIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "所属栏目 ID 列表"
+          }
+        }
+      },
+      "ArticleItemResponse": {
+        "type": "object",
+        "description": "文章列表项响应（App 端；image 为签名 URL）。",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "ID（UUID）"
+          },
+          "image": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ImageResponse"
+              }
+            ],
+            "description": "图片（objectKey + 签名 URL）"
+          },
+          "title": {
+            "type": "string",
+            "description": "标题"
+          },
+          "subtitle": {
+            "type": "string",
+            "description": "副标题"
+          }
+        }
+      },
+      "BannerItemResponse": {
+        "type": "object",
+        "description": "App 端 Banner 展示项 Response。\n响应字段顺序固定为 id, name, type, image, data，\ndata 形态由 type 决定：\n- BannerType#CITY：{id, chineseName, englishName, chineseProvince,\nenglishProvince}（城市名以 chineseName 为准）\n- 其它类型：由对应业务装配，结构与前端约定",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "banner 主键 UUID"
+          },
+          "name": {
+            "type": "string",
+            "description": "banner 名称"
+          },
+          "type": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/BannerType"
+              }
+            ],
+            "description": "banner 类型"
+          },
+          "image": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ImageResponse"
+            },
+            "description": "图片 URL 列表"
+          },
+          "data": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "类型相关的附加数据（CITY 时为 {id, chineseName, englishName, chineseProvince, englishProvince}）"
+          }
+        }
+      },
+      "BannerType": {
+        "type": "string",
+        "enum": [],
+        "description": "Banner 类型枚举（app 端只读副本，与 admin 端保持值一致）。"
+      },
+      "CategoryItemResponse": {
+        "type": "object",
+        "description": "分类列表项 Response（App 分类菜单）。",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "分类 ID"
+          },
+          "name": {
+            "type": "string",
+            "description": "分类名称"
+          }
+        }
+      },
+      "CityItemResponse": {
+        "type": "object",
+        "description": "城市列表项 Response。",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "城市 ID"
+          },
+          "chineseName": {
+            "type": "string",
+            "description": "中文名"
+          },
+          "englishName": {
+            "type": "string",
+            "description": "英文名"
+          },
+          "chineseProvince": {
+            "type": "string",
+            "description": "中文省份"
+          },
+          "englishProvince": {
+            "type": "string",
+            "description": "英文省份"
+          },
+          "backgroundImage": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ImageResponse"
+              }
+            ],
+            "description": "城市背景图 URL"
+          },
+          "editorNote": {
+            "type": "string",
+            "description": "地图编辑说（可空）"
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "description": "业务/参数错误统一响应体（400 / 404 / 500）",
+        "properties": {
+          "status": {
+            "type": "integer",
+            "description": "HTTP 状态码"
+          },
+          "error": {
+            "type": "string",
+            "description": "HTTP 状态短语，如 Bad Request / Not Found"
+          },
+          "message": {
+            "type": "string",
+            "description": "错误信息；参数校验失败时为「字段: 原因」以逗号拼接"
+          },
+          "path": {
+            "type": "string",
+            "description": "请求路径"
+          }
+        }
+      },
+      "FeaturedCycleItemResponse": {
+        "type": "object",
+        "description": "周期推荐条目响应（App 端）。\n不属于当前 type 的关联 id 与文案字段恒为 null；\n关联实体 id 供 App 端自行决定跳转。",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "推荐条目 ID"
+          },
+          "type": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/FeaturedCycleItemType"
+              }
+            ],
+            "description": "内容类型（ACTIVITY / ROUTE / ARTICLE），决定哪些关联 id 与文案字段有值"
+          },
+          "banner": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ImageResponse"
+              }
+            ],
+            "description": "Banner 图片（objectKey + 签名 URL）"
+          },
+          "activityId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "关联活动 id（type=ACTIVITY 时有值）"
+          },
+          "routeId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "关联路线 id（type=ROUTE 时有值）"
+          },
+          "articleId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "关联文章 id（type=ARTICLE 时有值）"
+          },
+          "title": {
+            "type": "string",
+            "description": "主标题（type=ROUTE / ARTICLE 时有值）"
+          },
+          "subtitle": {
+            "type": "string",
+            "description": "副标题（type=ROUTE 时有值）"
+          },
+          "description": {
+            "type": "string",
+            "description": "推荐说明（type=ACTIVITY / ROUTE 时有值）"
+          },
+          "note": {
+            "type": "string",
+            "description": "活动说明（type=ACTIVITY 时的选填项）"
+          }
+        }
+      },
+      "FeaturedCycleItemType": {
+        "type": "string",
+        "enum": [
+          "ACTIVITY",
+          "ROUTE",
+          "ARTICLE"
+        ],
+        "description": "周期推荐的内容类型（需求文档 §7.2）。\n- `ACTIVITY`：tripperclub活动：关联活动，额外填推荐说明与活动说明\n- `ROUTE`：路线体验：关联路线仅供跳转，主副标题与推荐说明在推荐位手填\n- `ARTICLE`：周期生活法：关联文章，填主标题"
+      },
+      "FeaturedItemResponse": {
+        "type": "object",
+        "description": "精选推荐条目响应（App 端；banner 为签名 URL，含关联城市数据供 App 决定跳转）。",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "ID（UUID）"
+          },
+          "banner": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ImageResponse"
+              }
+            ],
+            "description": "Banner 图片（objectKey + 签名 URL）"
+          },
+          "description": {
+            "type": "string",
+            "description": "推荐说明"
+          },
+          "city": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/FeaturedItemResponse_CityRef"
+              }
+            ],
+            "description": "关联城市（id + 名称），跳转由 App 端自行决定"
+          }
+        }
+      },
+      "FeaturedItemResponse_CityRef": {
+        "type": "object",
+        "description": "关联城市引用。",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "城市 ID"
+          },
+          "name": {
+            "type": "string",
+            "description": "城市中文名"
+          }
+        }
+      },
+      "ImageResponse": {
+        "type": "object",
+        "description": "图片对外表示（app 端）。",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "稳定图片标识 = OSS 对象 key（例如 bound/.）"
+          },
+          "url": {
+            "type": "string",
+            "description": "当次签名的可访问 GET URL"
+          }
+        }
+      },
+      "LoveIndexView": {
+        "type": "object",
+        "description": "爱女指数视图。",
+        "properties": {
+          "total": {
+            "type": "integer",
+            "format": "int32",
+            "description": "四维原始分之和（满分 100）"
+          },
+          "level": {
+            "type": "integer",
+            "format": "int32",
+            "description": "等级：clamp(ceil(total/10), 1, 10)"
+          }
+        }
+      },
+      "MerchantDetailResponse": {
+        "type": "object",
+        "description": "商户详情 Response。",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "商户 ID"
+          },
+          "name": {
+            "type": "string",
+            "description": "商户名称"
+          },
+          "logo": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ImageResponse"
+              }
+            ],
+            "description": "LOGO URL"
+          },
+          "images": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ImageResponse"
+            },
+            "description": "图片 URL 列表（按 sortOrder 升序）"
+          },
+          "address": {
+            "type": "string",
+            "description": "详细地址"
+          },
+          "longitude": {
+            "type": "number",
+            "description": "经度，可空"
+          },
+          "latitude": {
+            "type": "number",
+            "description": "纬度，可空"
+          },
+          "recommendedPeriods": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Period"
+            },
+            "description": "推荐周期（按枚举原序）"
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TagItemResponse"
+            },
+            "description": "上架标签集合"
+          },
+          "scores": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ScoreView"
+              }
+            ],
+            "description": "四维百分制评分"
+          },
+          "loveIndex": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/LoveIndexView"
+              }
+            ],
+            "description": "爱女指数（total + level）"
+          },
+          "story": {
+            "type": "string",
+            "description": "商户故事（≤5000 字），可空"
+          },
+          "recommendReason": {
+            "type": "string",
+            "description": "编辑推荐理由（纯文本），可空"
+          }
+        }
+      },
+      "MerchantListItemResponse": {
+        "type": "object",
+        "description": "商户列表项 Response。",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "商户 ID"
+          },
+          "name": {
+            "type": "string",
+            "description": "商户名称"
+          },
+          "logo": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ImageResponse"
+              }
+            ],
+            "description": "LOGO URL"
+          },
+          "address": {
+            "type": "string",
+            "description": "详细地址"
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TagItemResponse"
+            },
+            "description": "上架标签集合"
+          },
+          "scores": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ScoreView"
+              }
+            ],
+            "description": "四维百分制评分"
+          },
+          "loveIndex": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/LoveIndexView"
+              }
+            ],
+            "description": "爱女指数（total + level）"
+          },
+          "recommendSortOrder": {
+            "type": "integer",
+            "format": "int32",
+            "description": "清单内排序号；仅按 recommendListId 查询时有值，否则为 null"
+          }
+        }
+      },
+      "PageResponse_CategoryItemResponse": {
+        "type": "object",
+        "description": "通用分页响应（贴合 App 接口契约：content + page + size + totalElements + totalPages）。",
+        "properties": {
+          "content": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CategoryItemResponse"
+            },
+            "description": "当前页数据"
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32",
+            "description": "页码（1 基）"
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32",
+            "description": "每页大小"
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64",
+            "description": "总条数"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32",
+            "description": "总页数"
+          }
+        }
+      },
+      "PageResponse_MerchantListItemResponse": {
+        "type": "object",
+        "description": "通用分页响应（贴合 App 接口契约：content + page + size + totalElements + totalPages）。",
+        "properties": {
+          "content": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MerchantListItemResponse"
+            },
+            "description": "当前页数据"
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32",
+            "description": "页码（1 基）"
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32",
+            "description": "每页大小"
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64",
+            "description": "总条数"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32",
+            "description": "总页数"
+          }
+        }
+      },
+      "Period": {
+        "type": "string",
+        "enum": [
+          "MENSTRUAL",
+          "FOLLICULAR",
+          "OVULATION",
+          "LUTEAL"
+        ],
+        "description": "生理周期枚举（商户推荐周期，多选）。\n- `MENSTRUAL`：月经期\n- `FOLLICULAR`：卵泡期\n- `OVULATION`：排卵期\n- `LUTEAL`：黄体期"
+      },
+      "RecommendListDetailResponse": {
+        "type": "object",
+        "description": "推荐清单详情 Response（App 端，含商户明细）。",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "清单 ID"
+          },
+          "title": {
+            "type": "string",
+            "description": "标题"
+          },
+          "introduction": {
+            "type": "string",
+            "description": "介绍（可空）"
+          },
+          "cityId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "所属城市 ID"
+          },
+          "sortOrder": {
+            "type": "integer",
+            "format": "int32",
+            "description": "排序号"
+          },
+          "merchants": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RecommendListMerchantItemResponse"
+            },
+            "description": "清单内商户（仅上架商户，按关联排序号升序）"
+          }
+        }
+      },
+      "RecommendListItemResponse": {
+        "type": "object",
+        "description": "推荐清单列表项 Response（App 端）。",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "清单 ID"
+          },
+          "title": {
+            "type": "string",
+            "description": "标题"
+          },
+          "introduction": {
+            "type": "string",
+            "description": "介绍（可空）"
+          },
+          "cityId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "所属城市 ID"
+          },
+          "sortOrder": {
+            "type": "integer",
+            "format": "int32",
+            "description": "排序号"
+          }
+        }
+      },
+      "RecommendListMerchantItemResponse": {
+        "type": "object",
+        "description": "清单内商户展示项（App 端，按关联排序号升序）。",
+        "properties": {
+          "merchantId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "商户 ID"
+          },
+          "name": {
+            "type": "string",
+            "description": "商户名称"
+          },
+          "logo": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ImageResponse"
+              }
+            ],
+            "description": "LOGO"
+          },
+          "address": {
+            "type": "string",
+            "description": "详细地址"
+          },
+          "recommendReason": {
+            "type": "string",
+            "description": "编辑推荐理由（可空）"
+          },
+          "sortOrder": {
+            "type": "integer",
+            "format": "int32",
+            "description": "清单内排序号"
+          }
+        }
+      },
+      "ReviewItemResponse": {
+        "type": "object",
+        "description": "商户评价视图。",
+        "properties": {
+          "nickname": {
+            "type": "string",
+            "description": "昵称"
+          },
+          "title": {
+            "type": "string",
+            "description": "标题"
+          },
+          "content": {
+            "type": "string",
+            "description": "内容"
+          }
+        }
+      },
+      "RouteCityResponse": {
+        "type": "object",
+        "description": "路线内嵌城市对象（id + 中文名）。",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "城市 ID"
+          },
+          "name": {
+            "type": "string",
+            "description": "城市中文名"
+          }
+        }
+      },
+      "RouteDetailResponse": {
+        "type": "object",
+        "description": "路线详情响应（App 端）。",
+        "properties": {
+          "cityName": {
+            "type": "string",
+            "description": "所属城市中文名；可能为空"
+          },
+          "sortOrder": {
+            "type": "integer",
+            "format": "int32",
+            "description": "路线间排序号，升序展示"
+          },
+          "title": {
+            "type": "string",
+            "description": "主标题"
+          },
+          "ambassadorNote": {
+            "type": "string",
+            "description": "爱女大使说"
+          },
+          "thumbnail": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ImageResponse"
+              }
+            ],
+            "description": "缩略图（objectKey + 签名 URL）"
+          },
+          "images": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ImageResponse"
+            },
+            "description": "图片列表（objectKey + 签名 URL）"
+          },
+          "travelTime": {
+            "type": "string",
+            "description": "旅行时间，文本"
+          },
+          "season": {
+            "type": "string",
+            "description": "适合季节，文本"
+          },
+          "travelStatus": {
+            "type": "string",
+            "description": "旅行状态，文本"
+          },
+          "ambassador": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AmbassadorView"
+              }
+            ],
+            "description": "关联爱女大使信息"
+          },
+          "spots": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RouteSpotItemResponse"
+            },
+            "description": "地点列表（按添加顺序）"
+          },
+          "city": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RouteCityResponse"
+              }
+            ],
+            "description": "所属城市对象（id + 中文名）；城市记录已删除时为 null"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "创建时间（ISO-8601）"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "更新时间（ISO-8601）"
+          }
+        }
+      },
+      "RouteItemResponse": {
+        "type": "object",
+        "description": "路线列表项响应（App 端）。",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "ID（UUID）"
+          },
+          "title": {
+            "type": "string",
+            "description": "主标题"
+          },
+          "thumbnail": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ImageResponse"
+              }
+            ],
+            "description": "缩略图（objectKey + 签名 URL）"
+          },
+          "sortOrder": {
+            "type": "integer",
+            "format": "int32",
+            "description": "路线间排序号，升序展示"
+          },
+          "ambassadorName": {
+            "type": "string",
+            "description": "关联爱女大使名称"
+          },
+          "city": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RouteCityResponse"
+              }
+            ],
+            "description": "所属城市对象（id + 中文名）；城市记录已删除时为 null"
+          }
+        }
+      },
+      "RouteSpotItemResponse": {
+        "type": "object",
+        "description": "路线地点响应项（image 为签名 URL）。",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "地点名称"
+          },
+          "image": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ImageResponse"
+              }
+            ],
+            "description": "图片（objectKey + 签名 URL）"
+          },
+          "introduction": {
+            "type": "string",
+            "description": "地点介绍"
+          }
+        }
+      },
+      "ScoreView": {
+        "type": "object",
+        "description": "四维评分百分制视图（已由原始分换算为 0–100 整数）。",
+        "properties": {
+          "safetyEnvironmentPercent": {
+            "type": "integer",
+            "format": "int32",
+            "description": "安全环境百分制（原始满分 30）"
+          },
+          "businessRightsPercent": {
+            "type": "integer",
+            "format": "int32",
+            "description": "经营权益百分制（原始满分 25）"
+          },
+          "experienceFriendlyPercent": {
+            "type": "integer",
+            "format": "int32",
+            "description": "体验友好百分制（原始满分 25）"
+          },
+          "socialContributionPercent": {
+            "type": "integer",
+            "format": "int32",
+            "description": "社会贡献百分制（原始满分 20）"
+          }
+        }
+      },
+      "TagItemResponse": {
+        "type": "object",
+        "description": "标签简要视图（仅上架标签）。",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "标签 ID"
+          },
+          "name": {
+            "type": "string",
+            "description": "标签名"
+          }
+        }
+      }
+    }
+  }
+}
