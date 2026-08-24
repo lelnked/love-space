@@ -11,6 +11,7 @@ public record RouteDetailResponse(
         UUID id,
         int sortOrder,
         String title,
+        String cityName,
         String ambassadorNote,
         ImageResponse thumbnail,
         List<ImageResponse> images,

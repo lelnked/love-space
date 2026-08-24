@@ -31,6 +31,10 @@ public class Route extends BaseAuditEntity {
     @Column(name = "title", nullable = false)
     private String title;
 
+    /** 所属城市名（创建/编辑时写入，不再关联地图）。 */
+    @Column(name = "city_name")
+    private String cityName;
+
     /** 爱女大使说。 */
     @Column(name = "ambassador_note")
     private String ambassadorNote;

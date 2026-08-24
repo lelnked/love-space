@@ -10,6 +10,7 @@ import com.loves.space.modules.recommendlist.dto.RecommendListDetailResponse;
 import com.loves.space.modules.recommendlist.dto.RecommendListMerchantItemRequest;
 import com.loves.space.modules.recommendlist.dto.RecommendListMerchantResponse;
 import com.loves.space.modules.recommendlist.repository.RecommendListMerchantRepository;
+import com.loves.space.modules.recommendlist.repository.RecommendListRepository;
 import com.loves.space.support.AbstractPostgresIntegrationTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -80,7 +81,7 @@ class RecommendListServiceTest extends AbstractPostgresIntegrationTest {
     void createReturnsAllFields() {
         UUID cityId = cityId();
         RecommendListDetailResponse detail = recommendListService.create(
-                new RecommendListCreateRequest("周末探店", "介绍", cityId, 3, null));
+                new RecommendListCreateRequest("周末探店", "介绍", cityId, 3, null, null));
         assertThat(detail.id()).isNotNull();
         assertThat(detail.title()).isEqualTo("周末探店");
         assertThat(detail.introduction()).isEqualTo("介绍");
@@ -93,7 +94,7 @@ class RecommendListServiceTest extends AbstractPostgresIntegrationTest {
     @Test
     void createRejectsMissingCity() {
         assertThatThrownBy(() -> recommendListService.create(
-                new RecommendListCreateRequest("标题", null, UUID.randomUUID(), null, null)))
+                new RecommendListCreateRequest("标题", null, UUID.randomUUID(), null, null, null)))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("所属城市不存在");
     }
@@ -105,7 +106,7 @@ class RecommendListServiceTest extends AbstractPostgresIntegrationTest {
         UUID m1 = merchantIn(cityId);
         UUID m2 = merchantIn(cityId);
         UUID listId = recommendListService.create(
-                new RecommendListCreateRequest("排序清单", null, cityId, 0, null)).id();
+                new RecommendListCreateRequest("排序清单", null, cityId, 0, null, null)).id();
 
         RecommendListDetailResponse detail = recommendListService.replaceMerchants(listId, List.of(
                 new RecommendListMerchantItemRequest(m1, 5),
@@ -121,7 +122,7 @@ class RecommendListServiceTest extends AbstractPostgresIntegrationTest {
         UUID cityId = cityId();
         UUID otherCityMerchant = merchantIn(cityId());
         UUID listId = recommendListService.create(
-                new RecommendListCreateRequest("同城清单", null, cityId, 0, null)).id();
+                new RecommendListCreateRequest("同城清单", null, cityId, 0, null, null)).id();
 
         assertThatThrownBy(() -> recommendListService.replaceMerchants(listId,
                 List.of(new RecommendListMerchantItemRequest(otherCityMerchant, 0))))
@@ -135,11 +136,11 @@ class RecommendListServiceTest extends AbstractPostgresIntegrationTest {
         UUID cityId = cityId();
         UUID merchantId = merchantIn(cityId);
         UUID listId = recommendListService.create(
-                new RecommendListCreateRequest("去重清单", null, cityId, 0, null)).id();
+                new RecommendListCreateRequest("去重清单", null, cityId, 0, null, null)).id();
 
-        assertThatThrownBy(() -> recommendListService.replaceMerchants(listId, List.of(
-                new RecommendListMerchantItemRequest(merchantId, 0),
-                new RecommendListMerchantItemRequest(merchantId, 1))))
+        assertThatThrownBy(() -> recommendListService.replaceMerchants(listId,
+                List.of(new RecommendListMerchantItemRequest(merchantId, 0),
+                        new RecommendListMerchantItemRequest(merchantId, 1))))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("重复");
     }
@@ -148,9 +149,9 @@ class RecommendListServiceTest extends AbstractPostgresIntegrationTest {
     @Test
     void pageOrdersBySortOrderAscending() {
         UUID cityId = cityId();
-        recommendListService.create(new RecommendListCreateRequest("清单五", null, cityId, 5, null));
-        recommendListService.create(new RecommendListCreateRequest("清单一", null, cityId, 1, null));
-        recommendListService.create(new RecommendListCreateRequest("清单三", null, cityId, 3, null));
+        recommendListService.create(new RecommendListCreateRequest("清单五", null, cityId, 5, null, null));
+        recommendListService.create(new RecommendListCreateRequest("清单一", null, cityId, 1, null, null));
+        recommendListService.create(new RecommendListCreateRequest("清单三", null, cityId, 3, null, null));
 
         assertThat(recommendListService.page(cityId, null, org.springframework.data.domain.PageRequest.of(0, 10))
                 .content())
@@ -165,7 +166,7 @@ class RecommendListServiceTest extends AbstractPostgresIntegrationTest {
         UUID m1 = merchantIn(cityId);
         UUID m2 = merchantIn(cityId);
         UUID listId = recommendListService.create(
-                new RecommendListCreateRequest("移除清单", null, cityId, 0, null)).id();
+                new RecommendListCreateRequest("移除清单", null, cityId, 0, null, null)).id();
         recommendListService.replaceMerchants(listId, List.of(
                 new RecommendListMerchantItemRequest(m1, 0),
                 new RecommendListMerchantItemRequest(m2, 1)));
@@ -184,7 +185,7 @@ class RecommendListServiceTest extends AbstractPostgresIntegrationTest {
         UUID cityId = cityId();
         UUID merchantId = merchantIn(cityId);
         UUID listId = recommendListService.create(
-                new RecommendListCreateRequest("待删清单", null, cityId, 0, null)).id();
+                new RecommendListCreateRequest("待删清单", null, cityId, 0, null, null)).id();
         recommendListService.replaceMerchants(listId,
                 List.of(new RecommendListMerchantItemRequest(merchantId, 0)));
 

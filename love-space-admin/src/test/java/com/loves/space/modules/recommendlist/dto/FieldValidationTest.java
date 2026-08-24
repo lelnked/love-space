@@ -65,10 +65,10 @@ class FieldValidationTest {
     @Test
     void recommendListMissingTitleOrCityRejected() {
         assertThat(messages(VALIDATOR.validate(
-                new RecommendListCreateRequest("  ", null, UUID.randomUUID(), null, null))))
+                new RecommendListCreateRequest("  ", null, UUID.randomUUID(), null, null, null))))
                 .contains("清单标题不能为空");
         assertThat(messages(VALIDATOR.validate(
-                new RecommendListCreateRequest("标题", null, null, null, null))))
+                new RecommendListCreateRequest("标题", null, null, null, null, null))))
                 .contains("所属城市不能为空");
     }
 }

@@ -13,6 +13,7 @@ import java.util.UUID;
  *
  * @param sortOrder      路线间排序（可空，默认 0）
  * @param title          主标题，必填
+ * @param cityName       所属城市名，必填
  * @param ambassadorNote 爱女大使说
  * @param thumbnail      缩略图 objectKey，必填 1 张
  * @param images         路线图片 objectKey，≥1 张
@@ -25,6 +26,7 @@ import java.util.UUID;
 public record RouteUpsertRequest(
         Integer sortOrder,
         @NotBlank(message = "路线标题不能为空") String title,
+        @NotBlank(message = "所属城市不能为空") String cityName,
         String ambassadorNote,
         @NotBlank(message = "路线缩略图不能为空") String thumbnail,
         @NotEmpty(message = "路线图片至少 1 张") List<@NotBlank(message = "路线图片不能为空白") String> images,

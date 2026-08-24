@@ -13,6 +13,7 @@ public record RouteItemResponse(
         ImageResponse thumbnail,
         UUID ambassadorId,
         String ambassadorName,
+        String cityName,
         int spotCount,
         OffsetDateTime createdAt,
         OffsetDateTime updatedAt

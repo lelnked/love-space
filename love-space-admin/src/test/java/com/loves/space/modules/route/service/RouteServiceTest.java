@@ -54,14 +54,15 @@ class RouteServiceTest extends AbstractPostgresIntegrationTest {
                 .thenAnswer(inv -> "https://signed.example.com/" + inv.getArgument(0));
     }
 
-    private UUID cityId() {
+    private String cityName() {
         City city = new City();
         city.setChineseName("路线城-" + UUID.randomUUID());
         city.setEnglishName("route-city");
         city.setChineseProvince("省");
         city.setEnglishProvince("Province");
         city.setOnline(true);
-        return cityRepository.save(city).getId();
+        cityRepository.save(city);
+        return city.getChineseName();
     }
 
     private UUID ambassadorId() {
@@ -73,20 +74,20 @@ class RouteServiceTest extends AbstractPostgresIntegrationTest {
         return ambassadorRepository.save(ambassador).getId();
     }
 
-    private RouteUpsertRequest request(UUID cityId, UUID ambassadorId, int sortOrder, String title,
+    private RouteUpsertRequest request(String cityName, UUID ambassadorId, int sortOrder, String title,
                                        List<RouteSpotRequest> spots) {
-        return new RouteUpsertRequest(cityId, sortOrder, title, "大使说", "images/thumb.png",
+        return new RouteUpsertRequest(sortOrder, title, cityName, "大使说", "images/thumb.png",
                 List.of("images/a.png"), "3 天", "春", "可出行", ambassadorId, spots);
     }
 
     // @scenario: route/路线管理#创建路线
     @Test
     void createKeepsSpotOrder() {
-        UUID cityId = cityId();
-        RouteDetailResponse detail = routeService.create(request(cityId, ambassadorId(), 1, "路线一", List.of(
+        String cityName = cityName();
+        RouteDetailResponse detail = routeService.create(request(cityName, ambassadorId(), 1, "路线一", List.of(
                 new RouteSpotRequest("地点甲", "images/s1.png", "介绍甲"),
                 new RouteSpotRequest("地点乙", "images/s2.png", "介绍乙"))));
-        assertThat(detail.cityId()).isEqualTo(cityId);
+        assertThat(detail.cityName()).isEqualTo(cityName);
         assertThat(detail.spots()).extracting(RouteSpotResponse::name)
                 .containsExactly("地点甲", "地点乙");
         assertThat(detail.thumbnail().url()).contains("bound/images/thumb.png");
@@ -96,25 +97,25 @@ class RouteServiceTest extends AbstractPostgresIntegrationTest {
     @Test
     void createRejectsMissingCityOrAmbassador() {
         assertThatThrownBy(() -> routeService.create(
-                request(UUID.randomUUID(), ambassadorId(), 0, "无城路线", List.of())))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("所属城市不存在");
-        assertThatThrownBy(() -> routeService.create(
-                request(cityId(), UUID.randomUUID(), 0, "无大使路线", List.of())))
+                request(cityName(), UUID.randomUUID(), 0, "无大使路线", List.of())))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("关联大使不存在");
+        assertThatThrownBy(() -> routeService.create(
+                request("不存在的城市", ambassadorId(), 0, "无城路线", List.of())))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("所属城市不存在");
     }
 
     // @scenario: route/路线管理#路线列表按排序号升序
     @Test
     void pageOrdersBySortOrderAscending() {
-        UUID cityId = cityId();
+        String cityName = cityName();
         UUID ambassadorId = ambassadorId();
-        routeService.create(request(cityId, ambassadorId, 5, "路线五", List.of()));
-        routeService.create(request(cityId, ambassadorId, 1, "路线一", List.of()));
-        routeService.create(request(cityId, ambassadorId, 3, "路线三", List.of()));
+        routeService.create(request(cityName, ambassadorId, 5, "路线五", List.of()));
+        routeService.create(request(cityName, ambassadorId, 1, "路线一", List.of()));
+        routeService.create(request(cityName, ambassadorId, 3, "路线三", List.of()));
 
-        assertThat(routeService.page(cityId, null, PageRequest.of(0, 10)).content())
+        assertThat(routeService.page(null, PageRequest.of(0, 10)).content())
                 .extracting(item -> item.sortOrder())
                 .containsExactly(1, 3, 5);
     }
@@ -122,7 +123,8 @@ class RouteServiceTest extends AbstractPostgresIntegrationTest {
     // @scenario: route/路线管理#删除路线
     @Test
     void deleteRemovesRouteWithSpots() {
-        UUID id = routeService.create(request(cityId(), ambassadorId(), 0, "待删路线",
+        String cityName = cityName();
+        UUID id = routeService.create(request(cityName, ambassadorId(), 0, "待删路线",
                 List.of(new RouteSpotRequest("地点", "images/s.png", "介绍")))).id();
         routeService.delete(id);
         assertThatThrownBy(() -> routeService.detail(id))

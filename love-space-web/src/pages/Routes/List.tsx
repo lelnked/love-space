@@ -14,7 +14,6 @@ import { CityItem, listCities } from "../../api/cities";
 
 function buildQuery(filters: FilterValues, page: number, size: number): RouteQuery {
   const q: RouteQuery = { page, size };
-  if (filters.cityId) q.cityId = filters.cityId;
   if (filters.keyword) q.keyword = filters.keyword;
   return q;
 }
@@ -38,14 +37,8 @@ export default function RouteList() {
   const filterFields = useMemo<FilterField[]>(
     () => [
       { name: "keyword", label: "主标题", type: "text", placeholder: "模糊匹配" },
-      {
-        name: "cityId",
-        label: "所属地图",
-        type: "select",
-        options: cities.map((c) => ({ label: c.chineseName, value: c.id })),
-      },
     ],
-    [cities],
+    [],
   );
 
   const cityName = useMemo(

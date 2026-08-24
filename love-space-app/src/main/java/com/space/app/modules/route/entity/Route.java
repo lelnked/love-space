@@ -22,10 +22,6 @@ import java.util.UUID;
 @Setter
 public class Route extends BaseAuditEntity {
 
-    /** 所属城市 ID（无 FK）。 */
-    @Column(name = "city_id", nullable = false)
-    private UUID cityId;
-
     /** 路线间排序号，升序展示。 */
     @Column(name = "sort_order", nullable = false)
     private int sortOrder;
@@ -67,4 +63,8 @@ public class Route extends BaseAuditEntity {
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "spots", nullable = false, columnDefinition = "jsonb")
     private List<RouteSpot> spots = new ArrayList<>();
+
+    /** 所属城市名（创建/编辑时写入，用于 App 端反查城市）。允许为空。 */
+    @Column(name = "city_name")
+    private String cityName;
 }

@@ -89,7 +89,7 @@ class FeaturedCycleItemServiceTest extends AbstractPostgresIntegrationTest {
 
     private Route route(String title) {
         Route route = new Route();
-        route.setCityId(cityId());
+        route.setCityName("周期城-" + UUID.randomUUID());
         route.setTitle(title);
         route.setThumbnail("images/thumb.png");
         route.setAmbassadorId(UUID.randomUUID());

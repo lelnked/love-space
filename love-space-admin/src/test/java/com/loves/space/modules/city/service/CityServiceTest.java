@@ -116,7 +116,7 @@ class CityServiceTest extends AbstractPostgresIntegrationTest {
         UUID ambassadorId = ambassadorRepository.save(ambassador).getId();
 
         Route route = new Route();
-        route.setCityId(cityId);
+        route.setCityName("测试城-" + UUID.randomUUID());
         route.setSortOrder(0);
         route.setTitle("路线-" + UUID.randomUUID());
         route.setThumbnail("bound/thumb.png");

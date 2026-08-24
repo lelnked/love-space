@@ -14,8 +14,8 @@ import java.util.UUID;
 
 /**
  * 路线只读 API。
- * <p>GET /api/app/routes?cityId= → 200 上架城市的可见路线数组（sortOrder 升序）；
- * GET /api/app/routes/{id} → 200 详情（含地点与大使信息），城市下架/大使下线/不存在 → 404。
+ * <p>GET /api/app/routes?cityName= → 200 可见路线数组（sortOrder 升序）；
+ * GET /api/app/routes/{id} → 200 详情（含地点与大使信息与城市对象），城市记录已删除时 city 为 null，大使下线 → 404。
  */
 @RestController
 @RequestMapping("/api/app/routes")
@@ -27,10 +27,10 @@ public class RouteController {
         this.routeQueryService = routeQueryService;
     }
 
-    /** 按城市查询路线列表。 */
+    /** 按城市名查询路线列表；城市不存在返回空数组。 */
     @GetMapping
-    public List<RouteItemResponse> list(@RequestParam UUID cityId) {
-        return routeQueryService.listByCity(cityId);
+    public List<RouteItemResponse> list(@RequestParam String cityName) {
+        return routeQueryService.listByCity(cityName);
     }
 
     /** 路线详情（含地点明细与大使信息）。 */

@@ -8,7 +8,6 @@ import ImageUploader from "../../components/form/ImageUploader";
 import ImageUploaderList, { ImageListItem } from "../../components/form/ImageUploaderList";
 import { createRoute, getRoute, RouteUpsertRequest, updateRoute } from "../../api/routes";
 import { AmbassadorItem, pageAmbassadors } from "../../api/ambassadors";
-import { CityItem, getCity, listCities } from "../../api/cities";
 import { useToast } from "../../context/ToastContext";
 
 interface FieldError {
@@ -29,8 +28,7 @@ export default function RouteForm() {
   const { id } = useParams<{ id?: string }>();
   const editing = Boolean(id);
 
-  const [mapName, setMapName] = useState("");
-  const [cityId, setCityId] = useState("");
+  const [cityName, setCityName] = useState("");
   const [sortOrder, setSortOrder] = useState<number>(0);
   const [title, setTitle] = useState("");
   const [ambassadorNote, setAmbassadorNote] = useState("");
@@ -42,8 +40,6 @@ export default function RouteForm() {
   const [travelStatus, setTravelStatus] = useState("");
   const [ambassadorId, setAmbassadorId] = useState("");
   const [spots, setSpots] = useState<SpotRow[]>([]);
-
-  const [cities, setCities] = useState<CityItem[]>([]);
   const [ambassadors, setAmbassadors] = useState<AmbassadorItem[]>([]);
 
   const [loading, setLoading] = useState(false);
@@ -52,19 +48,16 @@ export default function RouteForm() {
   const toast = useToast();
 
   useEffect(() => {
-    // ponytail: 大使下拉一次取 200 条，大使量级到分页规模再做搜索选择器
     void pageAmbassadors({ page: 1, size: 200 })
       .then((d) => setAmbassadors(d.content))
       .catch(() => undefined);
     if (!id) {
-      // 仍拉城市列表做历史兼容回显
-      void listCities().then(setCities).catch(() => undefined);
       return;
     }
     setLoading(true);
     getRoute(id)
       .then((d) => {
-        setCityId(d.cityId);
+        setCityName(d.cityName ?? "");
         setSortOrder(d.sortOrder);
         setTitle(d.title);
         setAmbassadorNote(d.ambassadorNote ?? "");
@@ -83,10 +76,6 @@ export default function RouteForm() {
             introduction: s.introduction,
           })),
         );
-        // 仅用于历史 cityId 的回显对照，不再参与选择
-        void getCity(d.cityId)
-          .then((c) => setCities([c]))
-          .catch(() => undefined);
       })
       .catch((err: AxiosError<{ detail?: string }>) => {
         toast.error(err.response?.data?.detail ?? "加载失败");
@@ -103,10 +92,7 @@ export default function RouteForm() {
     setFieldErrors({});
 
     const errs: Record<string, string> = {};
-    if (!/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/.test(mapName.trim())) {
-      errs.mapName = "请输入合法的地图 ID（UUID 格式）";
-    }
-    if (!cityId) errs.cityId = "请选择或输入所属地图 ID";
+    if (!cityName.trim()) errs.cityName = "请输入所属城市名";
     if (!title.trim()) errs.title = "路线标题不能为空";
     if (!thumbnailKey.trim()) errs.thumbnail = "请上传缩略图";
     if (images.length === 0) errs.images = "至少上传 1 张图片";
@@ -121,12 +107,8 @@ export default function RouteForm() {
       return;
     }
 
-    let resolvedCityId = cityId;
-    if (!resolvedCityId && mapName.trim()) {
-      resolvedCityId = mapName.trim();
-    }
     const payload: RouteUpsertRequest = {
-      cityId: resolvedCityId,
+      cityName: cityName.trim(),
       sortOrder,
       title: title.trim(),
       ambassadorNote: ambassadorNote.trim() || null,
@@ -182,6 +164,20 @@ export default function RouteForm() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label>
+                  所属城市 <span className="text-error-500">*</span>
+                </Label>
+                <Input
+                  value={cityName}
+                  onChange={(e) => setCityName(e.target.value)}
+                  error={Boolean(fieldErrors.cityName)}
+                  hint={fieldErrors.cityName}
+                />
+                <div className="text-xs text-gray-400 mt-1">
+                  输入已有的城市中文名，创建/编辑时写入路线并校验城市库。
+                </div>
+              </div>
+              <div>
+                <Label>
                   主标题 <span className="text-error-500">*</span>
                 </Label>
                 <Input
@@ -198,39 +194,6 @@ export default function RouteForm() {
                   value={String(sortOrder)}
                   onChange={(e) => setSortOrder(Number(e.target.value))}
                 />
-              </div>
-              <div>
-                <Label>
-                  所属地图 <span className="text-error-500">*</span>
-                </Label>
-                <Input
-                  value={editing ? cities[0]?.chineseName ?? cityId : mapName}
-                  onChange={(e) => {
-                    setMapName(e.target.value);
-                    if (!editing) setCityId("");
-                  }}
-                  disabled={editing}
-                  placeholder="可输入任意地图名称，无需系统校验"
-                />
-                {!editing && (
-                  <div className="text-xs text-gray-400 mt-1">
-                    输入后以“所属地图 ID”保存，不再校验城市库。
-                  </div>
-                )}
-                {editing && (
-                  <div className="text-xs text-gray-400 mt-1">路线创建后所属地图不可修改</div>
-                )}
-                <input
-                  type="hidden"
-                  value={editing ? cityId : (mapName.trim() ? mapName.trim() : "")}
-                  onChange={() => {}}
-                />
-                {fieldErrors.mapName && (
-                  <div className="text-error-500 text-xs mt-1">{fieldErrors.mapName}</div>
-                )}
-                {fieldErrors.cityId && (
-                  <div className="text-error-500 text-xs mt-1">{fieldErrors.cityId}</div>
-                )}
               </div>
               <div>
                 <Label>
@@ -258,7 +221,7 @@ export default function RouteForm() {
                 <Input value={travelTime} onChange={(e) => setTravelTime(e.target.value)} />
               </div>
               <div>
-                <Label>季节</Label>
+                <Label>适合季节</Label>
                 <Input value={season} onChange={(e) => setSeason(e.target.value)} />
               </div>
               <div>

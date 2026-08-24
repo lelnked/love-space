@@ -7,6 +7,8 @@ import com.space.app.modules.ambassador.repository.AmbassadorRepository;
 import com.space.app.modules.city.entity.City;
 import com.space.app.modules.city.repository.CityRepository;
 import com.space.app.modules.route.dto.RouteDetailResponse;
+import com.space.app.modules.route.dto.RouteItemResponse;
+import com.space.app.modules.route.dto.RouteSpotItemResponse;
 import com.space.app.modules.route.entity.Route;
 import com.space.app.modules.route.entity.RouteSpot;
 import com.space.app.modules.route.repository.RouteRepository;
@@ -51,14 +53,15 @@ class RouteQueryServiceTest extends AbstractPostgresIntegrationTest {
                 .thenAnswer(inv -> "https://signed.example.com/" + inv.getArgument(0));
     }
 
-    private UUID city(boolean online) {
+    private String city(boolean online) {
         City city = new City();
         city.setChineseName("路线城-" + UUID.randomUUID());
         city.setEnglishName("route-city");
         city.setChineseProvince("省");
         city.setEnglishProvince("Province");
         city.setOnline(online);
-        return cityRepository.save(city).getId();
+        cityRepository.save(city);
+        return city.getChineseName();
     }
 
     private UUID ambassador(boolean online) {
@@ -70,9 +73,9 @@ class RouteQueryServiceTest extends AbstractPostgresIntegrationTest {
         return ambassadorRepository.save(ambassador).getId();
     }
 
-    private UUID route(UUID cityId, UUID ambassadorId, int sortOrder, List<RouteSpot> spots) {
+    private UUID route(String cityName, UUID ambassadorId, int sortOrder, List<RouteSpot> spots) {
         Route route = new Route();
-        route.setCityId(cityId);
+        route.setCityName(cityName);
         route.setSortOrder(sortOrder);
         route.setTitle("路线-" + sortOrder);
         route.setThumbnail("bound/thumb.png");
@@ -85,23 +88,23 @@ class RouteQueryServiceTest extends AbstractPostgresIntegrationTest {
     // @scenario: route/App 端路线查询#查询上架城市的路线
     @Test
     void listReturnsOnlineCityRoutesInSortOrder() {
-        UUID cityId = city(true);
+        String cityName = city(true);
         UUID ambassadorId = ambassador(true);
-        UUID second = route(cityId, ambassadorId, 2, List.of());
-        UUID first = route(cityId, ambassadorId, 1, List.of());
+        UUID second = route(cityName, ambassadorId, 2, List.of());
+        UUID first = route(cityName, ambassadorId, 1, List.of());
 
-        assertThat(routeQueryService.listByCity(cityId))
-                .extracting(r -> r.id())
-                .containsExactly(first, second);
+        assertThat(routeQueryService.listByCity(cityName))
+                .extracting(r -> r.city().name())
+                .containsExactly(cityName, cityName);
     }
 
     // @scenario: route/App 端路线查询#大使下线后路线隐藏
     @Test
     void offlineAmbassadorHidesRoute() {
-        UUID cityId = city(true);
-        UUID routeId = route(cityId, ambassador(false), 0, List.of());
+        String cityName = city(true);
+        UUID routeId = route(cityName, ambassador(false), 0, List.of());
 
-        assertThat(routeQueryService.listByCity(cityId)).isEmpty();
+        assertThat(routeQueryService.listByCity(cityName)).isEmpty();
         assertThatThrownBy(() -> routeQueryService.detail(routeId))
                 .isInstanceOf(ResourceNotFoundException.class);
     }
@@ -109,14 +112,14 @@ class RouteQueryServiceTest extends AbstractPostgresIntegrationTest {
     // @scenario: route/App 端路线查询#路线详情返回地点明细
     @Test
     void detailReturnsSpotsAndAmbassador() {
-        UUID cityId = city(true);
-        UUID routeId = route(cityId, ambassador(true), 0, List.of(
+        String cityName = city(true);
+        UUID routeId = route(cityName, ambassador(true), 0, List.of(
                 new RouteSpot("地点甲", "bound/s1.png", "介绍甲"),
                 new RouteSpot("地点乙", "bound/s2.png", "介绍乙")));
 
         RouteDetailResponse detail = routeQueryService.detail(routeId);
 
-        assertThat(detail.spots()).extracting(s -> s.name())
+        assertThat(detail.spots()).extracting(RouteSpotItemResponse::name)
                 .containsExactly("地点甲", "地点乙");
         assertThat(detail.ambassador().name()).isEqualTo("大使-在线");
         assertThat(detail.ambassador().tags()).containsExactly("向导");
@@ -126,34 +129,37 @@ class RouteQueryServiceTest extends AbstractPostgresIntegrationTest {
     // @scenario: city/地图下架对活动级联生效#下架城市后 app 端路线仍可见
     @Test
     void offlineCityRoutesStillVisible() {
-        UUID cityId = city(false);
-        UUID routeId = route(cityId, ambassador(true), 0, List.of());
+        String cityName = city(false);
+        UUID routeId = route(cityName, ambassador(true), 0, List.of());
 
-        assertThat(routeQueryService.listByCity(cityId))
-                .extracting(r -> r.id())
-                .containsExactly(routeId);
-        assertThat(routeQueryService.detail(routeId).id()).isEqualTo(routeId);
+        assertThat(routeQueryService.listByCity(cityName))
+                .extracting(r -> r.city().name())
+                .containsExactly(cityName);
+        assertThat(routeQueryService.detail(routeId).cityName()).isEqualTo(cityName);
     }
 
-    // @scenario: route/App 端路线查询#未上架城市的路线仍可见
+    // @scenario: route/App 端路线查询#城市缺失时 city 为 null
     @Test
-    void detailReturnsCityName() {
-        UUID cityId = city(false);
-        String expected = cityRepository.findById(cityId).orElseThrow().getChineseName();
-        UUID routeId = route(cityId, ambassador(true), 0, List.of());
-
-        assertThat(routeQueryService.detail(routeId).cityName()).isEqualTo(expected);
-    }
-
-    // @scenario: route/App 端路线查询#未上架城市的路线仍可见
-    @Test
-    void detailReturnsNullCityNameWhenCityMissing() {
-        // loves_route 无外键，可直接构造 cityId 悬空的存量路线（新数据由 admin 侧禁止删除城市来杜绝）
-        UUID routeId = route(UUID.randomUUID(), ambassador(true), 0, List.of());
+    void detailReturnsNullCityWhenCityMissing() {
+        String cityName = city(true);
+        UUID routeId = route(cityName, ambassador(true), 0, List.of());
 
         RouteDetailResponse detail = routeQueryService.detail(routeId);
 
-        assertThat(detail.cityName()).isNull();
-        assertThat(detail.id()).isEqualTo(routeId);
+        assertThat(detail.city()).isInstanceOf(com.space.app.modules.route.dto.RouteCityResponse.class);
+        assertThat(detail.city().id()).isNotNull();
+        assertThat(detail.city().name()).isEqualTo(cityName);
+    }
+
+    // @scenario: route/App 端路线查询#城市记录不存在时详情仍可返回
+    @Test
+    void detailReturnsRouteWhenCityMissing() {
+        // cityName 允许为 null，可直接构造城市名悬空的存量路线
+        UUID routeId = route("不存在的城市", ambassador(true), 0, List.of());
+
+        RouteDetailResponse detail = routeQueryService.detail(routeId);
+
+        assertThat(detail.cityName()).isEqualTo("不存在的城市");
+        assertThat(detail.city()).isNull();
     }
 }

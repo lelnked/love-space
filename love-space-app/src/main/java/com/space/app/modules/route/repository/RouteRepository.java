@@ -11,5 +11,5 @@ import java.util.UUID;
  */
 public interface RouteRepository extends JpaRepository<Route, UUID> {
 
-    List<Route> findAllByCityIdOrderBySortOrderAsc(UUID cityId);
+    List<Route> findAllByCityNameOrderBySortOrderAsc(String cityName);
 }

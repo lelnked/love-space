@@ -2,17 +2,18 @@ import { apiClient } from "./client";
 import type { Page } from "./types";
 import type { ImageResponse } from "../types/image";
 
+export interface RouteCity {
+  id: string;
+  name: string;
+}
+
 export interface RouteItem {
   id: string;
-  cityId: string;
-  sortOrder: number;
   title: string;
   thumbnail: ImageResponse;
-  ambassadorId: string;
+  sortOrder: number;
   ambassadorName: string;
-  spotCount: number;
-  createdAt: string;
-  updatedAt: string;
+  city: RouteCity | null;
 }
 
 export interface RouteSpot {
@@ -23,9 +24,9 @@ export interface RouteSpot {
 
 export interface RouteDetail {
   id: string;
-  cityId: string;
   sortOrder: number;
   title: string;
+  cityName: string;
   ambassadorNote: string | null;
   thumbnail: ImageResponse;
   images: ImageResponse[];
@@ -40,7 +41,6 @@ export interface RouteDetail {
 }
 
 export interface RouteQuery {
-  cityId?: string;
   keyword?: string;
   page?: number;
   size?: number;
@@ -54,7 +54,7 @@ export interface RouteSpotRequest {
 }
 
 export interface RouteUpsertRequest {
-  cityId: string;
+  cityName: string;
   sortOrder?: number;
   title: string;
   ambassadorNote?: string | null;
@@ -71,7 +71,6 @@ export interface RouteUpsertRequest {
 
 export async function pageRoutes(query: RouteQuery): Promise<Page<RouteItem>> {
   const params: Record<string, string | number> = {};
-  if (query.cityId) params.cityId = query.cityId;
   if (query.keyword) params.keyword = query.keyword;
   if (query.page) params.page = query.page;
   if (query.size) params.size = query.size;
