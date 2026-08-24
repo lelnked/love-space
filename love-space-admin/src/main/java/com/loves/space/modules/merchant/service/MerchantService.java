@@ -7,6 +7,7 @@ import com.loves.space.common.page.PageResponseMapper.PageResponse;
 import com.loves.space.common.util.ImageResponses;
 import com.loves.space.infrastructure.storage.ImageUrlSigner;
 import com.loves.space.infrastructure.storage.ObjectKeyValidator;
+import org.springframework.context.ApplicationEventPublisher;
 import com.loves.space.modules.category.entity.Category;
 import com.loves.space.modules.category.repository.CategoryRepository;
 import com.loves.space.modules.city.entity.City;
@@ -21,11 +22,13 @@ import com.loves.space.modules.merchant.entity.Merchant_;
 import com.loves.space.modules.merchant.repository.MerchantRepository;
 import com.loves.space.modules.merchant.repository.MerchantReviewRepository;
 import com.loves.space.modules.merchant.repository.MerchantTagRepository;
+import com.loves.space.modules.merchant.event.MerchantOnlineChangedEvent;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -58,6 +61,7 @@ public class MerchantService {
     private final ImageUrlSigner imageUrlSigner;
     private final CityRepository cityRepository;
     private final CategoryRepository categoryRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     /**
      * 创建或更新商户。
@@ -202,11 +206,15 @@ public class MerchantService {
     public MerchantDetailResponse setOnline(UUID id, boolean online) {
         Merchant merchant = merchantRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("商户不存在：" + id));
+        boolean previous = merchant.isOnline();
         if (online) {
             validateOnlineEligibility(merchant.getCityId(), merchant.getCategoryId());
         }
         merchant.setOnline(online);
         merchantRepository.save(merchant);
+        if (previous != online) {
+            eventPublisher.publishEvent(new MerchantOnlineChangedEvent(id, previous, online));
+        }
         return detail(id);
     }
 

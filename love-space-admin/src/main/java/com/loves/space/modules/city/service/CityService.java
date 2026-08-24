@@ -16,7 +16,6 @@ import com.loves.space.modules.city.event.CityDeletedEvent;
 import com.loves.space.modules.city.event.CityOnlineChangedEvent;
 import com.loves.space.modules.city.repository.CityRepository;
 import com.loves.space.modules.manager.service.ManagerService;
-import com.loves.space.modules.route.repository.RouteRepository;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Pageable;
@@ -38,18 +37,15 @@ import java.util.UUID;
 public class CityService {
 
     private final CityRepository cityRepository;
-    private final RouteRepository routeRepository;
     private final ApplicationEventPublisher eventPublisher;
     private final ObjectKeyValidator objectKeyValidator;
     private final ImageUrlSigner imageUrlSigner;
 
     public CityService(CityRepository cityRepository,
-                       RouteRepository routeRepository,
                        ApplicationEventPublisher eventPublisher,
                        ObjectKeyValidator objectKeyValidator,
                        ImageUrlSigner imageUrlSigner) {
         this.cityRepository = cityRepository;
-        this.routeRepository = routeRepository;
         this.eventPublisher = eventPublisher;
         this.objectKeyValidator = objectKeyValidator;
         this.imageUrlSigner = imageUrlSigner;
@@ -168,17 +164,13 @@ public class CityService {
 
     /**
      * 删除城市。
-     * <p>该城市下仍有路线时拒绝删除——路线的 cityId 无外键，删掉城市会留下悬空引用；
-     * 拒绝时不发布事件。删除成功后发布 {@link CityDeletedEvent}，
+     * <p>删除成功后发布事件，
      * 由 {@code BannerEventListener} 下架关联 CITY banner，
      * 由 {@code MerchantEventListener} 下架该城市下全部商户。
      */
     public void delete(UUID id) {
         if (!cityRepository.existsById(id)) {
             return;
-        }
-        if (routeRepository.existsByCityId(id)) {
-            throw new IllegalArgumentException("该城市下仍有路线，请先删除这些路线后再删除城市：" + id);
         }
         cityRepository.deleteById(id);
         eventPublisher.publishEvent(new CityDeletedEvent(id));

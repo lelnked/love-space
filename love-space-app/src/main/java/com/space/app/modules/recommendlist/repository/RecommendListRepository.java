@@ -11,6 +11,6 @@ import java.util.UUID;
  */
 public interface RecommendListRepository extends JpaRepository<RecommendList, UUID> {
 
-    /** 城市下清单，排序号升序。 */
-    List<RecommendList> findAllByCityIdOrderBySortOrderAsc(UUID cityId);
+    /** 某城市下 ONLINE 清单，按排序号升序。 */
+    List<RecommendList> findByCityIdAndStatusOrderBySortOrderAsc(UUID cityId, String status);
 }

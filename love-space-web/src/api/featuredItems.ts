@@ -19,7 +19,7 @@ export interface FeaturedItemQuery {
 }
 
 export interface FeaturedItemUpsertRequest {
-  /** 关联城市，创建后不可变。 */
+  /** 关联地图，创建后不可变。 */
   cityId: string;
   /** banner 图片 objectKey。 */
   banner: string;

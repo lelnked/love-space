@@ -99,7 +99,7 @@ export default function ActivityForm() {
 
     const cleanTags = tags.map((t) => t.trim()).filter(Boolean);
     const errs: Record<string, string> = {};
-    if (!cityId) errs.cityId = "请选择所属城市";
+    if (!cityId) errs.cityId = "请选择所属地图";
     if (!title.trim()) errs.title = "活动标题不能为空";
     if (images.length === 0) errs.images = "至少上传 1 张图片";
     itinerary.forEach((it, i) => {
@@ -178,7 +178,7 @@ export default function ActivityForm() {
               </div>
               <div>
                 <Label>
-                  所属城市 <span className="text-error-500">*</span>
+                  所属地图 <span className="text-error-500">*</span>
                 </Label>
                 <select
                   className="border rounded px-3 py-2 text-sm w-full h-11 disabled:bg-gray-100 disabled:text-gray-500"
@@ -195,7 +195,7 @@ export default function ActivityForm() {
                   ))}
                 </select>
                 {editing && (
-                  <div className="text-xs text-gray-400 mt-1">活动创建后所属城市不可修改</div>
+                  <div className="text-xs text-gray-400 mt-1">活动创建后所属地图不可修改</div>
                 )}
                 {fieldErrors.cityId && (
                   <div className="text-error-500 text-xs mt-1">{fieldErrors.cityId}</div>

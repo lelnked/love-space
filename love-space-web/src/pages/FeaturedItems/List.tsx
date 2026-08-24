@@ -60,7 +60,7 @@ export default function FeaturedItemList() {
     () => [
       {
         name: "cityId",
-        label: "关联城市",
+        label: "关联地图",
         type: "select",
         options: cities.map((c) => ({ label: c.chineseName, value: c.id })),
       },
@@ -119,7 +119,7 @@ export default function FeaturedItemList() {
     setFieldErrors({});
 
     const errs: Record<string, string> = {};
-    if (!cityId) errs.cityId = "请选择关联城市";
+    if (!cityId) errs.cityId = "请选择关联地图";
     if (!bannerKey.trim()) errs.banner = "请上传 banner 图片";
     if (Object.keys(errs).length > 0) {
       setFieldErrors(errs);
@@ -200,7 +200,7 @@ export default function FeaturedItemList() {
     },
     {
       key: "cityId",
-      header: "关联城市",
+      header: "关联地图",
       width: "10rem",
       render: (it) => cityName[it.cityId] ?? "-",
     },
@@ -281,14 +281,20 @@ export default function FeaturedItemList() {
         </ComponentCard>
       </div>
 
-      <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} className="max-w-lg m-4 p-6">
+      <Modal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        showBackdrop={false}
+        className="max-w-[520px] m-4 -translate-y-[100px] shadow-2xl ring-1 ring-gray-200 dark:ring-gray-800"
+      >
+        <div className="relative w-full rounded-3xl bg-white p-6 dark:bg-gray-900 lg:p-8">
         <h2 className="text-lg font-semibold text-gray-800 dark:text-white/90 mb-5">
           {editingId ? "编辑精选推荐" : "新增精选推荐"}
         </h2>
         <div className="space-y-5">
           <div>
             <Label>
-              关联城市 <span className="text-error-500">*</span>
+              关联地图 <span className="text-error-500">*</span>
             </Label>
             <select
               className="border rounded px-3 py-2 text-sm w-full h-11 disabled:bg-gray-100 disabled:text-gray-500"
@@ -305,7 +311,7 @@ export default function FeaturedItemList() {
               ))}
             </select>
             {editingId && (
-              <div className="text-xs text-gray-400 mt-1">精选推荐创建后关联城市不可修改</div>
+              <div className="text-xs text-gray-400 mt-1">精选推荐创建后关联地图不可修改</div>
             )}
             {fieldErrors.cityId && (
               <div className="text-error-500 text-xs mt-1">{fieldErrors.cityId}</div>
@@ -348,6 +354,7 @@ export default function FeaturedItemList() {
               取消
             </Button>
           </div>
+        </div>
         </div>
       </Modal>
     </>

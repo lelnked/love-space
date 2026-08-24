@@ -5,8 +5,6 @@ import com.space.app.common.util.ImageResponses;
 import com.space.app.infrastructure.storage.ImageUrlSigner;
 import com.space.app.modules.ambassador.entity.Ambassador;
 import com.space.app.modules.ambassador.repository.AmbassadorRepository;
-import com.space.app.modules.city.entity.City;
-import com.space.app.modules.city.repository.CityRepository;
 import com.space.app.modules.route.dto.AmbassadorView;
 import com.space.app.modules.route.dto.RouteDetailResponse;
 import com.space.app.modules.route.dto.RouteItemResponse;
@@ -34,16 +32,13 @@ import java.util.stream.Collectors;
 public class RouteQueryService {
 
     private final RouteRepository routeRepository;
-    private final CityRepository cityRepository;
     private final AmbassadorRepository ambassadorRepository;
     private final ImageUrlSigner imageUrlSigner;
 
     public RouteQueryService(RouteRepository routeRepository,
-                             CityRepository cityRepository,
                              AmbassadorRepository ambassadorRepository,
                              ImageUrlSigner imageUrlSigner) {
         this.routeRepository = routeRepository;
-        this.cityRepository = cityRepository;
         this.ambassadorRepository = ambassadorRepository;
         this.imageUrlSigner = imageUrlSigner;
     }
@@ -87,7 +82,6 @@ public class RouteQueryService {
         return new RouteDetailResponse(
                 route.getId(),
                 route.getCityId(),
-                cityRepository.findById(route.getCityId()).map(City::getChineseName).orElse(null),
                 route.getSortOrder(),
                 route.getTitle(),
                 route.getAmbassadorNote(),

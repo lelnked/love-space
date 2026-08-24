@@ -70,7 +70,7 @@ export default function BannerForm() {
     if (!name.trim()) errs.name = "名称不能为空";
     if (!positionCode.trim()) errs.positionCode = "位置标识不能为空";
     if (images.length === 0) errs.imageUrls = "至少上传 1 张图片";
-    if (!link) errs.link = "请选择关联城市";
+    if (!link) errs.link = "请选择关联地图";
     const sortValue = Number(sortOrder);
     if (!Number.isInteger(sortValue) || sortValue < 0) errs.sortOrder = "排序值需为非负整数";
     if (Object.keys(errs).length > 0) {
@@ -171,7 +171,7 @@ export default function BannerForm() {
 
           <div>
             <Label>
-              关联城市 <span className="text-error-500">*</span>
+              关联地图 <span className="text-error-500">*</span>
             </Label>
             <CitySelect
               value={link || null}

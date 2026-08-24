@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { FormEvent, useCallback, useEffect, useState } from "react";
 import { AxiosError } from "axios";
 import FilterBar, { FilterField, FilterValues } from "../../components/filter/FilterBar";
 import Pagination from "../../components/pagination/Pagination";
@@ -96,7 +96,8 @@ export default function AmbassadorList() {
     setModalOpen(true);
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
     if (submitting) return;
     setFieldErrors({});
 
@@ -272,75 +273,87 @@ export default function AmbassadorList() {
         </ComponentCard>
       </div>
 
-      <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} className="max-w-lg m-4 p-6">
-        <h2 className="text-lg font-semibold text-gray-800 dark:text-white/90 mb-5">
-          {editingId ? "编辑大使" : "新增大使"}
-        </h2>
-        <div className="space-y-5">
-          <div>
-            <Label>
-              头像 <span className="text-error-500">*</span>
-            </Label>
-            <ImageUploader
-              value={avatarKey}
-              previewUrl={avatarPreview}
-              onChange={setAvatarKey}
-              className="h-28 w-28"
-            />
-            {fieldErrors.avatar && (
-              <div className="text-error-500 text-xs mt-1">{fieldErrors.avatar}</div>
-            )}
-          </div>
-          <div>
-            <Label>
-              名称 <span className="text-error-500">*</span>
-            </Label>
-            <Input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              error={Boolean(fieldErrors.name)}
-              hint={fieldErrors.name}
-            />
-          </div>
-          <div>
-            <Label>标签（最多 3 条）</Label>
-            <div className="space-y-2">
-              {tags.map((t, i) => (
-                <div key={i} className="flex items-center gap-2">
-                  <Input
-                    value={t}
-                    onChange={(e) =>
-                      setTags((prev) => prev.map((x, j) => (j === i ? e.target.value : x)))
-                    }
-                  />
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => setTags((prev) => prev.filter((_, j) => j !== i))}
-                  >
-                    删除
-                  </Button>
-                </div>
-              ))}
-              {tags.length < 3 && (
-                <Button size="sm" variant="outline" onClick={() => setTags((prev) => [...prev, ""])}>
-                  添加标签
-                </Button>
+      <Modal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        showBackdrop={false}
+        className="max-w-[520px] m-4 -translate-y-[100px] shadow-2xl ring-1 ring-gray-200 dark:ring-gray-800"
+      >
+        <div className="relative w-full rounded-3xl bg-white p-6 dark:bg-gray-900 lg:p-8">
+          <h4 className="mb-5 text-xl font-semibold text-gray-800 dark:text-white/90">
+            {editingId ? "编辑大使" : "新增大使"}
+          </h4>
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div>
+              <Label>
+                头像 <span className="text-error-500">*</span>
+              </Label>
+              <ImageUploader
+                value={avatarKey}
+                previewUrl={avatarPreview}
+                onChange={setAvatarKey}
+                className="h-28 w-28"
+              />
+              {fieldErrors.avatar && (
+                <div className="text-error-500 text-xs mt-1">{fieldErrors.avatar}</div>
               )}
             </div>
-            {fieldErrors.tags && (
-              <div className="text-error-500 text-xs mt-1">{fieldErrors.tags}</div>
-            )}
-          </div>
+            <div>
+              <Label>
+                名称 <span className="text-error-500">*</span>
+              </Label>
+              <Input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                error={Boolean(fieldErrors.name)}
+                hint={fieldErrors.name}
+              />
+            </div>
+            <div>
+              <Label>标签（最多 3 条）</Label>
+              <div className="space-y-2">
+                {tags.map((t, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <Input
+                      value={t}
+                      onChange={(e) =>
+                        setTags((prev) => prev.map((x, j) => (j === i ? e.target.value : x)))
+                      }
+                    />
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setTags((prev) => prev.filter((_, j) => j !== i))}
+                    >
+                      删除
+                    </Button>
+                  </div>
+                ))}
+                {tags.length < 3 && (
+                  <Button size="sm" variant="outline" onClick={() => setTags((prev) => [...prev, ""])}>
+                    添加标签
+                  </Button>
+                )}
+              </div>
+              {fieldErrors.tags && (
+                <div className="text-error-500 text-xs mt-1">{fieldErrors.tags}</div>
+              )}
+            </div>
 
-          <div className="flex gap-3 pt-2">
-            <Button size="sm" disabled={submitting} onClick={() => void handleSubmit()}>
-              {submitting ? "提交中..." : editingId ? "保存" : "创建"}
-            </Button>
-            <Button size="sm" variant="outline" disabled={submitting} onClick={() => setModalOpen(false)}>
-              取消
-            </Button>
-          </div>
+            <div className="flex justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setModalOpen(false)}
+                disabled={submitting}
+                className="px-4 py-3 text-sm rounded-lg bg-white text-gray-700 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-400 dark:ring-gray-700"
+              >
+                取消
+              </button>
+              <Button size="sm" disabled={submitting} type="submit">
+                {submitting ? "提交中..." : editingId ? "保存" : "创建"}
+              </Button>
+            </div>
+          </form>
         </div>
       </Modal>
     </>

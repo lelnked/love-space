@@ -23,6 +23,7 @@ public record RecommendListItemResponse(
         Integer sortOrder,
         long merchantCount,
         OffsetDateTime createdAt,
-        OffsetDateTime updatedAt
+        OffsetDateTime updatedAt,
+        String status
 ) {
 }

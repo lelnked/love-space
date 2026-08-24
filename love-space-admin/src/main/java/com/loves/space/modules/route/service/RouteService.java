@@ -8,7 +8,6 @@ import com.loves.space.infrastructure.storage.ImageUrlSigner;
 import com.loves.space.infrastructure.storage.ObjectKeyValidator;
 import com.loves.space.modules.ambassador.entity.Ambassador;
 import com.loves.space.modules.ambassador.repository.AmbassadorRepository;
-import com.loves.space.modules.city.repository.CityRepository;
 import com.loves.space.modules.route.dto.RouteDetailResponse;
 import com.loves.space.modules.route.dto.RouteItemResponse;
 import com.loves.space.modules.route.dto.RouteSpotRequest;
@@ -16,7 +15,6 @@ import com.loves.space.modules.route.dto.RouteSpotResponse;
 import com.loves.space.modules.route.dto.RouteUpsertRequest;
 import com.loves.space.modules.route.entity.Route;
 import com.loves.space.modules.route.entity.RouteSpot;
-import com.loves.space.modules.route.entity.Route_;
 import com.loves.space.modules.route.repository.RouteRepository;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
@@ -30,10 +28,12 @@ import org.springframework.util.StringUtils;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * 路线服务（运营后台）：CRUD。
- * <p>无外键；city/ambassador 存在性在这里校验。图片/地点内联 jsonb。
+ * <p>无外键；ambassador 存在性由 service 层保证。图片/地点内联 jsonb。
  */
 @Service
 @RequiredArgsConstructor
@@ -41,26 +41,21 @@ import java.util.UUID;
 public class RouteService {
 
     private final RouteRepository routeRepository;
-    private final CityRepository cityRepository;
     private final AmbassadorRepository ambassadorRepository;
     private final ObjectKeyValidator objectKeyValidator;
     private final ImageUrlSigner imageUrlSigner;
 
-    /** 分页列表：cityId/keyword（标题模糊）过滤，sortOrder 升序。 */
+    /** 分页列表：keyword（标题模糊）过滤，sortOrder 升序。 */
     @Transactional(readOnly = true)
-    public PageResponse<RouteItemResponse> page(UUID cityId, String keyword, Pageable pageable) {
+    public PageResponse<RouteItemResponse> page(String keyword, Pageable pageable) {
         Specification<Route> spec = (root, cq, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
-            if (cityId != null) {
-                predicates.add(cb.equal(root.get(Route_.cityId), cityId));
-            }
             if (StringUtils.hasText(keyword)) {
-                predicates.add(cb.like(root.get(Route_.title), "%" + keyword + "%"));
+                predicates.add(cb.like(root.get("title"), "%" + keyword + "%"));
             }
             return cb.and(predicates.toArray(new Predicate[0]));
         };
-        Pageable sorted = PageQuery.normalize(pageable, Sort.by(Sort.Order.asc(Route_.SORT_ORDER), Sort.Order.desc(Route_.CREATED_AT)));
-        // ponytail: 大使名逐行查（N+1），页大小几十以内可接受，量级上来换批量查再映射
+        Pageable sorted = PageQuery.normalize(pageable, Sort.by(Sort.Order.asc("sortOrder"), Sort.Order.desc("createdAt")));
         return PageResponseMapper.map(routeRepository.findAll(spec, sorted), this::toItem);
     }
 
@@ -70,18 +65,14 @@ public class RouteService {
         return toDetail(find(id));
     }
 
-    /** 创建路线：校验城市与大使存在。 */
+    /** 创建路线。 */
     public RouteDetailResponse create(RouteUpsertRequest request) {
-        if (!cityRepository.existsById(request.cityId())) {
-            throw new IllegalArgumentException("所属城市不存在：" + request.cityId());
-        }
         Route route = new Route();
-        route.setCityId(request.cityId());
         apply(route, request);
         return toDetail(routeRepository.save(route));
     }
 
-    /** 更新路线（cityId 不可变，请求中的 cityId 被忽略）。 */
+    /** 更新路线。 */
     public RouteDetailResponse update(UUID id, RouteUpsertRequest request) {
         Route route = find(id);
         apply(route, request);
@@ -126,7 +117,6 @@ public class RouteService {
     private RouteItemResponse toItem(Route route) {
         return new RouteItemResponse(
                 route.getId(),
-                route.getCityId(),
                 route.getSortOrder(),
                 route.getTitle(),
                 ImageResponses.from(route.getThumbnail(), imageUrlSigner),
@@ -143,7 +133,6 @@ public class RouteService {
                 .toList();
         return new RouteDetailResponse(
                 route.getId(),
-                route.getCityId(),
                 route.getSortOrder(),
                 route.getTitle(),
                 route.getAmbassadorNote(),
@@ -152,7 +141,6 @@ public class RouteService {
                 route.getTravelTime(),
                 route.getSeason(),
                 route.getTravelStatus(),
-                route.getAmbassadorId(),
                 ambassadorName(route.getAmbassadorId()),
                 spots,
                 route.getCreatedAt(),

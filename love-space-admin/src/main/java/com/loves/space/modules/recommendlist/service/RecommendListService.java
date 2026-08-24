@@ -78,7 +78,7 @@ public class RecommendListService {
         return toDetail(list);
     }
 
-    /** 创建清单：校验所属城市存在。 */
+    /** 创建清单：校验所属城市存在；支持直接写入关联商户。 */
     public RecommendListDetailResponse create(RecommendListCreateRequest request) {
         if (!cityRepository.existsById(request.cityId())) {
             throw new IllegalArgumentException("所属城市不存在：" + request.cityId());
@@ -88,17 +88,62 @@ public class RecommendListService {
         list.setIntroduction(request.introduction());
         list.setCityId(request.cityId());
         list.setSortOrder(request.sortOrder() == null ? 0 : request.sortOrder());
-        return toDetail(recommendListRepository.save(list));
+        list.setStatus(normalizeStatus(request.status()));
+        RecommendList saved = recommendListRepository.save(list);
+        applyMerchantIds(saved.getId(), request.merchantIds());
+        return toDetail(saved);
     }
 
-    /** 更新清单（title/introduction/sortOrder；cityId 不可变，请求体不含该字段）。 */
+    /** 更新清单：cityId 可变；若变更城市，校验已有商户属于新城市；支持整体替换关联商户。 */
     public RecommendListDetailResponse update(UUID id, RecommendListUpdateRequest request) {
         RecommendList list = recommendListRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("推荐清单不存在：" + id));
         list.setTitle(request.title());
         list.setIntroduction(request.introduction());
         list.setSortOrder(request.sortOrder() == null ? 0 : request.sortOrder());
-        return toDetail(list);
+        if (request.status() != null) {
+            list.setStatus(normalizeStatus(request.status()));
+        }
+        if (request.cityId() != null && !request.cityId().equals(list.getCityId())) {
+            if (!cityRepository.existsById(request.cityId())) {
+                throw new IllegalArgumentException("所属城市不存在：" + request.cityId());
+            }
+            List<RecommendListMerchant> relations =
+                    recommendListMerchantRepository.findAllByRecommendListIdOrderBySortOrderAsc(id);
+            if (!relations.isEmpty()) {
+                Map<UUID, Merchant> merchants = merchantRepository.findAllById(
+                                relations.stream().map(RecommendListMerchant::getMerchantId).toList()).stream()
+                        .collect(Collectors.toMap(Merchant::getId, Function.identity()));
+                String invalid = relations.stream()
+                        .map(RecommendListMerchant::getMerchantId)
+                        .map(merchants::get)
+                        .filter(java.util.Objects::nonNull)
+                        .filter(m -> !request.cityId().equals(m.getCityId()))
+                        .map(m -> m.getName())
+                        .findFirst()
+                        .orElse(null);
+                if (invalid != null) {
+                    throw new IllegalArgumentException("清单内商户「" + invalid + "」不属于新城市，请先移除后再修改所属城市");
+                }
+            }
+            list.setCityId(request.cityId());
+        }
+        RecommendList updated = recommendListRepository.save(list);
+        if (request.merchantIds() != null) {
+            applyMerchantIds(updated.getId(), request.merchantIds());
+        }
+        return toDetail(updated);
+    }
+
+    private String normalizeStatus(String status) {
+        if (status == null || status.isBlank()) {
+            return "ONLINE";
+        }
+        String upper = status.trim().toUpperCase();
+        if (!"ONLINE".equals(upper) && !"OFFLINE".equals(upper)) {
+            throw new IllegalArgumentException("status 仅支持 ONLINE 或 OFFLINE");
+        }
+        return upper;
     }
 
     /** 物理删除清单，同事务删除商户关联。 */
@@ -108,6 +153,30 @@ public class RecommendListService {
         }
         recommendListMerchantRepository.deleteAllByRecommendListId(id);
         recommendListRepository.deleteById(id);
+    }
+
+    /** 人工恢复清单为 ONLINE；当前存在已下架商户时拒绝。 */
+    public RecommendListDetailResponse online(UUID id) {
+        RecommendList list = recommendListRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("推荐清单不存在：" + id));
+        if (!"OFFLINE".equals(list.getStatus())) {
+            return toDetail(list);
+        }
+        List<RecommendListMerchant> relations =
+                recommendListMerchantRepository.findAllByRecommendListIdOrderBySortOrderAsc(id);
+        Map<UUID, Merchant> merchants = merchantRepository.findAllById(
+                        relations.stream().map(RecommendListMerchant::getMerchantId).toList()).stream()
+                .collect(Collectors.toMap(Merchant::getId, Function.identity()));
+        boolean hasOffline = relations.stream()
+                .map(RecommendListMerchant::getMerchantId)
+                .map(merchants::get)
+                .filter(java.util.Objects::nonNull)
+                .anyMatch(m -> !m.isOnline());
+        if (hasOffline) {
+            throw new IllegalArgumentException("清单内存在未上架商户，请先清理后再恢复清单");
+        }
+        list.setStatus("ONLINE");
+        return toDetail(list);
     }
 
     /**
@@ -133,6 +202,9 @@ public class RecommendListService {
             if (!merchant.getCityId().equals(list.getCityId())) {
                 throw new IllegalArgumentException("商户「" + merchant.getName() + "」不属于清单所属城市，不能加入清单");
             }
+            if (!merchant.isOnline()) {
+                throw new IllegalArgumentException("商户「" + merchant.getName() + "」已下架，不能加入清单");
+            }
         }
 
         recommendListMerchantRepository.deleteAllByRecommendListId(id);
@@ -147,6 +219,44 @@ public class RecommendListService {
         return toDetail(list);
     }
 
+    private void applyMerchantIds(UUID recommendListId, List<UUID> merchantIds) {
+        if (merchantIds == null || merchantIds.isEmpty()) {
+            return;
+        }
+        RecommendList list = recommendListRepository.findById(recommendListId)
+                .orElseThrow(() -> new IllegalArgumentException("推荐清单不存在：" + recommendListId));
+
+        Set<UUID> uniqueIds = new HashSet<>(merchantIds);
+        if (uniqueIds.size() != merchantIds.size()) {
+            throw new IllegalArgumentException("同一商户不能重复添加到清单");
+        }
+        Map<UUID, Merchant> merchants = merchantRepository.findAllById(uniqueIds).stream()
+                .collect(Collectors.toMap(Merchant::getId, Function.identity()));
+        for (UUID merchantId : uniqueIds) {
+            Merchant merchant = merchants.get(merchantId);
+            if (merchant == null) {
+                throw new IllegalArgumentException("商户不存在：" + merchantId);
+            }
+            if (!merchant.getCityId().equals(list.getCityId())) {
+                throw new IllegalArgumentException("商户「" + merchant.getName() + "」不属于清单所属城市，不能加入清单");
+            }
+            if (!merchant.isOnline()) {
+                throw new IllegalArgumentException("商户「" + merchant.getName() + "」已下架，不能加入清单");
+            }
+        }
+
+        recommendListMerchantRepository.deleteAllByRecommendListId(recommendListId);
+        recommendListMerchantRepository.flush();
+        int sort = 1;
+        for (UUID merchantId : merchantIds) {
+            RecommendListMerchant relation = new RecommendListMerchant();
+            relation.setRecommendListId(recommendListId);
+            relation.setMerchantId(merchantId);
+            relation.setSortOrder(sort++);
+            recommendListMerchantRepository.save(relation);
+        }
+    }
+
     /** 实体到列表项（含商户数）。 */
     private RecommendListItemResponse toItem(RecommendList list) {
         return new RecommendListItemResponse(
@@ -157,7 +267,8 @@ public class RecommendListService {
                 list.getSortOrder(),
                 recommendListMerchantRepository.countByRecommendListId(list.getId()),
                 list.getCreatedAt(),
-                list.getUpdatedAt());
+                list.getUpdatedAt(),
+                list.getStatus());
     }
 
     /** 实体到详情（商户按关联 sortOrder 升序）。 */
@@ -191,6 +302,7 @@ public class RecommendListService {
                 list.getSortOrder(),
                 merchantResponses,
                 list.getCreatedAt(),
-                list.getUpdatedAt());
+                list.getUpdatedAt(),
+                list.getStatus());
     }
 }

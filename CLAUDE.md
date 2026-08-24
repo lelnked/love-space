@@ -59,6 +59,7 @@ Lombok is enabled with annotation processing wired into the compiler plugin — 
 
 - **运营账号统一称为 Manager**：admin 后端实体 `Manager`（包 `com.loves.space.modules.manager`）、表 `loves_manager`、REST 路径 `/api/admin/managers`、前端目录 `src/pages/Managers`、登录响应顶层字段 `manager`。**不要再用 `user` 命名运营账号**。`OperatingContext` 类名固定不变（不是 `OperatingManagerHolder`）。
 - **数据库表统一加 `loves_` 前缀**（例如 `loves_manager` / `loves_city` / `loves_merchant_image`）。所有 Liquibase changelog 用 formatted-SQL（`changes/*.sql`），master `db.changelog-master.yaml` 仅做 include。Liquibase 版本随 Spring Boot 4 默认，不在 `pom.xml` 中显式 pin。
+- **弹窗样式统一使用无遮罩卡片弹窗**：参考 `Managers` 页面“新增管理员”弹窗实现。`Modal` 必须传 `showBackdrop={false}`；外层加 `ring-1 ring-gray-200 dark:ring-gray-800` 边框；内容区用 `relative w-full rounded-3xl bg-white p-6 dark:bg-gray-900 lg:p-8` 卡片容器。后续所有弹窗统一这套样式，不再使用带遮罩的旧弹窗风格。
 
 ## Working across projects
 

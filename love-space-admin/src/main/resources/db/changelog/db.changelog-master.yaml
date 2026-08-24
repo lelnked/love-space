@@ -30,3 +30,5 @@ databaseChangeLog:
       file: db/changelog/changes/013-create-featured-item.sql
   - include:
       file: db/changelog/changes/014-create-featured-cycle-item.sql
+  - include:
+      file: db/changelog/changes/015-recommend-list-status.sql

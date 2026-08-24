@@ -33,12 +33,11 @@ public class RouteController {
         this.routeService = routeService;
     }
 
-    /** 分页查询路线（cityId 过滤 + keyword 标题模糊）。 */
+    /** 分页查询路线（keyword 标题模糊）。 */
     @GetMapping("page")
-    public PageResponse<RouteItemResponse> page(@RequestParam(required = false) UUID cityId,
-                                                @RequestParam(required = false) String keyword,
+    public PageResponse<RouteItemResponse> page(@RequestParam(required = false) String keyword,
                                                 Pageable pageable) {
-        return routeService.page(cityId, keyword, pageable);
+        return routeService.page(keyword, pageable);
     }
 
     /** 路线详情。 */

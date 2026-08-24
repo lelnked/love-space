@@ -15,6 +15,7 @@ import java.util.UUID;
  * @param merchants    清单内商户明细
  * @param createdAt    创建时间
  * @param updatedAt    更新时间
+ * @param status       上架状态
  */
 public record RecommendListDetailResponse(
         UUID id,
@@ -24,6 +25,7 @@ public record RecommendListDetailResponse(
         Integer sortOrder,
         List<RecommendListMerchantResponse> merchants,
         OffsetDateTime createdAt,
-        OffsetDateTime updatedAt
+        OffsetDateTime updatedAt,
+        String status
 ) {
 }

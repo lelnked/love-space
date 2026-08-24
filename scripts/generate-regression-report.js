@@ -71,7 +71,10 @@ function renderExchange(md) {
 
 function caseHtml(domain, tc, meta) {
   const dir = path.join(REG, domain, tc);
-  const lines = fs.readFileSync(path.join(dir, 'assertions.md'), 'utf8').trim().split('\n');
+  if (!fs.existsSync(dir)) return ''; // missing evidence -> skip entirely
+  const assertionsPath = path.join(dir, 'assertions.md');
+  if (!fs.existsSync(assertionsPath)) return ''; // no assertions -> skip
+  const lines = fs.readFileSync(assertionsPath, 'utf8').trim().split('\n');
   const failed = lines.some((l) => l.startsWith('- [ ]'));
   const asserts = lines.map((l) => `<li class="${l.startsWith('- [x]') ? 'ok' : 'bad'}">${esc(l.slice(6))}</li>`).join('\n');
   const files = fs.readdirSync(dir).sort();
@@ -109,8 +112,17 @@ const prioStat = {}; // P0/P1/P2 → [passed, total]（无优先级的用例归�
 const domainsHtml = domains.map((domain) => {
   const meta = loadMeta(domain);
   const cases = fs.readdirSync(path.join(REG, domain), { withFileTypes: true })
-    .filter((d) => d.isDirectory() && d.name.startsWith('TC-')).map((d) => d.name).sort();
-  const isFailed = (tc) => fs.readFileSync(path.join(REG, domain, tc, 'assertions.md'), 'utf8').includes('- [ ]');
+    .filter((d) => {
+      const full = path.join(REG, domain, d.name);
+      // Follow symlinks and include directories/symlinks-to-directories starting with TC-
+      if (!d.name.startsWith('TC-')) return false;
+      try { return fs.statSync(full).isDirectory(); } catch { return false; }
+    }).map((d) => d.name).sort();
+  const isFailed = (tc) => {
+    const a = path.join(REG, domain, tc, 'assertions.md');
+    if (!fs.existsSync(a)) return false; // missing evidence -> not failed
+    return fs.readFileSync(a, 'utf8').includes('- [ ]');
+  };
   const fails = cases.filter(isFailed);
   total += cases.length; totalFail += fails.length;
   for (const tc of cases) {

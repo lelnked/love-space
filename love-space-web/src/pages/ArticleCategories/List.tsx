@@ -187,10 +187,16 @@ export default function ArticleCategoryList() {
         </ComponentCard>
       </div>
 
-      <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} className="max-w-lg m-4 p-6">
-        <h2 className="text-lg font-semibold text-gray-800 dark:text-white/90 mb-5">
-          {editingId ? "编辑栏目" : "新增栏目"}
-        </h2>
+      <Modal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        showBackdrop={false}
+        className="max-w-[520px] m-4 -translate-y-[100px] shadow-2xl ring-1 ring-gray-200 dark:ring-gray-800"
+      >
+        <div className="relative w-full rounded-3xl bg-white p-6 dark:bg-gray-900 lg:p-8">
+          <h4 className="mb-5 text-xl font-semibold text-gray-800 dark:text-white/90">
+            {editingId ? "编辑栏目" : "新增栏目"}
+          </h4>
         <div className="space-y-5">
           <div>
             <Label>
@@ -228,21 +234,22 @@ export default function ArticleCategoryList() {
             />
           </div>
 
-          <div className="flex gap-3 pt-2">
+          <div className="flex justify-end gap-3 pt-2">
             <Button size="sm" disabled={submitting} onClick={() => void handleSubmit()}>
               {submitting ? "提交中..." : editingId ? "保存" : "创建"}
             </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={submitting}
+            <button
+              type="button"
               onClick={() => setModalOpen(false)}
+              disabled={submitting}
+              className="px-4 py-3 text-sm rounded-lg bg-white text-gray-700 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-400 dark:ring-gray-700"
             >
               取消
-            </Button>
+            </button>
           </div>
         </div>
-      </Modal>
+      </div>
+    </Modal>
     </>
   );
 }

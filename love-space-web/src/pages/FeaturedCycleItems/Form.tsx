@@ -180,9 +180,15 @@ export default function FeaturedCycleItemForm({ open, phase, editing, onClose, o
     fieldErrors[key] ? <div className="text-error-500 text-xs mt-1">{fieldErrors[key]}</div> : null;
 
   return (
-    <Modal isOpen={open} onClose={onClose} className="max-w-lg m-4 p-6">
-      <h2 className="text-lg font-semibold text-gray-800 dark:text-white/90 mb-5">{modalTitle}</h2>
-      <div className="space-y-5">
+    <Modal
+      isOpen={open}
+      onClose={onClose}
+      showBackdrop={false}
+      className="max-w-[520px] m-4 -translate-y-[100px] shadow-2xl ring-1 ring-gray-200 dark:ring-gray-800"
+    >
+      <div className="relative w-full rounded-3xl bg-white p-6 dark:bg-gray-900 lg:p-8">
+        <h2 className="text-lg font-semibold text-gray-800 dark:text-white/90 mb-5">{modalTitle}</h2>
+        <div className="space-y-5">
         <div>
           <Label>
             内容类型 <span className="text-error-500">*</span>
@@ -374,6 +380,7 @@ export default function FeaturedCycleItemForm({ open, phase, editing, onClose, o
             取消
           </Button>
         </div>
+      </div>
       </div>
     </Modal>
   );
