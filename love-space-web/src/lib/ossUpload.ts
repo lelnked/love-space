@@ -74,10 +74,28 @@ function postFormData(
         onProgress?.(1);
         resolve();
       } else {
-        reject(new Error(`上传失败（${xhr.status}）`));
+        // 尝试解析 OSS 返回的 XML / 纯文本错误体，提取可读信息。
+        let detail = "";
+        try {
+          const xml = xhr.responseXML;
+          if (xml) {
+            const msg = xml.querySelector("Message")?.textContent;
+            const code = xml.querySelector("Code")?.textContent;
+            if (msg || code) detail = [code, msg].filter(Boolean).join(": ");
+          }
+        } catch { /* 忽略解析失败 */ }
+        if (!detail) {
+          const text = xhr.responseText?.trim();
+          if (text && text.length < 200) detail = text;
+        }
+        const suffix = detail ? `：${detail}` : "";
+        reject(new Error(`上传失败（${xhr.status}）${suffix}`));
       }
     };
-    xhr.onerror = () => reject(new Error("上传失败，请稍后再试"));
+    xhr.onerror = () => {
+      // 网络级错误（CORS / DNS / 连接中断等），尝试附带就绪状态辅助定位。
+      reject(new Error(`上传失败，请稍后再试（网络错误，readyState=${xhr.readyState}）`));
+    };
     xhr.send(formData);
   });
 }

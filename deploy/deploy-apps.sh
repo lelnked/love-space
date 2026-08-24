@@ -19,7 +19,7 @@ JVM_MAX_HEAP=1000m                   # 每个后端 JVM 最大堆（-Xmx），�
 
 # 用 host 网络模式：容器复用宿主机网络栈，端口即应用自身监听端口
 # （admin 8080 / app 8081），无需自建网络或端口映射。
-# DB 连接走固定地址 172.16.16.12:8954（见下方 *_DB_URL）。
+# DB 连接走固定地址 172.26.150.96:8954（见下方 *_DB_URL）。
 
 # ===== PostgreSQL 连接（与 deploy-postgres.sh 保持一致）=====
 PG_DB=love_space
@@ -30,7 +30,7 @@ PG_PASSWORD=love_space
 ADMIN_IMAGE_NAME=love-space-admin
 ADMIN_CONTAINER=love-space-admin
 ADMIN_HOST_PORT=8080
-ADMIN_DB_URL="jdbc:postgresql://172.16.16.12:8954/${PG_DB}"
+ADMIN_DB_URL="jdbc:postgresql://172.26.150.96:8954/${PG_DB}"
 ADMIN_DB_USERNAME="$PG_USER"
 ADMIN_DB_PASSWORD="$PG_PASSWORD"
 ADMIN_JWT_SECRET="wwYYUD06sBrPtaBUgDeLZioRivtWwXo7PqEV/vem5TY="   # openssl rand -base64 32
@@ -39,7 +39,7 @@ ADMIN_JWT_SECRET="wwYYUD06sBrPtaBUgDeLZioRivtWwXo7PqEV/vem5TY="   # openssl rand
 APP_IMAGE_NAME=love-space-app
 APP_CONTAINER=love-space-app
 APP_HOST_PORT=8081
-APP_DB_URL="jdbc:postgresql://172.16.16.12:8954/${PG_DB}"
+APP_DB_URL="jdbc:postgresql://172.26.150.96:8954/${PG_DB}"
 APP_DB_USERNAME="$PG_USER"
 APP_DB_PASSWORD="$PG_PASSWORD"
 APP_SECURITY_API_KEYS="fd7cff9c23a77592472224b5e029a21583d464deb3ce64e7e7a13d8832570383"   # openssl rand -hex 32；多 key 用英文逗号分隔

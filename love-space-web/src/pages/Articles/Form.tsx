@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { AxiosError } from "axios";
 import Label from "../../components/form/Label";
@@ -6,7 +6,9 @@ import Input from "../../components/form/input/InputField";
 import Button from "../../components/ui/button/Button";
 import ImageUploader from "../../components/form/ImageUploader";
 import Checkbox from "../../components/form/input/Checkbox";
-import RichTextEditor from "../../components/form/RichTextEditor";
+import RichTextEditor, {
+  type RichTextEditorRef,
+} from "../../components/form/RichTextEditor";
 import {
   ArticleUpsertRequest,
   createArticle,
@@ -32,7 +34,8 @@ export default function ArticleForm() {
   const [subtitle, setSubtitle] = useState("");
   const [sortOrder, setSortOrder] = useState("0");
   const [categoryIds, setCategoryIds] = useState<string[]>([]);
-  const [contentHtml, setContentHtml] = useState("");
+  const [initialContentHtml, setInitialContentHtml] = useState("");
+  const editorRef = useRef<RichTextEditorRef>(null);
 
   const [categories, setCategories] = useState<ArticleCategory[]>([]);
 
@@ -53,7 +56,7 @@ export default function ArticleForm() {
         setSubtitle(d.subtitle ?? "");
         setSortOrder(String(d.sortOrder));
         setCategoryIds(d.categoryIds);
-        setContentHtml(d.contentHtml ?? "");
+        setInitialContentHtml(d.contentHtml ?? "");
       })
       .catch((err: AxiosError<{ detail?: string }>) => {
         toast.error(err.response?.data?.detail ?? "加载失败");
@@ -85,7 +88,7 @@ export default function ArticleForm() {
       image: imageKey.trim(),
       title: title.trim(),
       subtitle: subtitle.trim() || null,
-      contentHtml: contentHtml || null,
+      contentHtml: editorRef.current?.getHtmlForSubmit() || initialContentHtml || null,
       sortOrder: sortValue,
       categoryIds,
     };
@@ -194,7 +197,10 @@ export default function ArticleForm() {
           {/* 3. 文章内容（富文本） */}
           <fieldset className={sectionClass}>
             <legend className={sectionTitleClass}>文章内容</legend>
-            <RichTextEditor initialValue={contentHtml} onChange={setContentHtml} />
+            <RichTextEditor
+              ref={editorRef}
+              initialValue={initialContentHtml}
+            />
           </fieldset>
 
           <div className="flex gap-3">
