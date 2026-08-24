@@ -243,8 +243,8 @@
 **预期结果**: 返回 200；响应含 MENSTRUAL/FOLLICULAR/OVULATION/LUTEAL 四个键（FOLLICULAR 为空数组，不缺键）；MENSTRUAL、OVULATION 各 1 条且含 type、banner 签名 URL 与关联实体 id；LUTEAL 为空数组（下线条目不下发）
 **状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**: `test-evidence/route-decouple-city-online/TC-featured-IT-016/`
-**最后更新**: 2026-08-20
+**执行存证**: `test-evidence/app-featured-cycle-type-filter/TC-featured-IT-016/`
+**最后更新**: 2026-08-24
 
 ### TC-featured-IT-017: GET /api/app/featured-cycle-items 关联实体不可见时条目不下发
 **关联需求**: featured/App 端周期推荐查询#关联实体不可见时条目不下发
@@ -260,8 +260,8 @@
 **预期结果**: 步骤 2、3 该 ACTIVITY 条目从 MENSTRUAL 分组消失；步骤 4、5 该 ARTICLE 条目消失；每步中未受影响的另一条仍在；接口全程返回 200，不因关联实体缺失报 500
 **状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**: `test-evidence/route-decouple-city-online/TC-featured-IT-017/`
-**最后更新**: 2026-08-20
+**执行存证**: `test-evidence/app-featured-cycle-type-filter/TC-featured-IT-017/`
+**最后更新**: 2026-08-24
 
 ### TC-featured-IT-018: GET /api/app/featured-cycle-items 大使下线连带隐藏路线类条目
 **关联需求**: featured/App 端周期推荐查询#大使下线连带隐藏路线类条目
@@ -276,8 +276,8 @@
 **预期结果**: 步骤 2 该条目存在；步骤 3 该条目从 OVULATION 分组消失；步骤 4 该条目重新出现；接口全程返回 200。（城市下架不再影响 ROUTE 条目，该口径改由 TC-featured-IT-020 断言）
 **状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**: `test-evidence/route-decouple-city-online/TC-featured-IT-018/`
-**最后更新**: 2026-08-20
+**执行存证**: `test-evidence/app-featured-cycle-type-filter/TC-featured-IT-018/`
+**最后更新**: 2026-08-24
 
 ### TC-featured-IT-019: GET /api/app/featured-cycle-items 组内按排序号升序
 **关联需求**: featured/App 端周期推荐查询#组内按排序号升序
@@ -290,8 +290,8 @@
 **预期结果**: 返回 200；MENSTRUAL 分组内条目按 sortOrder 1、1、2、3 升序排列；两个 sortOrder=1 的条目按 createdAt 倒序（后创建的在前）
 **状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**: `test-evidence/route-decouple-city-online/TC-featured-IT-019/`
-**最后更新**: 2026-08-20
+**执行存证**: `test-evidence/app-featured-cycle-type-filter/TC-featured-IT-019/`
+**最后更新**: 2026-08-24
 
 ### TC-featured-IT-020: GET /api/app/featured-cycle-items 城市未上架不影响路线类条目
 **关联需求**: featured/App 端周期推荐查询#城市未上架不影响路线类条目
@@ -305,5 +305,47 @@
 **预期结果**: 步骤 2 返回 200，ROUTE 条目正常出现在 OVULATION 分组（城市下架不再过滤），而同城市的 ACTIVITY 条目**不出现**（活动侧仍要求城市上架）；步骤 3 城市上架后两条条目均出现，ROUTE 条目状态前后一致
 **状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**: `test-evidence/route-decouple-city-online/TC-featured-IT-020/`
-**最后更新**: 2026-08-20
+**执行存证**: `test-evidence/app-featured-cycle-type-filter/TC-featured-IT-020/`
+**最后更新**: 2026-08-24
+
+### TC-featured-IT-021: GET /api/app/featured-cycle-items?type= 按内容类型过滤
+**关联需求**: featured/App 端周期推荐查询#按内容类型过滤
+**关联契约**: api-spec.json#/paths/~1api~1app~1featured-cycle-items/get
+**来源**: app-featured-cycle-type-filter
+**优先级**: P0
+**测试步骤**:
+1. 前置（admin 端建数据）：MENSTRUAL 下各建 1 个上线条目，类型分别为 ACTIVITY（活动上线、城市上架）、ROUTE（大使上线）、ARTICLE（文章上线）
+2. GET /api/app/featured-cycle-items?type=ARTICLE（带 API-key 请求头）
+3. GET /api/app/featured-cycle-items（不带 type，同一批数据）
+**预期结果**: 步骤 2 返回 200，四周期键齐全，MENSTRUAL 仅含该 ARTICLE 条目（type=ARTICLE、articleId 非空），不含 ACTIVITY/ROUTE 条目；步骤 3 返回 200 且 MENSTRUAL 含全部 3 条（不传 type 行为不变）
+**状态**: ✅ 通过
+**执行方式**: api-test-runner
+**执行存证**: `test-evidence/app-featured-cycle-type-filter/TC-featured-IT-021/`
+**最后更新**: 2026-08-24
+
+### TC-featured-IT-022: GET /api/app/featured-cycle-items?type= 过滤后周期为空仍返回空数组
+**关联需求**: featured/App 端周期推荐查询#类型过滤后周期为空仍返回空数组
+**关联契约**: api-spec.json#/paths/~1api~1app~1featured-cycle-items/get
+**来源**: app-featured-cycle-type-filter
+**优先级**: P1
+**测试步骤**:
+1. 前置：库中仅有 ACTIVITY 类上线条目（无 ROUTE 类可见条目）
+2. GET /api/app/featured-cycle-items?type=ROUTE（带 API-key 请求头）
+**预期结果**: 返回 200，MENSTRUAL/FOLLICULAR/OVULATION/LUTEAL 四个键齐全且每个均为空数组（不缺键、不返回 404）
+**状态**: ✅ 通过
+**执行方式**: api-test-runner
+**执行存证**: `test-evidence/app-featured-cycle-type-filter/TC-featured-IT-022/`
+**最后更新**: 2026-08-24
+
+### TC-featured-IT-023: GET /api/app/featured-cycle-items?type= 非法类型值返回 400
+**关联需求**: featured/App 端周期推荐查询#非法类型值被拒绝
+**关联契约**: api-spec.json#/paths/~1api~1app~1featured-cycle-items/get
+**来源**: app-featured-cycle-type-filter
+**优先级**: P1
+**测试步骤**:
+1. GET /api/app/featured-cycle-items?type=UNKNOWN（带 API-key 请求头）
+**预期结果**: 返回 400（枚举转换失败），不返回 200 也不静默忽略该参数
+**状态**: ✅ 通过
+**执行方式**: api-test-runner
+**执行存证**: `test-evidence/app-featured-cycle-type-filter/TC-featured-IT-023/`
+**最后更新**: 2026-08-24

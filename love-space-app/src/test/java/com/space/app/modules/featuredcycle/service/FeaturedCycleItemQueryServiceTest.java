@@ -24,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -137,7 +138,7 @@ class FeaturedCycleItemQueryServiceTest extends AbstractPostgresIntegrationTest 
         return featuredCycleItemRepository.save(item).getId();
     }
 
-    // @scenario: featured/App 端周期推荐查询#查询指定周期的推荐列表
+    // @scenario: featured/App 端周期推荐查询#查询四个周期的推荐列表
     @Test
     void feedReturnsOnlyRequestedPhaseVisibleItems() {
         City city = city(true);
@@ -148,9 +149,9 @@ class FeaturedCycleItemQueryServiceTest extends AbstractPostgresIntegrationTest 
         item(Period.MENSTRUAL, FeaturedCycleItemType.ARTICLE, article(true).getId(), false, 0);
         item(Period.LUTEAL, FeaturedCycleItemType.ARTICLE, article(false).getId(), true, 0);
 
-        List<FeaturedCycleItemResponse> menstrual = featuredCycleItemQueryService.feed().getOrDefault(Period.MENSTRUAL, List.of());
-        List<FeaturedCycleItemResponse> ovulation = featuredCycleItemQueryService.feed().getOrDefault(Period.OVULATION, List.of());
-        List<FeaturedCycleItemResponse> luteal = featuredCycleItemQueryService.feed().getOrDefault(Period.LUTEAL, List.of());
+        List<FeaturedCycleItemResponse> menstrual = featuredCycleItemQueryService.feed(null).getOrDefault(Period.MENSTRUAL, List.of());
+        List<FeaturedCycleItemResponse> ovulation = featuredCycleItemQueryService.feed(null).getOrDefault(Period.OVULATION, List.of());
+        List<FeaturedCycleItemResponse> luteal = featuredCycleItemQueryService.feed(null).getOrDefault(Period.LUTEAL, List.of());
 
         assertThat(menstrual).extracting(FeaturedCycleItemResponse::id)
                 .containsExactly(visibleActivityItem);
@@ -175,7 +176,7 @@ class FeaturedCycleItemQueryServiceTest extends AbstractPostgresIntegrationTest 
         UUID visible = item(Period.MENSTRUAL, FeaturedCycleItemType.ACTIVITY,
                 activity(onlineCity.getId(), true).getId(), true, 0);
 
-        List<FeaturedCycleItemResponse> menstrual = featuredCycleItemQueryService.feed().getOrDefault(Period.MENSTRUAL, List.of());
+        List<FeaturedCycleItemResponse> menstrual = featuredCycleItemQueryService.feed(null).getOrDefault(Period.MENSTRUAL, List.of());
 
         assertThat(menstrual).extracting(FeaturedCycleItemResponse::id)
                 .containsExactly(visible);
@@ -190,7 +191,7 @@ class FeaturedCycleItemQueryServiceTest extends AbstractPostgresIntegrationTest 
         UUID visible = item(Period.OVULATION, FeaturedCycleItemType.ROUTE,
                 route(ambassador(true).getId()).getId(), true, 0);
 
-        List<FeaturedCycleItemResponse> ovulation = featuredCycleItemQueryService.feed().getOrDefault(Period.OVULATION, List.of());
+        List<FeaturedCycleItemResponse> ovulation = featuredCycleItemQueryService.feed(null).getOrDefault(Period.OVULATION, List.of());
 
         assertThat(ovulation).extracting(FeaturedCycleItemResponse::id)
                 .containsExactly(visible);
@@ -202,7 +203,7 @@ class FeaturedCycleItemQueryServiceTest extends AbstractPostgresIntegrationTest 
         UUID visible = item(Period.OVULATION, FeaturedCycleItemType.ROUTE,
                 route(ambassador(true).getId()).getId(), true, 0);
 
-        List<FeaturedCycleItemResponse> ovulation = featuredCycleItemQueryService.feed().getOrDefault(Period.OVULATION, List.of());
+        List<FeaturedCycleItemResponse> ovulation = featuredCycleItemQueryService.feed(null).getOrDefault(Period.OVULATION, List.of());
 
         assertThat(ovulation).extracting(FeaturedCycleItemResponse::id)
                 .containsExactly(visible);
@@ -219,9 +220,39 @@ class FeaturedCycleItemQueryServiceTest extends AbstractPostgresIntegrationTest 
         UUID third = item(Period.MENSTRUAL, FeaturedCycleItemType.ACTIVITY,
                 activity(city.getId(), true).getId(), true, 3);
 
-        List<FeaturedCycleItemResponse> menstrual = featuredCycleItemQueryService.feed().getOrDefault(Period.MENSTRUAL, List.of());
+        List<FeaturedCycleItemResponse> menstrual = featuredCycleItemQueryService.feed(null).getOrDefault(Period.MENSTRUAL, List.of());
 
         assertThat(menstrual).extracting(FeaturedCycleItemResponse::id)
                 .containsExactly(first, second, third);
+    }
+
+    // @scenario: featured/App 端周期推荐查询#按内容类型过滤
+    @Test
+    void feedFiltersByType() {
+        City city = city(true);
+        item(Period.MENSTRUAL, FeaturedCycleItemType.ACTIVITY, activity(city.getId(), true).getId(), true, 0);
+        item(Period.MENSTRUAL, FeaturedCycleItemType.ROUTE, route(ambassador(true).getId()).getId(), true, 1);
+        UUID articleItem = item(Period.MENSTRUAL, FeaturedCycleItemType.ARTICLE, article(true).getId(), true, 2);
+
+        Map<Period, List<FeaturedCycleItemResponse>> filtered =
+                featuredCycleItemQueryService.feed(FeaturedCycleItemType.ARTICLE);
+
+        assertThat(filtered).containsOnlyKeys(Period.values());
+        assertThat(filtered.get(Period.MENSTRUAL)).extracting(FeaturedCycleItemResponse::id)
+                .containsExactly(articleItem);
+        assertThat(featuredCycleItemQueryService.feed(null).get(Period.MENSTRUAL)).hasSize(3);
+    }
+
+    // @scenario: featured/App 端周期推荐查询#类型过滤后周期为空仍返回空数组
+    @Test
+    void feedKeepsAllPhaseKeysWhenTypeFilterMatchesNothing() {
+        City city = city(true);
+        item(Period.MENSTRUAL, FeaturedCycleItemType.ACTIVITY, activity(city.getId(), true).getId(), true, 0);
+
+        Map<Period, List<FeaturedCycleItemResponse>> filtered =
+                featuredCycleItemQueryService.feed(FeaturedCycleItemType.ROUTE);
+
+        assertThat(filtered).containsOnlyKeys(Period.values());
+        assertThat(filtered.values()).allSatisfy(items -> assertThat(items).isEmpty());
     }
 }

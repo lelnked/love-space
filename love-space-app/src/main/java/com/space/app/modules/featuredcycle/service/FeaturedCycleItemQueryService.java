@@ -13,6 +13,7 @@ import com.space.app.modules.city.entity.City;
 import com.space.app.modules.city.repository.CityRepository;
 import com.space.app.modules.featuredcycle.dto.FeaturedCycleItemResponse;
 import com.space.app.modules.featuredcycle.entity.FeaturedCycleItem;
+import com.space.app.modules.featuredcycle.entity.FeaturedCycleItemType;
 import com.space.app.modules.featuredcycle.repository.FeaturedCycleItemRepository;
 import com.space.app.modules.route.entity.Route;
 import com.space.app.modules.route.repository.RouteRepository;
@@ -59,8 +60,11 @@ public class FeaturedCycleItemQueryService {
         this.imageUrlSigner = imageUrlSigner;
     }
 
-    /** 四个周期的推荐列表；无条目的周期返回空数组，键恒在。 */
-    public Map<Period, List<FeaturedCycleItemResponse>> feed() {
+    /**
+     * 四个周期的推荐列表；无条目的周期返回空数组，键恒在。
+     * <p>{@code type} 可选：为 null 时下发全部类型，否则仅下发该内容类型的条目（分组键仍恒在）。
+     */
+    public Map<Period, List<FeaturedCycleItemResponse>> feed(FeaturedCycleItemType type) {
         // ponytail: 运营配置级数据量（每周期个位数），全量捞出在内存过滤即可，无需 join
         Set<UUID> onlineCityIds = cityRepository.findAllByOnlineTrueOrderByCreatedAtDesc().stream()
                 .map(City::getId).collect(Collectors.toSet());
@@ -84,6 +88,7 @@ public class FeaturedCycleItemQueryService {
             feed.put(period, new java.util.ArrayList<>());
         }
         featuredCycleItemRepository.findAllByOnlineTrueOrderBySortOrderAscCreatedAtDesc().stream()
+                .filter(item -> type == null || item.getType() == type)
                 .filter(item -> isVisible(item, visibleActivityIds, visibleRouteIds, visibleArticleIds))
                 .forEach(item -> feed.get(item.getPhase()).add(toResponse(item)));
         return feed;
