@@ -1,0 +1,48 @@
+[debug] [vite] connecting...
+[debug] [vite] connected.
+[info] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[net] POST 200 http://100.100.117.79:21423/api/admin/auth/login
+[net] GET 200 http://100.100.117.79:21423/api/admin/cities
+[net] GET 200 http://100.100.117.79:21423/api/admin/cities
+[debug] [vite] connecting...
+[debug] [vite] connected.
+[info] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[warning] [tiptap warn]: Duplicate extension names found: ['link', 'underline']. This can lead to issues.
+[warning] [tiptap warn]: Duplicate extension names found: ['link', 'underline']. This can lead to issues.
+[net] GET 200 http://100.100.117.79:21423/api/admin/cities?online=true
+[net] GET 200 http://100.100.117.79:21423/api/admin/cities?online=true
+[check] ProseMirror 节点数=1
+[net] POST 200 http://100.100.117.79:21423/api/admin/files/upload-credentials
+[net] POST 200 http://100.100.117.79:21423/api/admin/activities
+[net] GET 200 http://100.100.117.79:21423/api/admin/cities
+[net] GET 200 http://100.100.117.79:21423/api/admin/cities
+[net] GET 200 http://100.100.117.79:21423/api/admin/activities/page?page=1&size=20
+[net] GET 200 http://100.100.117.79:21423/api/admin/activities/page?page=1&size=20
+[info] createdId=01a034fb-df63-7ef1-8694-08c87d9e0720
+[debug] [vite] connecting...
+[debug] [vite] connected.
+[info] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[warning] [tiptap warn]: Duplicate extension names found: ['link', 'underline']. This can lead to issues.
+[warning] [tiptap warn]: Duplicate extension names found: ['link', 'underline']. This can lead to issues.
+[net] GET 200 http://100.100.117.79:21423/api/admin/activities/01a034fb-df63-7ef1-8694-08c87d9e0720
+[warning] [tiptap warn]: Duplicate extension names found: ['link', 'underline']. This can lead to issues.
+[warning] [tiptap warn]: Duplicate extension names found: ['link', 'underline']. This can lead to issues.
+[net] GET 200 http://100.100.117.79:21423/api/admin/activities/01a034fb-df63-7ef1-8694-08c87d9e0720
+[net] GET 200 http://100.100.117.79:21423/api/admin/cities/01a01fbc-0d56-7662-931b-1bd543c24ad2
+[net] GET 200 http://100.100.117.79:21423/api/admin/cities/01a01fbc-0d56-7662-931b-1bd543c24ad2
+[check] 首次编辑回显 景观="海岸线景观" 富文本="tiptap富文本内容TC003"
+WARN: 富文本回显不含预期文本，实际="tiptap富文本内容TC003"
+[net] PUT 200 http://100.100.117.79:21423/api/admin/activities/01a034fb-df63-7ef1-8694-08c87d9e0720
+[debug] [vite] connecting...
+[debug] [vite] connected.
+[info] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[warning] [tiptap warn]: Duplicate extension names found: ['link', 'underline']. This can lead to issues.
+[warning] [tiptap warn]: Duplicate extension names found: ['link', 'underline']. This can lead to issues.
+[net] GET 200 http://100.100.117.79:21423/api/admin/activities/01a034fb-df63-7ef1-8694-08c87d9e0720
+[warning] [tiptap warn]: Duplicate extension names found: ['link', 'underline']. This can lead to issues.
+[warning] [tiptap warn]: Duplicate extension names found: ['link', 'underline']. This can lead to issues.
+[net] GET 200 http://100.100.117.79:21423/api/admin/activities/01a034fb-df63-7ef1-8694-08c87d9e0720
+[net] GET 200 http://100.100.117.79:21423/api/admin/cities/01a01fbc-0d56-7662-931b-1bd543c24ad2
+[net] GET 200 http://100.100.117.79:21423/api/admin/cities/01a01fbc-0d56-7662-931b-1bd543c24ad2
+[check] 二次编辑回显 景观="火山地貌" 富文本="tiptap富文本内容TC003"
+[check] 富文本保存后不丢失=false

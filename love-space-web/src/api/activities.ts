@@ -46,6 +46,7 @@ export interface ActivityDetail {
   dismissalPlace: string | null;
   transportation: string | null;
   visa: string | null;
+  landscape: string | null;
   itinerary: ActivityItineraryItem[];
   /** 富文本 HTML，img src 为签名 URL。 */
   detailHtml: string | null;
@@ -75,6 +76,7 @@ export interface ActivityUpsertRequest {
   dismissalPlace?: string | null;
   transportation?: string | null;
   visa?: string | null;
+  landscape?: string | null;
   itinerary?: ActivityItineraryItem[];
   detailHtml?: string | null;
   online?: boolean;

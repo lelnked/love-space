@@ -65,8 +65,16 @@ class ActivityQueryServiceTest extends AbstractPostgresIntegrationTest {
         activity.setLevel("L1");
         activity.setItinerary(new ArrayList<>(List.of(new ActivityItineraryItem("第一天", "内容"))));
         activity.setDetailHtml("<p>说明</p><img src=\"bound/rich.png\">");
+        activity.setLandscape("火山地貌");
         activity.setOnline(online);
         return activityRepository.save(activity).getId();
+    }
+
+    // @scenario: activity/App 端活动查询#活动详情返回景观
+    @Test
+    void detailReturnsLandscape() {
+        UUID id = activity(city(true), true, "景观活动");
+        assertThat(activityQueryService.detail(id).landscape()).isEqualTo("火山地貌");
     }
 
     // @scenario: activity/App 端活动查询#查询上架城市的活动

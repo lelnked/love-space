@@ -6,7 +6,7 @@ import Input from "../../components/form/input/InputField";
 import Button from "../../components/ui/button/Button";
 import ImageUploaderList, { ImageListItem } from "../../components/form/ImageUploaderList";
 import Checkbox from "../../components/form/input/Checkbox";
-import RichTextEditor from "../../components/form/RichTextEditor";
+import ArticleRichTextEditor from "../../components/form/ArticleRichTextEditor";
 import {
   ACTIVITY_LEVELS,
   ACTIVITY_PERIOD_LABEL,
@@ -43,6 +43,7 @@ export default function ActivityForm() {
   const [dismissalPlace, setDismissalPlace] = useState("");
   const [transportation, setTransportation] = useState("");
   const [visa, setVisa] = useState("");
+  const [landscape, setLandscape] = useState("");
   const [itinerary, setItinerary] = useState<ActivityItineraryItem[]>([]);
   const [detailHtml, setDetailHtml] = useState("");
 
@@ -73,6 +74,7 @@ export default function ActivityForm() {
         setDismissalPlace(d.dismissalPlace ?? "");
         setTransportation(d.transportation ?? "");
         setVisa(d.visa ?? "");
+        setLandscape(d.landscape ?? "");
         setItinerary(d.itinerary);
         setDetailHtml(d.detailHtml ?? "");
         // 编辑时城市不可改，只需回显绑定城市名
@@ -124,6 +126,7 @@ export default function ActivityForm() {
       dismissalPlace: dismissalPlace.trim() || null,
       transportation: transportation.trim() || null,
       visa: visa.trim() || null,
+      landscape: landscape.trim() || null,
       itinerary: itinerary.map((it) => ({ title: it.title.trim(), content: it.content.trim() })),
       detailHtml: detailHtml || null,
     };
@@ -335,6 +338,13 @@ export default function ActivityForm() {
                   <Label>签证</Label>
                   <Input value={visa} onChange={(e) => setVisa(e.target.value)} />
                 </div>
+                <div>
+                  <Label>景观</Label>
+                  <Input
+                    value={landscape}
+                    onChange={(e) => setLandscape(e.target.value)}
+                  />
+                </div>
               </div>
             </div>
           </fieldset>
@@ -402,7 +412,7 @@ export default function ActivityForm() {
           {/* 6. 活动详情说明（富文本） */}
           <fieldset className={sectionClass}>
             <legend className={sectionTitleClass}>活动详情说明</legend>
-            <RichTextEditor initialValue={detailHtml} onChange={setDetailHtml} />
+            <ArticleRichTextEditor initialValue={detailHtml} onChange={setDetailHtml} />
           </fieldset>
 
           <div className="flex gap-3">

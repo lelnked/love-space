@@ -74,6 +74,7 @@ public class ActivityQueryService {
                 activity.getDismissalPlace(),
                 activity.getTransportation(),
                 activity.getVisa(),
+                activity.getLandscape(),
                 activity.getItinerary(),
                 RichTextImages.rewriteSrc(activity.getDetailHtml(), imageUrlSigner::sign));
     }

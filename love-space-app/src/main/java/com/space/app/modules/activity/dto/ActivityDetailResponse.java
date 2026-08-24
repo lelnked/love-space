@@ -23,6 +23,7 @@ public record ActivityDetailResponse(
         String dismissalPlace,
         String transportation,
         String visa,
+        String landscape,
         List<ActivityItineraryItem> itinerary,
         String detailHtml
 ) {

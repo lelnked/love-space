@@ -1,8 +1,5 @@
-# activity Specification
+## MODIFIED Requirements
 
-## Purpose
-TBD - created by archiving change ambassador-route-activity. Update Purpose after archive.
-## Requirements
 ### Requirement: 活动管理
 admin 端 SHALL 提供活动 CRUD：所属地图（城市）单选（必填、创建后不可变）、活动图片最少 1 张、活动标题（必填）、活动标签（多个文本）、适合周期多选（经期/卵泡期/排卵期/黄体期）、活动级别单选（L1/L2/L3）、活动简介、编辑说、集合地、解散地、交通、签证、景观（均文本）、路线子条目列表（每条为标题+内容，按添加顺序保存与展示）、活动详情说明（富文本，存 HTML）、上线/下线状态。删除为物理删除。
 
@@ -31,18 +28,23 @@ app 端 SHALL 提供只读查询：按城市查活动列表（含图片、标题
 
 #### Scenario: 查询上架城市的活动
 - **GIVEN** 上架城市下有上线活动
-- **WHEN** app 端按该城市查活动列表
-- **THEN** 返回 200，含标题、图片、级别、周期字段
+- **WHEN** app 端按城市查活动列表
+- **THEN** 返回 200，含图片、标题、标签、级别、周期
 
 #### Scenario: 下线活动不可见
 - **GIVEN** 一个下线活动
-- **WHEN** app 端查该城市活动列表及该活动详情
-- **THEN** 列表不含该活动；详情返回 404
+- **WHEN** app 端查该活动详情
+- **THEN** 返回 404
 
 #### Scenario: 活动详情返回富文本
-- **GIVEN** 一个可见活动，详情说明为含图片标签的 HTML
+- **GIVEN** 一个上线活动含富文本详情
 - **WHEN** app 端查该活动详情
-- **THEN** 返回 200，detailHtml 与后台保存内容一致
+- **THEN** 返回 200，detailHtml 内容与后台保存一致，img src 为可访问的签名 URL
+
+#### Scenario: 活动详情返回景观
+- **GIVEN** 一个上线活动的 landscape 为「火山地貌」
+- **WHEN** app 端查该活动详情
+- **THEN** 返回 200，`landscape` 为「火山地貌」
 
 ### Requirement: web 端活动管理页面
 web 端 SHALL 提供「活动管理」后台页面：DataTable 列表（图片/标题/所属城市/级别/状态/操作）+ 表单（含标签、周期多选、级别单选、景观文本框、路线子条目增删、富文本编辑器仅用于活动详情说明）+ 上下线开关 + 删除确认弹窗。
@@ -61,4 +63,3 @@ web 端 SHALL 提供「活动管理」后台页面：DataTable 列表（图片/�
 - **GIVEN** 活动表单已打开
 - **WHEN** 在「景观」输入框填写文本并保存，随后重新打开该活动的编辑表单
 - **THEN** 保存成功，「景观」输入框回显此前填写的文本
-

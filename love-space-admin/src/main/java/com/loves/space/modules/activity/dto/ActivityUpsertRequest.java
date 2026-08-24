@@ -24,6 +24,7 @@ import java.util.UUID;
  * @param dismissalPlace 解散地
  * @param transportation 交通
  * @param visa           签证
+ * @param landscape      景观
  * @param itinerary      路线子条目，按添加顺序
  * @param detailHtml     活动详情说明，富文本 HTML（img src 存 objectKey）
  * @param online         上线状态（可空，默认 false）
@@ -41,6 +42,7 @@ public record ActivityUpsertRequest(
         String dismissalPlace,
         String transportation,
         String visa,
+        String landscape,
         List<@Valid ActivityItineraryItemRequest> itinerary,
         String detailHtml,
         Boolean online

@@ -59,7 +59,7 @@ class ActivityServiceTest extends AbstractPostgresIntegrationTest {
     private ActivityUpsertRequest request(UUID cityId, String title) {
         return new ActivityUpsertRequest(cityId, List.of("images/a.png"), title,
                 List.of("徒步"), List.of("FOLLICULAR", "OVULATION"), "L2",
-                "简介", "编辑说", "集合地", "解散地", "交通", "签证",
+                "简介", "编辑说", "集合地", "解散地", "交通", "签证", "海岸线景观",
                 List.of(new ActivityItineraryItemRequest("第一天", "内容一"),
                         new ActivityItineraryItemRequest("第二天", "内容二")),
                 "<p>说明</p><img src=\"images/rich.png\">", null);
@@ -73,6 +73,7 @@ class ActivityServiceTest extends AbstractPostgresIntegrationTest {
         assertThat(detail.cityId()).isEqualTo(cityId);
         assertThat(detail.title()).isEqualTo("山间徒步");
         assertThat(detail.periods()).containsExactly("FOLLICULAR", "OVULATION");
+        assertThat(detail.landscape()).isEqualTo("海岸线景观");
         assertThat(detail.itinerary()).extracting(i -> i.title())
                 .containsExactly("第一天", "第二天");
         // 富文本 img src 落库为 bound key，读出时替换为签名 URL
@@ -85,6 +86,27 @@ class ActivityServiceTest extends AbstractPostgresIntegrationTest {
         assertThatThrownBy(() -> activityService.create(request(UUID.randomUUID(), "无城活动")))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("所属城市不存在");
+    }
+
+    // @scenario: activity/活动管理#景观字段可写可改可空
+    @Test
+    void landscapeIsWritableUpdatableAndNullable() {
+        UUID cityId = cityId();
+        ActivityDetailResponse created = activityService.create(request(cityId, "景观活动"));
+        assertThat(created.landscape()).isEqualTo("海岸线景观");
+
+        ActivityUpsertRequest base = request(cityId, "景观活动");
+        ActivityUpsertRequest volcano = new ActivityUpsertRequest(base.cityId(), base.images(), base.title(),
+                base.tags(), base.periods(), base.level(), base.introduction(), base.editorNote(),
+                base.gatheringPlace(), base.dismissalPlace(), base.transportation(), base.visa(),
+                "火山地貌", base.itinerary(), base.detailHtml(), base.online());
+        assertThat(activityService.update(created.id(), volcano).landscape()).isEqualTo("火山地貌");
+
+        ActivityUpsertRequest blank = new ActivityUpsertRequest(base.cityId(), base.images(), base.title(),
+                base.tags(), base.periods(), base.level(), base.introduction(), base.editorNote(),
+                base.gatheringPlace(), base.dismissalPlace(), base.transportation(), base.visa(),
+                null, base.itinerary(), base.detailHtml(), base.online());
+        assertThat(activityService.update(created.id(), blank).landscape()).isNull();
     }
 
     // @scenario: activity/活动管理#活动上下线切换

@@ -74,6 +74,10 @@ public class Activity extends BaseAuditEntity {
     @Column(name = "visa")
     private String visa;
 
+    /** 景观。 */
+    @Column(name = "landscape")
+    private String landscape;
+
     /** 路线子条目（按添加顺序），jsonb。 */
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "itinerary", nullable = false, columnDefinition = "jsonb")

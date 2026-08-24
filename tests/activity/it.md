@@ -135,3 +135,19 @@
 **执行方式**: api-test-runner
 **执行存证**: `test-evidence/ambassador-route-activity/TC-activity-IT-009/`
 **最后更新**: 2026-08-16
+
+### TC-activity-IT-020: 活动景观字段贯通 admin 写入与 admin/app 查询
+**关联需求**: activity/活动管理#景观字段可写可改可空
+**关联契约**: api-spec.json#/components/schemas/ActivityUpsertRequest
+**来源**: activity-landscape-field
+**优先级**: P1
+**测试步骤**:
+1. POST /api/admin/activities，body 含 landscape="海岸线景观"（其余字段合法，online=true，所属城市上架）
+2. GET /api/admin/activities/{id}
+3. PUT /api/admin/activities/{id}，把 landscape 改为「火山地貌」
+4. GET http://localhost:8081/api/app/activities/{id}（请求头带 X-API-Key）
+**预期结果**: 步骤 1、2 返回 200 且 `landscape`="海岸线景观"；步骤 3 返回 200 且 `landscape`="火山地貌"；步骤 4 返回 200 且 `landscape`="火山地貌"
+**状态**: ✅ 通过
+**执行方式**: api-test-runner
+**执行存证**: `test-evidence/activity-landscape-field/TC-activity-IT-020/`
+**最后更新**: 2026-08-24

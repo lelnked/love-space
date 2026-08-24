@@ -115,6 +115,7 @@ public class ActivityService {
         activity.setDismissalPlace(request.dismissalPlace());
         activity.setTransportation(request.transportation());
         activity.setVisa(request.visa());
+        activity.setLandscape(request.landscape());
         List<ActivityItineraryItemRequest> itinerary = request.itinerary() == null ? List.of() : request.itinerary();
         activity.setItinerary(new ArrayList<>(itinerary.stream()
                 .map(i -> new ActivityItineraryItem(i.title(), i.content()))
@@ -156,6 +157,7 @@ public class ActivityService {
                 activity.getDismissalPlace(),
                 activity.getTransportation(),
                 activity.getVisa(),
+                activity.getLandscape(),
                 activity.getItinerary(),
                 RichTextImages.rewriteSrc(activity.getDetailHtml(), imageUrlSigner::sign),
                 activity.isOnline(),

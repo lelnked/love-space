@@ -30,3 +30,18 @@
 **执行存证**: `test-evidence/ambassador-route-activity/TC-activity-WEB-002/`
 **阻塞说明**: 本地 OSS 仅配占位符，后端要求图片 objectKey 格式为 `images/<id>.<ext>`；前端保存前校验“至少 1 张图片”失败，富文本保存/回显链路无法完成。Playwright MCP 在当前会话中多次出现 unreachable/duplicate outputs，无法可靠完成图片上传与富文本编辑验证。
 **最后更新**: 2026-08-21
+
+### TC-activity-WEB-003: 活动表单填写景观并回显
+**关联需求**: activity/web 端活动管理页面#活动表单填写景观并回显
+**来源**: activity-landscape-field
+**优先级**: P2
+**前置条件**: Manager 已登录；存在上架城市；活动表单可打开（新建或编辑）
+**测试步骤**:
+1. 进入 /love-space/activities，打开活动新增表单，在「景观」输入框填写「海岸线景观」，连同必填字段一起保存
+2. 重新打开该活动的编辑表单，把「景观」改为「火山地貌」并保存
+3. 再次打开该活动的编辑表单
+**预期结果**: 步骤 1 保存成功；步骤 2 打开时「景观」回显「海岸线景观」，改后保存成功；步骤 3 回显「火山地貌」
+**状态**: ✅ 通过
+**执行方式**: web-test-runner（Playwright 本地 Chromium；@playwright/mcp 远程服务 100.103.199.95:9233 不可达）
+**执行存证**: `test-evidence/activity-landscape-field/TC-activity-WEB-003/`
+**最后更新**: 2026-08-24
