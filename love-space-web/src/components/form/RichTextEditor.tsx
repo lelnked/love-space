@@ -27,7 +27,7 @@ const ACCEPT = "image/png,image/jpeg,image/webp";
  * 富文本编辑公用组件（Quill）。
  *
  * 工具栏：段落样式 / 字体 / 加粗 / 斜体 / 下划线 / 无序列表 / 有序列表 / 居中对齐
- *        / 链接 / 图片 / 视频 / 公式 / 代码块 / 下标 / 上标。
+ *        / 链接 / 图片 / 视频 / 代码块 / 下标 / 上标。
  * 插图复用既有 OSS 直传链路：上传得 objectKey，编辑器内用 data URL 即时预览，
  * 提交时由 getHtmlForSubmit() 把 data URL 替换为 objectKey。
  */
@@ -110,7 +110,7 @@ export default forwardRef<RichTextEditorRef, RichTextEditorProps>(function RichT
           ["bold", "italic", "underline"],
           [{ list: "bullet" }, { list: "ordered" }, { align: [] }],
           ["link", "image", "video"],
-          ["formula", "code-block"],
+          ["code-block"],
           [{ script: "sub" }, { script: "super" }],
         ],
         handlers: {
