@@ -12,6 +12,8 @@ import com.space.app.modules.merchant.entity.Merchant;
 import com.space.app.modules.merchant.entity.MerchantTag;
 import com.space.app.modules.merchant.repository.MerchantRepository;
 import com.space.app.modules.merchant.repository.MerchantTagRepository;
+import com.space.app.modules.recommendlist.entity.RecommendListMerchant;
+import com.space.app.modules.recommendlist.repository.RecommendListMerchantRepository;
 import com.space.app.modules.tag.entity.Tag;
 import com.space.app.modules.tag.repository.TagRepository;
 import org.springframework.data.domain.Page;
@@ -30,7 +32,8 @@ import java.util.stream.Collectors;
 /**
  * 商户服务：App 端只读。
  * <ul>
- *   <li>列表分页：cityId 必填，period / categoryId 可选；排序 weight DESC, createdAt DESC；</li>
+ *   <li>列表分页：cityId 必填，period / categoryId / recommendListId 可选；
+ *       排序 weight DESC, createdAt DESC，按 recommendListId 查询时先按清单内 sortOrder 升序；</li>
  *   <li>详情拼装：图片、上架标签、四维百分制、爱女指数、故事；下架商户 404。
  *       评价不在详情内联返回，见 {@link MerchantReviewQueryService}。</li>
  * </ul>
@@ -41,27 +44,35 @@ public class MerchantService {
 
     private final MerchantRepository merchantRepository;
     private final MerchantTagRepository merchantTagRepository;
+    private final RecommendListMerchantRepository recommendListMerchantRepository;
     private final TagRepository tagRepository;
     private final ScoreCalculator scoreCalculator;
     private final ImageUrlSigner imageUrlSigner;
 
     public MerchantService(MerchantRepository merchantRepository,
                            MerchantTagRepository merchantTagRepository,
+                           RecommendListMerchantRepository recommendListMerchantRepository,
                            TagRepository tagRepository,
                            ScoreCalculator scoreCalculator,
                            ImageUrlSigner imageUrlSigner) {
         this.merchantRepository = merchantRepository;
         this.merchantTagRepository = merchantTagRepository;
+        this.recommendListMerchantRepository = recommendListMerchantRepository;
         this.tagRepository = tagRepository;
         this.scoreCalculator = scoreCalculator;
         this.imageUrlSigner = imageUrlSigner;
     }
 
     /** 商户列表分页查询。 */
-    public Page<MerchantListItemResponse> page(UUID cityId, Period period, UUID categoryId, PageQuery pageQuery) {
-        // 排序在 native SQL 中硬编码（weight DESC, created_at DESC），此处传入未排序 Pageable
+    public Page<MerchantListItemResponse> page(UUID cityId, Period period, UUID categoryId,
+                                               UUID recommendListId, PageQuery pageQuery) {
+        // 排序在 native SQL 中硬编码（清单内 sort_order 升序 → weight DESC, created_at DESC），此处传入未排序 Pageable
         Pageable pageable = pageQuery.toPageable(Sort.unsorted());
-        Page<Merchant> page = merchantRepository.searchOnline(cityId, period, categoryId, pageable);
+        Page<Merchant> page = merchantRepository.searchOnline(cityId, period, categoryId, recommendListId, pageable);
+        Map<UUID, Integer> recommendSortOrders = recommendListId == null ? Map.of()
+                : recommendListMerchantRepository.findAllByRecommendListIdOrderBySortOrderAsc(recommendListId).stream()
+                .collect(Collectors.toMap(RecommendListMerchant::getMerchantId, RecommendListMerchant::getSortOrder,
+                        (a, b) -> a));
 
         // 批量取标签关联与上架标签，避免 N+1
         List<UUID> merchantIds = page.getContent().stream().map(Merchant::getId).toList();
@@ -97,7 +108,8 @@ public class MerchantService {
                         m.getSafetyEnvironmentScore(),
                         m.getBusinessRightsScore(),
                         m.getExperienceFriendlyScore(),
-                        m.getSocialContributionScore())));
+                        m.getSocialContributionScore()),
+                recommendSortOrders.get(m.getId())));
     }
 
     /** 商户详情；下架或不存在抛 404。 */

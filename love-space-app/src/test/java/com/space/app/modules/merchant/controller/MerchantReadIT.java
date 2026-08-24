@@ -6,6 +6,8 @@ import com.space.app.modules.city.entity.City;
 import com.space.app.modules.city.repository.CityRepository;
 import com.space.app.modules.merchant.entity.Merchant;
 import com.space.app.modules.merchant.repository.MerchantRepository;
+import com.space.app.modules.recommendlist.entity.RecommendListMerchant;
+import com.space.app.modules.recommendlist.repository.RecommendListMerchantRepository;
 import com.space.app.support.AbstractPostgresIntegrationTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -39,6 +41,9 @@ class MerchantReadIT extends AbstractPostgresIntegrationTest {
     @Autowired
     private MerchantRepository merchantRepository;
 
+    @Autowired
+    private RecommendListMerchantRepository recommendListMerchantRepository;
+
     @MockitoBean
     private ImageUrlSigner imageUrlSigner;
 
@@ -47,6 +52,7 @@ class MerchantReadIT extends AbstractPostgresIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        recommendListMerchantRepository.deleteAll();
         merchantRepository.deleteAll();
         cityRepository.deleteAll();
 
@@ -90,6 +96,61 @@ class MerchantReadIT extends AbstractPostgresIntegrationTest {
                 .andExpect(jsonPath("$.content[0].id").value(merchantId.toString()))
                 .andExpect(jsonPath("$.content[0].logo.id").value("bound/logo.png"))
                 .andExpect(jsonPath("$.content[0].logo.url").value("https://signed.example.com/bound/logo.png"));
+    }
+
+    // @scenario: recommend-list/App 端清单查询#按推荐清单过滤商户列表
+    @Test
+    void listFiltersByRecommendListAndOrdersByListSortOrder() throws Exception {
+        UUID recommendListId = UUID.randomUUID();
+        UUID heavy = merchant("清单商户-权重高", 100);
+        UUID light = merchant("清单商户-权重低", 1);
+        relate(recommendListId, heavy, 2);
+        relate(recommendListId, light, 1);
+
+        // 不带 recommendListId：按 weight 降序，三个商户都在
+        mockMvc.perform(get("/api/app/merchants/page")
+                        .param("cityId", cityId.toString())
+                        .header("X-API-Key", TEST_API_KEY))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(3))
+                .andExpect(jsonPath("$.content[0].id").value(heavy.toString()))
+                .andExpect(jsonPath("$.content[0].recommendSortOrder").doesNotExist());
+
+        // 带 recommendListId：仅清单内商户，按清单内 sortOrder 升序，带回清单内排序号
+        mockMvc.perform(get("/api/app/merchants/page")
+                        .param("cityId", cityId.toString())
+                        .param("recommendListId", recommendListId.toString())
+                        .header("X-API-Key", TEST_API_KEY))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(2))
+                .andExpect(jsonPath("$.content[0].id").value(light.toString()))
+                .andExpect(jsonPath("$.content[0].recommendSortOrder").value(1))
+                .andExpect(jsonPath("$.content[1].id").value(heavy.toString()))
+                .andExpect(jsonPath("$.content[1].recommendSortOrder").value(2));
+    }
+
+    private UUID merchant(String name, int weight) {
+        Merchant merchant = new Merchant();
+        merchant.setName(name);
+        merchant.setLogo("bound/logo.png");
+        merchant.setAddress("地址");
+        merchant.setCityId(cityId);
+        merchant.setSafetyEnvironmentScore((short) 24);
+        merchant.setBusinessRightsScore((short) 20);
+        merchant.setExperienceFriendlyScore((short) 20);
+        merchant.setSocialContributionScore((short) 16);
+        merchant.setWeight(weight);
+        merchant.setOnline(true);
+        return merchantRepository.save(merchant).getId();
+    }
+
+    /** 只造关联行：查询按关联表 join，无需清单主表记录。 */
+    private void relate(UUID recommendListId, UUID merchantId, int sortOrder) {
+        RecommendListMerchant relation = new RecommendListMerchant();
+        relation.setRecommendListId(recommendListId);
+        relation.setMerchantId(merchantId);
+        relation.setSortOrder(sortOrder);
+        recommendListMerchantRepository.save(relation);
     }
 
     @Test

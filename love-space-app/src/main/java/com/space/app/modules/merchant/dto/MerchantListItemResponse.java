@@ -15,6 +15,7 @@ import java.util.UUID;
  * @param tags      上架标签集合
  * @param scores    四维百分制评分
  * @param loveIndex 爱女指数（total + level）
+ * @param recommendSortOrder 清单内排序号；仅按 recommendListId 查询时有值，否则为 null
  */
 public record MerchantListItemResponse(
         UUID id,
@@ -23,6 +24,7 @@ public record MerchantListItemResponse(
         String address,
         List<TagItemResponse> tags,
         ScoreView scores,
-        LoveIndexView loveIndex
+        LoveIndexView loveIndex,
+        Integer recommendSortOrder
 ) {
 }

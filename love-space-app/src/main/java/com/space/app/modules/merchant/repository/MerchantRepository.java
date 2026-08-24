@@ -22,32 +22,43 @@ import java.util.UUID;
 public interface MerchantRepository extends JpaRepository<Merchant, UUID> {
 
     /**
-     * 按 cityId + 可选 period + 可选 categoryId 过滤的上架商户分页。
+     * 按 cityId + 可选 period + 可选 categoryId + 可选 recommendListId 过滤的上架商户分页。
      * <p>periods 已内联为 jsonb 字符串数组列；period 命中通过 {@code jsonb @> '["NAME"]'::jsonb} 判断。
+     * <p>传 recommendListId 时仅返回该推荐清单内的商户，并优先按清单内 sort_order 升序。
      */
     @Query(value = """
-            select * from loves_merchant m
+            select m.* from loves_merchant m
+            left join loves_recommend_list_merchant rlm
+                   on rlm.merchant_id = m.id
+                  and rlm.recommend_list_id = cast(:recommendListId as uuid)
             where m.online = true
               and m.city_id = :cityId
               and (cast(:categoryId as uuid) is null or m.category_id = cast(:categoryId as uuid))
               and (:periodName is null or m.periods @> jsonb_build_array(cast(:periodName as text)))
-            order by m.weight desc, m.created_at desc
+              and (cast(:recommendListId as uuid) is null or rlm.id is not null)
+            order by rlm.sort_order asc nulls last, m.weight desc, m.created_at desc
             """,
             countQuery = """
             select count(*) from loves_merchant m
+            left join loves_recommend_list_merchant rlm
+                   on rlm.merchant_id = m.id
+                  and rlm.recommend_list_id = cast(:recommendListId as uuid)
             where m.online = true
               and m.city_id = :cityId
               and (cast(:categoryId as uuid) is null or m.category_id = cast(:categoryId as uuid))
               and (:periodName is null or m.periods @> jsonb_build_array(cast(:periodName as text)))
+              and (cast(:recommendListId as uuid) is null or rlm.id is not null)
             """,
             nativeQuery = true)
     Page<Merchant> searchOnlineNative(@Param("cityId") UUID cityId,
                                       @Param("periodName") String periodName,
                                       @Param("categoryId") UUID categoryId,
+                                      @Param("recommendListId") UUID recommendListId,
                                       Pageable pageable);
 
-    default Page<Merchant> searchOnline(UUID cityId, Period period, UUID categoryId, Pageable pageable) {
-        return searchOnlineNative(cityId, period == null ? null : period.name(), categoryId, pageable);
+    default Page<Merchant> searchOnline(UUID cityId, Period period, UUID categoryId, UUID recommendListId,
+                                        Pageable pageable) {
+        return searchOnlineNative(cityId, period == null ? null : period.name(), categoryId, recommendListId, pageable);
     }
 
     /** 按 ID 查询且仅当上架时返回。 */

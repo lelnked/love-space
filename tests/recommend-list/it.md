@@ -190,3 +190,18 @@
 **执行方式**: api-test-runner
 **执行存证**: `test-evidence/map-and-recommend-list/TC-recommend-list-IT-013/`
 **最后更新**: 2026-08-16
+
+### TC-recommend-list-IT-014: GET /api/app/merchants/page?recommendListId= 按推荐清单过滤商户
+**关联需求**: recommend-list/App 端清单查询#按推荐清单过滤商户列表
+**关联契约**: api-spec.json#/paths/~1api~1app~1merchants~1page/get
+**来源**: app-recommend-list-merchant-filter
+**优先级**: P1
+**测试步骤**:
+1. 前置：某上架城市下有 3 个上架商户；其中商户甲（weight 低）、商户乙（weight 高）加入清单 L，清单内 sortOrder 分别为 1、2；商户丙不在清单内
+2. GET http://localhost:8081/api/app/merchants/page?cityId={cityId}（请求头带 X-API-Key）
+3. GET http://localhost:8081/api/app/merchants/page?cityId={cityId}&recommendListId={listId}（请求头带 X-API-Key）
+**预期结果**: 步骤 2 返回 200，totalElements=3，按 weight 降序（乙在前），每项 `recommendSortOrder` 为 null；步骤 3 返回 200，totalElements=2，顺序为甲→乙（清单内 sortOrder 升序），`recommendSortOrder` 分别为 1、2，商户丙不出现
+**状态**: ⏳ 待执行
+**执行方式**: api-test-runner
+**执行存证**: -
+**最后更新**: 2026-08-24

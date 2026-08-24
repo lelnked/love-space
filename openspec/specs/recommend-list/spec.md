@@ -51,6 +51,7 @@ admin 端 SHALL 提供推荐清单 CRUD：清单含标题（必填）、介绍�
 
 ### Requirement: App 端清单查询
 app 端 SHALL 提供按城市查询清单列表与清单详情的只读接口；仅上架城市的清单可见；清单详情内商户按关联排序号升序返回。
+商户列表接口 `GET /api/app/merchants/page` SHALL 支持可选参数 `recommendListId`：传入时仅返回该清单内的上架商户，排序先按清单内 sortOrder 升序（再按既有 weight DESC, createdAt DESC 兜底），每项带回 `recommendSortOrder`；不传时行为与既有列表一致且 `recommendSortOrder` 为 `null`。
 
 #### Scenario: 查询上架城市的清单
 - **GIVEN** 某上架城市配有多个清单
@@ -61,6 +62,11 @@ app 端 SHALL 提供按城市查询清单列表与清单详情的只读接口；
 - **GIVEN** 某清单含多个商户
 - **WHEN** App 查询该清单详情
 - **THEN** 返回清单字段与商户列表（按关联 sortOrder 升序），商户含展示所需字段（名称、图片、推荐理由等）
+
+#### Scenario: 按推荐清单过滤商户列表
+- **GIVEN** 某城市下有 3 个上架商户，其中 2 个属于清单 L（清单内 sortOrder 分别为 1、2，与 weight 排序相反）
+- **WHEN** App 带 `recommendListId=L` 请求商户列表分页
+- **THEN** 仅返回清单内的 2 个商户，按清单内 sortOrder 升序，每项 `recommendSortOrder` 为 1、2；不带该参数时 3 个商户均返回且 `recommendSortOrder` 为 `null`
 
 #### Scenario: 下架城市清单不可见
 - **GIVEN** 某城市已下架且配有清单
