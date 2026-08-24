@@ -220,11 +220,15 @@ class RouteQueryServiceTest extends AbstractPostgresIntegrationTest {
         assertThat(result.getFirst().ambassadorName()).isEqualTo("大使-在线");
     }
 
-    // @scenario: route/App 端路线查询#城市名不存在返回空数组
+    // @scenario: route/App 端路线查询#城市表中无同名城市时仍返回路线且 city 为 null
     @Test
-    void listWithUnknownCityNameReturnsEmpty() {
-        route(city(true), ambassador(true), 1, List.of());
+    void listWithUnknownCityNameStillReturnsRoutes() {
+        String freeText = "不存在城-" + UUID.randomUUID();
+        route(freeText, ambassador(true), 1, List.of());
 
-        assertThat(routeQueryService.list("不存在城-" + UUID.randomUUID(), null)).isEmpty();
+        List<RouteItemResponse> result = routeQueryService.list(freeText, null);
+
+        assertThat(result).hasSize(1);
+        assertThat(result.getFirst().city()).isNull();
     }
 }

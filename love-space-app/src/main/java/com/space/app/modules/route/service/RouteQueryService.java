@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
  * 路线查询服务（App 端只读）：路线可见性仅取决于关联大使是否在线，与所属城市是否上架无关，
  * 按 sortOrder 升序。大使下线的级联靠查询过滤，不落库。
  * <p>列表支持可选的城市名与大使 ID 过滤（AND，均不传即不过滤）。
- * <p>城市信息由路线 cityName 反查城市表生成，城市记录删除时 city 为 null。
+ * <p>城市信息由路线 cityName 反查城市表生成：无同名城市时 city 为 null，多条同名取最新创建的。
  */
 @Service
 @Transactional(readOnly = true)
@@ -52,12 +52,10 @@ public class RouteQueryService {
 
     /**
      * 路线列表：cityName 与 ambassadorId 均为可选过滤条件，都不传则返回全部可见路线；
-     * cityName 指向的城市不存在时返回空列表。可见性仍仅取决于关联大使是否在线。
+     * cityName 按路线上的城市名原样匹配（城市表中无同名城市时 city 为 null，不影响路线返回）。
+     * 可见性仍仅取决于关联大使是否在线。
      */
     public List<RouteItemResponse> list(String cityName, UUID ambassadorId) {
-        if (cityName != null && cityRepository.findByChineseName(cityName).isEmpty()) {
-            return List.of();
-        }
         List<Route> routes = routeRepository.search(cityName, ambassadorId);
         if (routes.isEmpty()) {
             return List.of();
@@ -66,9 +64,10 @@ public class RouteQueryService {
                         routes.stream().map(Route::getAmbassadorId).distinct().toList()).stream()
                 .filter(Ambassador::isOnline)
                 .collect(Collectors.toMap(Ambassador::getId, Function.identity()));
-        Map<String, City> citiesByName = cityRepository.findAllByChineseNameIn(
+        // 升序取回后同名合并保留后者 = 最新创建的那条
+        Map<String, City> citiesByName = cityRepository.findAllByChineseNameInOrderByCreatedAtAsc(
                         routes.stream().map(Route::getCityName).filter(Objects::nonNull).distinct().toList()).stream()
-                .collect(Collectors.toMap(City::getChineseName, Function.identity(), (a, b) -> a));
+                .collect(Collectors.toMap(City::getChineseName, Function.identity(), (a, b) -> b));
 
         return routes.stream()
                 .map(route -> {
@@ -101,7 +100,8 @@ public class RouteQueryService {
                 .map(s -> new RouteSpotItemResponse(s.name(), ImageResponses.from(s.image(), imageUrlSigner), s.introduction()))
                 .toList();
 
-        City city = route.getCityName() == null ? null : cityRepository.findByChineseName(route.getCityName()).orElse(null);
+        City city = route.getCityName() == null ? null
+                : cityRepository.findFirstByChineseNameOrderByCreatedAtDesc(route.getCityName()).orElse(null);
         return new RouteDetailResponse(
                 route.getCityName(),
                 route.getSortOrder(),

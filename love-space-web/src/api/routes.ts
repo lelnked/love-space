@@ -2,18 +2,17 @@ import { apiClient } from "./client";
 import type { Page } from "./types";
 import type { ImageResponse } from "../types/image";
 
-export interface RouteCity {
-  id: string;
-  name: string;
-}
-
 export interface RouteItem {
   id: string;
+  sortOrder: number;
   title: string;
   thumbnail: ImageResponse;
-  sortOrder: number;
-  ambassadorName: string;
-  city: RouteCity | null;
+  ambassadorId: string;
+  ambassadorName: string | null;
+  cityName: string;
+  spotCount: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface RouteSpot {

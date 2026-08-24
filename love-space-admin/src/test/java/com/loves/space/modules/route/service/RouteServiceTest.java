@@ -95,15 +95,14 @@ class RouteServiceTest extends AbstractPostgresIntegrationTest {
 
     // @scenario: route/路线管理#缺少必填项被拒绝
     @Test
-    void createRejectsMissingCityOrAmbassador() {
+    void createRejectsMissingAmbassadorButAcceptsFreeTextCity() {
         assertThatThrownBy(() -> routeService.create(
                 request(cityName(), UUID.randomUUID(), 0, "无大使路线", List.of())))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("关联大使不存在");
-        assertThatThrownBy(() -> routeService.create(
-                request("不存在的城市", ambassadorId(), 0, "无城路线", List.of())))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("所属城市不存在");
+        // cityName 是自由文本，城市表中不存在也照原样保存
+        assertThat(routeService.create(request("不存在的城市", ambassadorId(), 0, "自由城市路线", List.of()))
+                .cityName()).isEqualTo("不存在的城市");
     }
 
     // @scenario: route/路线管理#路线列表按排序号升序
@@ -111,11 +110,13 @@ class RouteServiceTest extends AbstractPostgresIntegrationTest {
     void pageOrdersBySortOrderAscending() {
         String cityName = cityName();
         UUID ambassadorId = ambassadorId();
-        routeService.create(request(cityName, ambassadorId, 5, "路线五", List.of()));
-        routeService.create(request(cityName, ambassadorId, 1, "路线一", List.of()));
-        routeService.create(request(cityName, ambassadorId, 3, "路线三", List.of()));
+        // 用唯一标记做标题关键字过滤，隔离同库残留数据与其他用例落库的路线
+        String marker = "排序-" + UUID.randomUUID();
+        routeService.create(request(cityName, ambassadorId, 5, marker + "-路线五", List.of()));
+        routeService.create(request(cityName, ambassadorId, 1, marker + "-路线一", List.of()));
+        routeService.create(request(cityName, ambassadorId, 3, marker + "-路线三", List.of()));
 
-        assertThat(routeService.page(null, PageRequest.of(0, 10)).content())
+        assertThat(routeService.page(marker, PageRequest.of(0, 10)).content())
                 .extracting(item -> item.sortOrder())
                 .containsExactly(1, 3, 5);
     }

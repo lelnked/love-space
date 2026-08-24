@@ -10,7 +10,6 @@ import { useToast } from "../../context/ToastContext";
 import { useConfirm } from "../../context/ConfirmContext";
 import DataTable, { Column } from "../../components/datatable/DataTable";
 import { deleteRoute, pageRoutes, RouteItem, RouteQuery } from "../../api/routes";
-import { CityItem, listCities } from "../../api/cities";
 
 function buildQuery(filters: FilterValues, page: number, size: number): RouteQuery {
   const q: RouteQuery = { page, size };
@@ -26,24 +25,14 @@ export default function RouteList() {
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [cities, setCities] = useState<CityItem[]>([]);
   const toast = useToast();
   const confirm = useConfirm();
-
-  useEffect(() => {
-    void listCities().then(setCities).catch(() => undefined);
-  }, []);
 
   const filterFields = useMemo<FilterField[]>(
     () => [
       { name: "keyword", label: "主标题", type: "text", placeholder: "模糊匹配" },
     ],
     [],
-  );
-
-  const cityName = useMemo(
-    () => Object.fromEntries(cities.map((c) => [c.id, c.chineseName])),
-    [cities],
   );
 
   const load = useCallback(async () => {
@@ -100,10 +89,10 @@ export default function RouteList() {
       className: "font-medium text-gray-800 dark:text-white/90",
     },
     {
-      key: "cityId",
-      header: "所属地图",
+      key: "cityName",
+      header: "所属城市",
       width: "9rem",
-      render: (it) => cityName[it.cityId] ?? "-",
+      render: (it) => it.cityName || "-",
     },
     { key: "ambassadorName", header: "大使", width: "9rem" },
     { key: "sortOrder", header: "排序号", width: "6rem" },

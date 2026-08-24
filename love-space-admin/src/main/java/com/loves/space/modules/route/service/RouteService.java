@@ -16,7 +16,6 @@ import com.loves.space.modules.route.dto.RouteUpsertRequest;
 import com.loves.space.modules.route.entity.Route;
 import com.loves.space.modules.route.entity.RouteSpot;
 import com.loves.space.modules.route.repository.RouteRepository;
-import com.loves.space.modules.city.repository.CityRepository;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -34,7 +33,7 @@ import java.util.stream.Collectors;
 
 /**
  * 路线服务（运营后台）：CRUD。
- * <p>无外键；ambassador/city 存在性由 service 层保证。图片/地点内联 jsonb。
+ * <p>无外键；ambassador 存在性由 service 层保证，cityName 为自由文本不校验。图片/地点内联 jsonb。
  */
 @Service
 @RequiredArgsConstructor
@@ -43,7 +42,6 @@ public class RouteService {
 
     private final RouteRepository routeRepository;
     private final AmbassadorRepository ambassadorRepository;
-    private final CityRepository cityRepository;
     private final ObjectKeyValidator objectKeyValidator;
     private final ImageUrlSigner imageUrlSigner;
 
@@ -94,9 +92,6 @@ public class RouteService {
     private void apply(Route route, RouteUpsertRequest request) {
         if (!ambassadorRepository.existsById(request.ambassadorId())) {
             throw new IllegalArgumentException("关联大使不存在：" + request.ambassadorId());
-        }
-        if (!cityRepository.existsByChineseName(request.cityName())) {
-            throw new IllegalArgumentException("所属城市不存在：" + request.cityName());
         }
         route.setSortOrder(request.sortOrder() == null ? 0 : request.sortOrder());
         route.setTitle(request.title());
