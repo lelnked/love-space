@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useRef, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { AxiosError } from "axios";
 import Label from "../../components/form/Label";
@@ -6,9 +6,7 @@ import Input from "../../components/form/input/InputField";
 import Button from "../../components/ui/button/Button";
 import ImageUploader from "../../components/form/ImageUploader";
 import Checkbox from "../../components/form/input/Checkbox";
-import RichTextEditor, {
-  type RichTextEditorRef,
-} from "../../components/form/RichTextEditor";
+import ArticleRichTextEditor from "../../components/form/ArticleRichTextEditor";
 import {
   ArticleUpsertRequest,
   createArticle,
@@ -35,7 +33,7 @@ export default function ArticleForm() {
   const [sortOrder, setSortOrder] = useState("0");
   const [categoryIds, setCategoryIds] = useState<string[]>([]);
   const [initialContentHtml, setInitialContentHtml] = useState("");
-  const editorRef = useRef<RichTextEditorRef>(null);
+  const [contentHtml, setContentHtml] = useState("");
 
   const [categories, setCategories] = useState<ArticleCategory[]>([]);
 
@@ -57,6 +55,7 @@ export default function ArticleForm() {
         setSortOrder(String(d.sortOrder));
         setCategoryIds(d.categoryIds);
         setInitialContentHtml(d.contentHtml ?? "");
+        setContentHtml(d.contentHtml ?? "");
       })
       .catch((err: AxiosError<{ detail?: string }>) => {
         toast.error(err.response?.data?.detail ?? "加载失败");
@@ -88,7 +87,7 @@ export default function ArticleForm() {
       image: imageKey.trim(),
       title: title.trim(),
       subtitle: subtitle.trim() || null,
-      contentHtml: editorRef.current?.getHtmlForSubmit() || initialContentHtml || null,
+      contentHtml: contentHtml || null,
       sortOrder: sortValue,
       categoryIds,
     };
@@ -197,9 +196,9 @@ export default function ArticleForm() {
           {/* 3. 文章内容（富文本） */}
           <fieldset className={sectionClass}>
             <legend className={sectionTitleClass}>文章内容</legend>
-            <RichTextEditor
-              ref={editorRef}
+            <ArticleRichTextEditor
               initialValue={initialContentHtml}
+              onChange={setContentHtml}
             />
           </fieldset>
 
