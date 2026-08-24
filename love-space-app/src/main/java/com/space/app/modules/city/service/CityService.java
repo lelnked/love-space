@@ -1,5 +1,6 @@
 package com.space.app.modules.city.service;
 
+import com.space.app.common.exception.ResourceNotFoundException;
 import com.space.app.common.util.ImageResponses;
 import com.space.app.infrastructure.storage.ImageUrlSigner;
 import com.space.app.modules.city.dto.CityItemResponse;
@@ -32,6 +33,13 @@ public class CityService {
         return cityRepository.findAllByOnlineTrueOrderByCreatedAtDesc().stream()
                 .map(this::toItem)
                 .toList();
+    }
+
+    /** 详情：上架城市；不存在或未上架抛 {@link ResourceNotFoundException}。 */
+    public CityItemResponse detail(UUID id) {
+        return cityRepository.findByIdAndOnlineTrue(id)
+                .map(this::toItem)
+                .orElseThrow(() -> new ResourceNotFoundException("city not found: " + id));
     }
 
     /** 按 ID 查询上架城市；不存在返回 empty。 */

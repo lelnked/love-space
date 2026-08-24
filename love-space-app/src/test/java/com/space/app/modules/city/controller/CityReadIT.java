@@ -77,6 +77,43 @@ class CityReadIT extends AbstractPostgresIntegrationTest {
     }
 
     @Test
+    void detailReturnsOnlineCity() throws Exception {
+        City city = new City();
+        city.setChineseName("南京-app-it");
+        city.setEnglishName("nanjing-app-it");
+        city.setChineseProvince("江苏");
+        city.setEnglishProvince("jiangsu");
+        city.setBackgroundImage("bound/nj.png");
+        city.setEditorNote("城墙下的黄昏");
+        city.setOnline(true);
+        UUID id = cityRepository.save(city).getId();
+
+        mockMvc.perform(get("/api/app/cities/" + id).header("X-API-Key", TEST_API_KEY))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(id.toString()))
+                .andExpect(jsonPath("$.chineseName").value("南京-app-it"))
+                .andExpect(jsonPath("$.editorNote").value("城墙下的黄昏"))
+                .andExpect(jsonPath("$.backgroundImage.url").value("https://signed.example.com/bound/nj.png"));
+    }
+
+    @Test
+    void detailReturns404WhenOfflineOrMissing() throws Exception {
+        City offline = new City();
+        offline.setChineseName("宁波-app-it");
+        offline.setEnglishName("ningbo-app-it");
+        offline.setChineseProvince("浙江");
+        offline.setEnglishProvince("zhejiang");
+        offline.setOnline(false);
+        UUID offlineId = cityRepository.save(offline).getId();
+
+        mockMvc.perform(get("/api/app/cities/" + offlineId).header("X-API-Key", TEST_API_KEY))
+                .andExpect(status().isNotFound());
+
+        mockMvc.perform(get("/api/app/cities/" + UUID.randomUUID()).header("X-API-Key", TEST_API_KEY))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
     void listReturnsNullBackgroundImageWhenAbsent() throws Exception {
         City noBg = new City();
         noBg.setChineseName("杭州-app-it");

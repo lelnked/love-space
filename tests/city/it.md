@@ -152,3 +152,31 @@
 **执行方式**: api-test-runner
 **执行存证**: `test-evidence/route-decouple-city-online/TC-city-IT-010/`
 **最后更新**: 2026-08-20
+
+### TC-city-IT-011: GET /api/app/cities/{id} 返回上架城市详情
+**关联需求**: city/地图编辑说#app 端城市数据返回编辑说
+**关联契约**: api-spec.json#/paths/~1api~1app~1cities~1{id}/get
+**来源**: 直接实现（未走 change）
+**优先级**: P0
+**测试步骤**:
+1. 前置：存在一个 online=true 的城市，含 backgroundImage 与 editorNote
+2. GET /api/app/cities/{id}，带 X-API-Key
+**预期结果**: 200，响应字段与列表项一致（id/chineseName/englishName/chineseProvince/englishProvince/backgroundImage{id,url}/editorNote）
+**状态**: ✅ 通过
+**执行方式**: CityReadIT#detailReturnsOnlineCity
+**执行存证**: `love-space-app/target/surefire-reports/com.space.app.modules.city.controller.CityReadIT.txt`
+**最后更新**: 2026-08-24
+
+### TC-city-IT-012: GET /api/app/cities/{id} 未上架或不存在返回 404
+**关联需求**: city/地图编辑说#app 端城市数据返回编辑说
+**关联契约**: api-spec.json#/paths/~1api~1app~1cities~1{id}/get
+**来源**: 直接实现（未走 change）
+**优先级**: P0
+**测试步骤**:
+1. GET /api/app/cities/{id}，id 指向 online=false 的城市
+2. GET /api/app/cities/{随机 UUID}
+**预期结果**: 两次均返回 404（app 端 ResourceNotFoundException 全局口径）
+**状态**: ✅ 通过
+**执行方式**: CityReadIT#detailReturns404WhenOfflineOrMissing
+**执行存证**: `love-space-app/target/surefire-reports/com.space.app.modules.city.controller.CityReadIT.txt`
+**最后更新**: 2026-08-24
