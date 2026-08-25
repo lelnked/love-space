@@ -13,6 +13,8 @@ public record ArticleDetailResponse(
         ImageResponse image,
         String title,
         String subtitle,
+        String intro,
+        List<String> tags,
         String contentHtml,
         List<UUID> categoryIds
 ) {

@@ -85,6 +85,58 @@ class ArticleQueryServiceTest extends AbstractPostgresIntegrationTest {
         assertThat(articleQueryService.listByCategory(UUID.randomUUID())).isEmpty();
     }
 
+    // @scenario: article/App 端文章查询#未设封面标题时列表回落文章标题
+    @Test
+    void listFallsBackToTitleWhenCoverTitleBlank() {
+        UUID categoryId = category("回落栏目-" + UUID.randomUUID(), 0);
+        UUID withCover = article("详情标题甲", 1, true, categoryId);
+        UUID blankCover = article("详情标题乙", 2, true, categoryId);
+        UUID legacy = article("详情标题丙", 3, true, categoryId);
+        Article a = articleRepository.findById(withCover).orElseThrow();
+        a.setCoverTitle("封面标题甲");
+        a.setTags(new ArrayList<>(List.of("约会", "周末")));
+        articleRepository.save(a);
+        Article b = articleRepository.findById(blankCover).orElseThrow();
+        b.setCoverTitle("   ");
+        articleRepository.save(b);
+        // legacy 保持 cover_title 为 null，模拟本次变更前的存量文章
+
+        assertThat(articleQueryService.listByCategory(categoryId))
+                .extracting(item -> item.coverTitle())
+                .containsExactly("封面标题甲", "详情标题乙", "详情标题丙");
+        assertThat(articleQueryService.listByCategory(categoryId))
+                .filteredOn(item -> item.id().equals(withCover))
+                .singleElement()
+                .satisfies(item -> {
+                    assertThat(item.title()).isEqualTo("详情标题甲");
+                    assertThat(item.tags()).containsExactly("约会", "周末");
+                });
+        assertThat(articleQueryService.listByCategory(categoryId))
+                .filteredOn(item -> item.id().equals(legacy))
+                .singleElement()
+                .satisfies(item -> assertThat(item.tags()).isEmpty());
+    }
+
+    // @scenario: article/App 端文章查询#详情返回引言与标签
+    @Test
+    void detailReturnsIntroAndTags() {
+        UUID categoryId = category("引言栏目-" + UUID.randomUUID(), 0);
+        UUID withIntro = article("有引言", 0, true, categoryId);
+        UUID without = article("无引言", 1, true, categoryId);
+        Article a = articleRepository.findById(withIntro).orElseThrow();
+        a.setIntro("这是引言");
+        a.setTags(new ArrayList<>(List.of("恋爱", "指南")));
+        articleRepository.save(a);
+
+        var detail = articleQueryService.detail(withIntro);
+        assertThat(detail.intro()).isEqualTo("这是引言");
+        assertThat(detail.tags()).containsExactly("恋爱", "指南");
+
+        var bare = articleQueryService.detail(without);
+        assertThat(bare.intro()).isNull();
+        assertThat(bare.tags()).isEmpty();
+    }
+
     // @scenario: article/App 端文章查询#下线文章不可见
     @Test
     void offlineArticleInvisible() {

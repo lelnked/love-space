@@ -31,7 +31,10 @@ export default function ArticleForm() {
   const [imageKey, setImageKey] = useState("");
   const [imagePreview, setImagePreview] = useState("");
   const [title, setTitle] = useState("");
+  const [coverTitle, setCoverTitle] = useState("");
   const [subtitle, setSubtitle] = useState("");
+  const [intro, setIntro] = useState("");
+  const [tags, setTags] = useState<string[]>([]);
   const [sortOrder, setSortOrder] = useState("0");
   const [categoryIds, setCategoryIds] = useState<string[]>([]);
   const [initialContentHtml, setInitialContentHtml] = useState("");
@@ -53,7 +56,10 @@ export default function ArticleForm() {
         setImageKey(d.image?.id ?? "");
         setImagePreview(d.image?.url ?? "");
         setTitle(d.title);
+        setCoverTitle(d.coverTitle ?? "");
         setSubtitle(d.subtitle ?? "");
+        setIntro(d.intro ?? "");
+        setTags(d.tags ?? []);
         setSortOrder(String(d.sortOrder));
         setCategoryIds(d.categoryIds);
         setInitialContentHtml(d.contentHtml ?? "");
@@ -87,7 +93,10 @@ export default function ArticleForm() {
     const payload: ArticleUpsertRequest = {
       image: imageKey.trim(),
       title: title.trim(),
+      coverTitle: coverTitle.trim() || null,
       subtitle: subtitle.trim() || null,
+      intro: intro.trim() || null,
+      tags: tags.map((t) => t.trim()).filter(Boolean),
       contentHtml: editorRef.current?.getHtmlForSubmit() || initialContentHtml || null,
       sortOrder: sortValue,
       categoryIds,
@@ -145,8 +154,12 @@ export default function ArticleForm() {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
+                <Label>封面标题（列表展示）</Label>
+                <Input value={coverTitle} onChange={(e) => setCoverTitle(e.target.value)} />
+              </div>
+              <div>
                 <Label>
-                  标题 <span className="text-error-500">*</span>
+                  文章标题（详情页展示） <span className="text-error-500">*</span>
                 </Label>
                 <Input
                   value={title}
@@ -158,6 +171,10 @@ export default function ArticleForm() {
               <div>
                 <Label>副标题</Label>
                 <Input value={subtitle} onChange={(e) => setSubtitle(e.target.value)} />
+              </div>
+              <div>
+                <Label>文章引言</Label>
+                <Input value={intro} onChange={(e) => setIntro(e.target.value)} />
               </div>
               <div>
                 <Label>权重（数字越小越靠前）</Label>
@@ -172,7 +189,40 @@ export default function ArticleForm() {
             </div>
           </fieldset>
 
-          {/* 2. 关联栏目（多选） */}
+          {/* 2. 文章标签 */}
+          <fieldset className={sectionClass}>
+            <legend className={sectionTitleClass}>文章标签</legend>
+            <div className="space-y-2 max-w-md">
+              {tags.map((t, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <Input
+                    value={t}
+                    onChange={(e) =>
+                      setTags((prev) => prev.map((x, j) => (j === i ? e.target.value : x)))
+                    }
+                  />
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setTags((prev) => prev.filter((_, j) => j !== i))}
+                  >
+                    删除
+                  </Button>
+                </div>
+              ))}
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => setTags((prev) => [...prev, ""])}
+              >
+                添加标签
+              </Button>
+            </div>
+          </fieldset>
+
+          {/* 3. 关联栏目（多选） */}
           <fieldset className={sectionClass}>
             <legend className={sectionTitleClass}>关联栏目（多选）</legend>
             {categories.length === 0 ? (
@@ -194,7 +244,7 @@ export default function ArticleForm() {
             )}
           </fieldset>
 
-          {/* 3. 文章内容（富文本） */}
+          {/* 4. 文章内容（富文本） */}
           <fieldset className={sectionClass}>
             <legend className={sectionTitleClass}>文章内容</legend>
             <RichTextEditor

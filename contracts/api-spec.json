@@ -650,7 +650,7 @@
     },
     "/api/app/articles": {
       "get": {
-        "summary": "App 按栏目查文章列表（上线且栏目存在才可见，sortOrder 升序）",
+        "summary": "App 按栏目查文章列表（上线且栏目存在才可见，sortOrder 升序；返回 coverTitle 与 tags，coverTitle 为空时回落 title）",
         "parameters": [
           {
             "name": "categoryId",
@@ -667,7 +667,7 @@
     },
     "/api/app/articles/{id}": {
       "get": {
-        "summary": "App 文章详情（不可见 404，contentHtml 签名替换）",
+        "summary": "App 文章详情（不可见 404，contentHtml 签名替换；返回 intro 与 tags）",
         "x-requirement": "article/App 端文章查询"
       }
     },
@@ -1429,10 +1429,26 @@
             "description": "objectKey"
           },
           "title": {
-            "type": "string"
+            "type": "string",
+            "description": "文章标题，详情页展示"
+          },
+          "coverTitle": {
+            "type": "string",
+            "description": "封面标题，列表/封面展示；可空，app 列表为空时回落 title"
           },
           "subtitle": {
             "type": "string"
+          },
+          "intro": {
+            "type": "string",
+            "description": "文章引言，详情页导语；可空"
+          },
+          "tags": {
+            "type": "array",
+            "description": "文章标签，自由文本；可空，空白项写入时剔除",
+            "items": {
+              "type": "string"
+            }
           },
           "contentHtml": {
             "type": "string",

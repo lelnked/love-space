@@ -27,13 +27,26 @@ public class Article extends BaseAuditEntity {
     @Column(name = "image", nullable = false)
     private String image;
 
-    /** 文章标题。 */
+    /** 文章标题（详情页展示）。 */
     @Column(name = "title", nullable = false)
     private String title;
+
+    /** 封面标题（列表/封面展示），可空；为空时 app 端列表回落文章标题。 */
+    @Column(name = "cover_title")
+    private String coverTitle;
 
     /** 文章副标题。 */
     @Column(name = "subtitle")
     private String subtitle;
+
+    /** 文章引言（详情页导语），可空。 */
+    @Column(name = "intro")
+    private String intro;
+
+    /** 文章标签（自由文本，表单内输入即建），jsonb。 */
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "tags", nullable = false, columnDefinition = "jsonb")
+    private List<String> tags = new ArrayList<>();
 
     /** 文章内容，富文本 HTML；img src 持久化为 objectKey。 */
     @Column(name = "content_html")

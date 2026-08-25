@@ -6,7 +6,11 @@ export interface ArticleItem {
   id: string;
   image: ImageResponse | null;
   title: string;
+  /** 封面标题，列表展示；未设置时为 null。 */
+  coverTitle: string | null;
   subtitle: string | null;
+  intro: string | null;
+  tags: string[];
   sortOrder: number;
   categoryIds: string[];
   online: boolean;
@@ -18,7 +22,10 @@ export interface ArticleDetail {
   id: string;
   image: ImageResponse | null;
   title: string;
+  coverTitle: string | null;
   subtitle: string | null;
+  intro: string | null;
+  tags: string[];
   /** 富文本 HTML，img src 为签名 URL。 */
   contentHtml: string | null;
   sortOrder: number;
@@ -39,7 +46,10 @@ export interface ArticleUpsertRequest {
   /** 文章图片 objectKey。 */
   image: string;
   title: string;
+  coverTitle?: string | null;
   subtitle?: string | null;
+  intro?: string | null;
+  tags?: string[];
   contentHtml?: string | null;
   sortOrder?: number;
   categoryIds?: string[];

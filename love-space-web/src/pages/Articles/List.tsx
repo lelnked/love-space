@@ -125,9 +125,16 @@ export default function ArticleList() {
         ),
     },
     {
+      key: "coverTitle",
+      header: "封面标题",
+      width: "12rem",
+      className: "font-medium text-gray-800 dark:text-white/90",
+      render: (it) => it.coverTitle || "-",
+    },
+    {
       key: "title",
-      header: "标题",
-      width: "14rem",
+      header: "文章标题",
+      width: "12rem",
       className: "font-medium text-gray-800 dark:text-white/90",
     },
     {

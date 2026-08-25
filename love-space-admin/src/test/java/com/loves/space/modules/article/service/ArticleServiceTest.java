@@ -60,7 +60,7 @@ class ArticleServiceTest extends AbstractPostgresIntegrationTest {
         UUID second = categoryId("栏目乙");
 
         ArticleDetailResponse detail = articleService.create(new ArticleUpsertRequest(
-                "images/cover.png", "文章标题", "副标题",
+                "images/cover.png", "文章标题", null, "副标题", null, null,
                 "<p>正文</p><img src=\"images/rich.png\">", 3, List.of(first, second), true));
 
         assertThat(detail.title()).isEqualTo("文章标题");
@@ -70,15 +70,53 @@ class ArticleServiceTest extends AbstractPostgresIntegrationTest {
         assertThat(detail.contentHtml()).contains("https://signed.example.com/bound/images/rich.png");
     }
 
+    // @scenario: article/文章管理#创建带封面标题、引言与标签的文章
+    @Test
+    void createKeepsCoverTitleIntroAndTagsIndependent() {
+        UUID category = categoryId("栏目丙");
+
+        ArticleDetailResponse detail = articleService.create(new ArticleUpsertRequest(
+                "images/cover.png", "详情页标题", "封面标题", "副标题", "这是引言",
+                List.of("约会", "周末"), null, 0, List.of(category), true));
+
+        assertThat(detail.title()).isEqualTo("详情页标题");
+        assertThat(detail.coverTitle()).isEqualTo("封面标题");
+        assertThat(detail.subtitle()).isEqualTo("副标题");
+        assertThat(detail.intro()).isEqualTo("这是引言");
+        assertThat(detail.tags()).containsExactly("约会", "周末");
+    }
+
+    // @scenario: article/文章管理#封面标题、引言、标签均可省略
+    @Test
+    void omittedCoverTitleIntroAndTagsFallBackToNullAndEmpty() {
+        UUID category = categoryId("栏目丁");
+
+        ArticleDetailResponse detail = articleService.create(new ArticleUpsertRequest(
+                "images/cover.png", "只有标题", null, null, null, null, null, 0, List.of(category), true));
+
+        assertThat(detail.coverTitle()).isNull();
+        assertThat(detail.intro()).isNull();
+        assertThat(detail.tags()).isEmpty();
+
+        // 空白串按 null 存、标签中的空白项被剔除
+        ArticleDetailResponse updated = articleService.update(detail.id(), new ArticleUpsertRequest(
+                "images/cover.png", "只有标题", "  ", null, " ",
+                java.util.Arrays.asList(" 甲 ", "", null, "乙"), null, 0, List.of(category), true));
+
+        assertThat(updated.coverTitle()).isNull();
+        assertThat(updated.intro()).isNull();
+        assertThat(updated.tags()).containsExactly("甲", "乙");
+    }
+
     // @scenario: article/文章管理#缺少必填项被拒绝
     @Test
     void rejectsMissingRequiredOrUnknownCategory() {
         assertThat(VALIDATOR.validate(new ArticleUpsertRequest(
-                "images/a.png", " ", null, null, 0, List.of(), true)))
+                "images/a.png", " ", null, null, null, null, null, 0, List.of(), true)))
                 .extracting(v -> v.getMessage())
                 .contains("文章标题不能为空");
         assertThatThrownBy(() -> articleService.create(new ArticleUpsertRequest(
-                "images/a.png", "标题", null, null, 0, List.of(UUID.randomUUID()), true)))
+                "images/a.png", "标题", null, null, null, null, null, 0, List.of(UUID.randomUUID()), true)))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("关联栏目不存在");
     }
@@ -87,7 +125,7 @@ class ArticleServiceTest extends AbstractPostgresIntegrationTest {
     @Test
     void setOnlineToggles() {
         UUID id = articleService.create(new ArticleUpsertRequest(
-                "images/a.png", "开关文章", null, null, 0, List.of(categoryId("开关栏目")), true)).id();
+                "images/a.png", "开关文章", null, null, null, null, null, 0, List.of(categoryId("开关栏目")), true)).id();
         assertThat(articleService.setOnline(id, false).online()).isFalse();
         assertThat(articleService.setOnline(id, true).online()).isTrue();
     }

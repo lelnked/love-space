@@ -79,7 +79,7 @@ class ArticleCategoryServiceTest extends AbstractPostgresIntegrationTest {
         UUID categoryId = categoryService.create(
                 new ArticleCategoryUpsertRequest("待删栏目", "images/icon.png", 0)).id();
         UUID articleId = articleService.create(new ArticleUpsertRequest(
-                "images/a.png", "标题", null, null, 0, List.of(categoryId), true)).id();
+                "images/a.png", "标题", null, null, null, null, null, 0, List.of(categoryId), true)).id();
 
         categoryService.delete(categoryId);
 

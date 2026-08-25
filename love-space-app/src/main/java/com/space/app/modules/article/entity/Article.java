@@ -29,8 +29,21 @@ public class Article extends BaseAuditEntity {
     @Column(name = "title", nullable = false)
     private String title;
 
+    /** 封面标题（列表展示），可空；为空时列表回落 title。 */
+    @Column(name = "cover_title")
+    private String coverTitle;
+
     @Column(name = "subtitle")
     private String subtitle;
+
+    /** 文章引言（详情导语），可空。 */
+    @Column(name = "intro")
+    private String intro;
+
+    /** 文章标签（自由文本），jsonb。 */
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "tags", nullable = false, columnDefinition = "jsonb")
+    private List<String> tags = new ArrayList<>();
 
     @Column(name = "content_html")
     private String contentHtml;

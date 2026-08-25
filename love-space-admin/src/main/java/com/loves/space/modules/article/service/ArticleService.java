@@ -94,13 +94,31 @@ public class ArticleService {
         }
         article.setImage(objectKeyValidator.validateAndBind(request.image()));
         article.setTitle(request.title());
+        article.setCoverTitle(blankToNull(request.coverTitle()));
         article.setSubtitle(request.subtitle());
+        article.setIntro(blankToNull(request.intro()));
+        article.setTags(cleanTags(request.tags()));
         // 富文本 img src：先归一（编辑器可能回传签名 URL）再逐个 validateAndBind，持久化 bound objectKey
         article.setContentHtml(RichTextImages.rewriteSrc(request.contentHtml(),
                 src -> objectKeyValidator.validateAndBind(RichTextImages.normalizeToObjectKey(src))));
         article.setSortOrder(request.sortOrder() == null ? 0 : request.sortOrder());
         article.setCategoryIds(new ArrayList<>(categoryIds.stream().map(UUID::toString).toList()));
         article.setOnline(Boolean.TRUE.equals(request.online()));
+    }
+
+    private static String blankToNull(String value) {
+        return StringUtils.hasText(value) ? value : null;
+    }
+
+    /** 标签归一：null 视作空数组，逐项 trim 并剔除空白项。 */
+    private static List<String> cleanTags(List<String> tags) {
+        if (tags == null) {
+            return new ArrayList<>();
+        }
+        return tags.stream()
+                .filter(StringUtils::hasText)
+                .map(String::trim)
+                .collect(java.util.stream.Collectors.toCollection(ArrayList::new));
     }
 
     private List<UUID> categoryIdsOf(Article article) {
@@ -116,7 +134,10 @@ public class ArticleService {
                 article.getId(),
                 ImageResponses.from(article.getImage(), imageUrlSigner),
                 article.getTitle(),
+                article.getCoverTitle(),
                 article.getSubtitle(),
+                article.getIntro(),
+                article.getTags(),
                 article.getSortOrder(),
                 categoryIdsOf(article),
                 article.isOnline(),
@@ -129,7 +150,10 @@ public class ArticleService {
                 article.getId(),
                 ImageResponses.from(article.getImage(), imageUrlSigner),
                 article.getTitle(),
+                article.getCoverTitle(),
                 article.getSubtitle(),
+                article.getIntro(),
+                article.getTags(),
                 RichTextImages.rewriteSrc(article.getContentHtml(), imageUrlSigner::sign),
                 article.getSortOrder(),
                 categoryIdsOf(article),

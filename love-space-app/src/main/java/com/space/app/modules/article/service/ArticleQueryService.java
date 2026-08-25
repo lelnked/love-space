@@ -36,6 +36,12 @@ public class ArticleQueryService {
         this.imageUrlSigner = imageUrlSigner;
     }
 
+    /** 列表用封面标题：未设置封面标题的存量文章回落为文章标题，避免客户端出现空标题。 */
+    private static String coverTitleOf(Article article) {
+        String coverTitle = article.getCoverTitle();
+        return coverTitle == null || coverTitle.isBlank() ? article.getTitle() : coverTitle;
+    }
+
     /** 栏目列表，sortOrder 升序。 */
     public List<ArticleCategoryResponse> listCategories() {
         return categoryRepository.findAllByOrderBySortOrderAscCreatedAtDesc().stream()
@@ -56,8 +62,10 @@ public class ArticleQueryService {
                 .map(article -> new ArticleItemResponse(
                         article.getId(),
                         ImageResponses.from(article.getImage(), imageUrlSigner),
+                        coverTitleOf(article),
                         article.getTitle(),
-                        article.getSubtitle()))
+                        article.getSubtitle(),
+                        article.getTags()))
                 .toList();
     }
 
@@ -78,6 +86,8 @@ public class ArticleQueryService {
                 ImageResponses.from(article.getImage(), imageUrlSigner),
                 article.getTitle(),
                 article.getSubtitle(),
+                article.getIntro(),
+                article.getTags(),
                 RichTextImages.rewriteSrc(article.getContentHtml(), imageUrlSigner::sign),
                 existingCategoryIds);
     }
