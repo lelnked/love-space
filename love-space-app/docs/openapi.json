@@ -23,7 +23,7 @@
   "tags": [
     {
       "name": "Activity",
-      "description": "活动只读 API。\nGET /api/app/activities?cityId= → 200 上架城市的上线活动数组；\nGET /api/app/activities/{id} → 200 详情（detailHtml img src 为签名 URL），下线/城市下架/不存在 → 404。"
+      "description": "活动只读 API。\nGET /api/app/activities → 200 全部上线活动数组（创建时间倒序）；\nGET /api/app/activities/{id} → 200 详情（detailHtml img src 为签名 URL），下线/不存在 → 404。"
     },
     {
       "name": "Ambassador",
@@ -35,7 +35,7 @@
     },
     {
       "name": "Article",
-      "description": "文章只读 API。\nGET /api/app/articles?categoryId= → 200 该栏目上线文章数组（sortOrder 升序）；\nGET /api/app/articles/{id} → 200 详情（contentHtml img src 为签名 URL），下线/失去所有栏目/不存在 → 404。"
+      "description": "文章只读 API。\nGET /api/app/articles?categoryId=（可选） → 200 可见文章数组（sortOrder 升序）：传栏目则限该栏目，不传则全部；\nGET /api/app/articles/{id} → 200 详情（contentHtml img src 为签名 URL），下线/失去所有栏目/不存在 → 404。"
     },
     {
       "name": "Banner",
@@ -55,7 +55,7 @@
     },
     {
       "name": "FeaturedCycleItem",
-      "description": "精选·周期推荐只读 API。\nGET /api/app/featured-cycle-items?type=（可选） → 200 四周期分组（键恒在，无条目为空数组；\n条目上线∧关联实体可见，组内 sortOrder 升序）。周期判定在客户端，服务端不按用户筛选。"
+      "description": "精选·周期推荐只读 API。\nGET /api/app/featured-cycle-items?period=&type=（均可选） → 200 扁平数组（条目带 period；\n条目上线∧关联实体可见，sortOrder 升序；过滤后无条目为空数组）。周期判定在客户端，服务端不按用户筛选。"
     },
     {
       "name": "Merchant",
@@ -80,21 +80,9 @@
         "tags": [
           "Activity"
         ],
-        "summary": "按城市查询上线活动列表",
-        "description": "按城市查询上线活动列表。",
+        "summary": "查询全部上线活动",
+        "description": "查询全部上线活动。",
         "operationId": "Activity_list",
-        "parameters": [
-          {
-            "name": "cityId",
-            "in": "query",
-            "required": true,
-            "description": "城市 ID",
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
         "responses": {
           "200": {
             "description": "成功",
@@ -108,9 +96,6 @@
                 }
               }
             }
-          },
-          "400": {
-            "$ref": "#/components/responses/BadRequest"
           },
           "401": {
             "$ref": "#/components/responses/Unauthorized"
@@ -280,15 +265,15 @@
         "tags": [
           "Article"
         ],
-        "summary": "按栏目查询上线文章列表",
-        "description": "按栏目查询上线文章列表。",
+        "summary": "可见文章列表",
+        "description": "可见文章列表；categoryId 可选，传入时限该栏目，不传返回全部。",
         "operationId": "Article_list",
         "parameters": [
           {
             "name": "categoryId",
             "in": "query",
-            "required": true,
-            "description": "文章栏目 ID",
+            "required": false,
+            "description": "文章栏目 ID，可选；传入仅返回该栏目下文章（栏目不存在返回空数组），不传返回全部可见文章",
             "schema": {
               "type": "string",
               "format": "uuid"
@@ -567,10 +552,19 @@
         "tags": [
           "FeaturedCycleItem"
         ],
-        "summary": "四周期推荐信息流",
-        "description": "四周期推荐信息流；type 可选，传入时仅下发该内容类型的条目，非法值由枚举转换失败返回 400。",
+        "summary": "推荐信息流",
+        "description": "推荐信息流；period / type 可选且可同用，非法值由枚举转换失败返回 400。",
         "operationId": "FeaturedCycleItem_feed",
         "parameters": [
+          {
+            "name": "period",
+            "in": "query",
+            "required": false,
+            "description": "按推荐生理周期过滤；缺省不过滤",
+            "schema": {
+              "$ref": "#/components/schemas/Period"
+            }
+          },
           {
             "name": "type",
             "in": "query",
@@ -587,37 +581,9 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "description": "键为 Period 枚举值，键恒在",
-                  "properties": {
-                    "MENSTRUAL": {
-                      "type": "array",
-                      "items": {
-                        "$ref": "#/components/schemas/FeaturedCycleItemResponse"
-                      },
-                      "description": "月经期"
-                    },
-                    "FOLLICULAR": {
-                      "type": "array",
-                      "items": {
-                        "$ref": "#/components/schemas/FeaturedCycleItemResponse"
-                      },
-                      "description": "卵泡期"
-                    },
-                    "OVULATION": {
-                      "type": "array",
-                      "items": {
-                        "$ref": "#/components/schemas/FeaturedCycleItemResponse"
-                      },
-                      "description": "排卵期"
-                    },
-                    "LUTEAL": {
-                      "type": "array",
-                      "items": {
-                        "$ref": "#/components/schemas/FeaturedCycleItemResponse"
-                      },
-                      "description": "黄体期"
-                    }
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/FeaturedCycleItemResponse"
                   }
                 }
               }
@@ -1049,11 +1015,6 @@
             "format": "uuid",
             "description": "ID（UUID）"
           },
-          "cityId": {
-            "type": "string",
-            "format": "uuid",
-            "description": "所属城市 ID"
-          },
           "images": {
             "type": "array",
             "items": {
@@ -1290,6 +1251,17 @@
             "type": "string",
             "description": "副标题"
           },
+          "intro": {
+            "type": "string",
+            "description": "文章引言（详情导语），可空"
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "文章标签（自由文本）"
+          },
           "contentHtml": {
             "type": "string",
             "description": "正文富文本 HTML（img src 已替换为签名 URL）"
@@ -1321,6 +1293,10 @@
             ],
             "description": "图片（objectKey + 签名 URL）"
           },
+          "coverTitle": {
+            "type": "string",
+            "description": "封面标题；文章未设置封面标题时回落为文章标题"
+          },
           "title": {
             "type": "string",
             "description": "标题"
@@ -1328,6 +1304,13 @@
           "subtitle": {
             "type": "string",
             "description": "副标题"
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "文章标签（自由文本）"
           }
         }
       },
@@ -1449,12 +1432,20 @@
       },
       "FeaturedCycleItemResponse": {
         "type": "object",
-        "description": "周期推荐条目响应（App 端）。\n不属于当前 type 的关联 id 与文案字段恒为 null；\n关联实体 id 供 App 端自行决定跳转。",
+        "description": "周期推荐条目响应（App 端）。\nperiod 为所属周期，扁平列表下客户端据此自行分组；不属于当前 type 的关联 id 与文案字段恒为 null；\n关联实体 id 供 App 端自行决定跳转。",
         "properties": {
           "id": {
             "type": "string",
             "format": "uuid",
             "description": "推荐条目 ID"
+          },
+          "period": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Period"
+              }
+            ],
+            "description": "所属生理周期（MENSTRUAL / FOLLICULAR / OVULATION / LUTEAL），不传 period 过滤时客户端据此分组"
           },
           "type": {
             "allOf": [

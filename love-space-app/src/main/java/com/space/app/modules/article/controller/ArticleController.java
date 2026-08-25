@@ -27,7 +27,11 @@ public class ArticleController {
         this.articleQueryService = articleQueryService;
     }
 
-    /** 可见文章列表；categoryId 可选，传入时限该栏目，不传返回全部。 */
+    /**
+     * 可见文章列表；categoryId 可选，传入时限该栏目，不传返回全部。
+     *
+     * @param categoryId 文章栏目 ID，可选；传入仅返回该栏目下文章（栏目不存在返回空数组），不传返回全部可见文章
+     */
     @GetMapping
     public List<ArticleItemResponse> list(@RequestParam(required = false) UUID categoryId) {
         return categoryId == null
