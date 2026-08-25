@@ -11,7 +11,6 @@ import org.hibernate.type.SqlTypes;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 /**
  * 活动实体：对应 {@code loves_activity} 表。
@@ -22,10 +21,6 @@ import java.util.UUID;
 @Getter
 @Setter
 public class Activity extends BaseAuditEntity {
-
-    /** 所属地图（城市），创建后不可变。 */
-    @Column(name = "city_id", nullable = false)
-    private UUID cityId;
 
     /** 活动图片 objectKey 列表（≥1 张），jsonb。 */
     @JdbcTypeCode(SqlTypes.JSON)

@@ -12,7 +12,6 @@ import java.util.UUID;
  */
 public record ActivityDetailResponse(
         UUID id,
-        UUID cityId,
         List<ImageResponse> images,
         String title,
         List<String> tags,

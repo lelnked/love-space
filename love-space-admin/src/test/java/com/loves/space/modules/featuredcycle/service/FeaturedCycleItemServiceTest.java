@@ -8,8 +8,6 @@ import com.loves.space.modules.activity.entity.Activity;
 import com.loves.space.modules.activity.repository.ActivityRepository;
 import com.loves.space.modules.article.entity.Article;
 import com.loves.space.modules.article.repository.ArticleRepository;
-import com.loves.space.modules.city.entity.City;
-import com.loves.space.modules.city.repository.CityRepository;
 import com.loves.space.modules.featuredcycle.dto.FeaturedCycleItemResponse;
 import com.loves.space.modules.featuredcycle.dto.FeaturedCycleItemUpsertRequest;
 import com.loves.space.modules.featuredcycle.entity.FeaturedCycleItemType;
@@ -39,9 +37,6 @@ class FeaturedCycleItemServiceTest extends AbstractPostgresIntegrationTest {
     private FeaturedCycleItemService featuredCycleItemService;
 
     @Autowired
-    private CityRepository cityRepository;
-
-    @Autowired
     private ActivityRepository activityRepository;
 
     @Autowired
@@ -69,19 +64,8 @@ class FeaturedCycleItemServiceTest extends AbstractPostgresIntegrationTest {
                 .thenAnswer(inv -> "https://signed.example.com/" + inv.getArgument(0));
     }
 
-    private UUID cityId() {
-        City city = new City();
-        city.setChineseName("周期城-" + UUID.randomUUID());
-        city.setEnglishName("cycle-city");
-        city.setChineseProvince("省");
-        city.setEnglishProvince("Province");
-        city.setOnline(true);
-        return cityRepository.save(city).getId();
-    }
-
     private Activity activity(String title) {
         Activity activity = new Activity();
-        activity.setCityId(cityId());
         activity.setTitle(title);
         activity.setOnline(true);
         return activityRepository.save(activity);

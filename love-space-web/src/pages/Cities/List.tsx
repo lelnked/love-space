@@ -91,7 +91,7 @@ export default function CityList() {
       !next &&
       !(await confirm({
         title: "下架地图",
-        message: `确认下架地图「${item.chineseName}」？\n注意：下架会同时下架该城市下的全部商户和 Banner，该城市的推荐清单、活动、精选推荐也将在 App 端不可见。`,
+        message: `确认下架地图「${item.chineseName}」？\n注意：下架会同时下架该城市下的全部商户和 Banner，该城市的推荐清单、精选推荐也将在 App 端不可见。`,
         confirmText: "下架",
         danger: true,
       }))

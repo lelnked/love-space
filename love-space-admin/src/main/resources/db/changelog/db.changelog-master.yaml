@@ -37,3 +37,5 @@ databaseChangeLog:
       file: db/changelog/changes/018-add-ambassador-weight.sql
   - include:
       file: db/changelog/changes/019-add-activity-landscape.sql
+  - include:
+      file: db/changelog/changes/020-remove-activity-city-id.sql

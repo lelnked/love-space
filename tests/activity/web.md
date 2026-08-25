@@ -2,30 +2,30 @@
 
 ### TC-activity-WEB-001: 活动列表展示与上下线开关
 **关联需求**: activity/web 端活动管理页面#活动列表与上下线
-**来源**: ambassador-route-activity
+**来源**: ambassador-route-activity → activity-drop-city-link
 **优先级**: P1
-**前置条件**: Manager 账号可登录 http://100.93.172.18:5173/love-space/signin；已存在至少一个上线活动（含图片、所属城市、级别）
+**前置条件**: Manager 账号可登录 http://100.93.172.18:5173/love-space/signin；已存在至少一个上线活动（含图片、级别）
 **测试步骤**:
 1. 登录后台，导航至 /love-space/activities
 2. 核对 DataTable 列内容
 3. 切换某上线活动的状态开关为下线
-**预期结果**: DataTable 展示图片、标题、所属城市、级别、状态开关与操作列；切换后该行状态即时变为下线且出现成功提示，刷新页面后状态保持
-**状态**: ✅ 通过
+**预期结果**: DataTable 展示图片、标题、级别、状态开关与操作列，**不含「所属城市」列**，筛选区**不含地图（城市）下拉**；切换后该行状态即时变为下线且出现成功提示，刷新页面后状态保持
+**状态**: ⬜ 未测试（activity-drop-city-link 变更后需重测）
 **执行方式**: web-test-runner（@playwright/mcp）
 **执行存证**: `test-evidence/ambassador-route-activity/TC-activity-WEB-001/`
 **最后更新**: 2026-08-19
 
 ### TC-activity-WEB-002: 活动表单富文本编辑并回显
 **关联需求**: activity/web 端活动管理页面#活动表单富文本编辑
-**来源**: ambassador-route-activity
+**来源**: ambassador-route-activity → activity-drop-city-link
 **优先级**: P1
-**前置条件**: Manager 已登录；存在上架城市；活动表单可打开（新建或编辑）
+**前置条件**: Manager 已登录；活动表单可打开（新建或编辑）
 **测试步骤**:
-1. 进入 /love-space/activities，打开活动表单，填写必填字段（城市、标题、图片），勾选周期多选与级别单选，添加 1 条路线子条目
+1. 进入 /love-space/activities，打开活动表单，填写必填字段（标题、图片），勾选周期多选与级别单选，添加 1 条路线子条目
 2. 在「活动详情说明」富文本编辑器中输入一段文本并插入 1 张图片，保存
 3. 重新打开该活动的编辑表单
 **预期结果**: 保存成功有提示；重新打开后富文本编辑器回显此前录入的文本与图片（图片正常渲染），周期/级别/路线子条目与录入一致
-**状态**: ⚠️ 环境阻塞
+**状态**: ⚠️ 环境阻塞（activity-drop-city-link 变更后需重测）
 **执行方式**: web-test-runner（@playwright/mcp）
 **执行存证**: `test-evidence/ambassador-route-activity/TC-activity-WEB-002/`
 **阻塞说明**: 本地 OSS 仅配占位符，后端要求图片 objectKey 格式为 `images/<id>.<ext>`；前端保存前校验“至少 1 张图片”失败，富文本保存/回显链路无法完成。Playwright MCP 在当前会话中多次出现 unreachable/duplicate outputs，无法可靠完成图片上传与富文本编辑验证。
@@ -33,15 +33,30 @@
 
 ### TC-activity-WEB-003: 活动表单填写景观并回显
 **关联需求**: activity/web 端活动管理页面#活动表单填写景观并回显
-**来源**: activity-landscape-field
+**来源**: activity-landscape-field → activity-drop-city-link
 **优先级**: P2
-**前置条件**: Manager 已登录；存在上架城市；活动表单可打开（新建或编辑）
+**前置条件**: Manager 已登录；活动表单可打开（新建或编辑）
 **测试步骤**:
 1. 进入 /love-space/activities，打开活动新增表单，在「景观」输入框填写「海岸线景观」，连同必填字段一起保存
 2. 重新打开该活动的编辑表单，把「景观」改为「火山地貌」并保存
 3. 再次打开该活动的编辑表单
 **预期结果**: 步骤 1 保存成功；步骤 2 打开时「景观」回显「海岸线景观」，改后保存成功；步骤 3 回显「火山地貌」
-**状态**: ✅ 通过
+**状态**: ⬜ 未测试（activity-drop-city-link 变更后需重测）
 **执行方式**: web-test-runner（Playwright 本地 Chromium；@playwright/mcp 远程服务 100.103.199.95:9233 不可达）
 **执行存证**: `test-evidence/activity-landscape-field/TC-activity-WEB-003/`
 **最后更新**: 2026-08-24
+
+### TC-activity-WEB-004: 活动表单无地图选项即可保存
+**关联需求**: activity/web 端活动管理页面#活动表单无地图选项即可保存
+**来源**: activity-drop-city-link
+**优先级**: P1
+**前置条件**: Manager 已登录 http://100.93.172.18:5173/love-space/
+**测试步骤**:
+1. 进入 /love-space/activities，点击新增打开活动表单
+2. 检查表单字段区，确认不存在「所属地图」/「所属城市」下拉控件
+3. 填写标题与至少 1 张图片后保存
+**预期结果**: 步骤 2 表单中无地图（城市）下拉项；步骤 3 保存成功、出现成功提示并返回列表，新活动出现在列表中
+**状态**: ⬜ 未测试
+**执行方式**: web-test-runner（@playwright/mcp）
+**执行存证**: `test-evidence/regression/activity/TC-activity-WEB-004/`
+**最后更新**: -

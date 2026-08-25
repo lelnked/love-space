@@ -3,34 +3,30 @@ package com.loves.space.modules.activity.service;
 import com.loves.space.infrastructure.storage.ImageUrlSigner;
 import com.loves.space.infrastructure.storage.ObjectKeyValidator;
 import com.loves.space.modules.activity.dto.ActivityDetailResponse;
+import com.loves.space.modules.activity.dto.ActivityItemResponse;
 import com.loves.space.modules.activity.dto.ActivityItineraryItemRequest;
 import com.loves.space.modules.activity.dto.ActivityUpsertRequest;
-import com.loves.space.modules.city.entity.City;
-import com.loves.space.modules.city.repository.CityRepository;
 import com.loves.space.support.AbstractPostgresIntegrationTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 /**
- * {@link ActivityService} 集成测试：创建（含行程顺序与富文本图片绑定）、必填校验、上下线。
+ * {@link ActivityService} 集成测试：创建（含行程顺序与富文本图片绑定）、列表、上下线。
  */
 class ActivityServiceTest extends AbstractPostgresIntegrationTest {
 
     @Autowired
     private ActivityService activityService;
-
-    @Autowired
-    private CityRepository cityRepository;
 
     @MockitoBean
     private ObjectKeyValidator objectKeyValidator;
@@ -46,18 +42,8 @@ class ActivityServiceTest extends AbstractPostgresIntegrationTest {
                 .thenAnswer(inv -> "https://signed.example.com/" + inv.getArgument(0));
     }
 
-    private UUID cityId() {
-        City city = new City();
-        city.setChineseName("活动城-" + UUID.randomUUID());
-        city.setEnglishName("activity-city");
-        city.setChineseProvince("省");
-        city.setEnglishProvince("Province");
-        city.setOnline(true);
-        return cityRepository.save(city).getId();
-    }
-
-    private ActivityUpsertRequest request(UUID cityId, String title) {
-        return new ActivityUpsertRequest(cityId, List.of("images/a.png"), title,
+    private ActivityUpsertRequest request(String title) {
+        return new ActivityUpsertRequest(List.of("images/a.png"), title,
                 List.of("徒步"), List.of("FOLLICULAR", "OVULATION"), "L2",
                 "简介", "编辑说", "集合地", "解散地", "交通", "签证", "海岸线景观",
                 List.of(new ActivityItineraryItemRequest("第一天", "内容一"),
@@ -68,9 +54,7 @@ class ActivityServiceTest extends AbstractPostgresIntegrationTest {
     // @scenario: activity/活动管理#创建活动
     @Test
     void createReturnsFullDetailWithBoundRichTextImages() {
-        UUID cityId = cityId();
-        ActivityDetailResponse detail = activityService.create(request(cityId, "山间徒步"));
-        assertThat(detail.cityId()).isEqualTo(cityId);
+        ActivityDetailResponse detail = activityService.create(request("山间徒步"));
         assertThat(detail.title()).isEqualTo("山间徒步");
         assertThat(detail.periods()).containsExactly("FOLLICULAR", "OVULATION");
         assertThat(detail.landscape()).isEqualTo("海岸线景观");
@@ -80,29 +64,32 @@ class ActivityServiceTest extends AbstractPostgresIntegrationTest {
         assertThat(detail.detailHtml()).contains("https://signed.example.com/bound/images/rich.png");
     }
 
-    // @scenario: activity/活动管理#缺少必填项被拒绝
+    // @scenario: activity/活动管理#活动列表不按城市过滤
     @Test
-    void createRejectsMissingCity() {
-        assertThatThrownBy(() -> activityService.create(request(UUID.randomUUID(), "无城活动")))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("所属城市不存在");
+    void pageReturnsAllActivitiesRegardlessOfCity() {
+        String tag = UUID.randomUUID().toString().substring(0, 8);
+        activityService.create(request("列表甲-" + tag));
+        activityService.create(request("列表乙-" + tag));
+
+        assertThat(activityService.page(tag, PageRequest.of(0, 20)).content())
+                .extracting(ActivityItemResponse::title)
+                .containsExactlyInAnyOrder("列表甲-" + tag, "列表乙-" + tag);
     }
 
     // @scenario: activity/活动管理#景观字段可写可改可空
     @Test
     void landscapeIsWritableUpdatableAndNullable() {
-        UUID cityId = cityId();
-        ActivityDetailResponse created = activityService.create(request(cityId, "景观活动"));
+        ActivityDetailResponse created = activityService.create(request("景观活动"));
         assertThat(created.landscape()).isEqualTo("海岸线景观");
 
-        ActivityUpsertRequest base = request(cityId, "景观活动");
-        ActivityUpsertRequest volcano = new ActivityUpsertRequest(base.cityId(), base.images(), base.title(),
+        ActivityUpsertRequest base = request("景观活动");
+        ActivityUpsertRequest volcano = new ActivityUpsertRequest(base.images(), base.title(),
                 base.tags(), base.periods(), base.level(), base.introduction(), base.editorNote(),
                 base.gatheringPlace(), base.dismissalPlace(), base.transportation(), base.visa(),
                 "火山地貌", base.itinerary(), base.detailHtml(), base.online());
         assertThat(activityService.update(created.id(), volcano).landscape()).isEqualTo("火山地貌");
 
-        ActivityUpsertRequest blank = new ActivityUpsertRequest(base.cityId(), base.images(), base.title(),
+        ActivityUpsertRequest blank = new ActivityUpsertRequest(base.images(), base.title(),
                 base.tags(), base.periods(), base.level(), base.introduction(), base.editorNote(),
                 base.gatheringPlace(), base.dismissalPlace(), base.transportation(), base.visa(),
                 null, base.itinerary(), base.detailHtml(), base.online());
@@ -112,7 +99,7 @@ class ActivityServiceTest extends AbstractPostgresIntegrationTest {
     // @scenario: activity/活动管理#活动上下线切换
     @Test
     void setOnlineToggles() {
-        UUID id = activityService.create(request(cityId(), "开关活动")).id();
+        UUID id = activityService.create(request("开关活动")).id();
         assertThat(activityService.setOnline(id, true).online()).isTrue();
         assertThat(activityService.setOnline(id, false).online()).isFalse();
     }

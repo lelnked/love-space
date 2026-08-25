@@ -445,16 +445,8 @@
     },
     "/api/admin/activities/page": {
       "get": {
-        "summary": "活动分页列表，支持 cityId/keyword 过滤",
+        "summary": "活动分页列表，支持 keyword 过滤",
         "parameters": [
-          {
-            "name": "cityId",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
           {
             "name": "keyword",
             "in": "query",
@@ -501,7 +493,7 @@
         "x-requirement": "activity/活动管理"
       },
       "put": {
-        "summary": "更新活动（cityId 不可变）",
+        "summary": "更新活动",
         "x-requirement": "activity/活动管理"
       },
       "delete": {
@@ -517,24 +509,13 @@
     },
     "/api/app/activities": {
       "get": {
-        "summary": "App 按城市查活动列表（城市上架且活动上线才可见）",
-        "parameters": [
-          {
-            "name": "cityId",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
+        "summary": "App 活动列表（全部上线活动，创建时间倒序；与地图无关）",
         "x-requirement": "activity/App 端活动查询"
       }
     },
     "/api/app/activities/{id}": {
       "get": {
-        "summary": "App 活动详情含 landscape 景观与富文本 detailHtml（城市下架或活动下线 → 404）",
+        "summary": "App 活动详情含 landscape 景观与富文本 detailHtml（活动下线或不存在 → 404）",
         "x-requirement": "activity/App 端活动查询"
       }
     },
@@ -1327,16 +1308,10 @@
       "ActivityUpsertRequest": {
         "type": "object",
         "required": [
-          "cityId",
           "title",
           "images"
         ],
         "properties": {
-          "cityId": {
-            "type": "string",
-            "format": "uuid",
-            "description": "所属地图（城市），创建后不可变"
-          },
           "images": {
             "type": "array",
             "minItems": 1,

@@ -34,12 +34,11 @@ public class ActivityController {
         this.activityService = activityService;
     }
 
-    /** 分页查询活动（cityId 过滤 + keyword 标题模糊）。 */
+    /** 分页查询活动（keyword 标题模糊）。 */
     @GetMapping("page")
-    public PageResponse<ActivityItemResponse> page(@RequestParam(required = false) UUID cityId,
-                                                   @RequestParam(required = false) String keyword,
+    public PageResponse<ActivityItemResponse> page(@RequestParam(required = false) String keyword,
                                                    Pageable pageable) {
-        return activityService.page(cityId, keyword, pageable);
+        return activityService.page(keyword, pageable);
     }
 
     /** 活动详情。 */
@@ -55,7 +54,7 @@ public class ActivityController {
         return activityService.create(request);
     }
 
-    /** 更新活动（cityId 不可变）。 */
+    /** 更新活动。 */
     @PutMapping("/{id}")
     @OperationLog("activity:update")
     public ActivityDetailResponse update(@PathVariable UUID id,

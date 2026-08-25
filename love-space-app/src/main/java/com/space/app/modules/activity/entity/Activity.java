@@ -11,7 +11,6 @@ import org.hibernate.type.SqlTypes;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 /**
  * 活动实体：对应 {@code loves_activity} 表。App 端只读。
@@ -21,10 +20,6 @@ import java.util.UUID;
 @Getter
 @Setter
 public class Activity extends BaseAuditEntity {
-
-    /** 所属城市 ID（无 FK）。 */
-    @Column(name = "city_id", nullable = false)
-    private UUID cityId;
 
     /** 活动图片 objectKey 列表，jsonb。 */
     @JdbcTypeCode(SqlTypes.JSON)

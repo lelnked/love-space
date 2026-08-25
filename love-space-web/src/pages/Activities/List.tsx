@@ -17,11 +17,9 @@ import {
   pageActivities,
   setActivityOnline,
 } from "../../api/activities";
-import { CityItem, listCities } from "../../api/cities";
 
 function buildQuery(filters: FilterValues, page: number, size: number): ActivityQuery {
   const q: ActivityQuery = { page, size };
-  if (filters.cityId) q.cityId = filters.cityId;
   if (filters.keyword) q.keyword = filters.keyword;
   return q;
 }
@@ -34,32 +32,14 @@ export default function ActivityList() {
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [cities, setCities] = useState<CityItem[]>([]);
   // Switch 为非受控组件：切换失败后靠 nonce 变更 key 强制重挂载复位
   const [switchNonce, setSwitchNonce] = useState(0);
   const toast = useToast();
   const confirm = useConfirm();
 
-  useEffect(() => {
-    void listCities().then(setCities).catch(() => undefined);
-  }, []);
-
   const filterFields = useMemo<FilterField[]>(
-    () => [
-      { name: "keyword", label: "标题", type: "text", placeholder: "模糊匹配" },
-      {
-        name: "cityId",
-        label: "所属地图",
-        type: "select",
-        options: cities.map((c) => ({ label: c.chineseName, value: c.id })),
-      },
-    ],
-    [cities],
-  );
-
-  const cityName = useMemo(
-    () => Object.fromEntries(cities.map((c) => [c.id, c.chineseName])),
-    [cities],
+    () => [{ name: "keyword", label: "标题", type: "text", placeholder: "模糊匹配" }],
+    [],
   );
 
   const load = useCallback(async () => {
@@ -129,12 +109,6 @@ export default function ActivityList() {
       header: "标题",
       width: "14rem",
       className: "font-medium text-gray-800 dark:text-white/90",
-    },
-    {
-      key: "cityId",
-      header: "所属地图",
-      width: "9rem",
-      render: (it) => cityName[it.cityId] ?? "-",
     },
     {
       key: "level",

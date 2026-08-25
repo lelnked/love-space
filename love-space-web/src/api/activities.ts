@@ -21,7 +21,6 @@ export interface ActivityItineraryItem {
 
 export interface ActivityItem {
   id: string;
-  cityId: string;
   cover: ImageResponse | null;
   title: string;
   tags: string[];
@@ -34,7 +33,6 @@ export interface ActivityItem {
 
 export interface ActivityDetail {
   id: string;
-  cityId: string;
   images: ImageResponse[];
   title: string;
   tags: string[];
@@ -56,14 +54,12 @@ export interface ActivityDetail {
 }
 
 export interface ActivityQuery {
-  cityId?: string;
   keyword?: string;
   page?: number;
   size?: number;
 }
 
 export interface ActivityUpsertRequest {
-  cityId: string;
   /** 图片 objectKey 列表，至少 1 张。 */
   images: string[];
   title: string;
@@ -84,7 +80,6 @@ export interface ActivityUpsertRequest {
 
 export async function pageActivities(query: ActivityQuery): Promise<Page<ActivityItem>> {
   const params: Record<string, string | number> = {};
-  if (query.cityId) params.cityId = query.cityId;
   if (query.keyword) params.keyword = query.keyword;
   if (query.page) params.page = query.page;
   if (query.size) params.size = query.size;

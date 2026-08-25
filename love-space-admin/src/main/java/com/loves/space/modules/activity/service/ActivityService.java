@@ -15,7 +15,6 @@ import com.loves.space.modules.activity.entity.Activity;
 import com.loves.space.modules.activity.entity.ActivityItineraryItem;
 import com.loves.space.modules.activity.entity.Activity_;
 import com.loves.space.modules.activity.repository.ActivityRepository;
-import com.loves.space.modules.city.repository.CityRepository;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -31,7 +30,7 @@ import java.util.UUID;
 
 /**
  * 活动服务（运营后台）：CRUD + 上下线。
- * <p>无外键，city 存在性在这里校验；富文本 img src 保存时绑定 objectKey、读取时替换为签名 URL。
+ * <p>无外键；富文本 img src 保存时绑定 objectKey、读取时替换为签名 URL。
  */
 @Service
 @RequiredArgsConstructor
@@ -39,18 +38,14 @@ import java.util.UUID;
 public class ActivityService {
 
     private final ActivityRepository activityRepository;
-    private final CityRepository cityRepository;
     private final ObjectKeyValidator objectKeyValidator;
     private final ImageUrlSigner imageUrlSigner;
 
-    /** 分页列表：cityId/keyword（标题模糊）过滤，创建时间倒序。 */
+    /** 分页列表：keyword（标题模糊）过滤，创建时间倒序。 */
     @Transactional(readOnly = true)
-    public PageResponse<ActivityItemResponse> page(UUID cityId, String keyword, Pageable pageable) {
+    public PageResponse<ActivityItemResponse> page(String keyword, Pageable pageable) {
         Specification<Activity> spec = (root, cq, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
-            if (cityId != null) {
-                predicates.add(cb.equal(root.get(Activity_.cityId), cityId));
-            }
             if (StringUtils.hasText(keyword)) {
                 predicates.add(cb.like(root.get(Activity_.title), "%" + keyword + "%"));
             }
@@ -66,18 +61,14 @@ public class ActivityService {
         return toDetail(find(id));
     }
 
-    /** 创建活动：校验所属城市存在。 */
+    /** 创建活动。 */
     public ActivityDetailResponse create(ActivityUpsertRequest request) {
-        if (!cityRepository.existsById(request.cityId())) {
-            throw new IllegalArgumentException("所属城市不存在：" + request.cityId());
-        }
         Activity activity = new Activity();
-        activity.setCityId(request.cityId());
         apply(activity, request);
         return toDetail(activityRepository.save(activity));
     }
 
-    /** 更新活动（cityId 不可变，请求中的 cityId 被忽略）。 */
+    /** 更新活动。 */
     public ActivityDetailResponse update(UUID id, ActivityUpsertRequest request) {
         Activity activity = find(id);
         apply(activity, request);
@@ -131,7 +122,6 @@ public class ActivityService {
                 ? null : activity.getImages().get(0);
         return new ActivityItemResponse(
                 activity.getId(),
-                activity.getCityId(),
                 ImageResponses.from(cover, imageUrlSigner),
                 activity.getTitle(),
                 activity.getTags(),
@@ -145,7 +135,6 @@ public class ActivityService {
     private ActivityDetailResponse toDetail(Activity activity) {
         return new ActivityDetailResponse(
                 activity.getId(),
-                activity.getCityId(),
                 ImageResponses.fromList(activity.getImages(), imageUrlSigner),
                 activity.getTitle(),
                 activity.getTags(),

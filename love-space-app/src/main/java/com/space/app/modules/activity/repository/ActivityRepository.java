@@ -11,5 +11,5 @@ import java.util.UUID;
  */
 public interface ActivityRepository extends JpaRepository<Activity, UUID> {
 
-    List<Activity> findAllByCityIdAndOnlineTrueOrderByCreatedAtDesc(UUID cityId);
+    List<Activity> findAllByOnlineTrueOrderByCreatedAtDesc();
 }

@@ -9,8 +9,6 @@ import com.space.app.modules.ambassador.entity.Ambassador;
 import com.space.app.modules.ambassador.repository.AmbassadorRepository;
 import com.space.app.modules.article.entity.Article;
 import com.space.app.modules.article.repository.ArticleRepository;
-import com.space.app.modules.city.entity.City;
-import com.space.app.modules.city.repository.CityRepository;
 import com.space.app.modules.featuredcycle.dto.FeaturedCycleItemResponse;
 import com.space.app.modules.featuredcycle.entity.FeaturedCycleItem;
 import com.space.app.modules.featuredcycle.entity.FeaturedCycleItemType;
@@ -41,7 +39,6 @@ public class FeaturedCycleItemQueryService {
     private final RouteRepository routeRepository;
     private final ArticleRepository articleRepository;
     private final AmbassadorRepository ambassadorRepository;
-    private final CityRepository cityRepository;
     private final ImageUrlSigner imageUrlSigner;
 
     public FeaturedCycleItemQueryService(FeaturedCycleItemRepository featuredCycleItemRepository,
@@ -49,14 +46,12 @@ public class FeaturedCycleItemQueryService {
                                          RouteRepository routeRepository,
                                          ArticleRepository articleRepository,
                                          AmbassadorRepository ambassadorRepository,
-                                         CityRepository cityRepository,
                                          ImageUrlSigner imageUrlSigner) {
         this.featuredCycleItemRepository = featuredCycleItemRepository;
         this.activityRepository = activityRepository;
         this.routeRepository = routeRepository;
         this.articleRepository = articleRepository;
         this.ambassadorRepository = ambassadorRepository;
-        this.cityRepository = cityRepository;
         this.imageUrlSigner = imageUrlSigner;
     }
 
@@ -66,11 +61,9 @@ public class FeaturedCycleItemQueryService {
      */
     public Map<Period, List<FeaturedCycleItemResponse>> feed(FeaturedCycleItemType type) {
         // ponytail: 运营配置级数据量（每周期个位数），全量捞出在内存过滤即可，无需 join
-        Set<UUID> onlineCityIds = cityRepository.findAllByOnlineTrueOrderByCreatedAtDesc().stream()
-                .map(City::getId).collect(Collectors.toSet());
+        // 活动可见性只看活动是否上线——活动不再关联地图，城市上架状态与它无关
         Set<UUID> visibleActivityIds = activityRepository.findAll().stream()
                 .filter(Activity::isOnline)
-                .filter(activity -> onlineCityIds.contains(activity.getCityId()))
                 .map(Activity::getId).collect(Collectors.toSet());
         Set<UUID> onlineAmbassadorIds = ambassadorRepository.findAll().stream()
                 .filter(Ambassador::isOnline)

@@ -1,8 +1,5 @@
-# activity Specification
+## MODIFIED Requirements
 
-## Purpose
-TBD - created by archiving change ambassador-route-activity. Update Purpose after archive.
-## Requirements
 ### Requirement: 活动管理
 admin 端 SHALL 提供活动 CRUD：活动图片最少 1 张、活动标题（必填）、活动标签（多个文本）、适合周期多选（经期/卵泡期/排卵期/黄体期）、活动级别单选（L1/L2/L3）、活动简介、编辑说、集合地、解散地、交通、签证、景观（均文本）、路线子条目列表（每条为标题+内容，按添加顺序保存与展示）、活动详情说明（富文本，存 HTML）、上线/下线状态。活动 SHALL NOT 关联地图（城市）——请求体中的 `cityId` 不再被接受，响应中不再返回 `cityId`，列表查询不再支持按城市过滤。删除为物理删除。
 

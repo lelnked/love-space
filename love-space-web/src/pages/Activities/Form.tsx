@@ -19,7 +19,6 @@ import {
   getActivity,
   updateActivity,
 } from "../../api/activities";
-import { CityItem, getCity, listOnlineCities } from "../../api/cities";
 import { PERIOD_VALUES, Period } from "../../api/types";
 import { useToast } from "../../context/ToastContext";
 
@@ -33,7 +32,6 @@ export default function ActivityForm() {
   const { id } = useParams<{ id?: string }>();
   const editing = Boolean(id);
 
-  const [cityId, setCityId] = useState("");
   const [images, setImages] = useState<ImageListItem[]>([]);
   const [title, setTitle] = useState("");
   const [tags, setTags] = useState<string[]>([]);
@@ -50,7 +48,6 @@ export default function ActivityForm() {
   const [detailHtml, setDetailHtml] = useState("");
   const editorRef = useRef<RichTextEditorRef>(null);
 
-  const [cities, setCities] = useState<CityItem[]>([]);
 
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -58,14 +55,10 @@ export default function ActivityForm() {
   const toast = useToast();
 
   useEffect(() => {
-    if (!id) {
-      void listOnlineCities().then(setCities).catch(() => undefined);
-      return;
-    }
+    if (!id) return;
     setLoading(true);
     getActivity(id)
       .then((d) => {
-        setCityId(d.cityId);
         setImages(d.images.map((im) => ({ objectKey: im.id, previewUrl: im.url })));
         setTitle(d.title);
         setTags(d.tags);
@@ -80,10 +73,6 @@ export default function ActivityForm() {
         setLandscape(d.landscape ?? "");
         setItinerary(d.itinerary);
         setDetailHtml(d.detailHtml ?? "");
-        // 编辑时城市不可改，只需回显绑定城市名
-        void getCity(d.cityId)
-          .then((c) => setCities([c]))
-          .catch(() => undefined);
       })
       .catch((err: AxiosError<{ detail?: string }>) => {
         toast.error(err.response?.data?.detail ?? "加载失败");
@@ -104,7 +93,6 @@ export default function ActivityForm() {
 
     const cleanTags = tags.map((t) => t.trim()).filter(Boolean);
     const errs: Record<string, string> = {};
-    if (!cityId) errs.cityId = "请选择所属地图";
     if (!title.trim()) errs.title = "活动标题不能为空";
     if (images.length === 0) errs.images = "至少上传 1 张图片";
     itinerary.forEach((it, i) => {
@@ -117,7 +105,6 @@ export default function ActivityForm() {
     }
 
     const payload: ActivityUpsertRequest = {
-      cityId,
       images: images.map((it) => it.objectKey.trim()),
       title: title.trim(),
       tags: cleanTags,
@@ -181,31 +168,6 @@ export default function ActivityForm() {
                   error={Boolean(fieldErrors.title)}
                   hint={fieldErrors.title}
                 />
-              </div>
-              <div>
-                <Label>
-                  所属地图 <span className="text-error-500">*</span>
-                </Label>
-                <select
-                  className="border rounded px-3 py-2 text-sm w-full h-11 disabled:bg-gray-100 disabled:text-gray-500"
-                  value={cityId}
-                  onChange={(e) => setCityId(e.target.value)}
-                  disabled={editing}
-                >
-                  <option value="">请选择</option>
-                  {cities.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.chineseName}
-                      {c.online ? "" : "（已下架）"}
-                    </option>
-                  ))}
-                </select>
-                {editing && (
-                  <div className="text-xs text-gray-400 mt-1">活动创建后所属地图不可修改</div>
-                )}
-                {fieldErrors.cityId && (
-                  <div className="text-error-500 text-xs mt-1">{fieldErrors.cityId}</div>
-                )}
               </div>
             </div>
           </fieldset>

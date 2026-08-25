@@ -79,9 +79,8 @@ class FeaturedCycleItemQueryServiceTest extends AbstractPostgresIntegrationTest 
         return cityRepository.save(city);
     }
 
-    private Activity activity(UUID cityId, boolean online) {
+    private Activity activity(boolean online) {
         Activity activity = new Activity();
-        activity.setCityId(cityId);
         activity.setTitle("活动-" + UUID.randomUUID());
         activity.setOnline(online);
         return activityRepository.save(activity);
@@ -141,9 +140,8 @@ class FeaturedCycleItemQueryServiceTest extends AbstractPostgresIntegrationTest 
     // @scenario: featured/App 端周期推荐查询#查询四个周期的推荐列表
     @Test
     void feedReturnsOnlyRequestedPhaseVisibleItems() {
-        City city = city(true);
         UUID visibleActivityItem = item(Period.MENSTRUAL, FeaturedCycleItemType.ACTIVITY,
-                activity(city.getId(), true).getId(), true, 0);
+                activity(true).getId(), true, 0);
         UUID visibleArticleItem = item(Period.OVULATION, FeaturedCycleItemType.ARTICLE,
                 article(true).getId(), true, 0);
         item(Period.MENSTRUAL, FeaturedCycleItemType.ARTICLE, article(true).getId(), false, 0);
@@ -165,16 +163,12 @@ class FeaturedCycleItemQueryServiceTest extends AbstractPostgresIntegrationTest 
     // @scenario: featured/App 端周期推荐查询#关联实体不可见时条目不下发
     @Test
     void itemHiddenWhenRelatedEntityInvisible() {
-        City onlineCity = city(true);
-        City offlineCity = city(false);
         item(Period.MENSTRUAL, FeaturedCycleItemType.ACTIVITY,
-                activity(onlineCity.getId(), false).getId(), true, 0);
-        item(Period.MENSTRUAL, FeaturedCycleItemType.ACTIVITY,
-                activity(offlineCity.getId(), true).getId(), true, 0);
+                activity(false).getId(), true, 0);
         item(Period.MENSTRUAL, FeaturedCycleItemType.ARTICLE, article(false).getId(), true, 0);
         item(Period.MENSTRUAL, FeaturedCycleItemType.ARTICLE, UUID.randomUUID(), true, 0);
         UUID visible = item(Period.MENSTRUAL, FeaturedCycleItemType.ACTIVITY,
-                activity(onlineCity.getId(), true).getId(), true, 0);
+                activity(true).getId(), true, 0);
 
         List<FeaturedCycleItemResponse> menstrual = featuredCycleItemQueryService.feed(null).getOrDefault(Period.MENSTRUAL, List.of());
 
@@ -185,7 +179,6 @@ class FeaturedCycleItemQueryServiceTest extends AbstractPostgresIntegrationTest 
     // @scenario: featured/App 端周期推荐查询#大使下线连带隐藏路线类条目
     @Test
     void routeItemHiddenWhenAmbassadorOffline() {
-        City onlineCity = city(true);
         item(Period.OVULATION, FeaturedCycleItemType.ROUTE,
                 route(ambassador(false).getId()).getId(), false, 0);
         UUID visible = item(Period.OVULATION, FeaturedCycleItemType.ROUTE,
@@ -212,13 +205,12 @@ class FeaturedCycleItemQueryServiceTest extends AbstractPostgresIntegrationTest 
     // @scenario: featured/App 端周期推荐查询#组内按排序号升序
     @Test
     void itemsWithinPhaseSortedBySortOrderAsc() {
-        City city = city(true);
         UUID second = item(Period.MENSTRUAL, FeaturedCycleItemType.ACTIVITY,
-                activity(city.getId(), true).getId(), true, 2);
+                activity(true).getId(), true, 2);
         UUID first = item(Period.MENSTRUAL, FeaturedCycleItemType.ACTIVITY,
-                activity(city.getId(), true).getId(), true, 1);
+                activity(true).getId(), true, 1);
         UUID third = item(Period.MENSTRUAL, FeaturedCycleItemType.ACTIVITY,
-                activity(city.getId(), true).getId(), true, 3);
+                activity(true).getId(), true, 3);
 
         List<FeaturedCycleItemResponse> menstrual = featuredCycleItemQueryService.feed(null).getOrDefault(Period.MENSTRUAL, List.of());
 
@@ -229,8 +221,7 @@ class FeaturedCycleItemQueryServiceTest extends AbstractPostgresIntegrationTest 
     // @scenario: featured/App 端周期推荐查询#按内容类型过滤
     @Test
     void feedFiltersByType() {
-        City city = city(true);
-        item(Period.MENSTRUAL, FeaturedCycleItemType.ACTIVITY, activity(city.getId(), true).getId(), true, 0);
+        item(Period.MENSTRUAL, FeaturedCycleItemType.ACTIVITY, activity(true).getId(), true, 0);
         item(Period.MENSTRUAL, FeaturedCycleItemType.ROUTE, route(ambassador(true).getId()).getId(), true, 1);
         UUID articleItem = item(Period.MENSTRUAL, FeaturedCycleItemType.ARTICLE, article(true).getId(), true, 2);
 
@@ -246,13 +237,24 @@ class FeaturedCycleItemQueryServiceTest extends AbstractPostgresIntegrationTest 
     // @scenario: featured/App 端周期推荐查询#类型过滤后周期为空仍返回空数组
     @Test
     void feedKeepsAllPhaseKeysWhenTypeFilterMatchesNothing() {
-        City city = city(true);
-        item(Period.MENSTRUAL, FeaturedCycleItemType.ACTIVITY, activity(city.getId(), true).getId(), true, 0);
+        item(Period.MENSTRUAL, FeaturedCycleItemType.ACTIVITY, activity(true).getId(), true, 0);
 
         Map<Period, List<FeaturedCycleItemResponse>> filtered =
                 featuredCycleItemQueryService.feed(FeaturedCycleItemType.ROUTE);
 
         assertThat(filtered).containsOnlyKeys(Period.values());
         assertThat(filtered.values()).allSatisfy(items -> assertThat(items).isEmpty());
+    }
+
+    // @scenario: city/地图下架对路线与活动均不级联#下架城市后 app 端活动仍可见
+    @Test
+    void activityItemVisibleEvenWhenAllCitiesOffline() {
+        city(false);
+        UUID visible = item(Period.LUTEAL, FeaturedCycleItemType.ACTIVITY,
+                activity(true).getId(), true, 0);
+
+        List<FeaturedCycleItemResponse> luteal = featuredCycleItemQueryService.feed(null).getOrDefault(Period.LUTEAL, List.of());
+
+        assertThat(luteal).extracting(FeaturedCycleItemResponse::id).contains(visible);
     }
 }
