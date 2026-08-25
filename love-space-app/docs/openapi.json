@@ -59,7 +59,7 @@
     },
     {
       "name": "Merchant",
-      "description": "商户只读 API。\n- GET /api/app/merchants/page：列表分页（cityId 必填；period / categoryId / recommendListId 可选，\n传 recommendListId 时仅返回该推荐清单内的上架商户，按清单内 sortOrder 升序）；\n- GET /api/app/merchants/{id}：详情，下架/不存在返回 404。"
+      "description": "商户只读 API。\n- GET /api/app/merchants/page：列表分页（cityId 必填；period / categoryId 可选；\n固定 weight DESC, createdAt DESC，不受推荐清单影响）；\n- GET /api/app/merchants/{id}：详情，下架/不存在返回 404。"
     },
     {
       "name": "MerchantReview",
@@ -67,7 +67,7 @@
     },
     {
       "name": "RecommendList",
-      "description": "推荐清单只读 API。\nGET /api/app/recommend-lists?cityId= → 200 上架城市的清单数组（sortOrder 升序）；\nGET /api/app/recommend-lists/{id} → 200 详情（含上架商户），城市下架/清单不存在 → 404。"
+      "description": "推荐清单只读 API。\nGET /api/app/recommend-lists?cityId= → 200 上架城市的清单数组（sortOrder 升序）；\nGET /api/app/recommend-lists/{id} → 200 详情（含上架商户，按清单保存顺序，商户项仅 id/name/address/logo），城市下架/清单不存在 → 404。"
     },
     {
       "name": "Route",
@@ -631,16 +631,6 @@
             "in": "query",
             "required": false,
             "description": "分类 ID",
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          {
-            "name": "recommendListId",
-            "in": "query",
-            "required": false,
-            "description": "推荐清单 ID；传入时仅返回该清单内的上架商户，按清单内排序号升序",
             "schema": {
               "type": "string",
               "format": "uuid"
@@ -1708,11 +1698,6 @@
               }
             ],
             "description": "爱女指数（total + level）"
-          },
-          "recommendSortOrder": {
-            "type": "integer",
-            "format": "int32",
-            "description": "清单内排序号；仅按 recommendListId 查询时有值，否则为 null"
           }
         }
       },
@@ -1824,7 +1809,7 @@
             "items": {
               "$ref": "#/components/schemas/RecommendListMerchantItemResponse"
             },
-            "description": "清单内商户（仅上架商户，按关联排序号升序）"
+            "description": "清单内商户（仅上架商户，按清单保存顺序，仅 id/name/address/logo）"
           }
         }
       },
@@ -1859,9 +1844,9 @@
       },
       "RecommendListMerchantItemResponse": {
         "type": "object",
-        "description": "清单内商户展示项（App 端，按关联排序号升序）。",
+        "description": "清单内商户展示项（App 端）。数组顺序即清单保存顺序，仅四字段，不回传排序号。",
         "properties": {
-          "merchantId": {
+          "id": {
             "type": "string",
             "format": "uuid",
             "description": "商户 ID"
@@ -1870,6 +1855,10 @@
             "type": "string",
             "description": "商户名称"
           },
+          "address": {
+            "type": "string",
+            "description": "详细地址"
+          },
           "logo": {
             "allOf": [
               {
@@ -1877,19 +1866,6 @@
               }
             ],
             "description": "LOGO"
-          },
-          "address": {
-            "type": "string",
-            "description": "详细地址"
-          },
-          "recommendReason": {
-            "type": "string",
-            "description": "编辑推荐理由（可空）"
-          },
-          "sortOrder": {
-            "type": "integer",
-            "format": "int32",
-            "description": "清单内排序号"
           }
         }
       },

@@ -11,7 +11,7 @@ import java.util.UUID;
  * @param introduction 介绍（可空）
  * @param cityId       所属城市 ID
  * @param sortOrder    排序号
- * @param merchants    清单内商户（仅上架商户，按关联排序号升序）
+ * @param merchants    清单内商户（仅上架商户，按清单保存顺序，仅 id/name/address/logo）
  */
 public record RecommendListDetailResponse(
         UUID id,

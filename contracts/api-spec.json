@@ -69,7 +69,7 @@
     },
     "/api/app/merchants/page": {
       "get": {
-        "summary": "App 商户列表分页（cityId 必填；period / categoryId / recommendListId 可选）",
+        "summary": "App 商户列表分页（cityId 必填；period / categoryId 可选；固定 weight DESC, createdAt DESC，不受推荐清单影响）",
         "parameters": [
           {
             "name": "cityId",
@@ -101,16 +101,6 @@
             }
           },
           {
-            "name": "recommendListId",
-            "in": "query",
-            "required": false,
-            "description": "推荐清单 ID，可选；传入时仅返回该清单内的上架商户，并按清单内 sortOrder 升序，响应项带回 recommendSortOrder",
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          {
             "name": "page",
             "in": "query",
             "required": false,
@@ -129,7 +119,7 @@
             }
           }
         ],
-        "x-requirement": "recommend-list/App 端清单查询"
+        "x-requirement": "recommend-list/App 端清单与清单内商户查询"
       }
     },
     "/api/app/merchants/{id}": {
@@ -236,13 +226,13 @@
             }
           }
         ],
-        "x-requirement": "recommend-list/App 端清单查询"
+        "x-requirement": "recommend-list/App 端清单与清单内商户查询"
       }
     },
     "/api/app/recommend-lists/{id}": {
       "get": {
-        "summary": "App 清单详情含商户（所属城市下架 → 404）",
-        "x-requirement": "recommend-list/App 端清单查询"
+        "summary": "App 清单详情含商户（按清单保存顺序；商户项仅 id/name/address/logo；所属城市下架 → 404）",
+        "x-requirement": "recommend-list/App 端清单与清单内商户查询"
       }
     },
     "/api/admin/ambassadors/page": {

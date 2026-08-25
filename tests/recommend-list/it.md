@@ -149,7 +149,7 @@
 **最后更新**: 2026-08-16
 
 ### TC-recommend-list-IT-011: GET /api/app/recommend-lists 上架城市清单按 sortOrder 升序
-**关联需求**: recommend-list/App 端清单查询#查询上架城市的清单
+**关联需求**: recommend-list/App 端清单与清单内商户查询#查询上架城市的清单
 **关联契约**: api-spec.json#/paths/~1api~1app~1recommend-lists/get
 **来源**: map-and-recommend-list
 **优先级**: P0
@@ -159,25 +159,25 @@
 **预期结果**: 返回 200，包含该城市全部清单，按 sortOrder 1→3→5 升序排列
 **状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**: `test-evidence/map-and-recommend-list/TC-recommend-list-IT-011/`
-**最后更新**: 2026-08-16
+**执行存证**: `test-evidence/app-recommend-list-owns-merchant-order/TC-recommend-list-IT-011/`
+**最后更新**: 2026-08-25
 
-### TC-recommend-list-IT-012: GET /api/app/recommend-lists/{id} 详情返回商户明细按排序升序
-**关联需求**: recommend-list/App 端清单查询#清单详情返回商户明细
+### TC-recommend-list-IT-012: GET /api/app/recommend-lists/{id} 详情按清单保存顺序返回上架商户四字段
+**关联需求**: recommend-list/App 端清单与清单内商户查询#清单详情返回商户明细
 **关联契约**: api-spec.json#/paths/~1api~1app~1recommend-lists~1{id}/get
-**来源**: map-and-recommend-list
+**来源**: app-recommend-list-owns-merchant-order
 **优先级**: P0
 **测试步骤**:
-1. 前置：清单含多个商户，关联 sortOrder 各异，商户配有名称/图片/推荐理由
-2. GET http://localhost:8081/api/app/recommend-lists/{id}（请求头带 API-key）
-**预期结果**: 返回 200；含清单字段（title、introduction、sortOrder）与商户列表，商户按关联 sortOrder 升序，每项含名称、图片、recommendReason 等展示字段
+1. 前置：某上架城市下清单按顺序保存了上架商户 甲、乙（甲的 weight 低于乙）；另有已下架商户 丙 也在该清单中
+2. GET http://localhost:8081/api/app/recommend-lists/{id}（请求头带 X-API-Key）
+**预期结果**: 返回 200；含清单字段（title、introduction、sortOrder）与 `merchants` 数组；`merchants` 顺序为 甲→乙（清单保存顺序，与 weight 无关），丙不出现；每项仅含 `id`、`name`、`address`、`logo` 四个字段，不含 `recommendReason`、`sortOrder`、`merchantId`、`recommendSortOrder`
 **状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**: `test-evidence/map-and-recommend-list/TC-recommend-list-IT-012/`
-**最后更新**: 2026-08-16
+**执行存证**: `test-evidence/app-recommend-list-owns-merchant-order/TC-recommend-list-IT-012/`
+**最后更新**: 2026-08-25
 
 ### TC-recommend-list-IT-013: GET /api/app/recommend-lists 下架城市清单不可见、详情 404
-**关联需求**: recommend-list/App 端清单查询#下架城市清单不可见
+**关联需求**: recommend-list/App 端清单与清单内商户查询#下架城市清单不可见
 **关联契约**: api-spec.json#/paths/~1api~1app~1recommend-lists~1{id}/get
 **来源**: map-and-recommend-list
 **优先级**: P0
@@ -188,20 +188,20 @@
 **预期结果**: 列表请求返回空数据（不含该城市任何清单）；详情请求返回 404
 **状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**: `test-evidence/map-and-recommend-list/TC-recommend-list-IT-013/`
-**最后更新**: 2026-08-16
+**执行存证**: `test-evidence/app-recommend-list-owns-merchant-order/TC-recommend-list-IT-013/`
+**最后更新**: 2026-08-25
 
-### TC-recommend-list-IT-014: GET /api/app/merchants/page?recommendListId= 按推荐清单过滤商户
-**关联需求**: recommend-list/App 端清单查询#按推荐清单过滤商户列表
+### TC-recommend-list-IT-015: GET /api/app/merchants/page 商户列表不受清单影响
+**关联需求**: recommend-list/App 端清单与清单内商户查询#商户列表不受清单影响
 **关联契约**: api-spec.json#/paths/~1api~1app~1merchants~1page/get
-**来源**: app-recommend-list-merchant-filter
+**来源**: app-recommend-list-owns-merchant-order
 **优先级**: P1
 **测试步骤**:
-1. 前置：某上架城市下有 3 个上架商户；其中商户甲（weight 低）、商户乙（weight 高）加入清单 L，清单内 sortOrder 分别为 1、2；商户丙不在清单内
+1. 前置：某上架城市下有 3 个上架商户 甲、乙、丙（weight 各异）；其中 甲、乙 加入清单 L，清单内保存顺序与 weight 排序相反（weight 低者在前）
 2. GET http://localhost:8081/api/app/merchants/page?cityId={cityId}（请求头带 X-API-Key）
-3. GET http://localhost:8081/api/app/merchants/page?cityId={cityId}&recommendListId={listId}（请求头带 X-API-Key）
-**预期结果**: 步骤 2 返回 200，totalElements=3，按 weight 降序（乙在前），每项 `recommendSortOrder` 为 null；步骤 3 返回 200，totalElements=2，顺序为甲→乙（清单内 sortOrder 升序），`recommendSortOrder` 分别为 1、2，商户丙不出现
-**状态**: ⏳ 待执行
+3. GET http://localhost:8081/api/app/merchants/page?cityId={cityId}&recommendListId={L}（请求头带 X-API-Key）
+**预期结果**: 两次均返回 200，totalElements=3，`content` 顺序均按 weight 降序（与清单内顺序无关，`recommendListId` 被忽略）；`content[*]` 不含 `recommendSortOrder` 字段
+**状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**: -
-**最后更新**: 2026-08-24
+**执行存证**: `test-evidence/app-recommend-list-owns-merchant-order/TC-recommend-list-IT-015/`
+**最后更新**: 2026-08-25

@@ -73,9 +73,10 @@ class RecommendListQueryServiceTest extends AbstractPostgresIntegrationTest {
         return recommendListRepository.save(list).getId();
     }
 
-    private UUID merchant(UUID cityId, boolean online, String recommendReason) {
+    private UUID merchant(UUID cityId, boolean online, int weight) {
         Merchant merchant = new Merchant();
-        merchant.setName("商户");
+        merchant.setName("商户-" + weight);
+        merchant.setWeight(weight);
         merchant.setLogo("bound/logo.png");
         merchant.setAddress("地址");
         merchant.setCityId(cityId);
@@ -85,7 +86,6 @@ class RecommendListQueryServiceTest extends AbstractPostgresIntegrationTest {
         merchant.setSocialContributionScore((short) 10);
         merchant.setImages(new java.util.ArrayList<>(List.of("bound/a.png")));
         merchant.setOnline(online);
-        merchant.setRecommendReason(recommendReason);
         return merchantRepository.save(merchant).getId();
     }
 
@@ -97,7 +97,7 @@ class RecommendListQueryServiceTest extends AbstractPostgresIntegrationTest {
         recommendListMerchantRepository.save(relation);
     }
 
-    // @scenario: recommend-list/App 端清单查询#查询上架城市的清单
+    // @scenario: recommend-list/App 端清单与清单内商户查询#查询上架城市的清单
     @Test
     void listReturnsOnlineCityListsInSortOrder() {
         UUID cityId = city(true);
@@ -109,7 +109,7 @@ class RecommendListQueryServiceTest extends AbstractPostgresIntegrationTest {
                 .containsExactly(first, second);
     }
 
-    // @scenario: recommend-list/App 端清单查询#下架城市清单不可见
+    // @scenario: recommend-list/App 端清单与清单内商户查询#下架城市清单不可见
     // @scenario: city/地图下架对推荐清单级联生效#下架城市后 app 端清单不可见
     @Test
     void offlineCityListsInvisible() {
@@ -121,23 +121,32 @@ class RecommendListQueryServiceTest extends AbstractPostgresIntegrationTest {
                 .isInstanceOf(ResourceNotFoundException.class);
     }
 
-    // @scenario: recommend-list/App 端清单查询#清单详情返回商户明细
+    // @scenario: recommend-list/App 端清单与清单内商户查询#清单详情返回商户明细
     @Test
-    void detailReturnsOnlineMerchantsWithRecommendReasonInSortOrder() {
+    void detailReturnsOnlineMerchantsInSavedOrderWithFourFields() {
         UUID cityId = city(true);
         UUID listId = list(cityId, 0);
-        UUID m1 = merchant(cityId, true, "理由一");
-        UUID m2 = merchant(cityId, true, null);
-        UUID offline = merchant(cityId, false, null);
-        relate(listId, m1, 2);
-        relate(listId, m2, 1);
-        relate(listId, offline, 0);
+        UUID jia = merchant(cityId, true, 1);      // weight 低，保存在前
+        UUID yi = merchant(cityId, true, 100);     // weight 高，保存在后
+        UUID bing = merchant(cityId, false, 50);   // 已下架
+        relate(listId, jia, 1);
+        relate(listId, yi, 2);
+        relate(listId, bing, 3);
 
         RecommendListDetailResponse detail = recommendListQueryService.detail(listId);
 
+        // 顺序 = 清单保存顺序，与 weight 无关；下架商户不出现
         assertThat(detail.merchants())
-                .extracting(RecommendListMerchantItemResponse::merchantId)
-                .containsExactly(m2, m1);
-        assertThat(detail.merchants().get(1).recommendReason()).isEqualTo("理由一");
+                .extracting(RecommendListMerchantItemResponse::id)
+                .containsExactly(jia, yi);
+        RecommendListMerchantItemResponse first = detail.merchants().get(0);
+        assertThat(first.name()).isEqualTo("商户-1");
+        assertThat(first.address()).isEqualTo("地址");
+        assertThat(first.logo().id()).isEqualTo("bound/logo.png");
+        assertThat(first.logo().url()).isEqualTo("https://signed.example.com/bound/logo.png");
+        // 仅四字段：record 组件即响应字段
+        assertThat(RecommendListMerchantItemResponse.class.getRecordComponents())
+                .extracting(java.lang.reflect.RecordComponent::getName)
+                .containsExactlyInAnyOrder("id", "name", "address", "logo");
     }
 }

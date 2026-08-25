@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 
 /**
  * 推荐清单查询服务（App 端只读）：仅上架城市的清单可见；清单详情商户仅含上架商户，
- * 按关联排序号升序。城市下架级联靠查询过滤，不依赖清单自身状态。
+ * 按清单保存顺序返回、仅 id/name/address/logo 四字段。城市下架级联靠查询过滤，不依赖清单自身状态。
  */
 @Service
 @Transactional(readOnly = true)
@@ -85,10 +85,8 @@ public class RecommendListQueryService {
                     return new RecommendListMerchantItemResponse(
                             merchant.getId(),
                             merchant.getName(),
-                            ImageResponses.from(merchant.getLogo(), imageUrlSigner),
                             merchant.getAddress(),
-                            merchant.getRecommendReason(),
-                            relation.getSortOrder());
+                            ImageResponses.from(merchant.getLogo(), imageUrlSigner));
                 })
                 .filter(Objects::nonNull)
                 .toList();

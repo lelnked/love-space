@@ -18,8 +18,8 @@ import java.util.UUID;
 /**
  * 商户只读 API。
  * <ul>
- *   <li>GET /api/app/merchants/page：列表分页（cityId 必填；period / categoryId / recommendListId 可选，
- *       传 recommendListId 时仅返回该推荐清单内的上架商户，按清单内 sortOrder 升序）；</li>
+ *   <li>GET /api/app/merchants/page：列表分页（cityId 必填；period / categoryId 可选；
+ *       固定 weight DESC, createdAt DESC，不受推荐清单影响）；</li>
  *   <li>GET /api/app/merchants/{id}：详情，下架/不存在返回 404。</li>
  * </ul>
  */
@@ -39,11 +39,10 @@ public class MerchantController {
             @RequestParam("cityId") @NotNull UUID cityId,
             @RequestParam(value = "period", required = false) Period period,
             @RequestParam(value = "categoryId", required = false) UUID categoryId,
-            @RequestParam(value = "recommendListId", required = false) UUID recommendListId,
             @RequestParam(value = "page", required = false) Integer page,
             @RequestParam(value = "size", required = false) Integer size) {
         return PageResponse.of(
-                merchantService.page(cityId, period, categoryId, recommendListId, new PageQuery(page, size)));
+                merchantService.page(cityId, period, categoryId, new PageQuery(page, size)));
     }
 
     /** 商户详情；下架或不存在 → 404。 */

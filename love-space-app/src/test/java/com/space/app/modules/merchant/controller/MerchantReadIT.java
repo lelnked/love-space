@@ -98,14 +98,15 @@ class MerchantReadIT extends AbstractPostgresIntegrationTest {
                 .andExpect(jsonPath("$.content[0].logo.url").value("https://signed.example.com/bound/logo.png"));
     }
 
-    // @scenario: recommend-list/App 端清单查询#按推荐清单过滤商户列表
+    // @scenario: recommend-list/App 端清单与清单内商户查询#商户列表不受清单影响
     @Test
-    void listFiltersByRecommendListAndOrdersByListSortOrder() throws Exception {
+    void listIgnoresRecommendListAndOrdersByWeight() throws Exception {
         UUID recommendListId = UUID.randomUUID();
         UUID heavy = merchant("清单商户-权重高", 100);
         UUID light = merchant("清单商户-权重低", 1);
-        relate(recommendListId, heavy, 2);
+        // 清单内顺序与 weight 相反：light 在前
         relate(recommendListId, light, 1);
+        relate(recommendListId, heavy, 2);
 
         // 不带 recommendListId：按 weight 降序，三个商户都在
         mockMvc.perform(get("/api/app/merchants/page")
@@ -114,19 +115,21 @@ class MerchantReadIT extends AbstractPostgresIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalElements").value(3))
                 .andExpect(jsonPath("$.content[0].id").value(heavy.toString()))
-                .andExpect(jsonPath("$.content[0].recommendSortOrder").doesNotExist());
+                .andExpect(jsonPath("$.content[1].id").value(merchantId.toString()))
+                .andExpect(jsonPath("$.content[2].id").value(light.toString()))
+                .andExpect(jsonPath("$.content[*].recommendSortOrder").doesNotExist());
 
-        // 带 recommendListId：仅清单内商户，按清单内 sortOrder 升序，带回清单内排序号
+        // 带 recommendListId：参数被忽略，结果与不带完全一致
         mockMvc.perform(get("/api/app/merchants/page")
                         .param("cityId", cityId.toString())
                         .param("recommendListId", recommendListId.toString())
                         .header("X-API-Key", TEST_API_KEY))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.totalElements").value(2))
-                .andExpect(jsonPath("$.content[0].id").value(light.toString()))
-                .andExpect(jsonPath("$.content[0].recommendSortOrder").value(1))
-                .andExpect(jsonPath("$.content[1].id").value(heavy.toString()))
-                .andExpect(jsonPath("$.content[1].recommendSortOrder").value(2));
+                .andExpect(jsonPath("$.totalElements").value(3))
+                .andExpect(jsonPath("$.content[0].id").value(heavy.toString()))
+                .andExpect(jsonPath("$.content[1].id").value(merchantId.toString()))
+                .andExpect(jsonPath("$.content[2].id").value(light.toString()))
+                .andExpect(jsonPath("$.content[*].recommendSortOrder").doesNotExist());
     }
 
     private UUID merchant(String name, int weight) {
@@ -144,7 +147,7 @@ class MerchantReadIT extends AbstractPostgresIntegrationTest {
         return merchantRepository.save(merchant).getId();
     }
 
-    /** 只造关联行：查询按关联表 join，无需清单主表记录。 */
+    /** 只造关联行（无需清单主表记录），用于证明商户列表不感知清单关联。 */
     private void relate(UUID recommendListId, UUID merchantId, int sortOrder) {
         RecommendListMerchant relation = new RecommendListMerchant();
         relation.setRecommendListId(recommendListId);

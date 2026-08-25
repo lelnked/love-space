@@ -15,7 +15,7 @@ import java.util.UUID;
 /**
  * 推荐清单只读 API。
  * <p>GET /api/app/recommend-lists?cityId= → 200 上架城市的清单数组（sortOrder 升序）；
- * GET /api/app/recommend-lists/{id} → 200 详情（含上架商户），城市下架/清单不存在 → 404。
+ * GET /api/app/recommend-lists/{id} → 200 详情（含上架商户，按清单保存顺序，商户项仅 id/name/address/logo），城市下架/清单不存在 → 404。
  */
 @RestController
 @RequestMapping("/api/app/recommend-lists")
