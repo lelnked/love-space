@@ -325,6 +325,7 @@ export default function AmbassadorList() {
                       }
                     />
                     <Button
+                      type="button"
                       size="sm"
                       variant="outline"
                       onClick={() => setTags((prev) => prev.filter((_, j) => j !== i))}
@@ -334,7 +335,12 @@ export default function AmbassadorList() {
                   </div>
                 ))}
                 {tags.length < 3 && (
-                  <Button size="sm" variant="outline" onClick={() => setTags((prev) => [...prev, ""])}>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setTags((prev) => [...prev, ""])}
+                  >
                     添加标签
                   </Button>
                 )}
