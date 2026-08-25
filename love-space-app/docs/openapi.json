@@ -403,8 +403,8 @@
         "tags": [
           "Category"
         ],
-        "summary": "上架分类分页查询：sortOrder ASC, createdAt ASC",
-        "description": "上架分类分页查询：sortOrder ASC, createdAt ASC。",
+        "summary": "上架商户分类分页查询：sortOrder ASC, createdAt ASC",
+        "description": "上架商户分类分页查询：sortOrder ASC, createdAt ASC。",
         "operationId": "Category_page",
         "parameters": [
           {
