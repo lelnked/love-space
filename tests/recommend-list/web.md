@@ -17,14 +17,14 @@
 
 ### TC-recommend-list-WEB-002: 清单编辑界面维护商户（仅本城市可选）
 **关联需求**: recommend-list/web 端推荐清单管理页面#维护清单商户
-**来源**: map-and-recommend-list
+**来源**: recommend-list-align-spec-to-merchant-ids
 **优先级**: P1
 **前置条件**: Manager 已登录；存在清单（属城市 A）；城市 A 下有商户 M1/M2，城市 B 下有商户 Mx
 **测试步骤**:
 1. 打开该清单的编辑界面，展开商户添加下拉
 2. 核对下拉选项范围
-3. 添加 M1（排序号 2）与 M2（排序号 1）并保存
-**预期结果**: 下拉仅出现城市 A 的商户（M1/M2），不出现 Mx；保存成功后清单商户列表按排序号升序回显为 M2、M1
+3. 依次添加 M2、M1 并保存
+**预期结果**: 下拉仅出现城市 A 的商户（M1/M2），不出现 Mx；保存成功后清单商户列表按添加顺序回显为 M2、M1
 **状态**: ✅ 通过
 **执行方式**: web-test-runner（@playwright/mcp）
 **执行存证**: `test-evidence/map-and-recommend-list/TC-recommend-list-WEB-002/`

@@ -11,7 +11,6 @@ import com.loves.space.modules.merchant.repository.MerchantRepository;
 import com.loves.space.modules.recommendlist.dto.RecommendListCreateRequest;
 import com.loves.space.modules.recommendlist.dto.RecommendListDetailResponse;
 import com.loves.space.modules.recommendlist.dto.RecommendListItemResponse;
-import com.loves.space.modules.recommendlist.dto.RecommendListMerchantItemRequest;
 import com.loves.space.modules.recommendlist.dto.RecommendListMerchantResponse;
 import com.loves.space.modules.recommendlist.dto.RecommendListUpdateRequest;
 import com.loves.space.modules.recommendlist.entity.RecommendList;
@@ -38,7 +37,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
- * 推荐清单服务（运营后台）：CRUD + 清单商户全量替换。
+ * 推荐清单服务（运营后台）：CRUD；清单内商户经 create/update 的 merchantIds（有序数组）整体替换，数组顺序即清单保存顺序。
  * <p>无外键，city 存在性与商户同城校验都在这里做；删除清单同事务删关联。
  */
 @Service
@@ -70,7 +69,7 @@ public class RecommendListService {
         return PageResponseMapper.map(recommendListRepository.findAll(spec, sorted), this::toItem);
     }
 
-    /** 清单详情，含商户明细（按关联 sortOrder 升序）。 */
+    /** 清单详情，含商户明细（按清单保存顺序）。 */
     @Transactional(readOnly = true)
     public RecommendListDetailResponse detail(UUID id) {
         RecommendList list = recommendListRepository.findById(id)
@@ -179,46 +178,6 @@ public class RecommendListService {
         return toDetail(list);
     }
 
-    /**
-     * 全量替换清单商户：校验商户存在且属于清单所属城市、无重复，之后删旧建新。
-     */
-    public RecommendListDetailResponse replaceMerchants(UUID id, List<RecommendListMerchantItemRequest> items) {
-        RecommendList list = recommendListRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("推荐清单不存在：" + id));
-
-        Set<UUID> merchantIds = new HashSet<>();
-        for (RecommendListMerchantItemRequest item : items) {
-            if (!merchantIds.add(item.merchantId())) {
-                throw new IllegalArgumentException("同一商户不能重复添加到清单");
-            }
-        }
-        Map<UUID, Merchant> merchants = merchantRepository.findAllById(merchantIds).stream()
-                .collect(Collectors.toMap(Merchant::getId, Function.identity()));
-        for (UUID merchantId : merchantIds) {
-            Merchant merchant = merchants.get(merchantId);
-            if (merchant == null) {
-                throw new IllegalArgumentException("商户不存在：" + merchantId);
-            }
-            if (!merchant.getCityId().equals(list.getCityId())) {
-                throw new IllegalArgumentException("商户「" + merchant.getName() + "」不属于清单所属城市，不能加入清单");
-            }
-            if (!merchant.isOnline()) {
-                throw new IllegalArgumentException("商户「" + merchant.getName() + "」已下架，不能加入清单");
-            }
-        }
-
-        recommendListMerchantRepository.deleteAllByRecommendListId(id);
-        recommendListMerchantRepository.flush();
-        for (RecommendListMerchantItemRequest item : items) {
-            RecommendListMerchant relation = new RecommendListMerchant();
-            relation.setRecommendListId(id);
-            relation.setMerchantId(item.merchantId());
-            relation.setSortOrder(item.sortOrder());
-            recommendListMerchantRepository.save(relation);
-        }
-        return toDetail(list);
-    }
-
     private void applyMerchantIds(UUID recommendListId, List<UUID> merchantIds) {
         if (merchantIds == null || merchantIds.isEmpty()) {
             return;
@@ -271,7 +230,7 @@ public class RecommendListService {
                 list.getStatus());
     }
 
-    /** 实体到详情（商户按关联 sortOrder 升序）。 */
+    /** 实体到详情（商户按清单保存顺序）。 */
     private RecommendListDetailResponse toDetail(RecommendList list) {
         List<RecommendListMerchant> relations =
                 recommendListMerchantRepository.findAllByRecommendListIdOrderBySortOrderAsc(list.getId());

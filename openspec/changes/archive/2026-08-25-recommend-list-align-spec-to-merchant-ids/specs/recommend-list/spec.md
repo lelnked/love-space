@@ -1,8 +1,5 @@
-# recommend-list Specification
+## MODIFIED Requirements
 
-## Purpose
-TBD - created by archiving change map-and-recommend-list. Update Purpose after archive.
-## Requirements
 ### Requirement: 推荐清单管理
 admin 端 SHALL 提供推荐清单 CRUD：清单含标题（必填）、介绍、所属城市（必填，创建后可改）、排序号 sortOrder、上架状态 `status`（`ONLINE` / `OFFLINE`，创建默认 `ONLINE`，可在创建或更新时设置）；删除为物理删除（同事务删除商户关联）。修改所属城市时，清单内已有商户 SHALL 全部属于新城市，否则返回 400 及中文业务错误、城市不变。`POST /api/admin/recommend-lists/{id}/online` SHALL 将 OFFLINE 清单人工恢复为 ONLINE；清单内存在已下架商户时 SHALL 拒绝（400 及中文业务错误）；对已是 ONLINE 的清单幂等返回详情。App 端清单列表仅返回 `status = ONLINE` 的清单。
 
@@ -64,30 +61,6 @@ admin 端 SHALL 提供推荐清单 CRUD：清单含标题（必填）、介绍�
 - **WHEN** Manager 更新清单，`merchantIds` 为 `[M2]`
 - **THEN** 详情 `merchants` 仅含 M2；商户 M1 本身仍存在且字段不受影响
 
-### Requirement: App 端清单与清单内商户查询
-app 端 SHALL 提供按城市查询清单列表与清单详情的只读接口；仅上架城市的清单可见；清单详情内商户 SHALL 按清单保存顺序（运营提交 `merchantIds` 的数组顺序）返回，仅含上架商户，每项仅含 `id`、`name`、`address`、`logo` 四个字段，不回传排序号。
-清单内商户只能通过清单详情接口获取；商户列表接口 `GET /api/app/merchants/page` SHALL NOT 接受清单相关参数，其排序固定为 `weight DESC, createdAt DESC`，不受推荐清单影响。
-
-#### Scenario: 查询上架城市的清单
-- **GIVEN** 某上架城市配有多个清单
-- **WHEN** App 按该城市查询清单列表
-- **THEN** 返回该城市全部清单，按 sortOrder 升序
-
-#### Scenario: 清单详情返回商户明细
-- **GIVEN** 某清单按顺序保存了商户 甲、乙（甲的 weight 低于乙），另有一个已下架商户 丙 也在清单中
-- **WHEN** App 查询该清单详情
-- **THEN** 返回清单字段与 `merchants` 数组，顺序为 甲→乙（清单保存顺序，与 weight 无关），丙不出现；每项仅含 `id`、`name`、`address`、`logo`，不含 `recommendReason`、`sortOrder`、`recommendSortOrder`
-
-#### Scenario: 商户列表不受清单影响
-- **GIVEN** 某城市下有 3 个上架商户，其中 2 个属于清单 L（清单内顺序与 weight 排序相反）
-- **WHEN** App 请求商户列表分页（无论是否附带 `recommendListId` 参数）
-- **THEN** 返回 200，3 个商户均返回，按 `weight DESC, createdAt DESC` 排列，响应项不含 `recommendSortOrder` 字段
-
-#### Scenario: 下架城市清单不可见
-- **GIVEN** 某城市已下架且配有清单
-- **WHEN** App 按该城市查询清单列表或查询其清单详情
-- **THEN** 列表不返回数据，详情返回 404
-
 ### Requirement: web 端推荐清单管理页面
 web 后台 SHALL 提供推荐清单管理页面：按城市筛选的清单列表（含排序号、状态、商户数）、新建/编辑表单（所属城市可改、状态可选）、清单内商户维护（仅本城市未下架商户可选，顺序即添加顺序）、删除确认。
 
@@ -105,4 +78,3 @@ web 后台 SHALL 提供推荐清单管理页面：按城市筛选的清单列表
 - **GIVEN** Manager 在清单列表点击删除
 - **WHEN** 弹出确认弹窗并确认
 - **THEN** 清单被删除并从列表消失；取消则不删除
-

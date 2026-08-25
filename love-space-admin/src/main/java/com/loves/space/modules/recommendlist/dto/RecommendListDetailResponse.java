@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * 推荐清单详情（含商户明细，按关联排序号升序）。
+ * 推荐清单详情（含商户明细，按清单保存顺序）。
  *
  * @param id           清单 ID
  * @param title        标题

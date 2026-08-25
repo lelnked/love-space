@@ -167,7 +167,7 @@
     },
     "/api/admin/recommend-lists": {
       "post": {
-        "summary": "创建推荐清单",
+        "summary": "创建推荐清单（可带 status / merchantIds，merchantIds 顺序即清单保存顺序）",
         "requestBody": {
           "content": {
             "application/json": {
@@ -182,34 +182,31 @@
     },
     "/api/admin/recommend-lists/{id}": {
       "get": {
-        "summary": "清单详情（含商户明细，按关联 sortOrder 升序）",
+        "summary": "清单详情（含商户明细，按清单保存顺序）",
         "x-requirement": "recommend-list/推荐清单管理"
       },
       "put": {
-        "summary": "更新清单（title/introduction/sortOrder；cityId 不可变）",
-        "x-requirement": "recommend-list/推荐清单管理"
+        "summary": "更新清单（cityId/status 可变；merchantIds 非 null 时整体替换，顺序即清单保存顺序）",
+        "x-requirement": "recommend-list/推荐清单管理",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecommendListUpdateRequest"
+              }
+            }
+          }
+        }
       },
       "delete": {
         "summary": "物理删除清单（同事务删除商户关联）",
         "x-requirement": "recommend-list/推荐清单管理"
       }
     },
-    "/api/admin/recommend-lists/{id}/merchants": {
-      "put": {
-        "summary": "全量替换清单商户列表；仅允许清单所属城市的商户，重复商户拒绝",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/RecommendListMerchantItem"
-                }
-              }
-            }
-          }
-        },
-        "x-requirement": "recommend-list/清单内商户维护"
+    "/api/admin/recommend-lists/{id}/online": {
+      "post": {
+        "summary": "人工恢复清单为 ONLINE；清单内存在已下架商户 → 400；已是 ONLINE 幂等返回详情",
+        "x-requirement": "recommend-list/推荐清单管理"
       }
     },
     "/api/app/recommend-lists": {
@@ -1147,23 +1144,23 @@
             "type": "integer",
             "default": 0,
             "description": "清单间排序，升序"
-          }
-        }
-      },
-      "RecommendListMerchantItem": {
-        "type": "object",
-        "required": [
-          "merchantId",
-          "sortOrder"
-        ],
-        "properties": {
-          "merchantId": {
-            "type": "string",
-            "format": "uuid"
           },
-          "sortOrder": {
-            "type": "integer",
-            "description": "清单内商户排序，升序"
+          "status": {
+            "type": "string",
+            "enum": [
+              "ONLINE",
+              "OFFLINE"
+            ],
+            "default": "ONLINE",
+            "description": "上架状态，可空，默认 ONLINE"
+          },
+          "merchantIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "清单内商户 ID，有序；数组顺序即清单保存顺序。校验：存在、属于清单所属城市、未下架、不重复"
           }
         }
       },
@@ -1570,6 +1567,47 @@
           "LUTEAL"
         ],
         "description": "生理周期：经期/卵泡期/排卵期/黄体期（复用既有 common/enums/Period）"
+      },
+      "RecommendListUpdateRequest": {
+        "type": "object",
+        "required": [
+          "title"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "清单标题，必填"
+          },
+          "introduction": {
+            "type": "string",
+            "description": "清单介绍"
+          },
+          "cityId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "所属城市，可改；null 视为不修改。改城市时清单内已有商户须全部属于新城市，否则 400"
+          },
+          "sortOrder": {
+            "type": "integer",
+            "description": "清单间排序，升序；null 视为 0"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ONLINE",
+              "OFFLINE"
+            ],
+            "description": "上架状态；null 视为不修改"
+          },
+          "merchantIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "清单内商户 ID，有序；null 视为不修改，非 null 整体替换，数组顺序即清单保存顺序。校验同创建"
+          }
+        }
       }
     }
   }

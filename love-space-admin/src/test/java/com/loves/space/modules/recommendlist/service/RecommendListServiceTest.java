@@ -7,8 +7,8 @@ import com.loves.space.modules.merchant.entity.Merchant;
 import com.loves.space.modules.merchant.repository.MerchantRepository;
 import com.loves.space.modules.recommendlist.dto.RecommendListCreateRequest;
 import com.loves.space.modules.recommendlist.dto.RecommendListDetailResponse;
-import com.loves.space.modules.recommendlist.dto.RecommendListMerchantItemRequest;
 import com.loves.space.modules.recommendlist.dto.RecommendListMerchantResponse;
+import com.loves.space.modules.recommendlist.dto.RecommendListUpdateRequest;
 import com.loves.space.modules.recommendlist.repository.RecommendListMerchantRepository;
 import com.loves.space.modules.recommendlist.repository.RecommendListRepository;
 import com.loves.space.support.AbstractPostgresIntegrationTest;
@@ -26,7 +26,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 /**
- * {@link RecommendListService} 集成测试：清单 CRUD、商户全量替换的同城/去重校验、删除级联。
+ * {@link RecommendListService} 集成测试：清单 CRUD、merchantIds 整体替换的同城/去重/未下架校验、城市变更、人工恢复、删除级联。
  */
 class RecommendListServiceTest extends AbstractPostgresIntegrationTest {
 
@@ -62,6 +62,10 @@ class RecommendListServiceTest extends AbstractPostgresIntegrationTest {
     }
 
     private UUID merchantIn(UUID cityId) {
+        return merchantIn(cityId, true);
+    }
+
+    private UUID merchantIn(UUID cityId, boolean online) {
         Merchant merchant = new Merchant();
         merchant.setName("清单商户");
         merchant.setLogo("bound/logo.png");
@@ -72,8 +76,13 @@ class RecommendListServiceTest extends AbstractPostgresIntegrationTest {
         merchant.setExperienceFriendlyScore((short) 15);
         merchant.setSocialContributionScore((short) 10);
         merchant.setImages(new java.util.ArrayList<>(List.of("bound/a.png")));
-        merchant.setOnline(true);
+        merchant.setOnline(online);
         return merchantRepository.save(merchant).getId();
+    }
+
+    /** 仅替换 merchantIds 的更新请求（title 必填沿用原标题）。 */
+    private static RecommendListUpdateRequest merchants(String title, List<UUID> merchantIds) {
+        return new RecommendListUpdateRequest(title, null, null, 0, null, merchantIds);
     }
 
     // @scenario: recommend-list/推荐清单管理#创建清单
@@ -101,16 +110,15 @@ class RecommendListServiceTest extends AbstractPostgresIntegrationTest {
 
     // @scenario: recommend-list/清单内商户维护#添加本城市商户
     @Test
-    void replaceMerchantsOrdersBySortOrder() {
+    void updateMerchantIdsKeepsArrayOrder() {
         UUID cityId = cityId();
         UUID m1 = merchantIn(cityId);
         UUID m2 = merchantIn(cityId);
         UUID listId = recommendListService.create(
                 new RecommendListCreateRequest("排序清单", null, cityId, 0, null, null)).id();
 
-        RecommendListDetailResponse detail = recommendListService.replaceMerchants(listId, List.of(
-                new RecommendListMerchantItemRequest(m1, 5),
-                new RecommendListMerchantItemRequest(m2, 1)));
+        RecommendListDetailResponse detail = recommendListService.update(listId,
+                merchants("排序清单", List.of(m2, m1)));
 
         assertThat(detail.merchants()).extracting(RecommendListMerchantResponse::merchantId)
                 .containsExactly(m2, m1);
@@ -118,31 +126,91 @@ class RecommendListServiceTest extends AbstractPostgresIntegrationTest {
 
     // @scenario: recommend-list/清单内商户维护#拒绝跨城市商户
     @Test
-    void replaceMerchantsRejectsCrossCityMerchant() {
+    void updateRejectsCrossCityMerchant() {
         UUID cityId = cityId();
         UUID otherCityMerchant = merchantIn(cityId());
         UUID listId = recommendListService.create(
                 new RecommendListCreateRequest("同城清单", null, cityId, 0, null, null)).id();
 
-        assertThatThrownBy(() -> recommendListService.replaceMerchants(listId,
-                List.of(new RecommendListMerchantItemRequest(otherCityMerchant, 0))))
+        assertThatThrownBy(() -> recommendListService.update(listId,
+                merchants("同城清单", List.of(otherCityMerchant))))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("不属于清单所属城市");
+        assertThat(recommendListService.detail(listId).merchants()).isEmpty();
     }
 
     // @scenario: recommend-list/清单内商户维护#重复添加同一商户被拒绝
     @Test
-    void replaceMerchantsRejectsDuplicateMerchant() {
+    void updateRejectsDuplicateMerchant() {
         UUID cityId = cityId();
         UUID merchantId = merchantIn(cityId);
         UUID listId = recommendListService.create(
                 new RecommendListCreateRequest("去重清单", null, cityId, 0, null, null)).id();
 
-        assertThatThrownBy(() -> recommendListService.replaceMerchants(listId,
-                List.of(new RecommendListMerchantItemRequest(merchantId, 0),
-                        new RecommendListMerchantItemRequest(merchantId, 1))))
+        assertThatThrownBy(() -> recommendListService.update(listId,
+                merchants("去重清单", List.of(merchantId, merchantId))))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("重复");
+        assertThat(recommendListService.detail(listId).merchants()).isEmpty();
+    }
+
+    // @scenario: recommend-list/清单内商户维护#拒绝已下架商户
+    @Test
+    void updateRejectsOfflineMerchant() {
+        UUID cityId = cityId();
+        UUID offline = merchantIn(cityId, false);
+        UUID listId = recommendListService.create(
+                new RecommendListCreateRequest("下架清单", null, cityId, 0, null, null)).id();
+
+        assertThatThrownBy(() -> recommendListService.update(listId,
+                merchants("下架清单", List.of(offline))))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("已下架");
+        assertThat(recommendListService.detail(listId).merchants()).isEmpty();
+    }
+
+    // @scenario: recommend-list/推荐清单管理#修改所属城市需清单内商户同属新城市
+    @Test
+    void updateCityRequiresMerchantsInNewCity() {
+        UUID cityA = cityId();
+        UUID cityB = cityId();
+        UUID m1 = merchantIn(cityA);
+        UUID withMerchant = recommendListService.create(
+                new RecommendListCreateRequest("含商户", null, cityA, 0, null, List.of(m1))).id();
+        UUID empty = recommendListService.create(
+                new RecommendListCreateRequest("空清单", null, cityA, 0, null, null)).id();
+
+        assertThatThrownBy(() -> recommendListService.update(withMerchant,
+                new RecommendListUpdateRequest("含商户", null, cityB, 0, null, null)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("不属于新城市");
+        assertThat(recommendListService.detail(withMerchant).cityId()).isEqualTo(cityA);
+
+        RecommendListDetailResponse moved = recommendListService.update(empty,
+                new RecommendListUpdateRequest("空清单", null, cityB, 0, null, null));
+        assertThat(moved.cityId()).isEqualTo(cityB);
+    }
+
+    // @scenario: recommend-list/推荐清单管理#人工恢复清单
+    @Test
+    void onlineRequiresNoOfflineMerchant() {
+        UUID cityId = cityId();
+        UUID merchantId = merchantIn(cityId);
+        UUID listId = recommendListService.create(
+                new RecommendListCreateRequest("待恢复", null, cityId, 0, "OFFLINE", List.of(merchantId))).id();
+
+        Merchant merchant = merchantRepository.findById(merchantId).orElseThrow();
+        merchant.setOnline(false);
+        merchantRepository.save(merchant);
+        assertThatThrownBy(() -> recommendListService.online(listId))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("未上架商户");
+        assertThat(recommendListService.detail(listId).status()).isEqualTo("OFFLINE");
+
+        merchant.setOnline(true);
+        merchantRepository.save(merchant);
+        assertThat(recommendListService.online(listId).status()).isEqualTo("ONLINE");
+        assertThat(recommendListService.online(listId).status()).isEqualTo("ONLINE");
     }
 
     // @scenario: recommend-list/推荐清单管理#清单列表按排序号升序
@@ -161,18 +229,15 @@ class RecommendListServiceTest extends AbstractPostgresIntegrationTest {
 
     // @scenario: recommend-list/清单内商户维护#从清单移除商户
     @Test
-    void replaceMerchantsRemovesUnlistedWithoutDeletingMerchant() {
+    void updateRemovesUnlistedWithoutDeletingMerchant() {
         UUID cityId = cityId();
         UUID m1 = merchantIn(cityId);
         UUID m2 = merchantIn(cityId);
         UUID listId = recommendListService.create(
-                new RecommendListCreateRequest("移除清单", null, cityId, 0, null, null)).id();
-        recommendListService.replaceMerchants(listId, List.of(
-                new RecommendListMerchantItemRequest(m1, 0),
-                new RecommendListMerchantItemRequest(m2, 1)));
+                new RecommendListCreateRequest("移除清单", null, cityId, 0, null, List.of(m1, m2))).id();
 
-        RecommendListDetailResponse detail = recommendListService.replaceMerchants(listId,
-                List.of(new RecommendListMerchantItemRequest(m2, 0)));
+        RecommendListDetailResponse detail = recommendListService.update(listId,
+                merchants("移除清单", List.of(m2)));
 
         assertThat(detail.merchants()).extracting(RecommendListMerchantResponse::merchantId)
                 .containsExactly(m2);
@@ -185,9 +250,7 @@ class RecommendListServiceTest extends AbstractPostgresIntegrationTest {
         UUID cityId = cityId();
         UUID merchantId = merchantIn(cityId);
         UUID listId = recommendListService.create(
-                new RecommendListCreateRequest("待删清单", null, cityId, 0, null, null)).id();
-        recommendListService.replaceMerchants(listId,
-                List.of(new RecommendListMerchantItemRequest(merchantId, 0)));
+                new RecommendListCreateRequest("待删清单", null, cityId, 0, null, List.of(merchantId))).id();
 
         recommendListService.delete(listId);
 
