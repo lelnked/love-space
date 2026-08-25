@@ -144,6 +144,7 @@ public class RouteService {
                 route.getTravelTime(),
                 route.getSeason(),
                 route.getTravelStatus(),
+                route.getAmbassadorId(),
                 ambassadorName(route.getAmbassadorId()),
                 spots,
                 route.getCreatedAt(),

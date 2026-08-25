@@ -18,6 +18,7 @@ public record RouteDetailResponse(
         String travelTime,
         String season,
         String travelStatus,
+        UUID ambassadorId,
         String ambassadorName,
         List<RouteSpotResponse> spots,
         OffsetDateTime createdAt,

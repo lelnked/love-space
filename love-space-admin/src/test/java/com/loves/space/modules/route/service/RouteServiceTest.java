@@ -84,10 +84,14 @@ class RouteServiceTest extends AbstractPostgresIntegrationTest {
     @Test
     void createKeepsSpotOrder() {
         String cityName = cityName();
-        RouteDetailResponse detail = routeService.create(request(cityName, ambassadorId(), 1, "路线一", List.of(
+        UUID ambassadorId = ambassadorId();
+        RouteDetailResponse detail = routeService.create(request(cityName, ambassadorId, 1, "路线一", List.of(
                 new RouteSpotRequest("地点甲", "images/s1.png", "介绍甲"),
                 new RouteSpotRequest("地点乙", "images/s2.png", "介绍乙"))));
         assertThat(detail.cityName()).isEqualTo(cityName);
+        // 编辑页回显依赖 ambassadorId，详情必须带上
+        assertThat(routeService.detail(detail.id()).ambassadorId()).isEqualTo(ambassadorId);
+        assertThat(detail.ambassadorName()).isEqualTo("路线大使");
         assertThat(detail.spots()).extracting(RouteSpotResponse::name)
                 .containsExactly("地点甲", "地点乙");
         assertThat(detail.thumbnail().url()).contains("bound/images/thumb.png");
