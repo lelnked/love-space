@@ -14,7 +14,7 @@ import java.util.UUID;
 
 /**
  * 文章只读 API。
- * <p>GET /api/app/articles?categoryId= → 200 该栏目上线文章数组（sortOrder 升序）；
+ * <p>GET /api/app/articles?categoryId=（可选） → 200 可见文章数组（sortOrder 升序）：传栏目则限该栏目，不传则全部；
  * GET /api/app/articles/{id} → 200 详情（contentHtml img src 为签名 URL），下线/失去所有栏目/不存在 → 404。
  */
 @RestController
@@ -27,10 +27,12 @@ public class ArticleController {
         this.articleQueryService = articleQueryService;
     }
 
-    /** 按栏目查询上线文章列表。 */
+    /** 可见文章列表；categoryId 可选，传入时限该栏目，不传返回全部。 */
     @GetMapping
-    public List<ArticleItemResponse> list(@RequestParam UUID categoryId) {
-        return articleQueryService.listByCategory(categoryId);
+    public List<ArticleItemResponse> list(@RequestParam(required = false) UUID categoryId) {
+        return categoryId == null
+                ? articleQueryService.listAll()
+                : articleQueryService.listByCategory(categoryId);
     }
 
     /** 文章详情。 */

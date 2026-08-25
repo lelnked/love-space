@@ -59,14 +59,25 @@ public class ArticleQueryService {
             return List.of();
         }
         return articleRepository.findVisibleByCategory(categoryId.toString()).stream()
-                .map(article -> new ArticleItemResponse(
-                        article.getId(),
-                        ImageResponses.from(article.getImage(), imageUrlSigner),
-                        coverTitleOf(article),
-                        article.getTitle(),
-                        article.getSubtitle(),
-                        article.getTags()))
+                .map(this::toItem)
                 .toList();
+    }
+
+    /** 全部可见文章（上线且至少关联一个仍存在的栏目），sortOrder 升序。 */
+    public List<ArticleItemResponse> listAll() {
+        return articleRepository.findAllVisible().stream()
+                .map(this::toItem)
+                .toList();
+    }
+
+    private ArticleItemResponse toItem(Article article) {
+        return new ArticleItemResponse(
+                article.getId(),
+                ImageResponses.from(article.getImage(), imageUrlSigner),
+                coverTitleOf(article),
+                article.getTitle(),
+                article.getSubtitle(),
+                article.getTags());
     }
 
     /** 文章详情；不存在、下线或失去所有栏目均抛 404。 */

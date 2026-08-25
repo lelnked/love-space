@@ -18,15 +18,13 @@ import com.space.app.modules.route.repository.RouteRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
- * 周期推荐查询服务（App 端只读）：一次性下发四个周期的完整列表，由客户端按本地判定的周期自选。
+ * 周期推荐查询服务（App 端只读）：下发扁平列表（条目带所属周期），可按周期/类型过滤，由客户端按本地判定的周期自选。
  * <p>App 后端无用户体系，服务端不依据用户身份筛选。
  * <p>条目仅在自身上线且关联实体当前可见时下发；关联实体被删除的条目自然被过滤。
  */
@@ -56,10 +54,10 @@ public class FeaturedCycleItemQueryService {
     }
 
     /**
-     * 四个周期的推荐列表；无条目的周期返回空数组，键恒在。
-     * <p>{@code type} 可选：为 null 时下发全部类型，否则仅下发该内容类型的条目（分组键仍恒在）。
+     * 可见条目扁平列表，sortOrder 升序、同序号创建时间倒序。
+     * <p>{@code period} / {@code type} 均可选：为 null 时不过滤；过滤后无条目返回空列表。
      */
-    public Map<Period, List<FeaturedCycleItemResponse>> feed(FeaturedCycleItemType type) {
+    public List<FeaturedCycleItemResponse> feed(Period period, FeaturedCycleItemType type) {
         // ponytail: 运营配置级数据量（每周期个位数），全量捞出在内存过滤即可，无需 join
         // 活动可见性只看活动是否上线——活动不再关联地图，城市上架状态与它无关
         Set<UUID> visibleActivityIds = activityRepository.findAll().stream()
@@ -76,15 +74,12 @@ public class FeaturedCycleItemQueryService {
                 .filter(Article::isOnline)
                 .map(Article::getId).collect(Collectors.toSet());
 
-        Map<Period, List<FeaturedCycleItemResponse>> feed = new LinkedHashMap<>();
-        for (Period period : Period.values()) {
-            feed.put(period, new java.util.ArrayList<>());
-        }
-        featuredCycleItemRepository.findAllByOnlineTrueOrderBySortOrderAscCreatedAtDesc().stream()
+        return featuredCycleItemRepository.findAllByOnlineTrueOrderBySortOrderAscCreatedAtDesc().stream()
+                .filter(item -> period == null || item.getPhase() == period)
                 .filter(item -> type == null || item.getType() == type)
                 .filter(item -> isVisible(item, visibleActivityIds, visibleRouteIds, visibleArticleIds))
-                .forEach(item -> feed.get(item.getPhase()).add(toResponse(item)));
-        return feed;
+                .map(this::toResponse)
+                .toList();
     }
 
     private boolean isVisible(FeaturedCycleItem item,
@@ -101,6 +96,7 @@ public class FeaturedCycleItemQueryService {
     private FeaturedCycleItemResponse toResponse(FeaturedCycleItem item) {
         return new FeaturedCycleItemResponse(
                 item.getId(),
+                item.getPhase(),
                 item.getType(),
                 ImageResponses.from(item.getBanner(), imageUrlSigner),
                 item.getActivityId(),

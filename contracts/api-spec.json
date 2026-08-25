@@ -650,16 +650,17 @@
     },
     "/api/app/articles": {
       "get": {
-        "summary": "App 按栏目查文章列表（上线且栏目存在才可见，sortOrder 升序；返回 coverTitle 与 tags，coverTitle 为空时回落 title）",
+        "summary": "App 查文章列表（categoryId 可选：传入按栏目、不传返回全部可见文章；上线且栏目存在才可见，sortOrder 升序；返回 coverTitle 与 tags，coverTitle 为空时回落 title）",
         "parameters": [
           {
             "name": "categoryId",
             "in": "query",
-            "required": true,
+            "required": false,
             "schema": {
               "type": "string",
               "format": "uuid"
-            }
+            },
+            "description": "栏目 id，可选；传入时仅返回该栏目下可见文章（栏目不存在返回空数组），不传时返回全部可见文章"
           }
         ],
         "x-requirement": "article/App 端文章查询"
@@ -840,8 +841,17 @@
     },
     "/api/app/featured-cycle-items": {
       "get": {
-        "summary": "App 周期推荐（type 可选过滤；四周期分组恒在，条目上线∧关联实体可见，组内 sortOrder 升序）",
+        "summary": "App 周期推荐（扁平数组，条目带 period；period / type 可选过滤且可同用；条目上线∧关联实体可见，sortOrder 升序）",
         "parameters": [
+          {
+            "name": "period",
+            "in": "query",
+            "required": false,
+            "description": "所属周期，可选；不传则下发全部周期，非法值返回 400",
+            "schema": {
+              "$ref": "#/components/schemas/Period"
+            }
+          },
           {
             "name": "type",
             "in": "query",

@@ -232,120 +232,177 @@
 **执行存证**: `test-evidence/featured-cycle-feed/TC-featured-IT-015/`
 **最后更新**: 2026-08-20
 
-### TC-featured-IT-016: GET /api/app/featured-cycle-items 四周期分组齐全且只含上线条目
+### TC-featured-IT-016: GET /api/app/featured-cycle-items 扁平数组带 period 字段且只含上线条目
 **关联需求**: featured/App 端周期推荐查询#查询四个周期的推荐列表
 **关联契约**: api-spec.json#/paths/~1api~1app~1featured-cycle-items/get
-**来源**: featured-cycle-feed
+**来源**: app-article-optional-category-and-featured-period-filter
 **优先级**: P0
 **测试步骤**:
 1. 前置（admin 端建数据）：MENSTRUAL 下 1 个上线 ACTIVITY 条目（活动上线、其城市上架）、OVULATION 下 1 个上线 ARTICLE 条目（文章上线）、LUTEAL 下 1 个**下线**条目、FOLLICULAR 下无条目
-2. GET /api/app/featured-cycle-items（带 API-key 请求头）
-**预期结果**: 返回 200；响应含 MENSTRUAL/FOLLICULAR/OVULATION/LUTEAL 四个键（FOLLICULAR 为空数组，不缺键）；MENSTRUAL、OVULATION 各 1 条且含 type、banner 签名 URL 与关联实体 id；LUTEAL 为空数组（下线条目不下发）
+2. GET http://localhost:8081/api/app/featured-cycle-items（不带参数，请求头带 X-API-Key）
+**预期结果**: 返回 200；响应顶层为 JSON 数组（不是按周期分组的对象，无 MENSTRUAL/FOLLICULAR/OVULATION/LUTEAL 键）；数组恰含 2 条：一条 period=MENSTRUAL、type=ACTIVITY、activityId 非空，一条 period=OVULATION、type=ARTICLE、articleId 非空；每条含 banner 签名 URL（http 开头、非裸 objectKey）；不含 LUTEAL 的下线条目
 **状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**: `test-evidence/app-featured-cycle-type-filter/TC-featured-IT-016/`
-**最后更新**: 2026-08-24
+**执行存证**: `test-evidence/app-article-optional-category-and-featured-period-filter/TC-featured-IT-016/`
+**最后更新**: 2026-08-25
 
 ### TC-featured-IT-017: GET /api/app/featured-cycle-items 关联实体不可见时条目不下发
 **关联需求**: featured/App 端周期推荐查询#关联实体不可见时条目不下发
 **关联契约**: api-spec.json#/paths/~1api~1app~1featured-cycle-items/get
-**来源**: featured-cycle-feed
+**来源**: app-article-optional-category-and-featured-period-filter
 **优先级**: P0
 **测试步骤**:
-1. 前置：MENSTRUAL 下 1 个上线 ACTIVITY 条目（活动上线、城市上架）、1 个上线 ARTICLE 条目（文章上线）；GET app 接口确认两条均在
+1. 前置：MENSTRUAL 下 1 个上线 ACTIVITY 条目（活动上线、城市上架）、1 个上线 ARTICLE 条目（文章上线）；GET app 接口确认数组含两条（period 均为 MENSTRUAL）
 2. admin 端将该活动下线，GET app 接口
-3. 恢复活动上线、改将其所属城市下架，GET app 接口
+3. 恢复活动上线，GET app 接口（活动不关联城市，无城市下架步骤）
 4. 恢复城市上架、改将该文章下线，GET app 接口
 5. 恢复文章上线，admin 端删除该文章，GET app 接口
-**预期结果**: 步骤 2、3 该 ACTIVITY 条目从 MENSTRUAL 分组消失；步骤 4、5 该 ARTICLE 条目消失；每步中未受影响的另一条仍在；接口全程返回 200，不因关联实体缺失报 500
+**预期结果**: 步骤 2 数组不含该 ACTIVITY 条目、步骤 3 恢复后重新出现；步骤 4、5 数组不含该 ARTICLE 条目；每步中未受影响的另一条仍在数组中；接口全程返回 200，不因关联实体缺失报 500
 **状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**: `test-evidence/app-featured-cycle-type-filter/TC-featured-IT-017/`
-**最后更新**: 2026-08-24
+**执行存证**: `test-evidence/app-article-optional-category-and-featured-period-filter/TC-featured-IT-017/`
+**最后更新**: 2026-08-25
 
 ### TC-featured-IT-018: GET /api/app/featured-cycle-items 大使下线连带隐藏路线类条目
 **关联需求**: featured/App 端周期推荐查询#大使下线连带隐藏路线类条目
 **关联契约**: api-spec.json#/paths/~1api~1app~1featured-cycle-items/get
-**来源**: route-decouple-city-online
+**来源**: app-article-optional-category-and-featured-period-filter
 **优先级**: P0
 **测试步骤**:
 1. 前置：存在上架城市下的一条路线，其爱女大使 online=true；OVULATION 下建 1 个上线 ROUTE 条目关联该路线
-2. GET /api/app/featured-cycle-items，确认该条目在 OVULATION 分组
+2. GET http://localhost:8081/api/app/featured-cycle-items（请求头带 X-API-Key），确认数组含该条目且其 period=OVULATION
 3. admin 端将该大使下线，GET /api/app/featured-cycle-items
 4. 恢复大使上线，GET /api/app/featured-cycle-items
-**预期结果**: 步骤 2 该条目存在；步骤 3 该条目从 OVULATION 分组消失；步骤 4 该条目重新出现；接口全程返回 200。（城市下架不再影响 ROUTE 条目，该口径改由 TC-featured-IT-020 断言）
+**预期结果**: 步骤 2 数组含该条目（period=OVULATION、type=ROUTE、routeId 非空）；步骤 3 数组不含该条目；步骤 4 该条目重新出现；接口全程返回 200。（城市下架不再影响 ROUTE 条目，该口径改由 TC-featured-IT-020 断言）
 **状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**: `test-evidence/app-featured-cycle-type-filter/TC-featured-IT-018/`
-**最后更新**: 2026-08-24
+**执行存证**: `test-evidence/app-article-optional-category-and-featured-period-filter/TC-featured-IT-018/`
+**最后更新**: 2026-08-25
 
-### TC-featured-IT-019: GET /api/app/featured-cycle-items 组内按排序号升序
+### TC-featured-IT-019: GET /api/app/featured-cycle-items 按排序号升序
 **关联需求**: featured/App 端周期推荐查询#组内按排序号升序
 **关联契约**: api-spec.json#/paths/~1api~1app~1featured-cycle-items/get
-**来源**: featured-cycle-feed
+**来源**: app-article-optional-category-and-featured-period-filter
 **优先级**: P1
 **测试步骤**:
 1. 前置：MENSTRUAL 下按 sortOrder 2、1、3 的顺序创建三个上线条目（关联实体均可见），另建两个 sortOrder 同为 1 的条目
-2. GET /api/app/featured-cycle-items
-**预期结果**: 返回 200；MENSTRUAL 分组内条目按 sortOrder 1、1、2、3 升序排列；两个 sortOrder=1 的条目按 createdAt 倒序（后创建的在前）
+2. GET http://localhost:8081/api/app/featured-cycle-items?period=MENSTRUAL（请求头带 X-API-Key）
+**预期结果**: 返回 200；数组内 5 条条目 period 均为 MENSTRUAL，按 sortOrder 1、1、1、2、3 升序排列；三个 sortOrder=1 的条目按 createdAt 倒序（后创建的在前）
 **状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**: `test-evidence/app-featured-cycle-type-filter/TC-featured-IT-019/`
-**最后更新**: 2026-08-24
+**执行存证**: `test-evidence/app-article-optional-category-and-featured-period-filter/TC-featured-IT-019/`
+**最后更新**: 2026-08-25
 
 ### TC-featured-IT-020: GET /api/app/featured-cycle-items 城市未上架不影响路线类条目
 **关联需求**: featured/App 端周期推荐查询#城市未上架不影响路线类条目
 **关联契约**: api-spec.json#/paths/~1api~1app~1featured-cycle-items/get
-**来源**: route-decouple-city-online
+**来源**: app-article-optional-category-and-featured-period-filter
 **优先级**: P0
 **测试步骤**:
-1. 前置：admin 端创建一个**下架**城市，在其下创建一条路线（关联大使 online=true）；OVULATION 下建 1 个上线 ROUTE 条目关联该路线；同一分组另建 1 个上线 ACTIVITY 条目，其活动上线且所属城市为同一下架城市
-2. GET /api/app/featured-cycle-items（带 API-key 请求头）
+1. 前置：admin 端创建一个**下架**城市，在其下创建一条路线（关联大使 online=true）；OVULATION 下建 1 个上线 ROUTE 条目关联该路线；同一周期另建 1 个上线 ACTIVITY 条目（活动上线，活动不关联城市）
+2. GET http://localhost:8081/api/app/featured-cycle-items（请求头带 X-API-Key）
 3. admin 端将该城市上架，再次 GET /api/app/featured-cycle-items
-**预期结果**: 步骤 2 返回 200，ROUTE 条目正常出现在 OVULATION 分组（城市下架不再过滤），而同城市的 ACTIVITY 条目**不出现**（活动侧仍要求城市上架）；步骤 3 城市上架后两条条目均出现，ROUTE 条目状态前后一致
+**预期结果**: 步骤 2 返回 200，数组含该 ROUTE 条目（period=OVULATION，城市下架不再过滤），ACTIVITY 条目同样在数组中（活动不关联城市）；步骤 3 城市上架后数组仍同时含两条条目，前后一致
 **状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**: `test-evidence/app-featured-cycle-type-filter/TC-featured-IT-020/`
-**最后更新**: 2026-08-24
+**执行存证**: `test-evidence/app-article-optional-category-and-featured-period-filter/TC-featured-IT-020/`
+**最后更新**: 2026-08-25
 
 ### TC-featured-IT-021: GET /api/app/featured-cycle-items?type= 按内容类型过滤
 **关联需求**: featured/App 端周期推荐查询#按内容类型过滤
 **关联契约**: api-spec.json#/paths/~1api~1app~1featured-cycle-items/get
-**来源**: app-featured-cycle-type-filter
+**来源**: app-article-optional-category-and-featured-period-filter
 **优先级**: P0
 **测试步骤**:
 1. 前置（admin 端建数据）：MENSTRUAL 下各建 1 个上线条目，类型分别为 ACTIVITY（活动上线、城市上架）、ROUTE（大使上线）、ARTICLE（文章上线）
-2. GET /api/app/featured-cycle-items?type=ARTICLE（带 API-key 请求头）
-3. GET /api/app/featured-cycle-items（不带 type，同一批数据）
-**预期结果**: 步骤 2 返回 200，四周期键齐全，MENSTRUAL 仅含该 ARTICLE 条目（type=ARTICLE、articleId 非空），不含 ACTIVITY/ROUTE 条目；步骤 3 返回 200 且 MENSTRUAL 含全部 3 条（不传 type 行为不变）
+2. GET http://localhost:8081/api/app/featured-cycle-items?type=ARTICLE（请求头带 X-API-Key）
+3. GET http://localhost:8081/api/app/featured-cycle-items（不带参数，同一批数据）
+**预期结果**: 步骤 2 返回 200，数组仅含该 ARTICLE 条目（period=MENSTRUAL、type=ARTICLE、articleId 非空），不含 ACTIVITY/ROUTE 条目；步骤 3 返回 200 且数组含全部 3 条（不传 type 行为不变）
 **状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**: `test-evidence/app-featured-cycle-type-filter/TC-featured-IT-021/`
-**最后更新**: 2026-08-24
+**执行存证**: `test-evidence/app-article-optional-category-and-featured-period-filter/TC-featured-IT-021/`
+**最后更新**: 2026-08-25
 
-### TC-featured-IT-022: GET /api/app/featured-cycle-items?type= 过滤后周期为空仍返回空数组
+### TC-featured-IT-022: GET /api/app/featured-cycle-items?type= 类型过滤后无条目返回空数组
 **关联需求**: featured/App 端周期推荐查询#类型过滤后周期为空仍返回空数组
 **关联契约**: api-spec.json#/paths/~1api~1app~1featured-cycle-items/get
-**来源**: app-featured-cycle-type-filter
+**来源**: app-article-optional-category-and-featured-period-filter
 **优先级**: P1
 **测试步骤**:
-1. 前置：库中仅有 ACTIVITY 类上线条目（无 ROUTE 类可见条目）
-2. GET /api/app/featured-cycle-items?type=ROUTE（带 API-key 请求头）
-**预期结果**: 返回 200，MENSTRUAL/FOLLICULAR/OVULATION/LUTEAL 四个键齐全且每个均为空数组（不缺键、不返回 404）
+1. 前置：库中仅 MENSTRUAL 下有 1 个 ACTIVITY 类上线条目（无 ROUTE 类可见条目，其余周期无条目）
+2. GET http://localhost:8081/api/app/featured-cycle-items?type=ROUTE（请求头带 X-API-Key）
+**预期结果**: 返回 200 且响应体为 `[]`（空数组，不是四键对象、不返回 404）
 **状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**: `test-evidence/app-featured-cycle-type-filter/TC-featured-IT-022/`
-**最后更新**: 2026-08-24
+**执行存证**: `test-evidence/app-article-optional-category-and-featured-period-filter/TC-featured-IT-022/`
+**最后更新**: 2026-08-25
 
 ### TC-featured-IT-023: GET /api/app/featured-cycle-items?type= 非法类型值返回 400
 **关联需求**: featured/App 端周期推荐查询#非法类型值被拒绝
 **关联契约**: api-spec.json#/paths/~1api~1app~1featured-cycle-items/get
-**来源**: app-featured-cycle-type-filter
+**来源**: app-article-optional-category-and-featured-period-filter
 **优先级**: P1
 **测试步骤**:
-1. GET /api/app/featured-cycle-items?type=UNKNOWN（带 API-key 请求头）
+1. GET http://localhost:8081/api/app/featured-cycle-items?type=UNKNOWN（请求头带 X-API-Key）
 **预期结果**: 返回 400（枚举转换失败），不返回 200 也不静默忽略该参数
 **状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**: `test-evidence/app-featured-cycle-type-filter/TC-featured-IT-023/`
-**最后更新**: 2026-08-24
+**执行存证**: `test-evidence/app-article-optional-category-and-featured-period-filter/TC-featured-IT-023/`
+**最后更新**: 2026-08-25
+
+### TC-featured-IT-024: GET /api/app/featured-cycle-items?period= 按周期过滤
+**关联需求**: featured/App 端周期推荐查询#按周期过滤
+**关联契约**: api-spec.json#/paths/~1api~1app~1featured-cycle-items/get
+**来源**: app-article-optional-category-and-featured-period-filter
+**优先级**: P0
+**测试步骤**:
+1. 前置（admin 端建数据）：MENSTRUAL 下建 2 个上线条目（ACTIVITY 活动上线且城市上架、ARTICLE 文章上线），FOLLICULAR 下建 1 个上线 ARTICLE 条目
+2. GET http://localhost:8081/api/app/featured-cycle-items?period=MENSTRUAL（请求头带 X-API-Key）
+3. GET http://localhost:8081/api/app/featured-cycle-items?period=FOLLICULAR（请求头带 X-API-Key）
+**预期结果**: 步骤 2 返回 200，数组恰含 2 条且每条 period=MENSTRUAL，不含 FOLLICULAR 条目；步骤 3 返回 200，数组恰含 1 条且 period=FOLLICULAR
+**状态**: ✅ 通过
+**执行方式**: api-test-runner
+**执行存证**: `test-evidence/app-article-optional-category-and-featured-period-filter/TC-featured-IT-024/`
+**最后更新**: 2026-08-25
+
+### TC-featured-IT-025: GET /api/app/featured-cycle-items?period=&type= 周期与类型同时过滤
+**关联需求**: featured/App 端周期推荐查询#周期与类型同时过滤
+**关联契约**: api-spec.json#/paths/~1api~1app~1featured-cycle-items/get
+**来源**: app-article-optional-category-and-featured-period-filter
+**优先级**: P0
+**测试步骤**:
+1. 前置（admin 端建数据）：MENSTRUAL 下建 ACTIVITY（活动上线且城市上架）、ARTICLE（文章上线）各 1 个上线条目；FOLLICULAR 下建 1 个上线 ARTICLE 条目
+2. GET http://localhost:8081/api/app/featured-cycle-items?period=MENSTRUAL&type=ARTICLE（请求头带 X-API-Key）
+**预期结果**: 返回 200，数组恰含 1 条：period=MENSTRUAL、type=ARTICLE、articleId 非空；不含 MENSTRUAL 的 ACTIVITY 条目，也不含 FOLLICULAR 的 ARTICLE 条目
+**状态**: ✅ 通过
+**执行方式**: api-test-runner
+**执行存证**: `test-evidence/app-article-optional-category-and-featured-period-filter/TC-featured-IT-025/`
+**最后更新**: 2026-08-25
+
+### TC-featured-IT-026: GET /api/app/featured-cycle-items?period= 周期过滤后无条目返回空数组
+**关联需求**: featured/App 端周期推荐查询#周期过滤后无条目返回空数组
+**关联契约**: api-spec.json#/paths/~1api~1app~1featured-cycle-items/get
+**来源**: app-article-optional-category-and-featured-period-filter
+**优先级**: P1
+**测试步骤**:
+1. 前置：库中仅 MENSTRUAL 下有 1 个 ACTIVITY 类上线条目，其余周期无条目
+2. GET http://localhost:8081/api/app/featured-cycle-items?period=LUTEAL（请求头带 X-API-Key）
+**预期结果**: 返回 200 且响应体为 `[]`（空数组，不是空对象、不返回 404）
+**状态**: ✅ 通过
+**执行方式**: api-test-runner
+**执行存证**: `test-evidence/app-article-optional-category-and-featured-period-filter/TC-featured-IT-026/`
+**最后更新**: 2026-08-25
+
+### TC-featured-IT-027: GET /api/app/featured-cycle-items?period= 非法周期值返回 400
+**关联需求**: featured/App 端周期推荐查询#非法周期值被拒绝
+**关联契约**: api-spec.json#/paths/~1api~1app~1featured-cycle-items/get
+**来源**: app-article-optional-category-and-featured-period-filter
+**优先级**: P1
+**测试步骤**:
+1. GET http://localhost:8081/api/app/featured-cycle-items?period=UNKNOWN（请求头带 X-API-Key）
+2. GET http://localhost:8081/api/app/featured-cycle-items?period=menstrual（小写，请求头带 X-API-Key）
+**预期结果**: 两次均返回 400（枚举转换失败），不返回 200 也不静默忽略该参数
+**状态**: ✅ 通过
+**执行方式**: api-test-runner
+**执行存证**: `test-evidence/app-article-optional-category-and-featured-period-filter/TC-featured-IT-027/`
+**最后更新**: 2026-08-25

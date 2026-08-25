@@ -2,6 +2,7 @@ package com.space.app.modules.article.service;
 
 import com.space.app.common.exception.ResourceNotFoundException;
 import com.space.app.infrastructure.storage.ImageUrlSigner;
+import com.space.app.modules.article.dto.ArticleItemResponse;
 import com.space.app.modules.article.entity.Article;
 import com.space.app.modules.article.entity.ArticleCategory;
 import com.space.app.modules.article.repository.ArticleCategoryRepository;
@@ -39,7 +40,10 @@ class ArticleQueryServiceTest extends AbstractPostgresIntegrationTest {
     private ImageUrlSigner imageUrlSigner;
 
     @BeforeEach
-    void stubSigner() {
+    void resetAndStub() {
+        // 全量查询用例会被同类其他用例残留的文章污染，先清空
+        articleRepository.deleteAll();
+        categoryRepository.deleteAll();
         when(imageUrlSigner.sign(anyString()))
                 .thenAnswer(inv -> "https://signed.example.com/" + inv.getArgument(0));
     }
@@ -135,6 +139,22 @@ class ArticleQueryServiceTest extends AbstractPostgresIntegrationTest {
         var bare = articleQueryService.detail(without);
         assertThat(bare.intro()).isNull();
         assertThat(bare.tags()).isEmpty();
+    }
+
+    // @scenario: article/App 端文章查询#不传栏目返回全部可见文章
+    @Test
+    void listAllReturnsOnlyVisibleArticlesAcrossCategories() {
+        UUID categoryA = category("栏目A", 0);
+        UUID categoryB = category("栏目B", 1);
+        UUID deleted = category("已删栏目", 2);
+        UUID inA = article("A 文章", 2, true, categoryA);
+        UUID inB = article("B 文章", 1, true, categoryB);
+        article("下线文章", 0, false, categoryA);
+        article("孤儿文章", 0, true, deleted);
+        categoryRepository.deleteById(deleted);
+
+        assertThat(articleQueryService.listAll()).extracting(ArticleItemResponse::id)
+                .containsExactly(inB, inA);
     }
 
     // @scenario: article/App 端文章查询#下线文章不可见

@@ -164,7 +164,7 @@
 **预期结果**: 栏目列表返回 200，按 sortOrder 升序（B 在前），每项含名称与 icon 签名 URL；文章列表返回 200，按 sortOrder 升序（权重 1 在前），每项含图片（签名 URL）、封面标题 coverTitle、标题、副标题、标签 tags
 **状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**: `test-evidence/article-cover-title-intro-tags/TC-article-IT-011/`
+**执行存证**: `test-evidence/app-article-optional-category-and-featured-period-filter/TC-article-IT-011/`
 **最后更新**: 2026-08-25
 
 ### TC-article-IT-012: GET /api/app/articles 下线文章不可见、详情 404
@@ -180,7 +180,7 @@
 **预期结果**: 下线后列表不含该文章；详情返回 404
 **状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**: `test-evidence/article-cover-title-intro-tags/TC-article-IT-012/`
+**执行存证**: `test-evidence/app-article-optional-category-and-featured-period-filter/TC-article-IT-012/`
 **最后更新**: 2026-08-25
 
 ### TC-article-IT-013: GET /api/app/articles/{id} 失去所有栏目的文章不可见
@@ -269,7 +269,7 @@
 **预期结果**: 返回 200；甲的 coverTitle=「封面甲」、tags=["约会"]；乙的 coverTitle 回落为「文章乙」、tags=[]；两项均含 image、title、subtitle 字段
 **状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**: `test-evidence/article-cover-title-intro-tags/TC-article-IT-018/`
+**执行存证**: `test-evidence/app-article-optional-category-and-featured-period-filter/TC-article-IT-018/`
 **最后更新**: 2026-08-25
 
 ### TC-article-IT-019: GET /api/app/articles/{id} 详情返回引言与标签
@@ -285,4 +285,19 @@
 **状态**: ✅ 通过
 **执行方式**: api-test-runner
 **执行存证**: `test-evidence/article-cover-title-intro-tags/TC-article-IT-019/`
+**最后更新**: 2026-08-25
+
+### TC-article-IT-020: GET /api/app/articles 不传 categoryId 返回全部可见文章
+**关联需求**: article/App 端文章查询#不传栏目返回全部可见文章
+**关联契约**: api-spec.json#/paths/~1api~1app~1articles/get
+**来源**: app-article-optional-category-and-featured-period-filter
+**优先级**: P0
+**测试步骤**:
+1. 前置（admin 端建数据）：栏目 A、B、C；文章甲关联 A（sortOrder=2、online=true）、文章乙关联 B（sortOrder=1、online=true）、文章丙关联 A（online=false）、文章丁仅关联 C（online=true）；随后 DELETE /api/admin/article-categories/{C 的 id}
+2. GET http://localhost:8081/api/app/articles（不带 categoryId，请求头带 X-API-Key）
+3. GET http://localhost:8081/api/app/articles?categoryId={A 的 id}（请求头带 X-API-Key）
+**预期结果**: 步骤 2 返回 200，列表恰含甲、乙两篇且乙在前（sortOrder 升序），不含下线的丙与失去所有栏目的丁；每项含 image 签名 URL、coverTitle、title、subtitle、tags；步骤 3 返回 200 且仅含甲（传 categoryId 行为不变）
+**状态**: ✅ 通过
+**执行方式**: api-test-runner
+**执行存证**: `test-evidence/app-article-optional-category-and-featured-period-filter/TC-article-IT-020/`
 **最后更新**: 2026-08-25

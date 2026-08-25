@@ -21,4 +21,14 @@ public interface ArticleRepository extends JpaRepository<Article, UUID> {
             ORDER BY sort_order ASC, created_at DESC
             """, nativeQuery = true)
     List<Article> findVisibleByCategory(@Param("categoryId") String categoryId);
+
+    /** 全部可见文章（上线且至少关联一个仍存在的栏目），sortOrder 升序。 */
+    @Query(value = """
+            SELECT a.* FROM loves_article a
+            WHERE a.online = true
+              AND EXISTS (SELECT 1 FROM loves_article_category c
+                          WHERE a.category_ids @> jsonb_build_array(cast(c.id AS text)))
+            ORDER BY a.sort_order ASC, a.created_at DESC
+            """, nativeQuery = true)
+    List<Article> findAllVisible();
 }

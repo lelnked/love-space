@@ -11,7 +11,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * {@link FeaturedCycleItemController} 的 type 参数绑定：合法枚举值放行，非法值 400。
+ * {@link FeaturedCycleItemController} 的 period / type 参数绑定：合法枚举值放行并返回扁平数组，非法值 400。
  */
 @AutoConfigureMockMvc
 class FeaturedCycleItemControllerWebMvcTest extends AbstractPostgresIntegrationTest {
@@ -27,15 +27,22 @@ class FeaturedCycleItemControllerWebMvcTest extends AbstractPostgresIntegrationT
                 .andExpect(status().isBadRequest());
     }
 
-    // @scenario: featured/App 端周期推荐查询#按内容类型过滤
+    // @scenario: featured/App 端周期推荐查询#非法周期值被拒绝
     @Test
-    void validTypeValueIsAccepted() throws Exception {
-        mockMvc.perform(get("/api/app/featured-cycle-items").param("type", "ARTICLE")
+    void unknownPeriodValueIsRejected() throws Exception {
+        mockMvc.perform(get("/api/app/featured-cycle-items").param("period", "UNKNOWN")
+                        .header("X-API-Key", TEST_API_KEY))
+                .andExpect(status().isBadRequest());
+    }
+
+    // @scenario: featured/App 端周期推荐查询#按内容类型过滤
+    // @scenario: featured/App 端周期推荐查询#按周期过滤
+    @Test
+    void validPeriodAndTypeValuesReturnFlatArray() throws Exception {
+        mockMvc.perform(get("/api/app/featured-cycle-items")
+                        .param("period", "MENSTRUAL").param("type", "ARTICLE")
                         .header("X-API-Key", TEST_API_KEY))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.MENSTRUAL").isArray())
-                .andExpect(jsonPath("$.FOLLICULAR").isArray())
-                .andExpect(jsonPath("$.OVULATION").isArray())
-                .andExpect(jsonPath("$.LUTEAL").isArray());
+                .andExpect(jsonPath("$").isArray());
     }
 }

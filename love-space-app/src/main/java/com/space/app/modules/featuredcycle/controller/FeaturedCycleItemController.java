@@ -10,12 +10,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * 精选·周期推荐只读 API。
- * <p>GET /api/app/featured-cycle-items?type=（可选） → 200 四周期分组（键恒在，无条目为空数组；
- * 条目上线∧关联实体可见，组内 sortOrder 升序）。周期判定在客户端，服务端不按用户筛选。
+ * <p>GET /api/app/featured-cycle-items?period=&type=（均可选） → 200 扁平数组（条目带 period；
+ * 条目上线∧关联实体可见，sortOrder 升序；过滤后无条目为空数组）。周期判定在客户端，服务端不按用户筛选。
  */
 @RestController
 @RequestMapping("/api/app/featured-cycle-items")
@@ -27,10 +26,11 @@ public class FeaturedCycleItemController {
         this.featuredCycleItemQueryService = featuredCycleItemQueryService;
     }
 
-    /** 四周期推荐信息流；type 可选，传入时仅下发该内容类型的条目，非法值由枚举转换失败返回 400。 */
+    /** 推荐信息流；period / type 可选且可同用，非法值由枚举转换失败返回 400。 */
     @GetMapping
-    public Map<Period, List<FeaturedCycleItemResponse>> feed(
+    public List<FeaturedCycleItemResponse> feed(
+            @RequestParam(required = false) Period period,
             @RequestParam(required = false) FeaturedCycleItemType type) {
-        return featuredCycleItemQueryService.feed(type);
+        return featuredCycleItemQueryService.feed(period, type);
     }
 }
