@@ -23,7 +23,7 @@ public class CategoryController {
         this.categoryService = categoryService;
     }
 
-    /** 上架分类分页查询：sortOrder ASC, createdAt ASC。 */
+    /** 文章栏目列表 */
     @GetMapping("/page")
     public PageResponse<CategoryItemResponse> page(
             @RequestParam(value = "page", required = false) Integer page,
