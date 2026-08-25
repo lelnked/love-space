@@ -1,0 +1,15 @@
+HTTP/1.1 200 
+Vary: Origin
+Vary: Access-Control-Request-Method
+Vary: Access-Control-Request-Headers
+X-Content-Type-Options: nosniff
+X-XSS-Protection: 0
+Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+Pragma: no-cache
+Expires: 0
+X-Frame-Options: DENY
+Content-Type: application/json
+Content-Length: 1323
+Date: Tue, 25 Aug 2026 12:00:11 GMT
+
+[{"id":"01a038bb-d304-7295-a941-ee48da8726b5","title":"活动","images":[],"tags":[],"periods":[],"level":null,"introduction":null},{"id":"01a038bb-d2f9-7dfb-b023-22f222b5ef96","title":"成都周末","images":[],"tags":[],"periods":[],"level":null,"introduction":null},{"id":"01a038bb-d2db-759c-a2e9-9bb1684aef8e","title":"活动","images":[],"tags":[],"periods":[],"level":null,"introduction":null},{"id":"01a038bb-d2c7-7f70-81ca-d9ebe42806f6","title":"活动","images":[],"tags":[],"periods":[],"level":null,"introduction":null},{"id":"01a038bb-d2bf-777d-b892-f4433f5d169a","title":"活动","images":[],"tags":[],"periods":[],"level":null,"introduction":null},{"id":"01a03851-b2ca-78ea-9e9a-e73e6ea7ae7b","title":"活动","images":[],"tags":[],"periods":[],"level":null,"introduction":null},{"id":"01a03851-b2bf-78fd-ae95-0f6fb5480ab7","title":"成都周末","images":[],"tags":[],"periods":[],"level":null,"introduction":null},{"id":"01a03851-b297-7935-b1ca-a3340cb4fac7","title":"活动","images":[],"tags":[],"periods":[],"level":null,"introduction":null},{"id":"01a03851-b287-7059-b1c5-00d5ee2d721f","title":"活动","images":[],"tags":[],"periods":[],"level":null,"introduction":null},{"id":"01a03851-b27f-77d2-bfe4-653a62f1c206","title":"活动","images":[],"tags":[],"periods":[],"level":null,"introduction":null}]

@@ -6,6 +6,11 @@ import com.loves.space.modules.city.dto.CityCreateRequest;
 import com.loves.space.modules.city.dto.CityDetailResponse;
 import com.loves.space.modules.city.dto.CityUpdateRequest;
 import com.loves.space.modules.ambassador.entity.Ambassador;
+import com.loves.space.modules.banner.entity.Banner;
+import com.loves.space.modules.banner.entity.BannerType;
+import com.loves.space.modules.banner.repository.BannerRepository;
+import com.loves.space.modules.merchant.entity.Merchant;
+import com.loves.space.modules.merchant.repository.MerchantRepository;
 import com.loves.space.modules.ambassador.repository.AmbassadorRepository;
 import com.loves.space.modules.route.entity.Route;
 import com.loves.space.modules.route.repository.RouteRepository;
@@ -38,6 +43,12 @@ class CityServiceTest extends AbstractPostgresIntegrationTest {
 
     @Autowired
     private AmbassadorRepository ambassadorRepository;
+
+    @Autowired
+    private MerchantRepository merchantRepository;
+
+    @Autowired
+    private BannerRepository bannerRepository;
 
     @MockitoBean
     private ObjectKeyValidator objectKeyValidator;
@@ -106,14 +117,13 @@ class CityServiceTest extends AbstractPostgresIntegrationTest {
         assertThat(updated.backgroundImage()).isNull();
     }
 
-    /** 在指定城市下建一条路线，返回路线 id。 */
-    private UUID routeIn(UUID cityId) {
+    /** 建一条路线（路线只持有自由文本地图名，与任何城市实体均无关联），返回路线 id。 */
+    private UUID anyRoute() {
         Ambassador ambassador = new Ambassador();
         ambassador.setAvatar("bound/avatar.png");
         ambassador.setName("大使-" + UUID.randomUUID());
         ambassador.setTags(new ArrayList<>(List.of("向导")));
         ambassador.setOnline(true);
-        UUID ambassadorId = ambassadorRepository.save(ambassador).getId();
 
         Route route = new Route();
         route.setCityName("测试城-" + UUID.randomUUID());
@@ -121,28 +131,67 @@ class CityServiceTest extends AbstractPostgresIntegrationTest {
         route.setTitle("路线-" + UUID.randomUUID());
         route.setThumbnail("bound/thumb.png");
         route.setImages(new ArrayList<>(List.of("bound/a.png")));
-        route.setAmbassadorId(ambassadorId);
+        route.setAmbassadorId(ambassadorRepository.save(ambassador).getId());
         return routeRepository.save(route).getId();
     }
 
-    // @scenario: city/城市下存在路线时禁止删除#有路线的城市不能删除
+    // @scenario: city/地图删除#有路线的地图可以直接删除
     @Test
-    void deleteRejectedWhenCityHasRoutes() {
-        CityDetailResponse created = cityService.create(createReq("城-del-" + UUID.randomUUID(), null));
-        routeIn(created.id());
+    void deleteSucceedsEvenWhenRoutesExist() {
+        CityDetailResponse created = cityService.create(createReq("城-route-" + UUID.randomUUID(), null));
+        UUID routeId = anyRoute();
 
-        assertThatThrownBy(() -> cityService.delete(created.id()))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("路线");
+        cityService.delete(created.id());
 
-        assertThat(cityService.get(created.id()).id()).isEqualTo(created.id());
+        assertThatThrownBy(() -> cityService.get(created.id()))
+                .isInstanceOf(IllegalArgumentException.class);
+        // 路线与地图已完全解耦，删除地图不影响路线记录
+        assertThat(routeRepository.findById(routeId)).isPresent();
     }
 
-    // @scenario: city/城市下存在路线时禁止删除#路线清空后可删除城市
+    // @scenario: city/地图删除#删除地图连带下架 Banner 与商户
     @Test
-    void deleteSucceedsAfterRoutesRemoved() {
-        CityDetailResponse created = cityService.create(createReq("城-del2-" + UUID.randomUUID(), null));
-        routeRepository.deleteById(routeIn(created.id()));
+    void deleteOfflinesLinkedBannerAndMerchants() {
+        CityDetailResponse created = cityService.create(createReq("城-cascade-" + UUID.randomUUID(), null));
+
+        Merchant merchant = new Merchant();
+        merchant.setName("商户-" + UUID.randomUUID());
+        merchant.setLogo("bound/logo.png");
+        merchant.setAddress("测试地址");
+        merchant.setCityId(created.id());
+        merchant.setImages(new ArrayList<>(List.of("bound/m.png")));
+        merchant.setPeriods(new ArrayList<>(List.of("09:00-18:00")));
+        merchant.setSafetyEnvironmentScore((short) 5);
+        merchant.setBusinessRightsScore((short) 5);
+        merchant.setExperienceFriendlyScore((short) 5);
+        merchant.setSocialContributionScore((short) 5);
+        merchant.setWeight(0);
+        merchant.setOnline(true);
+        UUID merchantId = merchantRepository.save(merchant).getId();
+
+        Banner banner = new Banner();
+        banner.setName("banner-" + UUID.randomUUID());
+        banner.setPositionCode("HOME");
+        banner.setType(BannerType.CITY);
+        banner.setImageUrls(new ArrayList<>(List.of("bound/b.png")));
+        banner.setLinkedEntityId(created.id());
+        banner.setSortOrder(0);
+        banner.setOnline(true);
+        UUID bannerId = bannerRepository.save(banner).getId();
+
+        cityService.delete(created.id());
+
+        // 事件监听器在事务提交后同步执行：两者均只下架、记录仍在，商户 cityId 不清空
+        Merchant offlinedMerchant = merchantRepository.findById(merchantId).orElseThrow();
+        assertThat(offlinedMerchant.isOnline()).isFalse();
+        assertThat(offlinedMerchant.getCityId()).isEqualTo(created.id());
+        assertThat(bannerRepository.findById(bannerId).orElseThrow().isOnline()).isFalse();
+    }
+
+    // @scenario: city/地图删除#删除地图
+    @Test
+    void deleteRemovesCity() {
+        CityDetailResponse created = cityService.create(createReq("城-del-" + UUID.randomUUID(), null));
 
         cityService.delete(created.id());
 

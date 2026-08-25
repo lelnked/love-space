@@ -40,8 +40,8 @@
         "x-requirement": "city/地图编辑说"
       },
       "delete": {
-        "summary": "删除城市/地图（该城市下仍有路线时返回 400 中文业务错误，拒绝删除）",
-        "x-requirement": "city/城市下存在路线时禁止删除"
+        "summary": "删除城市/地图（物理删除，无前置校验；提交后异步下架该城市的 CITY Banner 与其下全部商户，只下架不删除）",
+        "x-requirement": "city/地图删除"
       }
     },
     "/api/app/cities": {
