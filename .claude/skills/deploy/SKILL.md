@@ -27,9 +27,9 @@ $ARGUMENTS
 | | `test` | `prod` |
 |---|---|---|
 | 脚本环境变量 | `DEPLOY_ENV=test` | `DEPLOY_ENV=prod` |
-| 服务器上的环境变量文件 | `<部署根>/deploy/.env.test` | `<部署根>/deploy/.env.prod` |
+| 环境变量文件（**在服务器上**，不在打包机） | `<部署根>/deploy/.env.test` | `<部署根>/deploy/.env.prod` |
 | 前端构建命令 | `npm run build -- --mode test` | `npm run build` |
-| 前端读取的本地文件 | `love-space-web/.env.test` | `love-space-web/.env.production` |
+| 前端环境文件（**在打包机上**，构建期读取） | `love-space-web/.env.test` | `love-space-web/.env.production` |
 | 环境文档（**执行前必读**） | `docs/部署测试环境.md` | `docs/部署正式环境.md` |
 
 **SSH 登录方式、部署根目录、各端上传路径、部署脚本位置、对外访问地址，全部以环境文档为准**，
@@ -64,8 +64,10 @@ $ARGUMENTS
    ssh <SSH> "test -f <部署根>/deploy/.env.<环境>" \
      || echo "❌ 服务器缺 <部署根>/deploy/.env.<环境>"
    ```
-   缺失 → **停止部署**，提示：按仓库 `deploy/.env.example` 在本地建 `deploy/.env.<环境>` 填好值，
-   再 `scp deploy/.env.<环境> <SSH>:<部署根>/deploy/`。该文件含密钥、不在 git 里，**不要替用户编造值**。
+   缺失 → **停止部署**，提示用户在**服务器上**创建：
+   `scp deploy/.env.example <SSH>:<部署根>/deploy/` → `ssh <SSH>` → `cd <部署根>/deploy`
+   → `cp .env.example .env.<环境>` → 填值。
+   该文件含密钥、属于服务器、不在 git 里，**不要替用户编造值，也不要在打包机上生成后传上去**。
 6. **部署 web 时，本地前端环境变量文件存在**：
    ```bash
    test -f love-space-web/.env.production   # prod
@@ -94,8 +96,8 @@ scp deploy/*.sh <SSH>:<部署根>/deploy/
 ssh <SSH> "chmod +x <部署根>/deploy/*.sh"
 ```
 
-**只传 `*.sh`。** `deploy/.env.*` 含密钥、被 `.gitignore` 忽略，只在首次或配置变更时由用户单独传，
-不要跟着每次部署覆盖服务器上的那份。
+**只传 `*.sh`。** `deploy/.env.<环境>` 属于目标服务器、由服务器自己维护（含密钥），
+**不要从打包机传或覆盖它**。只有模板 `deploy/.env.example` 在 git 里，可以传。
 
 ### 分支 A：`web`（前端）
 
