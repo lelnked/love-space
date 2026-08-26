@@ -2,68 +2,49 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Repository layout
+## 开发规范手册（动手前必读）
 
-This is a multi-project workspace for the "love-space" product. Each subdirectory is an independent project with its own VCS-less tree (the outer directory is the single git repo).
+改动某一端的代码前，**先读对应手册**，里面是该端的分层、命名、接口/DTO/异常/分页/安全约定与交付清单：
 
-- `love-space-web/` — Admin dashboard **frontend** (React 19 + TypeScript + Vite 6 + Tailwind CSS v4). Bootstrapped from the TailAdmin free template.
-- `love-space-admin/` — Admin dashboard **backend** (Spring Boot 4.0.6, Java 25, Maven). Package root: `com.loves.space`. Main class: `LoveSpaceAdminApplication`.
-- `love-space-app/` — Mobile **app backend** (Spring Boot 4.0.6, Java 25, Maven). Package root: `com.space.app`. Main class: `LoveSpaceAppApplication`.
-- `需求文档.pdf` — Product requirements document (Chinese). Consult this for feature/business-rule questions.
+| 改动落在 | 必读 |
+|---|---|
+| `love-space-web/`（后台前端） | [docs/web-开发规范.md](docs/web-开发规范.md) |
+| `love-space-admin/`（后台后端） | [docs/admin-开发规范.md](docs/admin-开发规范.md) |
+| `love-space-app/`（App 后端） | [docs/app-开发规范.md](docs/app-开发规范.md) |
 
-The two backends are siblings, not modules of one parent POM. They share the same dependency stack (Spring Data JPA, Spring Security, Spring Web MVC, PostgreSQL, Lombok) but serve different clients (admin web vs. mobile app) and likely point at different schemas/services.
+一次改动跨端就把涉及的几份都读了。业务规则真源是 `openspec/specs/`，接口契约真源是 `contracts/api-spec.json`，手册只讲写法，不复制需求。
 
-## Common commands
+各端的命名、分层、样式、排序等硬约定**只写在手册里**，本文件不再复制一份。唯一在这里重复的跨端铁律：
+**运营账号统一叫 Manager**（实体 `Manager` / 表 `loves_manager` / 路径 `/api/admin/managers` / 前端 `src/pages/Managers` / 登录响应字段 `manager`），三端都不要用 `user` 命名运营账号。
 
-All commands assume you are inside the relevant subproject directory.
+## 项目组成
 
-### love-space-web
+单个 git 仓库，三个互相独立的子项目（两个后端是兄弟关系，**不是**同一个父 POM 的模块）：
 
-```bash
-npm install        # first time
-npm run dev        # Vite dev server
-npm run build      # tsc -b && vite build (type-check then bundle)
-npm run lint       # ESLint (flat config: eslint.config.js)
-npm run preview    # preview production build
-```
+| 目录 | 是什么 | 技术栈 |
+|---|---|---|
+| `love-space-web/` | 运营后台前端 | React 19 + TS + Vite 6 + Tailwind v4（TailAdmin 模板衍生） |
+| `love-space-admin/` | 运营后台后端 | Spring Boot 4.0.6 / Java 25 / Maven，包 `com.loves.space` |
+| `love-space-app/` | 移动端 App 后端 | Spring Boot 4.0.6 / Java 25 / Maven，包 `com.space.app` |
 
-Node 18+ required; 20+ recommended.
+前端只连 admin 后端，App 客户端（不在本仓库）只连 app 后端。**两个后端的 controller 不互相引用**，接口面各自独立。
 
-### love-space-admin / love-space-app
+真源与文档：
 
-Both use the Maven Wrapper.
+| 找什么 | 去哪 |
+|---|---|
+| 各端怎么写代码、怎么跑、怎么测 | `docs/{web,admin,app}-开发规范.md` |
+| 业务规则（行为真源） | `openspec/specs/` |
+| 接口契约 | `contracts/api-spec.json`（app 端另有 `love-space-app/docs/openapi.json`） |
+| 测试域注册表与用例 | `tests/modules.md`、`tests/{domain}/` |
+| 原始产品需求 | `需求文档.pdf`、`二期需求开发文档.md` |
+| 部署正式环境 | `docs/部署正式环境.md`（构建 → 上传 → 跑脚本） |
+| 部署测试环境 | `docs/部署测试环境.md`（目标 `lo_test` → 47.109.27.132） |
+| 服务器首次初始化 | `docs/部署服务器初始化.md`（PostgreSQL / nginx / SSL / OSS） |
+| 部署脚本本身 | `deploy/`（`DEPLOY_ENV=prod\|test` 选环境，差异全在 `deploy/.env.<环境>`） |
 
-```bash
-./mvnw spring-boot:run                                  # run locally
-./mvnw test                                             # run all tests
-./mvnw -Dtest=ClassName test                            # single test class
-./mvnw -Dtest=ClassName#methodName test                 # single test method
-./mvnw package                                          # build jar (target/*.jar)
-./mvnw spring-boot:build-image                          # OCI image (admin only — has it preconfigured)
-```
+## 跨端协作
 
-Java 25 toolchain is required (set in `pom.xml` `<java.version>25</java.version>`).
-PostgreSQL is the runtime DB; check `src/main/resources/application.properties` for connection config before running.
-
-Lombok is enabled with annotation processing wired into the compiler plugin — IDEs need the Lombok plugin installed.
-
-## Architecture notes
-
-- **Three-tier split.** Frontend (`web`) talks to the admin backend (`admin`); the mobile app (not in this repo) talks to the app backend (`app`). Keep API surfaces for admin vs. app distinct — do not cross-wire controllers between the two backends.
-- **Frontend is template-derived.** `love-space-web` still contains the upstream TailAdmin demo pages (Calendar, Charts, UI Elements, Forms, Tables, Auth) wired in `src/App.tsx`. Treat these as scaffolding to replace, not as product features. The structure is `pages/` (route components) + `layout/AppLayout.tsx` (sidebar+header shell) + `components/` + `context/` + `hooks/` + `icons/` (SVGR-imported).
-- **Routing.** `react-router` v7 with `BrowserRouter`. Authenticated routes are nested inside `<AppLayout />`; `/signin` and `/signup` sit outside it. A catch-all 404 falls through at the bottom of `App.tsx`.
-- **Styling.** Tailwind v4 via `@tailwindcss/postcss`. No `tailwind.config.js` — configuration lives in CSS (`src/index.css`) per Tailwind v4 conventions.
-- **Backends are skeletons.** As of writing, `com.loves.space` and `com.space.app` contain only the `@SpringBootApplication` entry class and a context-loads test. When adding code, follow standard Spring Boot layering (controller / service / repository / entity) under the respective root package.
-
-## Naming conventions
-
-- **运营账号统一称为 Manager**：admin 后端实体 `Manager`（包 `com.loves.space.modules.manager`）、表 `loves_manager`、REST 路径 `/api/admin/managers`、前端目录 `src/pages/Managers`、登录响应顶层字段 `manager`。**不要再用 `user` 命名运营账号**。`OperatingContext` 类名固定不变（不是 `OperatingManagerHolder`）。
-- **数据库表统一加 `loves_` 前缀**（例如 `loves_manager` / `loves_city` / `loves_merchant_image`）。所有 Liquibase changelog 用 formatted-SQL（`changes/*.sql`），master `db.changelog-master.yaml` 仅做 include。Liquibase 版本随 Spring Boot 4 默认，不在 `pom.xml` 中显式 pin。
-- **弹窗样式统一使用无遮罩卡片弹窗**：参考 `Managers` 页面“新增管理员”弹窗实现。`Modal` 必须传 `showBackdrop={false}`；外层加 `ring-1 ring-gray-200 dark:ring-gray-800` 边框；内容区用 `relative w-full rounded-3xl bg-white p-6 dark:bg-gray-900 lg:p-8` 卡片容器。后续所有弹窗统一这套样式，不再使用带遮罩的旧弹窗风格。
-- **app 端列表排序统一口径**：`love-space-app` 凡返回 list 的接口，只要实体带排序号字段（`sortOrder` 或 `weight`），排序一律为「排序号 + `createdAt DESC`」——`sortOrder` **升序**（第几位，小的靠前）、`weight` **降序**（权重，大的靠前），同序号时按 `createdAt` **倒序**（新的在前）。tie-break 不可省略，否则同序号顺序由 DB 返回顺序决定，App 刷新会漂。实体无排序号字段的列表不受此约束，沿用各自口径。
-
-## Working across projects
-
-- When a change touches both web and admin (e.g. a new admin API), update the Java controller/DTO first, then mirror types/clients in the React app. There is no shared schema/codegen yet.
-- The outer directory is a single git repo, so commits can legitimately span multiple subprojects. Scope commit messages with a prefix (e.g. `web:`, `admin:`, `app:`) to keep history readable.
-
+- 一个改动同时涉及 web 与 admin 时：**先改 Java 的 controller/DTO，再镜像前端类型**。没有 codegen，靠 `contracts/api-spec.json` 对齐。
+- 外层是单个 git 仓库，一次 commit 可以跨子项目；commit message 加前缀 `web:` / `admin:` / `app:`。
+- 行为有变化的改动走 OpenSpec change 流程，见 `.claude/rules/openspec-session-protocol.md`（每个会话自动注入）。
