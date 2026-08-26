@@ -32,7 +32,7 @@ $ARGUMENTS
 - 前端是静态文件，覆盖即生效，**不需要重启 nginx**。修改了 nginx 配置才需要 `nginx -t && nginx -s reload`。
 - admin 容器先启动，负责跑 Liquibase 迁移；app 后启动。`deploy-apps.sh` 已经按这个顺序处理。
 - 环境差异（DB 地址、JWT、API key、OSS、端口）统一放在服务器 `/app/loveSpace/deploy/.env.<环境>`，脚本必须带 `DEPLOY_ENV=prod` 才会执行。
-- OSS / JWT 等敏感环境变量已经在服务器 `~/.bashrc` 配置好了，**首次部署之外不要再写入**。如果用户没主动提，不要去碰 `~/.bashrc`。
+- OSS / JWT / API key 等敏感环境变量在服务器 `/app/loveSpace/deploy/.env.prod` 里，**日常发版不需要动它**。如果用户没主动提，不要去改这个文件，也不要去碰 `~/.bashrc`。
 
 ## 执行前检查
 
