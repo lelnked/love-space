@@ -11,6 +11,6 @@ import java.util.UUID;
  */
 public interface RecommendListMerchantRepository extends JpaRepository<RecommendListMerchant, UUID> {
 
-    /** 清单内关联，按排序号升序。 */
-    List<RecommendListMerchant> findAllByRecommendListIdOrderBySortOrderAsc(UUID recommendListId);
+    /** 清单内关联，按排序号升序、同序号创建时间倒序。 */
+    List<RecommendListMerchant> findAllByRecommendListIdOrderBySortOrderAscCreatedAtDesc(UUID recommendListId);
 }

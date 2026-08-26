@@ -182,24 +182,24 @@
 2. 在同一 `positionCode`（如 `APP_HOME_TOP`）下创建两个 Banner：A 的 `sortOrder=1`、B 的 `sortOrder=0`，并分别上架
 3. GET http://localhost:8081/api/app/banners?positionCode=APP_HOME_TOP，请求头 `X-API-Key: test-api-key`
 **预期结果**: 返回 200 且 body 为**数组**（非分页对象）；顺序为 B(sortOrder=0)、A(sortOrder=1)；每项字段为 `{id, name, type, image, data}`——图片字段名为 **`image`**（数组），`data` 含城市 id、中英文名称、省份；响应中**不含** `positionCode` / `online` / `sortOrder` / `link` / 时间戳字段
-**状态**: ⬜ 未测试
+**状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**:
-**最后更新**: 2026-08-21
+**执行存证**: `test-evidence/app-list-sort-tiebreak/TC-banner-IT-012/`
+**最后更新**: 2026-08-26
 
-### TC-banner-IT-013: GET /api/app/banners 排序号并列时按创建时间升序
-**关联需求**: banner/App 端 Banner 查询#按展示位查询上架 Banner
+### TC-banner-IT-013: GET /api/app/banners 排序号并列时按创建时间倒序
+**关联需求**: banner/App 端 Banner 查询#同排序号 Banner 按创建时间倒序
 **关联契约**: api-spec.json#/paths/~1api~1app~1banners/get
-**来源**: baseline-auth-manager-banner-log-file
+**来源**: app-list-sort-tiebreak
 **优先级**: P1
 **测试步骤**:
 1. admin 侧创建上架城市；在同一 `positionCode`（如 `APP_TIE_ORDER`）下**先后**创建 Banner C、Banner D，二者 `sortOrder` **同为 5**，并依次上架
 2. GET http://localhost:8081/api/app/banners?positionCode=APP_TIE_ORDER，请求头 `X-API-Key: test-api-key`
-**预期结果**: 返回 200 数组；排序号并列时按创建时间升序，即先创建的 C 排在 D 之前
-**状态**: ⬜ 未测试
+**预期结果**: 返回 200 数组；排序号并列时按创建时间**倒序**，即后创建的 D 排在 C 之前
+**状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**:
-**最后更新**: 2026-08-21
+**执行存证**: `test-evidence/app-list-sort-tiebreak/TC-banner-IT-013/`
+**最后更新**: 2026-08-26
 
 ### TC-banner-IT-014: GET /api/app/banners 下架 Banner 不下发
 **关联需求**: banner/App 端 Banner 查询#下架 Banner 不下发
@@ -210,10 +210,10 @@
 1. admin 侧创建上架城市与关联 Banner（`positionCode=APP_OFFLINE_CASE`），**保持下架**（创建后默认 `online=false`）
 2. GET http://localhost:8081/api/app/banners?positionCode=APP_OFFLINE_CASE，请求头 `X-API-Key: test-api-key`
 **预期结果**: 返回 200；结果数组中**不含**该 Banner（可为空数组）
-**状态**: ⬜ 未测试
+**状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**:
-**最后更新**: 2026-08-21
+**执行存证**: `test-evidence/app-list-sort-tiebreak/TC-banner-IT-014/`
+**最后更新**: 2026-08-26
 
 ### TC-banner-IT-015: GET /api/app/banners 关联城市下架时条目被剔除
 **关联需求**: banner/App 端 Banner 查询#关联城市下架时条目被剔除
@@ -225,10 +225,10 @@
 2. 直接在数据库/或通过城市下架后确认 Banner 仍为 `online=true` 的时间窗内（级联异步），构造「Banner `online=true` 但关联城市已下架」的状态：将城市下架后**立即**执行下一步
 3. GET http://localhost:8081/api/app/banners?positionCode=APP_CITY_OFF，请求头 `X-API-Key: test-api-key`
 **预期结果**: 返回 200；结果数组中**不含**该 Banner——即便 Banner 自身 `online` 尚未被异步级联改写，app 端查询也会按关联城市状态整条剔除（第三重防线）
-**状态**: ⬜ 未测试
+**状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**:
-**最后更新**: 2026-08-21
+**执行存证**: `test-evidence/app-list-sort-tiebreak/TC-banner-IT-015/`
+**最后更新**: 2026-08-26
 
 ### TC-banner-IT-016: GET /api/app/banners 缺少 API-key 返回 401
 **关联需求**: banner/App 端 Banner 查询#缺少 API-key 返回 401
@@ -239,10 +239,10 @@
 1. GET http://localhost:8081/api/app/banners?positionCode=APP_HOME_TOP，**不携带** `X-API-Key` 请求头
 2. GET 同一地址，携带错误的 `X-API-Key: wrong-key`
 **预期结果**: 两次均返回 401，且两种情况响应不作区分（不泄漏 key 是否存在）
-**状态**: ⬜ 未测试
+**状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**:
-**最后更新**: 2026-08-21
+**执行存证**: `test-evidence/app-list-sort-tiebreak/TC-banner-IT-016/`
+**最后更新**: 2026-08-26
 
 ### TC-banner-IT-017: DELETE /api/admin/banners/{id} 物理删除 Banner
 **关联需求**: banner/Banner 管理#创建后默认下架

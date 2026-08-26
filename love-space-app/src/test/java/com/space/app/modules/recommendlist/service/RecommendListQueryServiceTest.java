@@ -16,8 +16,10 @@ import com.space.app.support.AbstractPostgresIntegrationTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -45,6 +47,9 @@ class RecommendListQueryServiceTest extends AbstractPostgresIntegrationTest {
 
     @Autowired
     private RecommendListMerchantRepository recommendListMerchantRepository;
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
     @MockitoBean
     private ImageUrlSigner imageUrlSigner;
@@ -107,6 +112,22 @@ class RecommendListQueryServiceTest extends AbstractPostgresIntegrationTest {
         assertThat(recommendListQueryService.listByCity(cityId))
                 .extracting(r -> r.id())
                 .containsExactly(first, second);
+    }
+
+    // @scenario: recommend-list/App 端清单与清单内商户查询#同排序号清单按创建时间倒序
+    @Test
+    void listBreaksTieByCreatedAtDesc() {
+        UUID cityId = city(true);
+        UUID early = list(cityId, 0);
+        UUID late = list(cityId, 0);
+        // 确定性地拉开 created_at，避免依赖审计时间戳的纳秒差
+        OffsetDateTime base = OffsetDateTime.now();
+        jdbcTemplate.update("update loves_recommend_list set created_at = ? where id = ?", base.minusMinutes(10), early);
+        jdbcTemplate.update("update loves_recommend_list set created_at = ? where id = ?", base.minusMinutes(1), late);
+
+        assertThat(recommendListQueryService.listByCity(cityId))
+                .extracting(r -> r.id())
+                .containsExactly(late, early);
     }
 
     // @scenario: recommend-list/App 端清单与清单内商户查询#下架城市清单不可见

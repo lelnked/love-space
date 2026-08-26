@@ -85,3 +85,46 @@
 **执行方式**: api-test-runner
 **执行存证**: `test-evidence/map-and-recommend-list/TC-merchant-IT-006/`
 **最后更新**: 2026-08-16
+
+### TC-merchant-IT-007: GET /api/app/categories/page 同排序号分类按创建时间倒序
+**关联需求**: merchant/App 端带排序号列表的排序口径#分类列表同序号按创建时间倒序
+**关联契约**: ⚠️ 待补契约（api-spec.json 中缺 `/api/app/categories/page` 条目）
+**来源**: app-list-sort-tiebreak
+**优先级**: P1
+**测试步骤**:
+1. admin 侧（http://localhost:21423）登录，**先后**创建两个分类 A、B，二者 `sortOrder` **同为 0**，并均上架
+2. GET http://localhost:8081/api/app/categories/page?page=0&size=20，请求头 `X-API-Key: test-api-key`
+**预期结果**: 返回 200 分页对象；后创建的 B 排在先创建的 A 之前（同序号按 `createdAt` 倒序）
+**状态**: ✅ 通过
+**执行方式**: api-test-runner
+**执行存证**: `test-evidence/app-list-sort-tiebreak/TC-merchant-IT-007/`
+**最后更新**: 2026-08-26
+
+### TC-merchant-IT-008: GET /api/app/categories/page 排序号优先于创建时间
+**关联需求**: merchant/App 端带排序号列表的排序口径#排序号不同时以排序号为准
+**关联契约**: ⚠️ 待补契约（api-spec.json 中缺 `/api/app/categories/page` 条目）
+**来源**: app-list-sort-tiebreak
+**优先级**: P1
+**测试步骤**:
+1. admin 侧登录，**先**创建分类 A（`sortOrder=1`），**后**创建分类 B（`sortOrder=0`），均上架
+2. GET http://localhost:8081/api/app/categories/page?page=0&size=20，请求头 `X-API-Key: test-api-key`
+**预期结果**: 返回 200；B（sortOrder=0）排在 A（sortOrder=1）之前——排序号优先，创建时间仅作同序号 tie-break
+**状态**: ✅ 通过
+**执行方式**: api-test-runner
+**执行存证**: `test-evidence/app-list-sort-tiebreak/TC-merchant-IT-008/`
+**最后更新**: 2026-08-26
+
+### TC-merchant-IT-009: GET /api/app/merchants/{merchantId}/reviews 同排序号评价按创建时间倒序
+**关联需求**: merchant/App 端带排序号列表的排序口径#商户评价同序号按创建时间倒序
+**关联契约**: ⚠️ 待补契约（api-spec.json 中缺 `/api/app/merchants/{merchantId}/reviews` 条目）
+**来源**: app-list-sort-tiebreak
+**优先级**: P1
+**测试步骤**:
+1. admin 侧登录，创建上架城市与一个上架商户 M
+2. 为 M **先后**创建两条评价 A、B，二者 `sortOrder` **同为 0**
+3. GET http://localhost:8081/api/app/merchants/{M}/reviews，请求头 `X-API-Key: test-api-key`
+**预期结果**: 返回 200 数组；后创建的 B 排在先创建的 A 之前（同序号按 `createdAt` 倒序）
+**状态**: ✅ 通过
+**执行方式**: api-test-runner
+**执行存证**: `test-evidence/app-list-sort-tiebreak/TC-merchant-IT-009/`
+**最后更新**: 2026-08-26

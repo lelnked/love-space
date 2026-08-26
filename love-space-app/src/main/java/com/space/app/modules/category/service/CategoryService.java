@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * 分类服务：App 端只读，仅暴露上架分类，按 sortOrder ASC, createdAt ASC 排序。
+ * 分类服务：App 端只读，仅暴露上架分类，按 sortOrder ASC, createdAt DESC 排序。
  */
 @Service
 @Transactional(readOnly = true)
@@ -23,10 +23,10 @@ public class CategoryService {
         this.categoryRepository = categoryRepository;
     }
 
-    /** 上架分类分页：sortOrder 升序，相同则 createdAt 升序。 */
+    /** 上架分类分页：sortOrder 升序，同序号则 createdAt 倒序（新的在前）。 */
     public Page<CategoryItemResponse> page(PageQuery pageQuery) {
         Pageable pageable = pageQuery.toPageable(
-                Sort.by(Sort.Order.asc("sortOrder"), Sort.Order.asc("createdAt")));
+                Sort.by(Sort.Order.asc("sortOrder"), Sort.Order.desc("createdAt")));
         return categoryRepository.findAllByOnlineTrue(pageable).map(this::toItem);
     }
 

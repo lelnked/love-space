@@ -88,7 +88,7 @@ Banner 上架 SHALL 要求其关联城市存在且处于上架状态：城市不
 - **THEN** 该 Banner 仍存在，且 `online` 为 false
 
 ### Requirement: App 端 Banner 查询
-app 端 SHALL 提供 `GET /api/app/banners`（API-key 认证），必填查询参数 `positionCode`（**精确匹配**），可选 `linkedEntityId`（精确匹配）。返回**数组**（非分页），按 `sortOrder` 升序、同序号按创建时间升序。
+app 端 SHALL 提供 `GET /api/app/banners`（API-key 认证），必填查询参数 `positionCode`（**精确匹配**），可选 `linkedEntityId`（精确匹配）。返回**数组**（非分页），按 `sortOrder` 升序、同序号按创建时间**倒序**（新创建的靠前）。
 
 仅 `online=true` 的 Banner 可见。条目字段为 `{id, name, type, image, data}`——图片字段名为 **`image`**（与 admin 端的 `imageUrls` 不同），且不下发 `positionCode` / `online` / `sortOrder` / `link` / 时间戳。`data` 按类型装配关联实体信息，CITY 类型含城市 id 与中英文名称、省份。
 
@@ -100,6 +100,11 @@ app 端 SHALL 提供 `GET /api/app/banners`（API-key 认证），必填查询�
 - **GIVEN** 某展示位下有两个已上架 Banner，排序号分别为 1 与 0
 - **WHEN** app 端以该 `positionCode` 查询
 - **THEN** 返回 200 数组，按排序号 0、1 的顺序返回，每项含 `image` 数组与 `data`
+
+#### Scenario: 同排序号 Banner 按创建时间倒序
+- **GIVEN** 某展示位下两个已上架 Banner A、B 的排序号均为 0，B 的创建时间晚于 A
+- **WHEN** app 端以该 `positionCode` 查询
+- **THEN** 返回 200 数组，B 排在 A 之前
 
 #### Scenario: 下架 Banner 不下发
 - **GIVEN** 某展示位下有一个已下架 Banner

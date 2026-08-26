@@ -20,7 +20,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * App 端 {@link CategoryController} 读 IT：
  * <ul>
  *   <li>仅返回上架分类；</li>
- *   <li>排序 sortOrder ASC，相同 sortOrder 时 createdAt ASC。</li>
+ *   <li>排序 sortOrder ASC，同 sortOrder 时 createdAt DESC（新的在前）。</li>
  * </ul>
  */
 @AutoConfigureMockMvc
@@ -48,6 +48,7 @@ class CategoryReadIT extends AbstractPostgresIntegrationTest {
         return categoryRepository.save(c);
     }
 
+    // @scenario: merchant/App 端带排序号列表的排序口径#排序号不同时以排序号为准
     @Test
     void pageReturnsOnlyOnlineSortedBySortOrderAsc() throws Exception {
         save("下架分类", 0, false);
@@ -64,8 +65,9 @@ class CategoryReadIT extends AbstractPostgresIntegrationTest {
                 .andExpect(jsonPath("$.content[1].name").value("排序20"));
     }
 
+    // @scenario: merchant/App 端带排序号列表的排序口径#分类列表同序号按创建时间倒序
     @Test
-    void pageBreaksTieByCreatedAtAsc() throws Exception {
+    void pageBreaksTieByCreatedAtDesc() throws Exception {
         Category early = save("先创建", 0, true);
         Category late = save("后创建", 0, true);
         // 用 JdbcTemplate 确定性地拉开 created_at，避免依赖审计时间戳的纳秒差
@@ -77,7 +79,7 @@ class CategoryReadIT extends AbstractPostgresIntegrationTest {
 
         mockMvc.perform(get("/api/app/categories/page").header("X-API-Key", TEST_API_KEY))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content[0].name").value("先创建"))
-                .andExpect(jsonPath("$.content[1].name").value("后创建"));
+                .andExpect(jsonPath("$.content[0].name").value("后创建"))
+                .andExpect(jsonPath("$.content[1].name").value("先创建"));
     }
 }

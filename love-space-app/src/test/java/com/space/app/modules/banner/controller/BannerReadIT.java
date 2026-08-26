@@ -11,9 +11,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -38,6 +40,9 @@ class BannerReadIT extends AbstractPostgresIntegrationTest {
 
     @Autowired
     private BannerRepository bannerRepository;
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
     @MockitoBean
     private ImageUrlSigner imageUrlSigner;
@@ -104,7 +109,34 @@ class BannerReadIT extends AbstractPostgresIntegrationTest {
                 .andExpect(jsonPath("$[2].name").value("banner-sort-2"));
     }
 
-    private void saveBanner(String name, String positionCode, int sortOrder, UUID cityId) {
+    // @scenario: banner/App 端 Banner 查询#同排序号 Banner 按创建时间倒序
+    @Test
+    void listBreaksTieByCreatedAtDesc() throws Exception {
+        City city = new City();
+        city.setChineseName("北京-" + UUID.randomUUID());
+        city.setEnglishName("beijing-app-tie-it");
+        city.setChineseProvince("北京");
+        city.setEnglishProvince("beijing");
+        city.setOnline(true);
+        cityRepository.save(city);
+
+        UUID early = saveBanner("banner-tie-early", "home_tie", 5, city.getId());
+        UUID late = saveBanner("banner-tie-late", "home_tie", 5, city.getId());
+        // 确定性地拉开 created_at，避免依赖审计时间戳的纳秒差
+        OffsetDateTime base = OffsetDateTime.now();
+        jdbcTemplate.update("update loves_banner set created_at = ? where id = ?", base.minusMinutes(10), early);
+        jdbcTemplate.update("update loves_banner set created_at = ? where id = ?", base.minusMinutes(1), late);
+
+        mockMvc.perform(get("/api/app/banners")
+                        .param("positionCode", "home_tie")
+                        .header("X-API-Key", TEST_API_KEY))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].name").value("banner-tie-late"))
+                .andExpect(jsonPath("$[1].name").value("banner-tie-early"));
+    }
+
+    private UUID saveBanner(String name, String positionCode, int sortOrder, UUID cityId) {
         Banner banner = new Banner();
         banner.setName(name);
         banner.setPositionCode(positionCode);
@@ -114,5 +146,6 @@ class BannerReadIT extends AbstractPostgresIntegrationTest {
         banner.setImageUrls(List.of("bound/x.png"));
         banner.setSortOrder(sortOrder);
         bannerRepository.save(banner);
+        return banner.getId();
     }
 }

@@ -211,7 +211,7 @@
     },
     "/api/app/recommend-lists": {
       "get": {
-        "summary": "App 按城市查询清单列表（仅上架城市，sortOrder 升序）",
+        "summary": "App 按城市查询清单列表（仅上架城市，sortOrder 升序、同序号 createdAt 倒序）",
         "parameters": [
           {
             "name": "cityId",
@@ -228,7 +228,7 @@
     },
     "/api/app/recommend-lists/{id}": {
       "get": {
-        "summary": "App 清单详情含商户（按清单保存顺序；商户项仅 id/name/address/logo；所属城市下架 → 404）",
+        "summary": "App 清单详情含商户（按清单保存顺序，同序号 createdAt 倒序；商户项仅 id/name/address/logo；所属城市下架 → 404）",
         "x-requirement": "recommend-list/App 端清单与清单内商户查询"
       }
     },
@@ -399,7 +399,7 @@
     },
     "/api/app/routes": {
       "get": {
-        "summary": "App 查询路线列表（cityName / ambassadorId 均可选；仅大使上线即可见，城市上架与否不影响，sortOrder 升序）",
+        "summary": "App 查询路线列表（cityName / ambassadorId 均可选；仅大使上线即可见，城市上架与否不影响，sortOrder 升序、同序号 createdAt 倒序）",
         "parameters": [
           {
             "name": "cityName",
@@ -1037,7 +1037,7 @@
     },
     "/api/app/banners": {
       "get": {
-        "summary": "App 按展示位查上架 Banner（数组，sortOrder 升序）；关联城市不可见时整条剔除",
+        "summary": "App 按展示位查上架 Banner（数组，sortOrder 升序、同序号 createdAt 倒序）；关联城市不可见时整条剔除",
         "parameters": [
           {
             "name": "positionCode",

@@ -16,8 +16,10 @@ import com.space.app.support.AbstractPostgresIntegrationTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -43,6 +45,9 @@ class RouteQueryServiceTest extends AbstractPostgresIntegrationTest {
 
     @Autowired
     private RouteRepository routeRepository;
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
     @MockitoBean
     private ImageUrlSigner imageUrlSigner;
@@ -96,6 +101,23 @@ class RouteQueryServiceTest extends AbstractPostgresIntegrationTest {
         assertThat(routeQueryService.list(cityName, null))
                 .extracting(r -> r.city().name())
                 .containsExactly(cityName, cityName);
+    }
+
+    // @scenario: route/App 端路线查询#同排序号路线按创建时间倒序
+    @Test
+    void listBreaksTieByCreatedAtDesc() {
+        String cityName = city(true);
+        UUID ambassadorId = ambassador(true);
+        UUID early = route(cityName, ambassadorId, 0, List.of());
+        UUID late = route(cityName, ambassadorId, 0, List.of());
+        // 确定性地拉开 created_at，避免依赖审计时间戳的纳秒差
+        OffsetDateTime base = OffsetDateTime.now();
+        jdbcTemplate.update("update loves_route set created_at = ? where id = ?", base.minusMinutes(10), early);
+        jdbcTemplate.update("update loves_route set created_at = ? where id = ?", base.minusMinutes(1), late);
+
+        assertThat(routeQueryService.list(cityName, null))
+                .extracting(RouteItemResponse::id)
+                .containsExactly(late, early);
     }
 
     // @scenario: route/App 端路线查询#大使下线后路线隐藏

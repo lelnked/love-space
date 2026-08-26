@@ -12,10 +12,12 @@ import com.space.app.support.AbstractPostgresIntegrationTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -43,6 +45,9 @@ class MerchantReadIT extends AbstractPostgresIntegrationTest {
 
     @Autowired
     private RecommendListMerchantRepository recommendListMerchantRepository;
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
     @MockitoBean
     private ImageUrlSigner imageUrlSigner;
@@ -130,6 +135,24 @@ class MerchantReadIT extends AbstractPostgresIntegrationTest {
                 .andExpect(jsonPath("$.content[1].id").value(merchantId.toString()))
                 .andExpect(jsonPath("$.content[2].id").value(light.toString()))
                 .andExpect(jsonPath("$.content[*].recommendSortOrder").doesNotExist());
+    }
+
+    // @scenario: merchant/App 端带排序号列表的排序口径#weight 型排序号维持降序且已符合口径
+    @Test
+    void listBreaksWeightTieByCreatedAtDesc() throws Exception {
+        UUID early = merchant("同权重-先创建", 50);
+        UUID late = merchant("同权重-后创建", 50);
+        // 确定性地拉开 created_at，避免依赖审计时间戳的纳秒差
+        OffsetDateTime base = OffsetDateTime.now();
+        jdbcTemplate.update("update loves_merchant set created_at = ? where id = ?", base.minusMinutes(10), early);
+        jdbcTemplate.update("update loves_merchant set created_at = ? where id = ?", base.minusMinutes(1), late);
+
+        mockMvc.perform(get("/api/app/merchants/page")
+                        .param("cityId", cityId.toString())
+                        .header("X-API-Key", TEST_API_KEY))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].id").value(late.toString()))
+                .andExpect(jsonPath("$.content[1].id").value(early.toString()));
     }
 
     private UUID merchant(String name, int weight) {

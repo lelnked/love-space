@@ -176,8 +176,8 @@
 **预期结果**: 返回 200，含该城市全部可见路线，按 sortOrder 1→3→5 升序，每项含缩略图（签名 URL）、主标题与大使名称
 **状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**: `test-evidence/app-route-query-filters/TC-route-IT-012/`
-**最后更新**: 2026-08-24
+**执行存证**: `test-evidence/app-list-sort-tiebreak/TC-route-IT-012/`
+**最后更新**: 2026-08-26
 
 ### TC-route-IT-013: GET /api/app/routes 大使下线后路线隐藏、详情 404
 **关联需求**: route/App 端路线查询#大使下线后路线隐藏
@@ -277,10 +277,10 @@
 1. 前置：admin 侧创建一条路线，cityName 填「不存在城」（城市表中无同名城市），关联大使 online=true
 2. GET http://localhost:8081/api/app/routes?cityName=不存在城（请求头带 X-API-Key）
 **预期结果**: 返回 200，body 含该路线，其 `city` 为 `null`
-**状态**: ⏳ 待执行
+**状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**: `test-evidence/app-route-query-filters/TC-route-IT-019/`
-**最后更新**: 2026-08-24
+**执行存证**: `test-evidence/app-list-sort-tiebreak/TC-route-IT-019/`
+**最后更新**: 2026-08-26
 
 ### TC-route-IT-020: GET /api/app/ambassadors 默认返回权重最高的 3 位上线大使
 **关联需求**: route/爱女大使管理
@@ -341,3 +341,18 @@
 **执行方式**: AmbassadorServiceTest#weightIsPersistedAndDefaultsToZero
 **执行存证**: `love-space-admin/target/surefire-reports/com.loves.space.modules.ambassador.service.AmbassadorServiceTest.txt`
 **最后更新**: 2026-08-24
+
+### TC-route-IT-024: GET /api/app/routes 同排序号路线按创建时间倒序
+**关联需求**: route/App 端路线查询#同排序号路线按创建时间倒序
+**关联契约**: api-spec.json#/paths/~1api~1app~1routes/get
+**来源**: app-list-sort-tiebreak
+**优先级**: P1
+**测试步骤**:
+1. admin 侧（http://localhost:21423）登录，创建一个上线大使 amb
+2. 以同一 `cityName`（如 `排序测试城`）**先后**创建两条路线 A、B，二者 `sortOrder` **同为 0**，均关联 amb
+3. GET http://localhost:8081/api/app/routes?cityName=排序测试城，请求头 `X-API-Key: test-api-key`
+**预期结果**: 返回 200 数组；后创建的 B 排在先创建的 A 之前（同序号按 `createdAt` 倒序）
+**状态**: ✅ 通过
+**执行方式**: api-test-runner
+**执行存证**: `test-evidence/app-list-sort-tiebreak/TC-route-IT-024/`
+**最后更新**: 2026-08-26

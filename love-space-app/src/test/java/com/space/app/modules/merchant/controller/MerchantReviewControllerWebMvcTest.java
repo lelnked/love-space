@@ -11,8 +11,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -21,7 +23,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 /**
  * {@link MerchantReviewController} 集成测试：MockMvc + Testcontainers Postgres。
- * 覆盖 recommended 过滤、sortOrder 升序、emoji 透传、商户下架/不存在返回空列表。
+ * 覆盖 recommended 过滤、sortOrder 升序（同序号 createdAt 倒序）、emoji 透传、商户下架/不存在返回空列表。
  */
 @AutoConfigureMockMvc
 class MerchantReviewControllerWebMvcTest extends AbstractPostgresIntegrationTest {
@@ -34,6 +36,8 @@ class MerchantReviewControllerWebMvcTest extends AbstractPostgresIntegrationTest
     private MerchantRepository merchantRepository;
     @Autowired
     private MerchantReviewRepository merchantReviewRepository;
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
     private UUID merchantId;
 
@@ -71,7 +75,7 @@ class MerchantReviewControllerWebMvcTest extends AbstractPostgresIntegrationTest
         saveReview("小刚", "标题3", "推荐👍", 3, true);
     }
 
-    private void saveReview(String nickname, String title, String content, int sortOrder, boolean recommended) {
+    private UUID saveReview(String nickname, String title, String content, int sortOrder, boolean recommended) {
         MerchantReview review = new MerchantReview();
         review.setMerchantId(merchantId);
         review.setNickname(nickname);
@@ -80,6 +84,7 @@ class MerchantReviewControllerWebMvcTest extends AbstractPostgresIntegrationTest
         review.setSortOrder(sortOrder);
         review.setRecommended(recommended);
         merchantReviewRepository.save(review);
+        return review.getId();
     }
 
     @Test
@@ -92,6 +97,27 @@ class MerchantReviewControllerWebMvcTest extends AbstractPostgresIntegrationTest
                 .andExpect(jsonPath("$[1].content").value("好评😍"))    // sortOrder 2, emoji
                 .andExpect(jsonPath("$[1].nickname").value("小红"))
                 .andExpect(jsonPath("$[2].content").value("推荐👍"));   // sortOrder 3, emoji
+    }
+
+    // @scenario: merchant/App 端带排序号列表的排序口径#商户评价同序号按创建时间倒序
+    @Test
+    void list_breaks_tie_by_created_at_desc() throws Exception {
+        merchantReviewRepository.deleteAll();
+        UUID early = saveReview("先创建", "标题E", "先创建的评价", 0, true);
+        UUID late = saveReview("后创建", "标题L", "后创建的评价", 0, true);
+        // 确定性地拉开 created_at，避免依赖审计时间戳的纳秒差
+        OffsetDateTime base = OffsetDateTime.now();
+        jdbcTemplate.update("update loves_merchant_review set created_at = ? where id = ?",
+                base.minusMinutes(10), early);
+        jdbcTemplate.update("update loves_merchant_review set created_at = ? where id = ?",
+                base.minusMinutes(1), late);
+
+        mockMvc.perform(get("/api/app/merchants/{merchantId}/reviews", merchantId)
+                        .header("X-API-Key", TEST_API_KEY))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].nickname").value("后创建"))
+                .andExpect(jsonPath("$[1].nickname").value("先创建"));
     }
 
     @Test

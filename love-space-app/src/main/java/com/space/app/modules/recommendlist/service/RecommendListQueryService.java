@@ -54,7 +54,7 @@ public class RecommendListQueryService {
         if (cityRepository.findByIdAndOnlineTrue(cityId).isEmpty()) {
             return List.of();
         }
-        return recommendListRepository.findByCityIdAndStatusOrderBySortOrderAsc(cityId, "ONLINE").stream()
+        return recommendListRepository.findByCityIdAndStatusOrderBySortOrderAscCreatedAtDesc(cityId, "ONLINE").stream()
                 .map(list -> new RecommendListItemResponse(
                         list.getId(), list.getTitle(), list.getIntroduction(),
                         list.getCityId(), list.getSortOrder()))
@@ -70,7 +70,7 @@ public class RecommendListQueryService {
         }
 
         List<RecommendListMerchant> relations =
-                recommendListMerchantRepository.findAllByRecommendListIdOrderBySortOrderAsc(id);
+                recommendListMerchantRepository.findAllByRecommendListIdOrderBySortOrderAscCreatedAtDesc(id);
         Map<UUID, Merchant> onlineMerchants = relations.isEmpty() ? Map.of()
                 : merchantRepository.findAllById(
                         relations.stream().map(RecommendListMerchant::getMerchantId).toList()).stream()

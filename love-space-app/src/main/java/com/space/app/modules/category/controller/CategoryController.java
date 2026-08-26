@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * 分类只读 API。
- * <p>HTTP 语义：GET /api/app/categories/page → 200 返回上架分类分页，按 sortOrder ASC, createdAt ASC 排序。
+ * <p>HTTP 语义：GET /api/app/categories/page → 200 返回上架分类分页，按 sortOrder ASC, createdAt DESC 排序。
  */
 @RestController
 @RequestMapping("/api/app/categories")
@@ -23,7 +23,7 @@ public class CategoryController {
         this.categoryService = categoryService;
     }
 
-    /** 上架商户分类分页查询：sortOrder ASC, createdAt ASC。 */
+    /** 上架商户分类分页查询：sortOrder ASC, createdAt DESC。 */
     @GetMapping("/page")
     public PageResponse<CategoryItemResponse> page(
             @RequestParam(value = "page", required = false) Integer page,

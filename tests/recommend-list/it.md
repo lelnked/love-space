@@ -164,8 +164,8 @@
 **预期结果**: 返回 200，包含该城市全部清单，按 sortOrder 1→3→5 升序排列
 **状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**: `test-evidence/app-recommend-list-owns-merchant-order/TC-recommend-list-IT-011/`
-**最后更新**: 2026-08-25
+**执行存证**: `test-evidence/app-list-sort-tiebreak/TC-recommend-list-IT-011/`
+**最后更新**: 2026-08-26
 
 ### TC-recommend-list-IT-012: GET /api/app/recommend-lists/{id} 详情按清单保存顺序返回上架商户四字段
 **关联需求**: recommend-list/App 端清单与清单内商户查询#清单详情返回商户明细
@@ -178,8 +178,8 @@
 **预期结果**: 返回 200；含清单字段（title、introduction、sortOrder）与 `merchants` 数组；`merchants` 顺序为 甲→乙（清单保存顺序，与 weight 无关），丙不出现；每项仅含 `id`、`name`、`address`、`logo` 四个字段，不含 `recommendReason`、`sortOrder`、`merchantId`、`recommendSortOrder`
 **状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**: `test-evidence/app-recommend-list-owns-merchant-order/TC-recommend-list-IT-012/`
-**最后更新**: 2026-08-25
+**执行存证**: `test-evidence/app-list-sort-tiebreak/TC-recommend-list-IT-012/`
+**最后更新**: 2026-08-26
 
 ### TC-recommend-list-IT-013: GET /api/app/recommend-lists 下架城市清单不可见、详情 404
 **关联需求**: recommend-list/App 端清单与清单内商户查询#下架城市清单不可见
@@ -208,8 +208,8 @@
 **预期结果**: 两次均返回 200，totalElements=3，`content` 顺序均按 weight 降序（与清单内顺序无关，`recommendListId` 被忽略）；`content[*]` 不含 `recommendSortOrder` 字段
 **状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**: `test-evidence/app-recommend-list-owns-merchant-order/TC-recommend-list-IT-015/`
-**最后更新**: 2026-08-25
+**执行存证**: `test-evidence/app-list-sort-tiebreak/TC-recommend-list-IT-015/`
+**最后更新**: 2026-08-26
 
 ### TC-recommend-list-IT-016: PUT /api/admin/recommend-lists/{id} merchantIds 含已下架商户被拒绝
 **关联需求**: recommend-list/清单内商户维护#拒绝已下架商户
@@ -261,3 +261,18 @@
 **执行方式**: api-test-runner
 **执行存证**: `test-evidence/recommend-list-align-spec-to-merchant-ids/TC-recommend-list-IT-018/`
 **最后更新**: 2026-08-25
+
+### TC-recommend-list-IT-019: GET /api/app/recommend-lists 同排序号清单按创建时间倒序
+**关联需求**: recommend-list/App 端清单与清单内商户查询#同排序号清单按创建时间倒序
+**关联契约**: api-spec.json#/paths/~1api~1app~1recommend-lists/get
+**来源**: app-list-sort-tiebreak
+**优先级**: P1
+**测试步骤**:
+1. admin 侧（http://localhost:21423）登录，创建上架城市 cityId
+2. 在该城市下**先后**创建两个 ONLINE 清单 A、B，二者 `sortOrder` **同为 0**
+3. GET http://localhost:8081/api/app/recommend-lists?cityId={cityId}，请求头 `X-API-Key: test-api-key`
+**预期结果**: 返回 200；后创建的 B 排在先创建的 A 之前（同序号按 `createdAt` 倒序）
+**状态**: ✅ 通过
+**执行方式**: api-test-runner
+**执行存证**: `test-evidence/app-list-sort-tiebreak/TC-recommend-list-IT-019/`
+**最后更新**: 2026-08-26
