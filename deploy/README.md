@@ -24,9 +24,9 @@ cd love-space-app   && ./mvnw package -DskipTests && cd ..
 
 # 3. 部署（版本入参必填，作为 admin/app 镜像 tag）
 cd deploy
-./deploy-all.sh 1.2.0
+DEPLOY_ENV=prod ./deploy-all.sh 1.2.0
 # 仅重建/更新 admin、app（postgres 不动）：
-./deploy-apps.sh 1.2.0
+DEPLOY_ENV=prod ./deploy-apps.sh 1.2.0
 ```
 
 > 版本入参会生成镜像 `love-space-admin:<版本>`、`love-space-app:<版本>`，缺省则脚本报错退出。

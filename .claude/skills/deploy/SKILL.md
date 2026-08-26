@@ -31,6 +31,7 @@ $ARGUMENTS
 - admin 监听 8080，app 监听 8081，都用 host 网络模式；数据库走 `172.16.16.12:8954/love_space`。
 - 前端是静态文件，覆盖即生效，**不需要重启 nginx**。修改了 nginx 配置才需要 `nginx -t && nginx -s reload`。
 - admin 容器先启动，负责跑 Liquibase 迁移；app 后启动。`deploy-apps.sh` 已经按这个顺序处理。
+- 环境差异（DB 地址、JWT、API key、OSS、端口）统一放在服务器 `/app/loveSpace/deploy/.env.<环境>`，脚本必须带 `DEPLOY_ENV=prod` 才会执行。
 - OSS / JWT 等敏感环境变量已经在服务器 `~/.bashrc` 配置好了，**首次部署之外不要再写入**。如果用户没主动提，不要去碰 `~/.bashrc`。
 
 ## 执行前检查
@@ -56,7 +57,9 @@ $ARGUMENTS
 
 ```bash
 ssh root@119.29.108.66 "mkdir -p /app/loveSpace/deploy"
-scp deploy/* root@119.29.108.66:/app/loveSpace/deploy/
+scp deploy/*.sh root@119.29.108.66:/app/loveSpace/deploy/
+# 注意：deploy/.env.prod 含敏感值且被 .gitignore，只在首次或配置有变时单独传，不要跟着每次部署覆盖
+# scp deploy/.env.prod root@119.29.108.66:/app/loveSpace/deploy/
 ssh root@119.29.108.66 "chmod +x /app/loveSpace/deploy/*.sh"
 ```
 
@@ -88,7 +91,7 @@ ssh root@119.29.108.66 "mkdir -p /app/loveSpace/admin"
 scp target/love-space-admin-*.jar root@119.29.108.66:/app/loveSpace/admin/
 scp Dockerfile root@119.29.108.66:/app/loveSpace/admin/
 # 在服务器上调度构建+重启（脚本会同时处理 admin 和 app；只更 admin 时也会重建 app，可接受）
-ssh root@119.29.108.66 "cd /app/loveSpace/deploy && bash deploy-apps.sh <版本号>"
+ssh root@119.29.108.66 "cd /app/loveSpace/deploy && DEPLOY_ENV=prod bash deploy-apps.sh <版本号>"
 ```
 
 > 注意：现有 `deploy-apps.sh` 是 admin+app 一起重建。如果用户只要更 admin、不希望 app 跟着重启，必须先告诉用户这个副作用并让其确认。
@@ -102,7 +105,7 @@ ls -1t target/love-space-app-*.jar | head -1
 ssh root@119.29.108.66 "mkdir -p /app/loveSpace/app"
 scp target/love-space-app-*.jar root@119.29.108.66:/app/loveSpace/app/
 scp Dockerfile root@119.29.108.66:/app/loveSpace/app/
-ssh root@119.29.108.66 "cd /app/loveSpace/deploy && bash deploy-apps.sh <版本号>"
+ssh root@119.29.108.66 "cd /app/loveSpace/deploy && DEPLOY_ENV=prod bash deploy-apps.sh <版本号>"
 ```
 
 同样的副作用提示见分支 B。
@@ -114,7 +117,7 @@ ssh root@119.29.108.66 "cd /app/loveSpace/deploy && bash deploy-apps.sh <版本�
 1. 走分支 A（前端）。
 2. 本地分别 `cd love-space-admin && ./mvnw clean package -DskipTests` 和 `cd love-space-app && ./mvnw clean package -DskipTests`。两端 jar 都打完再传，避免传一半失败。
 3. 上传两端 jar + Dockerfile 到 `/app/loveSpace/{admin,app}/`。
-4. 服务器一次性执行 `bash deploy-apps.sh <版本号>`，由它顺序构建并重启 admin、app。
+4. 服务器一次性执行 `DEPLOY_ENV=prod bash deploy-apps.sh <版本号>`，由它顺序构建并重启 admin、app。
 
 ## 部署后验证
 
@@ -159,7 +162,7 @@ ssh root@119.29.108.66 "curl -fsSI https://tripleyourlife.com/ | head -1"
 
 ## 参考
 
-- `部署步骤.md`：原始流程文档，权威依据。
+- `docs/部署正式环境.md`：生产部署流程，权威依据（测试环境见 `docs/部署测试环境.md`）。
 - `deploy/deploy-apps.sh`：服务器端构建+重启脚本，所有镜像名/容器名/端口/JVM 参数以它为准。
-- `DEPLOY.md`：PostgreSQL 初始化与 OSS 配置，本 skill 不覆盖。
+- `docs/部署服务器初始化.md`：PostgreSQL 初始化与 OSS 配置，本 skill 不覆盖。
 - `CLAUDE.md`：项目结构与命名约定（运营账号叫 Manager，表前缀 `loves_`）。

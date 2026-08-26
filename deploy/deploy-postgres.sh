@@ -1,20 +1,26 @@
 #!/usr/bin/env bash
+# 用法：DEPLOY_ENV=<prod|test> ./deploy-postgres.sh
 # 用 docker 部署共用的 PostgreSQL（admin 与 app 共享同一个库 love_space）。
 # 数据绑定挂载到宿主机目录，删容器不丢数据；带 healthcheck，方便 admin/app 启动前等待就绪。
 
 set -euo pipefail
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# ===== 配置（按需修改）=====
-RESTART_POLICY=unless-stopped              # 随 docker 守护进程开机自启
-PG_MEM_LIMIT=750m                          # 容器内存上限，不超过 750m
-PG_IMAGE=postgres:17
-PG_CONTAINER=love-space-postgres
-PG_DB=love_space
-PG_USER=love_space
-PG_PASSWORD=love_space
-PG_BASE_DIR=/app/loveSpace/pgdata          # postgres 挂载根目录（绑定挂载，不存在则自动创建）
-PG_DATA_DIR="$PG_BASE_DIR/data"            # 数据目录 -> 容器 /var/lib/postgresql/data
-PG_LOG_DIR="$PG_BASE_DIR/logs"             # 日志目录 -> 容器 /var/log/postgresql
+# 加载 .env.<DEPLOY_ENV>；未在其中配置的项走下面的默认值。
+. "$SCRIPT_DIR/load-env.sh"
+
+# ===== 配置（默认值，可被 .env.<环境> 覆盖）=====
+RESTART_POLICY="${RESTART_POLICY:-unless-stopped}"     # 随 docker 守护进程开机自启
+PG_MEM_LIMIT="${PG_MEM_LIMIT:-750m}"                   # 容器内存上限
+PG_IMAGE="${PG_IMAGE:-postgres:17}"
+PG_CONTAINER="${PG_CONTAINER:-love-space-postgres}"
+PG_DB="${PG_DB:-love_space}"
+PG_USER="${PG_USER:-love_space}"
+PG_PASSWORD="${PG_PASSWORD:-love_space}"
+PG_HOST_PORT="${PG_HOST_PORT:-8954}"                   # 宿主机映射端口
+PG_BASE_DIR="${PG_BASE_DIR:-/app/loveSpace/pgdata}"    # 挂载根目录（绑定挂载，不存在则自动创建）
+PG_DATA_DIR="$PG_BASE_DIR/data"                        # 数据目录 -> 容器 /var/lib/postgresql/data
+PG_LOG_DIR="$PG_BASE_DIR/logs"                         # 日志目录 -> 容器 /var/log/postgresql
 
 # 用 host 网络模式：容器直接复用宿主机网络栈，postgres 监听宿主机 5432，
 # admin/app 通过 localhost:5432 连库，无需自建 docker 网络或端口映射。
@@ -34,7 +40,7 @@ echo "[postgres] 启动容器 $PG_CONTAINER（镜像 $PG_IMAGE，host 网络，�
 echo "[postgres]   数据目录 $PG_DATA_DIR  日志目录 $PG_LOG_DIR"
 docker run -d \
   --name "$PG_CONTAINER" \
-  -p 8954:5432 \
+  -p "${PG_HOST_PORT}:5432" \
   --restart "$RESTART_POLICY" \
   --memory "$PG_MEM_LIMIT" \
   -e POSTGRES_DB="$PG_DB" \

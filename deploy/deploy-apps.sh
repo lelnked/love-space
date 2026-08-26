@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # 构建并部署 admin 与 app 两个后端。
 #
-# 用法：./deploy-apps.sh <版本>
+# 用法：DEPLOY_ENV=<prod|test> ./deploy-apps.sh <版本>
+#   DEPLOY_ENV 决定读哪份 .env.<环境>（测试/生产只在那里有差异）。
 #   <版本>  必填，作为镜像 tag，例如 1.2.0 / 20260531 / git-sha。
 #           最终镜像为 ${ADMIN_IMAGE_NAME}:<版本> 与 ${APP_IMAGE_NAME}:<版本>。
 #
@@ -12,47 +13,53 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"   # docker build 上下文的父目录
 
+# 加载 .env.<DEPLOY_ENV>：测试/生产的差异全在那里，本脚本只留默认值。
+. "$SCRIPT_DIR/load-env.sh"
+
 # ===== 通用配置 =====
-RESTART_POLICY=unless-stopped        # 随 docker 守护进程开机自启
-LOG_BASE_DIR=/app/loveSpace/logs     # admin/app 日志分别挂到 $LOG_BASE_DIR/{admin,app}（不存在自动创建）
-JVM_MAX_HEAP=1000m                   # 每个后端 JVM 最大堆（-Xmx），最大不超过 1000m
+RESTART_POLICY="${RESTART_POLICY:-unless-stopped}"   # 随 docker 守护进程开机自启
+LOG_BASE_DIR="${LOG_BASE_DIR:-/app/loveSpace/logs}"  # admin/app 日志分别挂到 $LOG_BASE_DIR/{admin,app}
+JVM_MAX_HEAP="${JVM_MAX_HEAP:-1000m}"                # 每个后端 JVM 最大堆（-Xmx）
 
-# 用 host 网络模式：容器复用宿主机网络栈，端口即应用自身监听端口
-# （admin 8080 / app 8081），无需自建网络或端口映射。
-# DB 连接走固定地址 172.26.150.96:8954（见下方 *_DB_URL）。
+# 用 host 网络模式：容器复用宿主机网络栈，端口即应用自身监听端口。
 
-# ===== PostgreSQL 连接（与 deploy-postgres.sh 保持一致）=====
-PG_DB=love_space
-PG_USER=love_space
-PG_PASSWORD=love_space
+# ===== PostgreSQL 连接（与 deploy-postgres.sh 共用同一份 .env）=====
+PG_DB="${PG_DB:-love_space}"
+PG_USER="${PG_USER:-love_space}"
+PG_PASSWORD="${PG_PASSWORD:-love_space}"
+DB_HOST="${DB_HOST:-172.26.150.96}"
+DB_PORT="${DB_PORT:-8954}"
 
 # ===== admin 后端环境变量 =====
-ADMIN_IMAGE_NAME=love-space-admin
-ADMIN_CONTAINER=love-space-admin
-ADMIN_HOST_PORT=8080
-ADMIN_DB_URL="jdbc:postgresql://172.26.150.96:8954/${PG_DB}"
-ADMIN_DB_USERNAME="$PG_USER"
-ADMIN_DB_PASSWORD="$PG_PASSWORD"
-ADMIN_JWT_SECRET="wwYYUD06sBrPtaBUgDeLZioRivtWwXo7PqEV/vem5TY="   # openssl rand -base64 32
+ADMIN_IMAGE_NAME="${ADMIN_IMAGE_NAME:-love-space-admin}"
+ADMIN_CONTAINER="${ADMIN_CONTAINER:-love-space-admin}"
+ADMIN_HOST_PORT="${ADMIN_HOST_PORT:-8080}"
+ADMIN_DB_URL="${ADMIN_DB_URL:-jdbc:postgresql://${DB_HOST}:${DB_PORT}/${PG_DB}}"
+ADMIN_DB_USERNAME="${ADMIN_DB_USERNAME:-$PG_USER}"
+ADMIN_DB_PASSWORD="${ADMIN_DB_PASSWORD:-$PG_PASSWORD}"
+ADMIN_JWT_SECRET="${ADMIN_JWT_SECRET:-}"   # openssl rand -base64 32
 
 # ===== app 后端环境变量 =====
-APP_IMAGE_NAME=love-space-app
-APP_CONTAINER=love-space-app
-APP_HOST_PORT=8081
-APP_DB_URL="jdbc:postgresql://172.26.150.96:8954/${PG_DB}"
-APP_DB_USERNAME="$PG_USER"
-APP_DB_PASSWORD="$PG_PASSWORD"
-APP_SECURITY_API_KEYS="fd7cff9c23a77592472224b5e029a21583d464deb3ce64e7e7a13d8832570383"   # openssl rand -hex 32；多 key 用英文逗号分隔
+APP_IMAGE_NAME="${APP_IMAGE_NAME:-love-space-app}"
+APP_CONTAINER="${APP_CONTAINER:-love-space-app}"
+APP_HOST_PORT="${APP_HOST_PORT:-8081}"
+APP_DB_URL="${APP_DB_URL:-jdbc:postgresql://${DB_HOST}:${DB_PORT}/${PG_DB}}"
+APP_DB_USERNAME="${APP_DB_USERNAME:-$PG_USER}"
+APP_DB_PASSWORD="${APP_DB_PASSWORD:-$PG_PASSWORD}"
+APP_SECURITY_API_KEYS="${APP_SECURITY_API_KEYS:-}"   # openssl rand -hex 32；多 key 用英文逗号分隔
 
 # ===== 阿里云 OSS（admin 与 app 共用）=====
-# 敏感值（access key 等）不写进脚本/入库；部署时用环境变量注入，例如：
-#   export ALIYUN_OSS_ACCESS_KEY_ID=... ALIYUN_OSS_ACCESS_KEY_SECRET=...
 ALIYUN_OSS_REGION="${ALIYUN_OSS_REGION:-}"
 ALIYUN_OSS_ENDPOINT="${ALIYUN_OSS_ENDPOINT:-}"
 ALIYUN_OSS_BUCKET="${ALIYUN_OSS_BUCKET:-}"
 ALIYUN_OSS_ACCESS_KEY_ID="${ALIYUN_OSS_ACCESS_KEY_ID:-}"
 ALIYUN_OSS_ACCESS_KEY_SECRET="${ALIYUN_OSS_ACCESS_KEY_SECRET:-}"
 ALIYUN_STS_ROLE_ARN="${ALIYUN_STS_ROLE_ARN:-}"   # admin 专用 STS（如使用 STS 直传）
+
+# ---- 必填项校验 ----
+for _v in ADMIN_JWT_SECRET APP_SECURITY_API_KEYS; do
+  [ -n "${!_v}" ] || { echo "[错误] $_v 为空，请在 $SCRIPT_DIR/.env.$DEPLOY_ENV 中配置。" >&2; exit 1; }
+done
 
 # ---- 校验必填的版本入参 ----
 VERSION="${1:-}"
