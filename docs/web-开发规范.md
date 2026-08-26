@@ -15,8 +15,33 @@ npm run lint
 ```
 
 - 部署在子路径 **`/love-space/`**：`<Router basename="/love-space">`，硬跳转要带 `import.meta.env.BASE_URL`。
-- 后端地址走 `VITE_ADMIN_API_BASE`（`.env.local.example` / `.env.test`），默认 `http://localhost:8080`。
 - WEB 测试用远程浏览器，访问地址必须用本机 Tailscale IP（如 `http://100.93.172.18:5173/love-space/`），localhost 不可达。
+
+### 后端地址：`VITE_ADMIN_API_BASE`（构建期固化，别搞错）
+
+Vite 的环境变量在 **build 时**就编译进产物，运行时改不了。一个 mode 对应一个 `.env.<mode>` 文件：
+
+| 用途 | 构建命令 | 读取文件 |
+|---|---|---|
+| 本机开发 / 本机 Playwright 测试 | `npm run dev` | `.env.local` |
+| 部署到测试服务器 | `npm run build -- --mode test` | `.env.test` |
+| 部署到生产 | `npm run build` | `.env.production`（mode 默认 production） |
+
+**这些 `.env.*` 都被 `.gitignore` 忽略，不在仓库里**，只提交 `.env.*.example` 模板。
+换台机器构建前先 `cp .env.production.example .env.production` 并填值。
+
+`vite.config.ts` 在 `build` 时会校验 `.env.<mode>` 文件存在，缺了直接报错中断——**不要绕过它**。
+校验的是文件而非变量取值：`.env.local` 在任何 mode 下都会被加载，只查变量有值会被本机配置蒙混过去，
+打出一个连着 `100.100.x.x` 的"生产包"。
+
+优先级（高 → 低）：`.env.<mode>.local` > `.env.<mode>` > `.env.local` > `.env`。
+所以本机配置放 `.env.local` 是安全的，`--mode test` / production 构建时会被对应的 `.env.<mode>` 覆盖。
+
+构建后再核一眼产物里的地址，比上线后排查便宜：
+
+```bash
+grep -o 'https\?://[^"]*' dist/assets/*.js | grep -m1 admin
+```
 
 ## 2. 目录约定
 
