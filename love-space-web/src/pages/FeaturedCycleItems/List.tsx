@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router";
 import { AxiosError } from "axios";
 import Pagination from "../../components/pagination/Pagination";
 import PageMeta from "../../components/common/PageMeta";
@@ -16,7 +17,6 @@ import {
   pageFeaturedCycleItems,
   setFeaturedCycleItemOnline,
 } from "../../api/featuredCycleItems";
-import FeaturedCycleItemForm from "./Form";
 
 export default function FeaturedCycleItemList() {
   const [phase, setPhase] = useState<Period>("MENSTRUAL");
@@ -31,9 +31,7 @@ export default function FeaturedCycleItemList() {
   const [switchNonce, setSwitchNonce] = useState(0);
   const toast = useToast();
   const confirm = useConfirm();
-
-  const [modalOpen, setModalOpen] = useState(false);
-  const [editing, setEditing] = useState<FeaturedCycleItem | null>(null);
+  const navigate = useNavigate();
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -55,16 +53,6 @@ export default function FeaturedCycleItemList() {
   useEffect(() => {
     void load();
   }, [load]);
-
-  const openCreate = () => {
-    setEditing(null);
-    setModalOpen(true);
-  };
-
-  const openEdit = (it: FeaturedCycleItem) => {
-    setEditing(it);
-    setModalOpen(true);
-  };
 
   const handleToggleOnline = async (it: FeaturedCycleItem, next: boolean) => {
     try {
@@ -158,7 +146,11 @@ export default function FeaturedCycleItemList() {
       width: "11rem",
       render: (it) => (
         <div className="flex gap-2">
-          <Button size="sm" variant="primary" onClick={() => openEdit(it)}>
+          <Button
+            size="sm"
+            variant="primary"
+            onClick={() => navigate(`/featured-cycle-items/${it.id}/edit`)}
+          >
             编辑
           </Button>
           <Button size="sm" variant="primary" onClick={() => handleDelete(it)}>
@@ -173,13 +165,12 @@ export default function FeaturedCycleItemList() {
     <>
       <PageMeta title="周期推荐 | Love Space Admin" description="精选·你的周期活动推荐配置" />
       <div className="flex items-center justify-end mb-6">
-        <button
-          type="button"
-          onClick={openCreate}
+        <Link
+          to={`/featured-cycle-items/create?phase=${phase}`}
           className="px-4 py-2 text-sm rounded-lg bg-brand-500 text-white hover:bg-brand-600"
         >
           新增周期推荐
-        </button>
+        </Link>
       </div>
       <div className="space-y-6">
         <ComponentCard title="周期推荐列表">
@@ -234,17 +225,6 @@ export default function FeaturedCycleItemList() {
           )}
         </ComponentCard>
       </div>
-
-      <FeaturedCycleItemForm
-        open={modalOpen}
-        phase={phase}
-        editing={editing}
-        onClose={() => setModalOpen(false)}
-        onSaved={() => {
-          setModalOpen(false);
-          void load();
-        }}
-      />
     </>
   );
 }

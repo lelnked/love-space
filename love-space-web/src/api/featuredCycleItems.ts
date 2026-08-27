@@ -81,6 +81,11 @@ export async function pageFeaturedCycleItems(
   return data;
 }
 
+export async function getFeaturedCycleItem(id: string): Promise<FeaturedCycleItem> {
+  const { data } = await apiClient.get<FeaturedCycleItem>(`/api/admin/featured-cycle-items/${id}`);
+  return data;
+}
+
 export async function createFeaturedCycleItem(
   req: FeaturedCycleItemUpsertRequest,
 ): Promise<FeaturedCycleItem> {

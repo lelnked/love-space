@@ -105,17 +105,68 @@ toast.error(ax.response?.data?.detail ?? "加载失败");
 3. **`Pagination`** — 放在**表格右下角**，props `{page, size, total, totalPages, onChange}`；默认每页 **20**，可切 **30**（与后端 size 白名单一致）。
 
 外层套 `ComponentCard`，页面顶部放 `PageMeta`。删除等破坏性操作走 `useConfirm()`，结果反馈走 `useToast()`。
-参考实现：`src/pages/Cities/List.tsx`（后端全量返回 + 前端切片）、`src/pages/Managers/List.tsx`（弹窗式表单）。
+参考实现：`src/pages/Cities/List.tsx`（后端全量返回 + 前端切片）、`src/pages/Merchants/List.tsx`（跳独立表单页 + 行点击进详情）。
 
-## 6. 表单页规范
+## 6. 表单页规范（新增/编辑一律独立路由页）
 
-- 新增与编辑**复用同一个 `Form.tsx`**，靠 `useParams().id` 判断模式。
-- 路由成对注册：`/xxx`、`/xxx/create`、`/xxx/:id/edit`。
-- 校验以后端为准，前端只做必填/长度这类即时提示，不重复实现业务规则。
+**字段 5 个及以上的新增/编辑必须是独立路由页，不许做成弹窗。** 弹窗在小屏幕高分辨率机器上会被裁掉一截，且没有回退/刷新/分享链接。字段少于 5 个的轻量表单可以留在弹窗里，见第 7 节。参考实现：`src/pages/Merchants/Form.tsx`、`src/pages/FeaturedCycleItems/Form.tsx`。
 
-## 7. 弹窗规范（统一样式）
+### 6.1 操作规范
 
-无遮罩卡片弹窗，参考 `Managers` 页「新增管理员」：
+- 新增与编辑**复用同一个 `Form.tsx`**，靠 `useParams().id` 判断模式：`const editing = Boolean(id)`。
+- 路由成对注册在 `App.tsx` 的 `<AppLayout />` 内：`/xxx`、`/xxx/create`、`/xxx/:id/edit`。
+- **入口**：列表页「新增」用 `<Link to="/xxx/create">`（不是 `<button onClick={navigate}>`），行内「编辑」按钮用 `navigate(\`/xxx/${it.id}/edit\`)`。
+- **数据来源**：编辑页自己 `getXxx(id)` 拉数据，**不要靠 `location.state` 或父级 props 把列表行对象传过去**——那样刷新页面就白屏。加载期间渲染 `加载中...`，拉失败 `toast.error` + `navigate` 回列表。
+- 列表页的上下文（当前 Tab、筛选条件）需要带进新增页时走 **query 参数**：`/xxx/create?phase=MENSTRUAL`，表单侧用 `useSearchParams()` 读，并对非法值兜底。
+- **提交**：`<form onSubmit={handleSubmit} noValidate>` + `e.preventDefault()`，让回车能提交；提交按钮不写 `onClick`，靠 form 默认的 submit。
+- 成功后 `toast.success` + `navigate("/xxx")` 回列表；「取消」也是 `navigate("/xxx")`。
+- 创建后不可变的字段（所属周期、内容类型这类），编辑态渲染成 `disabled` 控件或只读输入框，并在同一块里用小字说明「创建后不可修改」。
+- 校验以后端为准，前端只做必填/长度这类即时提示，不重复实现业务规则。后端 422 的 `errors[]` 按 `field` 映射进 `fieldErrors`，逐字段展示。
+
+### 6.2 样式规范
+
+外壳固定这三层，不要套 `ComponentCard`（那是列表页的皮）：
+
+```tsx
+<div>
+  <PageMeta title={`${editing ? "编辑" : "新增"}XX | Love Space Admin`} description="..." />
+  <h1 className="text-xl font-semibold text-gray-800 dark:text-white/90 mb-4">
+    {editing ? "编辑XX" : "新增XX"}
+  </h1>
+  {loading ? <div className="text-gray-500">加载中...</div> : (
+    <form onSubmit={handleSubmit} noValidate className="max-w-4xl space-y-5">
+      {/* fieldset 分组 */}
+    </form>
+  )}
+</div>
+```
+
+字段按语义分组，每组一个 `fieldset` + `legend`，组内多字段用 `grid grid-cols-1 md:grid-cols-2 gap-4`：
+
+```tsx
+const sectionClass = "border border-gray-200 dark:border-gray-800 rounded-lg p-4 bg-white dark:bg-gray-900";
+const sectionTitleClass = "text-sm font-semibold text-gray-800 dark:text-white/90 mb-3";
+const inputClass = "border rounded px-3 py-2 text-sm w-full h-11";
+const selectClass = "border rounded px-3 py-2 text-sm w-full h-11 disabled:bg-gray-100 disabled:text-gray-500";
+const textareaClass = "border rounded px-3 py-2 text-sm w-full min-h-[80px]";
+```
+
+- 必填标记：`<Label>名称 <span className="text-error-500">*</span></Label>`。
+- 字段级错误：`<div className="text-error-500 text-xs mt-1">`，紧跟控件；辅助说明用 `text-xs text-gray-400 mt-1`。
+- 底部动作条固定为「提交 + 取消」，提交用 `<Button size="sm" disabled={submitting}>`（文案 `提交中... / 保存 / 创建`），取消是原生 button：
+
+```tsx
+<button type="button" onClick={() => navigate("/xxx")} disabled={submitting}
+  className="px-4 py-3 text-sm rounded-lg bg-white text-gray-700 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-400 dark:ring-gray-700">
+  取消
+</button>
+```
+
+## 7. 弹窗规范（仅限轻量交互）
+
+**弹窗只用于确认框和字段少于 5 个的轻量表单**（`useConfirm()`、改密码这类）。字段数到 5 个就必须拆成第 6 节的独立路由页——按最终表单的字段总数算，不是按当前迭代加了几个。
+
+真要用弹窗时，用无遮罩卡片风格，参考 `Managers` 页「新增管理员」：
 
 ```tsx
 <Modal showBackdrop={false} ...>              {/* 必须 showBackdrop={false} */}
