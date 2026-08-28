@@ -88,9 +88,9 @@ class FeaturedCycleItemServiceTest extends AbstractPostgresIntegrationTest {
         return articleRepository.save(article);
     }
 
-    private FeaturedCycleItemUpsertRequest activityRequest(UUID activityId) {
+    private FeaturedCycleItemUpsertRequest activityRequest(UUID targetId) {
         return new FeaturedCycleItemUpsertRequest(Period.MENSTRUAL, FeaturedCycleItemType.ACTIVITY,
-                "images/banner.png", 1, null, activityId, null, null, null, null, "经期慢下来", "周末两日");
+                "images/banner.png", 1, null, targetId, null, null, "经期慢下来", "周末两日");
     }
 
     // @scenario: featured/周期推荐条目管理#创建活动类周期推荐
@@ -103,15 +103,13 @@ class FeaturedCycleItemServiceTest extends AbstractPostgresIntegrationTest {
 
         assertThat(detail.phase()).isEqualTo(Period.MENSTRUAL);
         assertThat(detail.type()).isEqualTo(FeaturedCycleItemType.ACTIVITY);
-        assertThat(detail.activityId()).isEqualTo(activity.getId());
+        assertThat(detail.targetId()).isEqualTo(activity.getId());
         assertThat(detail.relatedTitle()).isEqualTo("成都周末");
         assertThat(detail.description()).isEqualTo("经期慢下来");
         assertThat(detail.note()).isEqualTo("周末两日");
         assertThat(detail.sortOrder()).isEqualTo(1);
         assertThat(detail.online()).isFalse();
         assertThat(detail.banner().url()).startsWith("https://signed.example.com/");
-        assertThat(detail.routeId()).isNull();
-        assertThat(detail.articleId()).isNull();
         assertThat(detail.title()).isNull();
         assertThat(detail.subtitle()).isNull();
     }
@@ -123,17 +121,15 @@ class FeaturedCycleItemServiceTest extends AbstractPostgresIntegrationTest {
 
         FeaturedCycleItemResponse created = featuredCycleItemService.create(
                 new FeaturedCycleItemUpsertRequest(Period.OVULATION, FeaturedCycleItemType.ROUTE,
-                        "images/banner.png", null, null, null, route.getId(), null,
+                        "images/banner.png", null, null, route.getId(),
                         "排卵期就该出门", "三天两夜", "体力最好的几天", null));
         FeaturedCycleItemResponse detail = featuredCycleItemService.detail(created.id());
 
         assertThat(detail.type()).isEqualTo(FeaturedCycleItemType.ROUTE);
-        assertThat(detail.routeId()).isEqualTo(route.getId());
+        assertThat(detail.targetId()).isEqualTo(route.getId());
         assertThat(detail.title()).isEqualTo("排卵期就该出门").isNotEqualTo(route.getTitle());
         assertThat(detail.subtitle()).isEqualTo("三天两夜");
         assertThat(detail.description()).isEqualTo("体力最好的几天");
-        assertThat(detail.activityId()).isNull();
-        assertThat(detail.articleId()).isNull();
         assertThat(detail.note()).isNull();
     }
 
@@ -144,16 +140,14 @@ class FeaturedCycleItemServiceTest extends AbstractPostgresIntegrationTest {
 
         FeaturedCycleItemResponse created = featuredCycleItemService.create(
                 new FeaturedCycleItemUpsertRequest(Period.LUTEAL, FeaturedCycleItemType.ARTICLE,
-                        "images/banner.png", null, null, null, null, article.getId(),
+                        "images/banner.png", null, null, article.getId(),
                         "黄体期生活法", null, null, null));
         FeaturedCycleItemResponse detail = featuredCycleItemService.detail(created.id());
 
         assertThat(detail.type()).isEqualTo(FeaturedCycleItemType.ARTICLE);
-        assertThat(detail.articleId()).isEqualTo(article.getId());
+        assertThat(detail.targetId()).isEqualTo(article.getId());
         assertThat(detail.relatedTitle()).isEqualTo("黄体期怎么吃");
         assertThat(detail.title()).isEqualTo("黄体期生活法");
-        assertThat(detail.activityId()).isNull();
-        assertThat(detail.routeId()).isNull();
         assertThat(detail.subtitle()).isNull();
         assertThat(detail.description()).isNull();
         assertThat(detail.note()).isNull();
@@ -167,14 +161,14 @@ class FeaturedCycleItemServiceTest extends AbstractPostgresIntegrationTest {
 
         assertThatThrownBy(() -> featuredCycleItemService.create(
                 new FeaturedCycleItemUpsertRequest(Period.OVULATION, FeaturedCycleItemType.ROUTE,
-                        "images/banner.png", null, null, null, route.getId(), null,
+                        "images/banner.png", null, null, route.getId(),
                         "主标题", null, "推荐说明", null)))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("副标题");
 
         assertThatThrownBy(() -> featuredCycleItemService.create(
                 new FeaturedCycleItemUpsertRequest(Period.MENSTRUAL, FeaturedCycleItemType.ACTIVITY,
-                        "images/banner.png", null, null, activity.getId(), null, null,
+                        "images/banner.png", null, null, activity.getId(),
                         null, null, null, "活动说明")))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("推荐说明");
@@ -189,14 +183,14 @@ class FeaturedCycleItemServiceTest extends AbstractPostgresIntegrationTest {
 
         assertThatThrownBy(() -> featuredCycleItemService.create(
                 new FeaturedCycleItemUpsertRequest(Period.OVULATION, FeaturedCycleItemType.ROUTE,
-                        "images/banner.png", null, null, null, UUID.randomUUID(), null,
+                        "images/banner.png", null, null, UUID.randomUUID(),
                         "主标题", "副标题", "推荐说明", null)))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("关联路线不存在");
 
         assertThatThrownBy(() -> featuredCycleItemService.create(
                 new FeaturedCycleItemUpsertRequest(Period.LUTEAL, FeaturedCycleItemType.ARTICLE,
-                        "images/banner.png", null, null, null, null, UUID.randomUUID(),
+                        "images/banner.png", null, null, UUID.randomUUID(),
                         "主标题", null, null, null)))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("关联文章不存在");
@@ -211,7 +205,7 @@ class FeaturedCycleItemServiceTest extends AbstractPostgresIntegrationTest {
 
         featuredCycleItemService.update(id, new FeaturedCycleItemUpsertRequest(
                 Period.LUTEAL, FeaturedCycleItemType.ARTICLE, "images/banner2.png", 5, true,
-                activity.getId(), null, article.getId(), "改名", null, "改后的推荐说明", null));
+                activity.getId(), "改名", null, "改后的推荐说明", null));
         FeaturedCycleItemResponse detail = featuredCycleItemService.detail(id);
 
         assertThat(detail.phase()).isEqualTo(Period.MENSTRUAL);
@@ -219,8 +213,56 @@ class FeaturedCycleItemServiceTest extends AbstractPostgresIntegrationTest {
         assertThat(detail.description()).isEqualTo("改后的推荐说明");
         assertThat(detail.sortOrder()).isEqualTo(5);
         assertThat(detail.online()).isTrue();
-        assertThat(detail.articleId()).isNull();
+        assertThat(detail.targetId()).isEqualTo(activity.getId());
         assertThat(detail.title()).isNull();
+    }
+
+    // @scenario: featured/周期推荐条目管理#周期与类型创建后不可变
+    @Test
+    void updateValidatesTargetAgainstPersistedTypeNotRequestType() {
+        Activity activity = activity("活动");
+        Article article = article("文章");
+        UUID id = featuredCycleItemService.create(activityRequest(activity.getId())).id();
+
+        // 条目持久化类型是 ACTIVITY，传文章 id 应按 ACTIVITY 校验并报「关联活动不存在」
+        assertThatThrownBy(() -> featuredCycleItemService.update(id, new FeaturedCycleItemUpsertRequest(
+                Period.LUTEAL, FeaturedCycleItemType.ARTICLE, "images/banner2.png", 5, true,
+                article.getId(), "改名", null, "改后的推荐说明", null)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("关联活动不存在");
+    }
+
+    // @scenario: featured/周期推荐条目管理#缺少 targetId 被拒绝
+    @Test
+    void missingTargetIdRejected() {
+        assertThatThrownBy(() -> featuredCycleItemService.create(activityRequest(null)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("关联活动不能为空");
+
+        assertThatThrownBy(() -> featuredCycleItemService.create(
+                new FeaturedCycleItemUpsertRequest(Period.OVULATION, FeaturedCycleItemType.ROUTE,
+                        "images/banner.png", null, null, null,
+                        "主标题", "副标题", "推荐说明", null)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("关联路线不能为空");
+
+        assertThatThrownBy(() -> featuredCycleItemService.create(
+                new FeaturedCycleItemUpsertRequest(Period.LUTEAL, FeaturedCycleItemType.ARTICLE,
+                        "images/banner.png", null, null, null,
+                        "主标题", null, null, null)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("关联文章不能为空");
+    }
+
+    // @scenario: featured/周期推荐条目管理#关联实体不存在被拒绝
+    @Test
+    void targetIdOfWrongEntityTypeRejected() {
+        Article article = article("文章");
+
+        // id 真实存在，但属于文章表；type=ACTIVITY 时仍应被拒
+        assertThatThrownBy(() -> featuredCycleItemService.create(activityRequest(article.getId())))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("关联活动不存在");
     }
 
     // @scenario: featured/周期推荐条目管理#按周期过滤列表
@@ -230,7 +272,7 @@ class FeaturedCycleItemServiceTest extends AbstractPostgresIntegrationTest {
         for (int sortOrder : new int[]{2, 1, 3}) {
             featuredCycleItemService.create(new FeaturedCycleItemUpsertRequest(
                     Period.FOLLICULAR, FeaturedCycleItemType.ACTIVITY, "images/banner.png",
-                    sortOrder, null, activity.getId(), null, null, null, null, "说明", null));
+                    sortOrder, null, activity.getId(), null, null, "说明", null));
         }
         UUID menstrualId = featuredCycleItemService.create(activityRequest(activity.getId())).id();
 

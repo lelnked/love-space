@@ -115,9 +115,7 @@ public class FeaturedCycleItemService {
      * 并把无关列置 null。
      */
     private void applyByType(FeaturedCycleItem item, FeaturedCycleItemUpsertRequest request) {
-        item.setActivityId(null);
-        item.setRouteId(null);
-        item.setArticleId(null);
+        item.setTargetId(requireTarget(item.getType(), request.targetId()));
         item.setTitle(null);
         item.setSubtitle(null);
         item.setDescription(null);
@@ -125,40 +123,40 @@ public class FeaturedCycleItemService {
 
         switch (item.getType()) {
             case ACTIVITY -> {
-                UUID activityId = requireId(request.activityId(), "关联活动");
-                if (!activityRepository.existsById(activityId)) {
-                    throw new IllegalArgumentException("关联活动不存在：" + activityId);
-                }
-                item.setActivityId(activityId);
                 item.setDescription(requireText(request.description(), "推荐说明"));
                 item.setNote(blankToNull(request.note()));
             }
             case ROUTE -> {
-                UUID routeId = requireId(request.routeId(), "关联路线");
-                if (!routeRepository.existsById(routeId)) {
-                    throw new IllegalArgumentException("关联路线不存在：" + routeId);
-                }
-                item.setRouteId(routeId);
                 item.setTitle(requireText(request.title(), "主标题"));
                 item.setSubtitle(requireText(request.subtitle(), "副标题"));
                 item.setDescription(requireText(request.description(), "推荐说明"));
             }
-            case ARTICLE -> {
-                UUID articleId = requireId(request.articleId(), "关联文章");
-                if (!articleRepository.existsById(articleId)) {
-                    throw new IllegalArgumentException("关联文章不存在：" + articleId);
-                }
-                item.setArticleId(articleId);
-                item.setTitle(requireText(request.title(), "主标题"));
-            }
+            case ARTICLE -> item.setTitle(requireText(request.title(), "主标题"));
         }
     }
 
-    private static UUID requireId(UUID value, String label) {
-        if (value == null) {
+    /**
+     * 按类型把 {@code targetId} 分派到对应仓储校验存在性，错误文案区分「关联活动/路线/文章」。
+     * <p>类型取自持久化实体，因此更新时传入不属于该类型的实体 id 会被拒绝。
+     */
+    private UUID requireTarget(FeaturedCycleItemType type, UUID targetId) {
+        String label = switch (type) {
+            case ACTIVITY -> "关联活动";
+            case ROUTE -> "关联路线";
+            case ARTICLE -> "关联文章";
+        };
+        if (targetId == null) {
             throw new IllegalArgumentException(label + "不能为空");
         }
-        return value;
+        boolean exists = switch (type) {
+            case ACTIVITY -> activityRepository.existsById(targetId);
+            case ROUTE -> routeRepository.existsById(targetId);
+            case ARTICLE -> articleRepository.existsById(targetId);
+        };
+        if (!exists) {
+            throw new IllegalArgumentException(label + "不存在：" + targetId);
+        }
+        return targetId;
     }
 
     private static String requireText(String value, String label) {
@@ -179,9 +177,7 @@ public class FeaturedCycleItemService {
                 item.getType(),
                 item.getSortOrder(),
                 item.isOnline(),
-                item.getActivityId(),
-                item.getRouteId(),
-                item.getArticleId(),
+                item.getTargetId(),
                 relatedTitle(item),
                 item.getTitle(),
                 item.getSubtitle(),
@@ -195,11 +191,11 @@ public class FeaturedCycleItemService {
     /** 关联实体标题；实体已被删除时返回 null，web 端据此标「已删除」。 */
     private String relatedTitle(FeaturedCycleItem item) {
         return switch (item.getType()) {
-            case ACTIVITY -> activityRepository.findById(item.getActivityId())
+            case ACTIVITY -> activityRepository.findById(item.getTargetId())
                     .map(activity -> activity.getTitle()).orElse(null);
-            case ROUTE -> routeRepository.findById(item.getRouteId())
+            case ROUTE -> routeRepository.findById(item.getTargetId())
                     .map(route -> route.getTitle()).orElse(null);
-            case ARTICLE -> articleRepository.findById(item.getArticleId())
+            case ARTICLE -> articleRepository.findById(item.getTargetId())
                     .map(article -> article.getTitle()).orElse(null);
         };
     }

@@ -19,9 +19,8 @@ export interface FeaturedCycleItem {
   type: FeaturedCycleItemType;
   sortOrder: number;
   online: boolean;
-  activityId: string | null;
-  routeId: string | null;
-  articleId: string | null;
+  /** 关联实体 id，指向哪类实体由 type 判别。 */
+  targetId: string;
   /** 关联实体标题；实体已被删除时为 null。 */
   relatedTitle: string | null;
   title: string | null;
@@ -50,12 +49,8 @@ export interface FeaturedCycleItemUpsertRequest {
   banner: string;
   sortOrder?: number;
   online?: boolean;
-  /** type=ACTIVITY 必填。 */
-  activityId?: string | null;
-  /** type=ROUTE 必填。 */
-  routeId?: string | null;
-  /** type=ARTICLE 必填。 */
-  articleId?: string | null;
+  /** 关联实体 id（ACTIVITY→活动 / ROUTE→路线 / ARTICLE→文章），必填。 */
+  targetId: string;
   /** type=ROUTE / ARTICLE 必填。 */
   title?: string | null;
   /** type=ROUTE 必填。 */

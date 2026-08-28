@@ -45,9 +45,8 @@ export default function FeaturedCycleItemForm() {
   const [bannerKey, setBannerKey] = useState("");
   const [bannerPreview, setBannerPreview] = useState("");
   const [sortOrder, setSortOrder] = useState("0");
-  const [activityId, setActivityId] = useState("");
-  const [routeId, setRouteId] = useState("");
-  const [articleId, setArticleId] = useState("");
+  // 三种类型共用一个关联实体 id，指向哪类实体由 type 判别；切换类型时清空，避免把活动 id 带进路线下拉
+  const [targetId, setTargetId] = useState("");
   const [title, setTitle] = useState("");
   const [subtitle, setSubtitle] = useState("");
   const [description, setDescription] = useState("");
@@ -83,9 +82,7 @@ export default function FeaturedCycleItemForm() {
         setBannerKey(d.banner?.id ?? "");
         setBannerPreview(d.banner?.url ?? "");
         setSortOrder(String(d.sortOrder));
-        setActivityId(d.activityId ?? "");
-        setRouteId(d.routeId ?? "");
-        setArticleId(d.articleId ?? "");
+        setTargetId(d.targetId);
         setTitle(d.title ?? "");
         setSubtitle(d.subtitle ?? "");
         setDescription(d.description ?? "");
@@ -105,9 +102,7 @@ export default function FeaturedCycleItemForm() {
   /** 切换内容类型：清空下方字段块，避免上一类型的内容残留。 */
   const handleTypeChange = (next: FeaturedCycleItemType) => {
     setType(next);
-    setActivityId("");
-    setRouteId("");
-    setArticleId("");
+    setTargetId("");
     setTitle("");
     setSubtitle("");
     setDescription("");
@@ -117,7 +112,7 @@ export default function FeaturedCycleItemForm() {
 
   /** 周期生活法：选中文章后带出文章标题，仍可手改。 */
   const handleArticleChange = (nextId: string) => {
-    setArticleId(nextId);
+    setTargetId(nextId);
     const article = articles.find((a) => a.id === nextId);
     if (article) setTitle(article.title);
   };
@@ -126,17 +121,17 @@ export default function FeaturedCycleItemForm() {
     const errs: Record<string, string> = {};
     if (!bannerKey.trim()) errs.banner = "请上传 banner 图片";
     if (type === "ACTIVITY") {
-      if (!activityId) errs.activityId = "请选择关联活动";
+      if (!targetId) errs.targetId = "请选择关联活动";
       if (!description.trim()) errs.description = "请填写推荐说明";
     }
     if (type === "ROUTE") {
-      if (!routeId) errs.routeId = "请选择关联路线";
+      if (!targetId) errs.targetId = "请选择关联路线";
       if (!title.trim()) errs.title = "请填写主标题";
       if (!subtitle.trim()) errs.subtitle = "请填写副标题";
       if (!description.trim()) errs.description = "请填写推荐说明";
     }
     if (type === "ARTICLE") {
-      if (!articleId) errs.articleId = "请选择关联文章";
+      if (!targetId) errs.targetId = "请选择关联文章";
       if (!title.trim()) errs.title = "请填写主标题";
     }
     return errs;
@@ -159,9 +154,7 @@ export default function FeaturedCycleItemForm() {
         banner: bannerKey.trim(),
         sortOrder: Number(sortOrder) || 0,
         online,
-        activityId: type === "ACTIVITY" ? activityId : null,
-        routeId: type === "ROUTE" ? routeId : null,
-        articleId: type === "ARTICLE" ? articleId : null,
+        targetId,
         title: type === "ACTIVITY" ? null : title.trim(),
         subtitle: type === "ROUTE" ? subtitle.trim() : null,
         description: type === "ARTICLE" ? null : description.trim(),
@@ -278,8 +271,8 @@ export default function FeaturedCycleItemForm() {
                   </Label>
                   <select
                     className={selectClass}
-                    value={activityId}
-                    onChange={(e) => setActivityId(e.target.value)}
+                    value={targetId}
+                    onChange={(e) => setTargetId(e.target.value)}
                   >
                     <option value="">请选择</option>
                     {activities.map((a) => (
@@ -289,7 +282,7 @@ export default function FeaturedCycleItemForm() {
                       </option>
                     ))}
                   </select>
-                  {error("activityId")}
+                  {error("targetId")}
                 </div>
                 <div>
                   <Label>
@@ -322,8 +315,8 @@ export default function FeaturedCycleItemForm() {
                   </Label>
                   <select
                     className={selectClass}
-                    value={routeId}
-                    onChange={(e) => setRouteId(e.target.value)}
+                    value={targetId}
+                    onChange={(e) => setTargetId(e.target.value)}
                   >
                     <option value="">请选择</option>
                     {routes.map((r) => (
@@ -332,7 +325,7 @@ export default function FeaturedCycleItemForm() {
                       </option>
                     ))}
                   </select>
-                  {error("routeId")}
+                  {error("targetId")}
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
@@ -380,7 +373,7 @@ export default function FeaturedCycleItemForm() {
                   </Label>
                   <select
                     className={selectClass}
-                    value={articleId}
+                    value={targetId}
                     onChange={(e) => handleArticleChange(e.target.value)}
                   >
                     <option value="">请选择</option>
@@ -391,7 +384,7 @@ export default function FeaturedCycleItemForm() {
                       </option>
                     ))}
                   </select>
-                  {error("articleId")}
+                  {error("targetId")}
                 </div>
                 <div>
                   <Label>

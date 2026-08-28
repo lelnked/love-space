@@ -14,8 +14,9 @@ import java.util.UUID;
 
 /**
  * 精选·周期推荐实体：对应 {@code loves_featured_cycle_item} 表。
- * <p>单表承载三种内容类型，{@link #type} 判别哪些关联列与文案列生效；
- * 不属于当前类型的列由服务层置 null（DB 层不做约束，与项目既有无外键口径一致）。
+ * <p>单表承载三种内容类型，{@link #type} 判别 {@link #targetId} 指向哪张表、以及哪些文案列生效；
+ * 不属于当前类型的文案列由服务层置 null。{@code targetId} 是多态列，无外键（与项目既有口径一致），
+ * 引用完整性靠写入侧存在性校验与读取侧可见性过滤保证。
  * <p>全局配置，不关联地图（城市）。
  */
 @Entity
@@ -42,17 +43,9 @@ public class FeaturedCycleItem extends BaseAuditEntity {
     @Column(name = "online", nullable = false)
     private boolean online;
 
-    /** 关联活动 id（type=ACTIVITY 时有值）。 */
-    @Column(name = "activity_id")
-    private UUID activityId;
-
-    /** 关联路线 id（type=ROUTE 时有值）。 */
-    @Column(name = "route_id")
-    private UUID routeId;
-
-    /** 关联文章 id（type=ARTICLE 时有值）。 */
-    @Column(name = "article_id")
-    private UUID articleId;
+    /** 关联实体 id，指向哪张表由 {@link #type} 判别（ACTIVITY→活动 / ROUTE→路线 / ARTICLE→文章）。 */
+    @Column(name = "target_id", nullable = false)
+    private UUID targetId;
 
     /** 主标题（type=ROUTE / ARTICLE 时有值）。 */
     @Column(name = "title")

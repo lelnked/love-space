@@ -18,7 +18,9 @@ import com.space.app.modules.route.repository.RouteRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -56,6 +58,8 @@ public class FeaturedCycleItemQueryService {
     /**
      * 可见条目扁平列表，sortOrder 升序、同序号创建时间倒序。
      * <p>{@code period} / {@code type} 均可选：为 null 时不过滤；过滤后无条目返回空列表。
+     * <p>响应的 {@code period} 是该 target 覆盖的周期集合，在全部可下发条目上算好后再做参数过滤——
+     * 若在过滤后的结果集上聚合，带 {@code period=X} 时集合会恒为 {@code [X]}，字段就退化回单值了。
      */
     public List<FeaturedCycleItemResponse> feed(Period period, FeaturedCycleItemType type) {
         // ponytail: 运营配置级数据量（每周期个位数），全量捞出在内存过滤即可，无需 join
@@ -74,12 +78,28 @@ public class FeaturedCycleItemQueryService {
                 .filter(Article::isOnline)
                 .map(Article::getId).collect(Collectors.toSet());
 
-        return featuredCycleItemRepository.findAllByOnlineTrueOrderBySortOrderAscCreatedAtDesc().stream()
+        List<FeaturedCycleItem> visibleItems =
+                featuredCycleItemRepository.findAllByOnlineTrueOrderBySortOrderAscCreatedAtDesc().stream()
+                        .filter(item -> isVisible(item, visibleActivityIds, visibleRouteIds, visibleArticleIds))
+                        .toList();
+
+        Map<TargetKey, EnumSet<Period>> periodsByTarget = visibleItems.stream().collect(Collectors.groupingBy(
+                TargetKey::of,
+                Collectors.mapping(FeaturedCycleItem::getPhase,
+                        Collectors.toCollection(() -> EnumSet.noneOf(Period.class)))));
+
+        return visibleItems.stream()
                 .filter(item -> period == null || item.getPhase() == period)
                 .filter(item -> type == null || item.getType() == type)
-                .filter(item -> isVisible(item, visibleActivityIds, visibleRouteIds, visibleArticleIds))
-                .map(this::toResponse)
+                .map(item -> toResponse(item, periodsByTarget.get(TargetKey.of(item))))
                 .toList();
+    }
+
+    /** 同一 target 的判定：type 与 targetId 都相同。targetId 指向三张不同的表，带上 type 语义更直白。 */
+    private record TargetKey(FeaturedCycleItemType type, UUID targetId) {
+        static TargetKey of(FeaturedCycleItem item) {
+            return new TargetKey(item.getType(), item.getTargetId());
+        }
     }
 
     private boolean isVisible(FeaturedCycleItem item,
@@ -87,21 +107,20 @@ public class FeaturedCycleItemQueryService {
                               Set<UUID> visibleRouteIds,
                               Set<UUID> visibleArticleIds) {
         return switch (item.getType()) {
-            case ACTIVITY -> visibleActivityIds.contains(item.getActivityId());
-            case ROUTE -> visibleRouteIds.contains(item.getRouteId());
-            case ARTICLE -> visibleArticleIds.contains(item.getArticleId());
+            case ACTIVITY -> visibleActivityIds.contains(item.getTargetId());
+            case ROUTE -> visibleRouteIds.contains(item.getTargetId());
+            case ARTICLE -> visibleArticleIds.contains(item.getTargetId());
         };
     }
 
-    private FeaturedCycleItemResponse toResponse(FeaturedCycleItem item) {
+    /** {@code periods} 用 EnumSet 传入：天然去重且按 Period 声明顺序迭代，转 List 后即为契约要求的顺序。 */
+    private FeaturedCycleItemResponse toResponse(FeaturedCycleItem item, EnumSet<Period> periods) {
         return new FeaturedCycleItemResponse(
                 item.getId(),
-                item.getPhase(),
+                List.copyOf(periods),
                 item.getType(),
                 ImageResponses.from(item.getBanner(), imageUrlSigner),
-                item.getActivityId(),
-                item.getRouteId(),
-                item.getArticleId(),
+                item.getTargetId(),
                 item.getTitle(),
                 item.getSubtitle(),
                 item.getDescription(),

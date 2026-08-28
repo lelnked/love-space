@@ -41,3 +41,5 @@ databaseChangeLog:
       file: db/changelog/changes/020-remove-activity-city-id.sql
   - include:
       file: db/changelog/changes/021-add-article-cover-title-intro-tags.sql
+  - include:
+      file: db/changelog/changes/022-merge-featured-cycle-item-target-id.sql
