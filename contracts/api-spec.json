@@ -399,7 +399,7 @@
     },
     "/api/app/routes": {
       "get": {
-        "summary": "App 查询路线列表（cityName / ambassadorId 均可选；仅大使上线即可见，城市上架与否不影响，sortOrder 升序、同序号 createdAt 倒序）",
+        "summary": "App 查询路线列表（cityName / ambassadorId 均可选；仅大使上线即可见，城市上架与否不影响，sortOrder 升序、同序号 createdAt 倒序）；列表项含 ambassadorNote（爱女大使说，未填为 null）",
         "parameters": [
           {
             "name": "cityName",
@@ -426,7 +426,7 @@
     },
     "/api/app/routes/{id}": {
       "get": {
-        "summary": "App 路线详情含地点、大使信息与所属城市名 cityName（城市记录已删除时为 null；大使下线 → 404，城市下架不影响）",
+        "summary": "App 路线详情含地点、大使信息（ambassador 对象含 id / name / avatar / tags）与所属城市名 cityName（城市记录已删除时为 null；大使下线 → 404，城市下架不影响）",
         "x-requirement": "route/App 端路线查询"
       }
     },

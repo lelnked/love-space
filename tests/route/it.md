@@ -356,3 +356,33 @@
 **执行方式**: api-test-runner
 **执行存证**: `test-evidence/app-list-sort-tiebreak/TC-route-IT-024/`
 **最后更新**: 2026-08-26
+
+### TC-route-IT-025: GET /api/app/routes 列表项返回 ambassadorNote
+**关联需求**: route/App 端路线查询#路线列表返回爱女大使说
+**关联契约**: api-spec.json#/paths/~1api~1app~1routes/get
+**来源**: app-route-ambassador-fields
+**优先级**: P1
+**测试步骤**:
+1. admin 侧（http://localhost:21423）登录，创建一个上线大使 amb
+2. 以同一 `cityName`（如 `大使说测试城`）创建两条关联 amb 的路线：路线甲 `ambassadorNote` 填「跟着我逛老城区」、`sortOrder=1`；路线乙不填 `ambassadorNote`、`sortOrder=2`
+3. GET http://localhost:8081/api/app/routes?cityName=大使说测试城，请求头 `X-API-Key: test-api-key`
+**预期结果**: 返回 200 数组共 2 条；路线甲 `ambassadorNote` == "跟着我逛老城区"，路线乙 `ambassadorNote` 为 null；两条的 `id`/`title`/`thumbnail`/`sortOrder`/`ambassadorName`/`city` 字段仍完整返回
+**状态**: ✅ 通过
+**执行方式**: api-test-runner
+**执行存证**: `test-evidence/regression/route/TC-route-IT-025/`
+**最后更新**: 2026-08-28
+
+### TC-route-IT-026: GET /api/app/routes/{id} 详情 ambassador 含 id
+**关联需求**: route/App 端路线查询#路线详情返回大使 id
+**关联契约**: api-spec.json#/paths/~1api~1app~1routes~1{id}/get
+**来源**: app-route-ambassador-fields
+**优先级**: P1
+**测试步骤**:
+1. admin 侧（http://localhost:21423）登录，创建一个上线大使 amb 及其名下一条路线 R
+2. GET http://localhost:8081/api/app/routes/{R.id}，请求头 `X-API-Key: test-api-key`
+3. 取响应 `ambassador.id`，再 GET http://localhost:8081/api/app/routes?ambassadorId={该 id}
+**预期结果**: 步骤 2 返回 200，`ambassador.id` == amb 的 id，且 `ambassador` 的 `name`/`avatar`/`tags` 仍返回；步骤 3 返回 200，结果含路线 R
+**状态**: ✅ 通过
+**执行方式**: api-test-runner
+**执行存证**: `test-evidence/regression/route/TC-route-IT-026/`
+**最后更新**: 2026-08-28

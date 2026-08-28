@@ -6,7 +6,7 @@
 - **activity/App 端活动查询**: 查询上架城市的活动 / 下线活动不可见 / 城市上架状态不影响活动详情可见性 / 活动详情返回富文本
 - **activity/web 端活动管理页面**: 活动列表与上下线 / 活动表单无地图选项即可保存 / 活动表单富文本编辑 / 活动表单填写景观并回显
 - **activity/活动管理**: 创建活动 / 缺少必填项被拒绝 / 请求体携带 cityId 不影响创建 / 活动列表不按城市过滤 / 活动上下线切换 / 景观字段可写可改可空
-- **article/App 端文章查询**: 查询栏目与文章列表 / 未设封面标题时列表回落文章标题 / 详情返回引言与标签 / 下线文章不可见 / 失去所有栏目的文章不可见 / 文章详情返回富文本
+- **article/App 端文章查询**: 查询栏目与文章列表 / 不传栏目返回全部可见文章 / 未设封面标题时列表回落文章标题 / 详情返回引言与标签 / 下线文章不可见 / 失去所有栏目的文章不可见 / 文章详情返回富文本
 - **article/web 端文章管理页面**: 栏目管理增删改 / 文章列表与上下线 / 文章表单富文本编辑 / 表单填写封面标题、引言与标签 / 存量文章封面标题为空时表单可正常打开
 - **article/文章栏目管理**: 创建栏目 / 缺少必填项被拒绝 / 删除栏目不影响文章数据
 - **article/文章管理**: 创建文章 / 创建带封面标题、引言与标签的文章 / 封面标题、引言、标签均可省略 / 缺少必填项被拒绝 / 文章上下线切换
@@ -14,7 +14,7 @@
 - **auth/web 端登录页与路由守卫**: 登录成功进入地图管理 / 两字段任一为空时无法提交 / 未登录访问后台被拦回登录页 / 非 ADMIN 角色看不到管理员管理入口
 - **auth/当前登录人查询与登出**: 查询当前登录人 / 登出返回 204 且 token 仍然有效
 - **auth/运营账号登录**: 内置管理员登录成功 / 密码错误被拒绝 / 停用账号无法登录 / 用户名不存在与密码错误不可区分
-- **banner/App 端 Banner 查询**: 按展示位查询上架 Banner / 下架 Banner 不下发 / 关联城市下架时条目被剔除 / 缺少 API-key 返回 401
+- **banner/App 端 Banner 查询**: 按展示位查询上架 Banner / 同排序号 Banner 按创建时间倒序 / 下架 Banner 不下发 / 关联城市下架时条目被剔除 / 缺少 API-key 返回 401
 - **banner/Banner 上架前置校验**: 关联城市下架时无法上架 Banner / 关联城市上架时可正常上架 / 下架无前置条件
 - **banner/Banner 管理**: 创建后默认下架 / 名称重复被拒绝 / 更新时携带上下架字段被拒绝 / 图片 objectKey 格式非法被拒绝
 - **banner/web 端 Banner 管理页面**: 列表展示与状态徽标 / 上下架乐观更新失败回滚 / 删除需确认 / 表单城市下拉只列上架城市
@@ -25,7 +25,7 @@
 - **city/地图下架对路线与活动均不级联**: 下架城市后 app 端路线仍可见 / 下架城市后 app 端活动仍可见 / web 下架确认提示不含路线与活动
 - **city/地图删除**: 删除地图 / 有路线的地图可以直接删除 / 删除地图连带下架 Banner 与商户
 - **city/地图编辑说**: admin 保存编辑说 / 编辑说超长被拒绝 / app 端城市数据返回编辑说
-- **featured/App 端周期推荐查询**: 查询四个周期的推荐列表 / 关联实体不可见时条目不下发 / 城市未上架不影响路线类条目 / 大使下线连带隐藏路线类条目 / 组内按排序号升序
+- **featured/App 端周期推荐查询**: 查询四个周期的推荐列表 / 按周期过滤 / 周期与类型同时过滤 / 按内容类型过滤 / 类型过滤后周期为空仍返回空数组 / 周期过滤后无条目返回空数组 / 非法类型值被拒绝 / 非法周期值被拒绝 / 关联实体不可见时条目不下发 / 城市未上架不影响路线类条目 / 大使下线连带隐藏路线类条目 / 组内按排序号升序
 - **featured/App 端精选推荐查询**: 查询精选推荐信息流
 - **featured/web 端周期推荐页面**: 周期 Tab 切换与列表展示 / 表单按类型切换字段 / 文章类型自动带出主标题 / 新增周期推荐 / 周期推荐上下线与删除
 - **featured/web 端精选推荐页面**: 精选推荐列表与上下线 / 新增精选推荐
@@ -40,16 +40,17 @@
 - **manager/账号启停与内置管理员保护**: 停用后无法登录 / 内置 admin 不可停用 / 启停可往复切换
 - **manager/运营账号分页查询**: 按用户名模糊过滤 / 页大小非白名单值被校正 / 列表按创建时间倒序 / 查询不存在的账号返回 400
 - **manager/运营账号管理**: 创建账号强制为 MEMBER 角色 / 用户名重复被拒绝 / 密码长度不足被拒绝 / 重置密码后旧密码失效
+- **merchant/App 端带排序号列表的排序口径**: 分类列表同序号按创建时间倒序 / 商户评价同序号按创建时间倒序 / 排序号不同时以排序号为准 / weight 型排序号维持降序且已符合口径
 - **merchant/商户编辑推荐理由**: admin 创建/更新商户时保存推荐理由 / 推荐理由超长被拒绝 / 推荐理由可为空 / app 端商户详情返回推荐理由 / web 商户表单录入推荐理由
 - **operation-log/web 端操作日志页面**: 按操作人筛选日志 / 模块与动作按中文展示 / 未映射的动作回落显示原值 / 对象为空的记录显示占位符
 - **operation-log/操作日志查询**: 按操作人与模块组合过滤 / 操作人过滤为模糊匹配 / 时间区间含边界 / 响应不含 payload / 非 ADMIN 角色可查询日志
 - **operation-log/留痕字段取值与敏感信息脱敏**: 密码字段被脱敏 / 创建类操作的 target 为空 / 更新类操作记录目标 id / 嵌套资源的 target 取父级 id
 - **operation-log/运营写操作留痕**: 创建城市后异步留痕 / 业务方法失败时不留痕 / 登录不产生日志
-- **recommend-list/App 端清单查询**: 查询上架城市的清单 / 清单详情返回商户明细 / 按推荐清单过滤商户列表 / 下架城市清单不可见
+- **recommend-list/App 端清单与清单内商户查询**: 查询上架城市的清单 / 同排序号清单按创建时间倒序 / 清单详情返回商户明细 / 商户列表不受清单影响 / 下架城市清单不可见
 - **recommend-list/web 端推荐清单管理页面**: 清单列表与筛选 / 维护清单商户 / 删除清单需确认
-- **recommend-list/推荐清单管理**: 创建清单 / 缺少必填项被拒绝 / 删除清单 / 清单列表按排序号升序
-- **recommend-list/清单内商户维护**: 添加本城市商户 / 拒绝跨城市商户 / 重复添加同一商户被拒绝 / 从清单移除商户
-- **route/App 端路线查询**: 查询上架城市的路线 / 不传任何过滤参数返回全部可见路线 / 按大使 ID 过滤路线 / 城市名与大使 ID 组合过滤 / 城市表中无同名城市时仍返回路线且 city 为 null / 未上架城市的路线仍可见 / 大使下线后路线隐藏 / 路线详情返回地点明细
+- **recommend-list/推荐清单管理**: 创建清单 / 缺少必填项被拒绝 / 修改所属城市需清单内商户同属新城市 / 人工恢复清单 / 删除清单 / 清单列表按排序号升序
+- **recommend-list/清单内商户维护**: 添加本城市商户 / 拒绝跨城市商户 / 重复添加同一商户被拒绝 / 拒绝已下架商户 / 从清单移除商户
+- **route/App 端路线查询**: 查询上架城市的路线 / 同排序号路线按创建时间倒序 / 不传任何过滤参数返回全部可见路线 / 按大使 ID 过滤路线 / 城市名与大使 ID 组合过滤 / 城市表中无同名城市时仍返回路线且 city 为 null / 未上架城市的路线仍可见 / 大使下线后路线隐藏 / 路线详情返回地点明细 / 路线列表返回爱女大使说 / 路线详情返回大使 id
 - **route/web 端大使与路线管理页面**: 大使列表与上下线 / 路线表单可选未上架城市 / 路线表单维护地点 / 删除路线需确认
 - **route/爱女大使管理**: 创建大使 / 标签超过 3 条被拒绝 / 大使上下线切换
 - **route/路线管理**: 创建路线 / 缺少必填项被拒绝 / 路线列表按排序号升序 / 删除路线
@@ -84,15 +85,16 @@
 | TC-article-IT-008 | PUT /api/admin/articles/{id}/online 文章上下线切换 | article/文章管理#文章上下线切换 | api-spec.json#/paths/~1api~1admin~1articles~1{id}~1online/put | article-and-featured-feed | IT | `test-evidence/article-cover-title-intro-tags/TC-article-IT-008/` | ✅ |
 | TC-article-IT-009 | DELETE /api/admin/articles/{id} 物理删除文章 | article/文章管理#创建文章 | api-spec.json#/paths/~1api~1admin~1articles~1{id}/delete | article-and-featured-feed | IT | `test-evidence/article-cover-title-intro-tags/TC-article-IT-009/` | ✅ |
 | TC-article-IT-010 | POST /api/admin/articles 富文本 img src 存 objectKey、admin 读时替换签名 URL | article/文章管理#创建文章 | api-spec.json#/paths/~1api~1admin~1articles/post | article-and-featured-feed | IT | `test-evidence/article-cover-title-intro-tags/TC-article-IT-010/` | ✅ |
-| TC-article-IT-011 | GET /api/app/article-categories 与 /api/app/articles 均按权重升序 | article/App 端文章查询#查询栏目与文章列表 | api-spec.json#/paths/~1api~1app~1article-categories/get | article-cover-title-intro-tags | IT | `test-evidence/article-cover-title-intro-tags/TC-article-IT-011/` | ✅ |
-| TC-article-IT-012 | GET /api/app/articles 下线文章不可见、详情 404 | article/App 端文章查询#下线文章不可见 | api-spec.json#/paths/~1api~1app~1articles~1{id}/get | article-and-featured-feed | IT | `test-evidence/article-cover-title-intro-tags/TC-article-IT-012/` | ✅ |
+| TC-article-IT-011 | GET /api/app/article-categories 与 /api/app/articles 均按权重升序 | article/App 端文章查询#查询栏目与文章列表 | api-spec.json#/paths/~1api~1app~1article-categories/get | article-cover-title-intro-tags | IT | `test-evidence/app-article-optional-category-and-featured-period-filter/TC-article-IT-011/` | ✅ |
+| TC-article-IT-012 | GET /api/app/articles 下线文章不可见、详情 404 | article/App 端文章查询#下线文章不可见 | api-spec.json#/paths/~1api~1app~1articles~1{id}/get | article-and-featured-feed | IT | `test-evidence/app-article-optional-category-and-featured-period-filter/TC-article-IT-012/` | ✅ |
 | TC-article-IT-013 | GET /api/app/articles/{id} 失去所有栏目的文章不可见 | article/App 端文章查询#失去所有栏目的文章不可见 | api-spec.json#/paths/~1api~1app~1articles~1{id}/get | article-and-featured-feed | IT | `test-evidence/article-cover-title-intro-tags/TC-article-IT-013/` | ✅ |
 | TC-article-IT-014 | GET /api/app/articles/{id} 详情返回富文本且 img src 为签名 URL | article/App 端文章查询#文章详情返回富文本 | api-spec.json#/paths/~1api~1app~1articles~1{id}/get | article-and-featured-feed | IT | `test-evidence/article-cover-title-intro-tags/TC-article-IT-014/` | ✅ |
 | TC-article-IT-015 | POST /api/admin/articles 创建带封面标题、引言与标签的文章 | article/文章管理#创建带封面标题、引言与标签的文章 | api-spec.json#/paths/~1api~1admin~1articles/post | article-cover-title-intro-tags | IT | `test-evidence/article-cover-title-intro-tags/TC-article-IT-015/` | ✅ |
 | TC-article-IT-016 | POST /api/admin/articles 省略封面标题、引言、标签 | article/文章管理#封面标题、引言、标签均可省略 | api-spec.json#/paths/~1api~1admin~1articles/post | article-cover-title-intro-tags | IT | `test-evidence/article-cover-title-intro-tags/TC-article-IT-016/` | ✅ |
 | TC-article-IT-017 | PUT /api/admin/articles/{id} 空白值按 null 存、标签空白项剔除 | article/文章管理#创建带封面标题、引言与标签的文章 | api-spec.json#/paths/~1api~1admin~1articles~1{id}/put | article-cover-title-intro-tags | IT | `test-evidence/article-cover-title-intro-tags/TC-article-IT-017/` | ✅ |
-| TC-article-IT-018 | GET /api/app/articles 未设封面标题时回落文章标题 | article/App 端文章查询#未设封面标题时列表回落文章标题 | api-spec.json#/paths/~1api~1app~1articles/get | article-cover-title-intro-tags | IT | `test-evidence/article-cover-title-intro-tags/TC-article-IT-018/` | ✅ |
+| TC-article-IT-018 | GET /api/app/articles 未设封面标题时回落文章标题 | article/App 端文章查询#未设封面标题时列表回落文章标题 | api-spec.json#/paths/~1api~1app~1articles/get | article-cover-title-intro-tags | IT | `test-evidence/app-article-optional-category-and-featured-period-filter/TC-article-IT-018/` | ✅ |
 | TC-article-IT-019 | GET /api/app/articles/{id} 详情返回引言与标签 | article/App 端文章查询#详情返回引言与标签 | api-spec.json#/paths/~1api~1app~1articles~1{id}/get | article-cover-title-intro-tags | IT | `test-evidence/article-cover-title-intro-tags/TC-article-IT-019/` | ✅ |
+| TC-article-IT-020 | GET /api/app/articles 不传 categoryId 返回全部可见文章 | article/App 端文章查询#不传栏目返回全部可见文章 | api-spec.json#/paths/~1api~1app~1articles/get | app-article-optional-category-and-featured-period-filter | IT | `test-evidence/app-article-optional-category-and-featured-period-filter/TC-article-IT-020/` | ✅ |
 | TC-article-WEB-001 | 文章栏目页新增与删除 | article/web 端文章管理页面#栏目管理增删改 | - | article-and-featured-feed | WEB | `test-evidence/regression/article/TC-article-WEB-001/` | ✅ |
 | TC-article-WEB-002 | 文章列表展示与上下线开关 | article/web 端文章管理页面#文章列表与上下线 | - | article-cover-title-intro-tags | WEB | `test-evidence/article-cover-title-intro-tags/TC-article-WEB-002/` | ✅ |
 | TC-article-WEB-003 | 文章表单富文本编辑与栏目多选回显 | article/web 端文章管理页面#文章表单富文本编辑 | - | article-and-featured-feed | WEB | `test-evidence/article-cover-title-intro-tags/TC-article-WEB-003/` | ✅ |
@@ -122,11 +124,11 @@
 | TC-banner-IT-009 | 城市下架级联使关联 Banner 下架 | banner/城市状态变更对 Banner 级联生效#城市下架连带 Banner 下架 | api-spec.json#/paths/~1api~1admin~1cities~1{id}~1online/post | baseline-auth-manager-banner-log-file | IT | - | ⬜ |
 | TC-banner-IT-010 | 城市重新上架级联恢复关联 Banner（含手动下架的） | banner/城市状态变更对 Banner 级联生效#城市重新上架连带 Banner 上架 | api-spec.json#/paths/~1api~1admin~1cities~1{id}~1online/post | baseline-auth-manager-banner-log-file | IT | - | ⬜ |
 | TC-banner-IT-011 | 删除城市只下架不删除关联 Banner | banner/城市状态变更对 Banner 级联生效#删除城市只下架不删除 Banner | api-spec.json#/paths/~1api~1admin~1cities~1{id}/delete | baseline-auth-manager-banner-log-file | IT | - | ⬜ |
-| TC-banner-IT-012 | GET /api/app/banners 按展示位返回上架 Banner 并按排序号升序 | banner/App 端 Banner 查询#按展示位查询上架 Banner | api-spec.json#/paths/~1api~1app~1banners/get | baseline-auth-manager-banner-log-file | IT | - | ⬜ |
-| TC-banner-IT-013 | GET /api/app/banners 排序号并列时按创建时间升序 | banner/App 端 Banner 查询#按展示位查询上架 Banner | api-spec.json#/paths/~1api~1app~1banners/get | baseline-auth-manager-banner-log-file | IT | - | ⬜ |
-| TC-banner-IT-014 | GET /api/app/banners 下架 Banner 不下发 | banner/App 端 Banner 查询#下架 Banner 不下发 | api-spec.json#/paths/~1api~1app~1banners/get | baseline-auth-manager-banner-log-file | IT | - | ⬜ |
-| TC-banner-IT-015 | GET /api/app/banners 关联城市下架时条目被剔除 | banner/App 端 Banner 查询#关联城市下架时条目被剔除 | api-spec.json#/paths/~1api~1app~1banners/get | baseline-auth-manager-banner-log-file | IT | - | ⬜ |
-| TC-banner-IT-016 | GET /api/app/banners 缺少 API-key 返回 401 | banner/App 端 Banner 查询#缺少 API-key 返回 401 | api-spec.json#/paths/~1api~1app~1banners/get | baseline-auth-manager-banner-log-file | IT | - | ⬜ |
+| TC-banner-IT-012 | GET /api/app/banners 按展示位返回上架 Banner 并按排序号升序 | banner/App 端 Banner 查询#按展示位查询上架 Banner | api-spec.json#/paths/~1api~1app~1banners/get | baseline-auth-manager-banner-log-file | IT | `test-evidence/app-list-sort-tiebreak/TC-banner-IT-012/` | ✅ |
+| TC-banner-IT-013 | GET /api/app/banners 排序号并列时按创建时间倒序 | banner/App 端 Banner 查询#同排序号 Banner 按创建时间倒序 | api-spec.json#/paths/~1api~1app~1banners/get | app-list-sort-tiebreak | IT | `test-evidence/app-list-sort-tiebreak/TC-banner-IT-013/` | ✅ |
+| TC-banner-IT-014 | GET /api/app/banners 下架 Banner 不下发 | banner/App 端 Banner 查询#下架 Banner 不下发 | api-spec.json#/paths/~1api~1app~1banners/get | baseline-auth-manager-banner-log-file | IT | `test-evidence/app-list-sort-tiebreak/TC-banner-IT-014/` | ✅ |
+| TC-banner-IT-015 | GET /api/app/banners 关联城市下架时条目被剔除 | banner/App 端 Banner 查询#关联城市下架时条目被剔除 | api-spec.json#/paths/~1api~1app~1banners/get | baseline-auth-manager-banner-log-file | IT | `test-evidence/app-list-sort-tiebreak/TC-banner-IT-015/` | ✅ |
+| TC-banner-IT-016 | GET /api/app/banners 缺少 API-key 返回 401 | banner/App 端 Banner 查询#缺少 API-key 返回 401 | api-spec.json#/paths/~1api~1app~1banners/get | baseline-auth-manager-banner-log-file | IT | `test-evidence/app-list-sort-tiebreak/TC-banner-IT-016/` | ✅ |
 | TC-banner-IT-017 | DELETE /api/admin/banners/{id} 物理删除 Banner | banner/Banner 管理#创建后默认下架 | api-spec.json#/paths/~1api~1admin~1banners~1{id}/delete | baseline-auth-manager-banner-log-file | IT | - | ⬜ |
 | TC-banner-WEB-001 | Banner 列表展示与上下架徽标 | banner/web 端 Banner 管理页面#列表展示与状态徽标 | - | baseline-auth-manager-banner-log-file | WEB | - | ⬜ |
 | TC-banner-WEB-002 | 上架乐观更新失败后回滚并提示 | banner/web 端 Banner 管理页面#上下架乐观更新失败回滚 | - | baseline-auth-manager-banner-log-file | WEB | - | ⬜ |
@@ -163,14 +165,18 @@
 | TC-featured-IT-013 | GET /api/admin/featured-cycle-items/page 按周期过滤并按排序号升序 | featured/周期推荐条目管理#按周期过滤列表 | api-spec.json#/paths/~1api~1admin~1featured-cycle-items~1page/get | featured-cycle-feed | IT | `test-evidence/featured-cycle-feed/TC-featured-IT-013/` | ✅ |
 | TC-featured-IT-014 | PUT /api/admin/featured-cycle-items/{id}/online 上下线切换 | featured/周期推荐条目管理#周期推荐上下线切换 | api-spec.json#/paths/~1api~1admin~1featured-cycle-items~1{id}~1online/put | featured-cycle-feed | IT | `test-evidence/featured-cycle-feed/TC-featured-IT-014/` | ✅ |
 | TC-featured-IT-015 | DELETE /api/admin/featured-cycle-items/{id} 物理删除 | featured/周期推荐条目管理 | api-spec.json#/paths/~1api~1admin~1featured-cycle-items~1{id}/delete | featured-cycle-feed | IT | `test-evidence/featured-cycle-feed/TC-featured-IT-015/` | ✅ |
-| TC-featured-IT-016 | GET /api/app/featured-cycle-items 四周期分组齐全且只含上线条目 | featured/App 端周期推荐查询#查询四个周期的推荐列表 | api-spec.json#/paths/~1api~1app~1featured-cycle-items/get | featured-cycle-feed | IT | `test-evidence/app-featured-cycle-type-filter/TC-featured-IT-016/` | ✅ |
-| TC-featured-IT-017 | GET /api/app/featured-cycle-items 关联实体不可见时条目不下发 | featured/App 端周期推荐查询#关联实体不可见时条目不下发 | api-spec.json#/paths/~1api~1app~1featured-cycle-items/get | featured-cycle-feed | IT | `test-evidence/app-featured-cycle-type-filter/TC-featured-IT-017/` | ✅ |
-| TC-featured-IT-018 | GET /api/app/featured-cycle-items 大使下线连带隐藏路线类条目 | featured/App 端周期推荐查询#大使下线连带隐藏路线类条目 | api-spec.json#/paths/~1api~1app~1featured-cycle-items/get | route-decouple-city-online | IT | `test-evidence/app-featured-cycle-type-filter/TC-featured-IT-018/` | ✅ |
-| TC-featured-IT-019 | GET /api/app/featured-cycle-items 组内按排序号升序 | featured/App 端周期推荐查询#组内按排序号升序 | api-spec.json#/paths/~1api~1app~1featured-cycle-items/get | featured-cycle-feed | IT | `test-evidence/app-featured-cycle-type-filter/TC-featured-IT-019/` | ✅ |
-| TC-featured-IT-020 | GET /api/app/featured-cycle-items 城市未上架不影响路线类条目 | featured/App 端周期推荐查询#城市未上架不影响路线类条目 | api-spec.json#/paths/~1api~1app~1featured-cycle-items/get | route-decouple-city-online | IT | `test-evidence/app-featured-cycle-type-filter/TC-featured-IT-020/` | ✅ |
-| TC-featured-IT-021 | GET /api/app/featured-cycle-items?type= 按内容类型过滤 | featured/App 端周期推荐查询#按内容类型过滤 | api-spec.json#/paths/~1api~1app~1featured-cycle-items/get | app-featured-cycle-type-filter | IT | `test-evidence/app-featured-cycle-type-filter/TC-featured-IT-021/` | ✅ |
-| TC-featured-IT-022 | GET /api/app/featured-cycle-items?type= 过滤后周期为空仍返回空数组 | featured/App 端周期推荐查询#类型过滤后周期为空仍返回空数组 | api-spec.json#/paths/~1api~1app~1featured-cycle-items/get | app-featured-cycle-type-filter | IT | `test-evidence/app-featured-cycle-type-filter/TC-featured-IT-022/` | ✅ |
-| TC-featured-IT-023 | GET /api/app/featured-cycle-items?type= 非法类型值返回 400 | featured/App 端周期推荐查询#非法类型值被拒绝 | api-spec.json#/paths/~1api~1app~1featured-cycle-items/get | app-featured-cycle-type-filter | IT | `test-evidence/app-featured-cycle-type-filter/TC-featured-IT-023/` | ✅ |
+| TC-featured-IT-016 | GET /api/app/featured-cycle-items 扁平数组带 period 字段且只含上线条目 | featured/App 端周期推荐查询#查询四个周期的推荐列表 | api-spec.json#/paths/~1api~1app~1featured-cycle-items/get | app-article-optional-category-and-featured-period-filter | IT | `test-evidence/app-article-optional-category-and-featured-period-filter/TC-featured-IT-016/` | ✅ |
+| TC-featured-IT-017 | GET /api/app/featured-cycle-items 关联实体不可见时条目不下发 | featured/App 端周期推荐查询#关联实体不可见时条目不下发 | api-spec.json#/paths/~1api~1app~1featured-cycle-items/get | app-article-optional-category-and-featured-period-filter | IT | `test-evidence/app-article-optional-category-and-featured-period-filter/TC-featured-IT-017/` | ✅ |
+| TC-featured-IT-018 | GET /api/app/featured-cycle-items 大使下线连带隐藏路线类条目 | featured/App 端周期推荐查询#大使下线连带隐藏路线类条目 | api-spec.json#/paths/~1api~1app~1featured-cycle-items/get | app-article-optional-category-and-featured-period-filter | IT | `test-evidence/app-article-optional-category-and-featured-period-filter/TC-featured-IT-018/` | ✅ |
+| TC-featured-IT-019 | GET /api/app/featured-cycle-items 按排序号升序 | featured/App 端周期推荐查询#组内按排序号升序 | api-spec.json#/paths/~1api~1app~1featured-cycle-items/get | app-article-optional-category-and-featured-period-filter | IT | `test-evidence/app-article-optional-category-and-featured-period-filter/TC-featured-IT-019/` | ✅ |
+| TC-featured-IT-020 | GET /api/app/featured-cycle-items 城市未上架不影响路线类条目 | featured/App 端周期推荐查询#城市未上架不影响路线类条目 | api-spec.json#/paths/~1api~1app~1featured-cycle-items/get | app-article-optional-category-and-featured-period-filter | IT | `test-evidence/app-article-optional-category-and-featured-period-filter/TC-featured-IT-020/` | ✅ |
+| TC-featured-IT-021 | GET /api/app/featured-cycle-items?type= 按内容类型过滤 | featured/App 端周期推荐查询#按内容类型过滤 | api-spec.json#/paths/~1api~1app~1featured-cycle-items/get | app-article-optional-category-and-featured-period-filter | IT | `test-evidence/app-article-optional-category-and-featured-period-filter/TC-featured-IT-021/` | ✅ |
+| TC-featured-IT-022 | GET /api/app/featured-cycle-items?type= 类型过滤后无条目返回空数组 | featured/App 端周期推荐查询#类型过滤后周期为空仍返回空数组 | api-spec.json#/paths/~1api~1app~1featured-cycle-items/get | app-article-optional-category-and-featured-period-filter | IT | `test-evidence/app-article-optional-category-and-featured-period-filter/TC-featured-IT-022/` | ✅ |
+| TC-featured-IT-023 | GET /api/app/featured-cycle-items?type= 非法类型值返回 400 | featured/App 端周期推荐查询#非法类型值被拒绝 | api-spec.json#/paths/~1api~1app~1featured-cycle-items/get | app-article-optional-category-and-featured-period-filter | IT | `test-evidence/app-article-optional-category-and-featured-period-filter/TC-featured-IT-023/` | ✅ |
+| TC-featured-IT-024 | GET /api/app/featured-cycle-items?period= 按周期过滤 | featured/App 端周期推荐查询#按周期过滤 | api-spec.json#/paths/~1api~1app~1featured-cycle-items/get | app-article-optional-category-and-featured-period-filter | IT | `test-evidence/app-article-optional-category-and-featured-period-filter/TC-featured-IT-024/` | ✅ |
+| TC-featured-IT-025 | GET /api/app/featured-cycle-items?period=&type= 周期与类型同时过滤 | featured/App 端周期推荐查询#周期与类型同时过滤 | api-spec.json#/paths/~1api~1app~1featured-cycle-items/get | app-article-optional-category-and-featured-period-filter | IT | `test-evidence/app-article-optional-category-and-featured-period-filter/TC-featured-IT-025/` | ✅ |
+| TC-featured-IT-026 | GET /api/app/featured-cycle-items?period= 周期过滤后无条目返回空数组 | featured/App 端周期推荐查询#周期过滤后无条目返回空数组 | api-spec.json#/paths/~1api~1app~1featured-cycle-items/get | app-article-optional-category-and-featured-period-filter | IT | `test-evidence/app-article-optional-category-and-featured-period-filter/TC-featured-IT-026/` | ✅ |
+| TC-featured-IT-027 | GET /api/app/featured-cycle-items?period= 非法周期值返回 400 | featured/App 端周期推荐查询#非法周期值被拒绝 | api-spec.json#/paths/~1api~1app~1featured-cycle-items/get | app-article-optional-category-and-featured-period-filter | IT | `test-evidence/app-article-optional-category-and-featured-period-filter/TC-featured-IT-027/` | ✅ |
 | TC-featured-WEB-001 | 精选推荐列表展示与上下线开关 | featured/web 端精选推荐页面#精选推荐列表与上下线 | - | article-and-featured-feed | WEB | `test-evidence/regression/featured/TC-featured-WEB-001/` | ✅ |
 | TC-featured-WEB-002 | 弹窗表单新增精选推荐 | featured/web 端精选推荐页面#新增精选推荐 | - | article-and-featured-feed | WEB | `test-evidence/regression/featured/TC-featured-WEB-002/` | ✅ |
 | TC-featured-WEB-003 | 周期推荐页四周期 Tab 切换与列表展示 | featured/web 端周期推荐页面#周期 Tab 切换与列表展示 | - | featured-cycle-feed | WEB | `test-evidence/regression/featured/TC-featured-WEB-003/` | ✅ |
@@ -212,6 +218,9 @@
 | TC-merchant-IT-004 | POST /api/admin/merchants 推荐理由 2001 字被拒绝 | merchant/商户编辑推荐理由#推荐理由超长被拒绝 | api-spec.json#/paths/~1api~1admin~1merchants/post | map-and-recommend-list | IT | `test-evidence/map-and-recommend-list/TC-merchant-IT-004/` | ✅ |
 | TC-merchant-IT-005 | POST /api/admin/merchants 不填推荐理由创建成功 | merchant/商户编辑推荐理由#推荐理由可为空 | api-spec.json#/paths/~1api~1admin~1merchants/post | map-and-recommend-list | IT | `test-evidence/map-and-recommend-list/TC-merchant-IT-005/` | ✅ |
 | TC-merchant-IT-006 | GET /api/app/merchants/{id} app 端详情返回推荐理由 | merchant/商户编辑推荐理由#app 端商户详情返回推荐理由 | api-spec.json#/paths/~1api~1app~1merchants~1{id}/get | map-and-recommend-list | IT | `test-evidence/map-and-recommend-list/TC-merchant-IT-006/` | ✅ |
+| TC-merchant-IT-007 | GET /api/app/categories/page 同排序号分类按创建时间倒序 | merchant/App 端带排序号列表的排序口径#分类列表同序号按创建时间倒序 | ⚠️ 待补契约（api-spec.json 中缺 `/api/app/categories/page` 条目） | app-list-sort-tiebreak | IT | `test-evidence/app-list-sort-tiebreak/TC-merchant-IT-007/` | ✅ |
+| TC-merchant-IT-008 | GET /api/app/categories/page 排序号优先于创建时间 | merchant/App 端带排序号列表的排序口径#排序号不同时以排序号为准 | ⚠️ 待补契约（api-spec.json 中缺 `/api/app/categories/page` 条目） | app-list-sort-tiebreak | IT | `test-evidence/app-list-sort-tiebreak/TC-merchant-IT-008/` | ✅ |
+| TC-merchant-IT-009 | GET /api/app/merchants/{merchantId}/reviews 同排序号评价按创建时间倒序 | merchant/App 端带排序号列表的排序口径#商户评价同序号按创建时间倒序 | ⚠️ 待补契约（api-spec.json 中缺 `/api/app/merchants/{merchantId}/reviews` 条目） | app-list-sort-tiebreak | IT | `test-evidence/app-list-sort-tiebreak/TC-merchant-IT-009/` | ✅ |
 | TC-merchant-WEB-001 | 商户表单录入推荐理由并回显 | merchant/商户编辑推荐理由#web 商户表单录入推荐理由 | - | map-and-recommend-list | WEB | `test-evidence/regression/merchant/TC-merchant-WEB-001/` | ✅ |
 | TC-merchant-WEB-002 | 推荐理由超长表单校验提示 | merchant/商户编辑推荐理由#web 商户表单录入推荐理由 | - | map-and-recommend-list | WEB | `test-evidence/regression/merchant/TC-merchant-WEB-002/` | ✅ |
 | TC-operation-log-IT-001 | 创建城市后异步产生 city:create 留痕 | operation-log/运营写操作留痕#创建城市后异步留痕 | api-spec.json#/paths/~1api~1admin~1logs~1page/get | baseline-auth-manager-banner-log-file | IT | - | ⬜ |
@@ -233,22 +242,26 @@
 | TC-operation-log-WEB-003 | 模块与动作按中文映射展示 | operation-log/web 端操作日志页面#模块与动作按中文展示 | - | baseline-auth-manager-banner-log-file | WEB | - | ⬜ |
 | TC-operation-log-WEB-004 | 未映射的模块/动作回落显示原始英文值 | operation-log/web 端操作日志页面#未映射的动作回落显示原值 | - | baseline-auth-manager-banner-log-file | WEB | - | ⬜ |
 | TC-operation-log-WEB-005 | 对象为空的创建类记录显示占位符 `-` | operation-log/web 端操作日志页面#对象为空的记录显示占位符 | - | baseline-auth-manager-banner-log-file | WEB | - | ⬜ |
-| TC-recommend-list-IT-001 | POST /api/admin/recommend-lists 创建清单成功 | recommend-list/推荐清单管理#创建清单 | api-spec.json#/paths/~1api~1admin~1recommend-lists/post | map-and-recommend-list | IT | `test-evidence/map-and-recommend-list/TC-recommend-list-IT-001/` | ✅ |
-| TC-recommend-list-IT-002 | POST /api/admin/recommend-lists 缺少必填项被拒绝 | recommend-list/推荐清单管理#缺少必填项被拒绝 | api-spec.json#/paths/~1api~1admin~1recommend-lists/post | map-and-recommend-list | IT | `test-evidence/map-and-recommend-list/TC-recommend-list-IT-002/` | ✅ |
-| TC-recommend-list-IT-003 | POST /api/admin/recommend-lists 不传 sortOrder 默认 0 | recommend-list/推荐清单管理#创建清单 | api-spec.json#/paths/~1api~1admin~1recommend-lists/post | map-and-recommend-list | IT | `test-evidence/map-and-recommend-list/TC-recommend-list-IT-003/` | ✅ |
-| TC-recommend-list-IT-004 | PUT /api/admin/recommend-lists/{id} 更新清单且 cityId 不可变 | recommend-list/推荐清单管理#创建清单 | api-spec.json#/paths/~1api~1admin~1recommend-lists~1{id}/put | map-and-recommend-list | IT | `test-evidence/map-and-recommend-list/TC-recommend-list-IT-004/` | ✅ |
-| TC-recommend-list-IT-005 | DELETE /api/admin/recommend-lists/{id} 物理删除含商户关联的清单 | recommend-list/推荐清单管理#删除清单 | api-spec.json#/paths/~1api~1admin~1recommend-lists~1{id}/delete | map-and-recommend-list | IT | `test-evidence/map-and-recommend-list/TC-recommend-list-IT-005/` | ✅ |
-| TC-recommend-list-IT-006 | GET /api/admin/recommend-lists/page 按 sortOrder 升序并支持过滤 | recommend-list/推荐清单管理#清单列表按排序号升序 | api-spec.json#/paths/~1api~1admin~1recommend-lists~1page/get | map-and-recommend-list | IT | `test-evidence/map-and-recommend-list/TC-recommend-list-IT-006/` | ✅ |
-| TC-recommend-list-IT-007 | PUT /api/admin/recommend-lists/{id}/merchants 全量替换本城市商户 | recommend-list/清单内商户维护#添加本城市商户 | api-spec.json#/paths/~1api~1admin~1recommend-lists~1{id}~1merchants/put | map-and-recommend-list | IT | `test-evidence/map-and-recommend-list/TC-recommend-list-IT-007/` | ✅ |
-| TC-recommend-list-IT-008 | PUT /api/admin/recommend-lists/{id}/merchants 跨城市商户被拒绝 | recommend-list/清单内商户维护#拒绝跨城市商户 | api-spec.json#/paths/~1api~1admin~1recommend-lists~1{id}~1merchants/put | map-and-recommend-list | IT | `test-evidence/map-and-recommend-list/TC-recommend-list-IT-008/` | ✅ |
-| TC-recommend-list-IT-009 | PUT /api/admin/recommend-lists/{id}/merchants 重复商户被拒绝 | recommend-list/清单内商户维护#重复添加同一商户被拒绝 | api-spec.json#/paths/~1api~1admin~1recommend-lists~1{id}~1merchants/put | map-and-recommend-list | IT | `test-evidence/map-and-recommend-list/TC-recommend-list-IT-009/` | ✅ |
-| TC-recommend-list-IT-010 | PUT /api/admin/recommend-lists/{id}/merchants 移除商户不影响商户本身 | recommend-list/清单内商户维护#从清单移除商户 | api-spec.json#/paths/~1api~1admin~1recommend-lists~1{id}~1merchants/put | map-and-recommend-list | IT | `test-evidence/map-and-recommend-list/TC-recommend-list-IT-010/` | ✅ |
-| TC-recommend-list-IT-011 | GET /api/app/recommend-lists 上架城市清单按 sortOrder 升序 | recommend-list/App 端清单查询#查询上架城市的清单 | api-spec.json#/paths/~1api~1app~1recommend-lists/get | map-and-recommend-list | IT | `test-evidence/map-and-recommend-list/TC-recommend-list-IT-011/` | ✅ |
-| TC-recommend-list-IT-012 | GET /api/app/recommend-lists/{id} 详情返回商户明细按排序升序 | recommend-list/App 端清单查询#清单详情返回商户明细 | api-spec.json#/paths/~1api~1app~1recommend-lists~1{id}/get | map-and-recommend-list | IT | `test-evidence/map-and-recommend-list/TC-recommend-list-IT-012/` | ✅ |
-| TC-recommend-list-IT-013 | GET /api/app/recommend-lists 下架城市清单不可见、详情 404 | recommend-list/App 端清单查询#下架城市清单不可见 | api-spec.json#/paths/~1api~1app~1recommend-lists~1{id}/get | map-and-recommend-list | IT | `test-evidence/map-and-recommend-list/TC-recommend-list-IT-013/` | ✅ |
-| TC-recommend-list-IT-014 | GET /api/app/merchants/page?recommendListId= 按推荐清单过滤商户 | recommend-list/App 端清单查询#按推荐清单过滤商户列表 | api-spec.json#/paths/~1api~1app~1merchants~1page/get | app-recommend-list-merchant-filter | IT | - | ⬜ |
+| TC-recommend-list-IT-001 | POST /api/admin/recommend-lists 创建清单成功 | recommend-list/推荐清单管理#创建清单 | api-spec.json#/paths/~1api~1admin~1recommend-lists/post | map-and-recommend-list | IT | `test-evidence/recommend-list-align-spec-to-merchant-ids/TC-recommend-list-IT-001/` | ✅ |
+| TC-recommend-list-IT-002 | POST /api/admin/recommend-lists 缺少必填项被拒绝 | recommend-list/推荐清单管理#缺少必填项被拒绝 | api-spec.json#/paths/~1api~1admin~1recommend-lists/post | map-and-recommend-list | IT | `test-evidence/recommend-list-align-spec-to-merchant-ids/TC-recommend-list-IT-002/` | ✅ |
+| TC-recommend-list-IT-003 | POST /api/admin/recommend-lists 不传 sortOrder 默认 0 | recommend-list/推荐清单管理#创建清单 | api-spec.json#/paths/~1api~1admin~1recommend-lists/post | map-and-recommend-list | IT | `test-evidence/recommend-list-align-spec-to-merchant-ids/TC-recommend-list-IT-003/` | ✅ |
+| TC-recommend-list-IT-004 | PUT /api/admin/recommend-lists/{id} 修改所属城市需清单内商户同属新城市 | recommend-list/推荐清单管理#修改所属城市需清单内商户同属新城市 | api-spec.json#/paths/~1api~1admin~1recommend-lists~1{id}/put | recommend-list-align-spec-to-merchant-ids | IT | `test-evidence/recommend-list-align-spec-to-merchant-ids/TC-recommend-list-IT-004/` | ✅ |
+| TC-recommend-list-IT-005 | DELETE /api/admin/recommend-lists/{id} 物理删除含商户关联的清单 | recommend-list/推荐清单管理#删除清单 | api-spec.json#/paths/~1api~1admin~1recommend-lists~1{id}/delete | map-and-recommend-list | IT | `test-evidence/recommend-list-align-spec-to-merchant-ids/TC-recommend-list-IT-005/` | ✅ |
+| TC-recommend-list-IT-006 | GET /api/admin/recommend-lists/page 按 sortOrder 升序并支持过滤 | recommend-list/推荐清单管理#清单列表按排序号升序 | api-spec.json#/paths/~1api~1admin~1recommend-lists~1page/get | map-and-recommend-list | IT | `test-evidence/recommend-list-align-spec-to-merchant-ids/TC-recommend-list-IT-006/` | ✅ |
+| TC-recommend-list-IT-007 | PUT /api/admin/recommend-lists/{id} merchantIds 整体替换本城市商户并按数组顺序回显 | recommend-list/清单内商户维护#添加本城市商户 | api-spec.json#/paths/~1api~1admin~1recommend-lists~1{id}/put | recommend-list-align-spec-to-merchant-ids | IT | `test-evidence/recommend-list-align-spec-to-merchant-ids/TC-recommend-list-IT-007/` | ✅ |
+| TC-recommend-list-IT-008 | PUT /api/admin/recommend-lists/{id} merchantIds 含跨城市商户被拒绝 | recommend-list/清单内商户维护#拒绝跨城市商户 | api-spec.json#/paths/~1api~1admin~1recommend-lists~1{id}/put | recommend-list-align-spec-to-merchant-ids | IT | `test-evidence/recommend-list-align-spec-to-merchant-ids/TC-recommend-list-IT-008/` | ✅ |
+| TC-recommend-list-IT-009 | PUT /api/admin/recommend-lists/{id} merchantIds 重复商户被拒绝 | recommend-list/清单内商户维护#重复添加同一商户被拒绝 | api-spec.json#/paths/~1api~1admin~1recommend-lists~1{id}/put | recommend-list-align-spec-to-merchant-ids | IT | `test-evidence/recommend-list-align-spec-to-merchant-ids/TC-recommend-list-IT-009/` | ✅ |
+| TC-recommend-list-IT-010 | PUT /api/admin/recommend-lists/{id} merchantIds 去掉商户即移除且不影响商户本身 | recommend-list/清单内商户维护#从清单移除商户 | api-spec.json#/paths/~1api~1admin~1recommend-lists~1{id}/put | recommend-list-align-spec-to-merchant-ids | IT | `test-evidence/recommend-list-align-spec-to-merchant-ids/TC-recommend-list-IT-010/` | ✅ |
+| TC-recommend-list-IT-011 | GET /api/app/recommend-lists 上架城市清单按 sortOrder 升序 | recommend-list/App 端清单与清单内商户查询#查询上架城市的清单 | api-spec.json#/paths/~1api~1app~1recommend-lists/get | map-and-recommend-list | IT | `test-evidence/app-list-sort-tiebreak/TC-recommend-list-IT-011/` | ✅ |
+| TC-recommend-list-IT-012 | GET /api/app/recommend-lists/{id} 详情按清单保存顺序返回上架商户四字段 | recommend-list/App 端清单与清单内商户查询#清单详情返回商户明细 | api-spec.json#/paths/~1api~1app~1recommend-lists~1{id}/get | app-recommend-list-owns-merchant-order | IT | `test-evidence/app-list-sort-tiebreak/TC-recommend-list-IT-012/` | ✅ |
+| TC-recommend-list-IT-013 | GET /api/app/recommend-lists 下架城市清单不可见、详情 404 | recommend-list/App 端清单与清单内商户查询#下架城市清单不可见 | api-spec.json#/paths/~1api~1app~1recommend-lists~1{id}/get | map-and-recommend-list | IT | `test-evidence/app-recommend-list-owns-merchant-order/TC-recommend-list-IT-013/` | ✅ |
+| TC-recommend-list-IT-015 | GET /api/app/merchants/page 商户列表不受清单影响 | recommend-list/App 端清单与清单内商户查询#商户列表不受清单影响 | api-spec.json#/paths/~1api~1app~1merchants~1page/get | app-recommend-list-owns-merchant-order | IT | `test-evidence/app-list-sort-tiebreak/TC-recommend-list-IT-015/` | ✅ |
+| TC-recommend-list-IT-016 | PUT /api/admin/recommend-lists/{id} merchantIds 含已下架商户被拒绝 | recommend-list/清单内商户维护#拒绝已下架商户 | api-spec.json#/paths/~1api~1admin~1recommend-lists~1{id}/put | recommend-list-align-spec-to-merchant-ids | IT | `test-evidence/recommend-list-align-spec-to-merchant-ids/TC-recommend-list-IT-016/` | ✅ |
+| TC-recommend-list-IT-017 | POST /api/admin/recommend-lists status 默认 ONLINE 且可带 status/merchantIds 创建 | recommend-list/推荐清单管理#创建清单 | api-spec.json#/paths/~1api~1admin~1recommend-lists/post | recommend-list-align-spec-to-merchant-ids | IT | `test-evidence/recommend-list-align-spec-to-merchant-ids/TC-recommend-list-IT-017/` | ✅ |
+| TC-recommend-list-IT-018 | POST /api/admin/recommend-lists/{id}/online 人工恢复清单（含下架商户拒绝、成功、幂等） | recommend-list/推荐清单管理#人工恢复清单 | api-spec.json#/paths/~1api~1admin~1recommend-lists~1{id}~1online/post | recommend-list-align-spec-to-merchant-ids | IT | `test-evidence/recommend-list-align-spec-to-merchant-ids/TC-recommend-list-IT-018/` | ✅ |
+| TC-recommend-list-IT-019 | GET /api/app/recommend-lists 同排序号清单按创建时间倒序 | recommend-list/App 端清单与清单内商户查询#同排序号清单按创建时间倒序 | api-spec.json#/paths/~1api~1app~1recommend-lists/get | app-list-sort-tiebreak | IT | `test-evidence/app-list-sort-tiebreak/TC-recommend-list-IT-019/` | ✅ |
 | TC-recommend-list-WEB-001 | 推荐清单列表与城市筛选 | recommend-list/web 端推荐清单管理页面#清单列表与筛选 | - | map-and-recommend-list | WEB | `test-evidence/map-and-recommend-list/TC-recommend-list-WEB-001/` | ✅ |
-| TC-recommend-list-WEB-002 | 清单编辑界面维护商户（仅本城市可选） | recommend-list/web 端推荐清单管理页面#维护清单商户 | - | map-and-recommend-list | WEB | `test-evidence/map-and-recommend-list/TC-recommend-list-WEB-002/` | ✅ |
+| TC-recommend-list-WEB-002 | 清单编辑界面维护商户（仅本城市可选） | recommend-list/web 端推荐清单管理页面#维护清单商户 | - | recommend-list-align-spec-to-merchant-ids | WEB | `test-evidence/map-and-recommend-list/TC-recommend-list-WEB-002/` | ✅ |
 | TC-recommend-list-WEB-003 | 删除清单需确认（确认删除、取消保留） | recommend-list/web 端推荐清单管理页面#删除清单需确认 | - | map-and-recommend-list | WEB | `test-evidence/map-and-recommend-list/TC-recommend-list-WEB-003/` | ✅ |
 | TC-route-IT-001 | POST /api/admin/ambassadors 创建大使成功且标签顺序保持 | route/爱女大使管理#创建大使 | api-spec.json#/paths/~1api~1admin~1ambassadors/post | ambassador-route-activity | IT | `test-evidence/ambassador-route-activity/TC-route-IT-001/` | ✅ |
 | TC-route-IT-002 | POST /api/admin/ambassadors 标签边界 3 条通过、4 条拒绝 | route/爱女大使管理#标签超过 3 条被拒绝 | api-spec.json#/paths/~1api~1admin~1ambassadors/post | ambassador-route-activity | IT | `test-evidence/ambassador-route-activity/TC-route-IT-002/` | ✅ |
@@ -261,18 +274,21 @@
 | TC-route-IT-009 | PUT /api/admin/routes/{id} 更新路线且 cityId 不可变 | route/路线管理#创建路线 | api-spec.json#/paths/~1api~1admin~1routes~1{id}/put | ambassador-route-activity | IT | `test-evidence/ambassador-route-activity/TC-route-IT-009/` | ✅ |
 | TC-route-IT-010 | GET /api/admin/routes/page 按 sortOrder 升序并支持过滤 | route/路线管理#路线列表按排序号升序 | api-spec.json#/paths/~1api~1admin~1routes~1page/get | ambassador-route-activity | IT | `test-evidence/ambassador-route-activity/TC-route-IT-010/` | ✅ |
 | TC-route-IT-011 | DELETE /api/admin/routes/{id} 物理删除路线连带地点 | route/路线管理#删除路线 | api-spec.json#/paths/~1api~1admin~1routes~1{id}/delete | ambassador-route-activity | IT | `test-evidence/ambassador-route-activity/TC-route-IT-011/` | ✅ |
-| TC-route-IT-012 | GET /api/app/routes?cityName= 按城市名查路线列表并按 sortOrder 升序 | route/App 端路线查询#查询上架城市的路线 | api-spec.json#/paths/~1api~1app~1routes/get | app-route-query-filters | IT | `test-evidence/app-route-query-filters/TC-route-IT-012/` | ✅ |
+| TC-route-IT-012 | GET /api/app/routes?cityName= 按城市名查路线列表并按 sortOrder 升序 | route/App 端路线查询#查询上架城市的路线 | api-spec.json#/paths/~1api~1app~1routes/get | app-route-query-filters | IT | `test-evidence/app-list-sort-tiebreak/TC-route-IT-012/` | ✅ |
 | TC-route-IT-013 | GET /api/app/routes 大使下线后路线隐藏、详情 404 | route/App 端路线查询#大使下线后路线隐藏 | api-spec.json#/paths/~1api~1app~1routes~1{id}/get | app-route-query-filters | IT | `test-evidence/app-route-query-filters/TC-route-IT-013/` | ✅ |
 | TC-route-IT-014 | GET /api/app/routes/{id} 路线详情返回地点明细与大使信息 | route/App 端路线查询#路线详情返回地点明细 | api-spec.json#/paths/~1api~1app~1routes~1{id}/get | ambassador-route-activity | IT | `test-evidence/app-route-query-filters/TC-route-IT-014/` | ✅ |
 | TC-route-IT-015 | GET /api/app/routes 未上架城市的路线仍可见且详情返回 cityName | route/App 端路线查询#未上架城市的路线仍可见 | api-spec.json#/paths/~1api~1app~1routes/get、api-spec.json#/paths/~1api~1app~1routes~1{id}/get | app-route-query-filters | IT | `test-evidence/app-route-query-filters/TC-route-IT-015/` | ✅ |
 | TC-route-IT-016 | GET /api/app/routes 不带任何参数返回全部可见路线 | route/App 端路线查询#不传任何过滤参数返回全部可见路线 | api-spec.json#/paths/~1api~1app~1routes/get | app-route-query-filters | IT | `test-evidence/app-route-query-filters/TC-route-IT-016/` | ✅ |
 | TC-route-IT-017 | GET /api/app/routes?ambassadorId= 按大使过滤路线 | route/App 端路线查询#按大使 ID 过滤路线 | api-spec.json#/paths/~1api~1app~1routes/get | app-route-query-filters | IT | `test-evidence/app-route-query-filters/TC-route-IT-017/` | ✅ |
 | TC-route-IT-018 | GET /api/app/routes?cityName=&ambassadorId= 组合过滤取交集 | route/App 端路线查询#城市名与大使 ID 组合过滤 | api-spec.json#/paths/~1api~1app~1routes/get | app-route-query-filters | IT | `test-evidence/app-route-query-filters/TC-route-IT-018/` | ✅ |
-| TC-route-IT-019 | GET /api/app/routes?cityName= 城市表无同名城市时仍返回路线且 city 为 null | route/App 端路线查询#城市表中无同名城市时仍返回路线且 city 为 null | api-spec.json#/paths/~1api~1app~1routes/get | app-route-query-filters | IT | `test-evidence/app-route-query-filters/TC-route-IT-019/` | ⬜ |
+| TC-route-IT-019 | GET /api/app/routes?cityName= 城市表无同名城市时仍返回路线且 city 为 null | route/App 端路线查询#城市表中无同名城市时仍返回路线且 city 为 null | api-spec.json#/paths/~1api~1app~1routes/get | app-route-query-filters | IT | `test-evidence/app-list-sort-tiebreak/TC-route-IT-019/` | ✅ |
 | TC-route-IT-020 | GET /api/app/ambassadors 默认返回权重最高的 3 位上线大使 | route/爱女大使管理 | api-spec.json#/paths/~1api~1app~1ambassadors/get | 直接实现（未走 change） | IT | `love-space-app/target/surefire-reports/com.space.app.modules.ambassador.controller.AmbassadorReadIT.txt` | ✅ |
 | TC-route-IT-021 | GET /api/app/ambassadors?limit= 生效且上限 20、非法值回落 3 | route/爱女大使管理 | api-spec.json#/paths/~1api~1app~1ambassadors/get | 直接实现（未走 change） | IT | `love-space-app/target/surefire-reports/com.space.app.modules.ambassador.controller.AmbassadorReadIT.txt` | ✅ |
 | TC-route-IT-022 | GET /api/app/ambassadors/{id} 详情与 404 口径 | route/爱女大使管理 | api-spec.json#/paths/~1api~1app~1ambassadors~1{id}/get | 直接实现（未走 change） | IT | `love-space-app/target/surefire-reports/com.space.app.modules.ambassador.controller.AmbassadorReadIT.txt` | ✅ |
 | TC-route-IT-023 | admin 大使创建/更新写入排序权重 | route/爱女大使管理 | api-spec.json#/paths/~1api~1admin~1ambassadors/post | 直接实现（未走 change） | IT | `love-space-admin/target/surefire-reports/com.loves.space.modules.ambassador.service.AmbassadorServiceTest.txt` | ✅ |
+| TC-route-IT-024 | GET /api/app/routes 同排序号路线按创建时间倒序 | route/App 端路线查询#同排序号路线按创建时间倒序 | api-spec.json#/paths/~1api~1app~1routes/get | app-list-sort-tiebreak | IT | `test-evidence/app-list-sort-tiebreak/TC-route-IT-024/` | ✅ |
+| TC-route-IT-025 | GET /api/app/routes 列表项返回 ambassadorNote | route/App 端路线查询#路线列表返回爱女大使说 | api-spec.json#/paths/~1api~1app~1routes/get | app-route-ambassador-fields | IT | `test-evidence/regression/route/TC-route-IT-025/` | ✅ |
+| TC-route-IT-026 | GET /api/app/routes/{id} 详情 ambassador 含 id | route/App 端路线查询#路线详情返回大使 id | api-spec.json#/paths/~1api~1app~1routes~1{id}/get | app-route-ambassador-fields | IT | `test-evidence/regression/route/TC-route-IT-026/` | ✅ |
 | TC-route-WEB-001 | 大使列表展示与上下线开关 | route/web 端大使与路线管理页面#大使列表与上下线 | - | ambassador-route-activity | WEB | `test-evidence/regression/route/TC-route-WEB-001/` | ✅ |
 | TC-route-WEB-002 | 路线表单维护地点子列表并按添加顺序回显 | route/web 端大使与路线管理页面#路线表单维护地点 | - | ambassador-route-activity | WEB | `test-evidence/regression/route/TC-route-WEB-002/` | ✅ |
 | TC-route-WEB-003 | 删除路线需确认（确认删除、取消保留） | route/web 端大使与路线管理页面#删除路线需确认 | - | ambassador-route-activity | WEB | `test-evidence/regression/route/TC-route-WEB-003/` | ✅ |
@@ -318,12 +334,9 @@
 - ⚠ 未覆盖：operation-log/留痕字段取值与敏感信息脱敏#嵌套资源的 target 取父级 id 无 WEB/APP 用例且无 UT(@scenario) 覆盖
 - ⚠ 未覆盖：operation-log/运营写操作留痕#业务方法失败时不留痕 无 WEB/APP 用例且无 UT(@scenario) 覆盖
 - ⚠ 未覆盖：operation-log/运营写操作留痕#登录不产生日志 无 WEB/APP 用例且无 UT(@scenario) 覆盖
-- ⚠ 悬空用例：TC-featured-IT-021 的 Scenario "按内容类型过滤" 在 "featured/App 端周期推荐查询" 下不存在
-- ⚠ 悬空用例：TC-featured-IT-022 的 Scenario "类型过滤后周期为空仍返回空数组" 在 "featured/App 端周期推荐查询" 下不存在
-- ⚠ 悬空用例：TC-featured-IT-023 的 Scenario "非法类型值被拒绝" 在 "featured/App 端周期推荐查询" 下不存在
 
 ## 测试统计
-- 总数：219
-- ✅ 通过：128 (58.4%)
+- 总数：234
+- ✅ 通过：150 (64.1%)
 - ❌ 失败：0
-- ⬜ 未测：91
+- ⬜ 未测：84

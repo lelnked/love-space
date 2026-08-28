@@ -43,7 +43,7 @@
     },
     {
       "name": "Category",
-      "description": "分类只读 API。\nHTTP 语义：GET /api/app/categories/page → 200 返回上架分类分页，按 sortOrder ASC, createdAt ASC 排序。"
+      "description": "分类只读 API。\nHTTP 语义：GET /api/app/categories/page → 200 返回上架分类分页，按 sortOrder ASC, createdAt DESC 排序。"
     },
     {
       "name": "City",
@@ -403,8 +403,8 @@
         "tags": [
           "Category"
         ],
-        "summary": "上架商户分类分页查询：sortOrder ASC, createdAt ASC",
-        "description": "上架商户分类分页查询：sortOrder ASC, createdAt ASC。",
+        "summary": "上架商户分类分页查询：sortOrder ASC, createdAt DESC",
+        "description": "上架商户分类分页查询：sortOrder ASC, createdAt DESC。",
         "operationId": "Category_page",
         "parameters": [
           {
@@ -1167,6 +1167,11 @@
         "type": "object",
         "description": "路线上的大使信息（头像为签名 URL）。",
         "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "大使 id，供客户端据此按 ambassadorId 反查该大使名下路线"
+          },
           "name": {
             "type": "string",
             "description": "大使名称"
@@ -1177,14 +1182,14 @@
                 "$ref": "#/components/schemas/ImageResponse"
               }
             ],
-            "description": "头像（objectKey + 签名 URL）"
+            "description": "大使头像（签名 URL）"
           },
           "tags": {
             "type": "array",
             "items": {
               "type": "string"
             },
-            "description": "大使标签（最多 3 条）"
+            "description": "大使标签，最多 3 条"
           }
         }
       },
@@ -1992,11 +1997,11 @@
           "id": {
             "type": "string",
             "format": "uuid",
-            "description": "ID（UUID）"
+            "description": "路线 id"
           },
           "title": {
             "type": "string",
-            "description": "主标题"
+            "description": "路线主标题"
           },
           "thumbnail": {
             "allOf": [
@@ -2004,16 +2009,20 @@
                 "$ref": "#/components/schemas/ImageResponse"
               }
             ],
-            "description": "缩略图（objectKey + 签名 URL）"
+            "description": "缩略图（签名 URL）"
           },
           "sortOrder": {
             "type": "integer",
             "format": "int32",
-            "description": "路线间排序号，升序展示"
+            "description": "排序号，升序展示"
           },
           "ambassadorName": {
             "type": "string",
             "description": "关联爱女大使名称"
+          },
+          "ambassadorNote": {
+            "type": "string",
+            "description": "爱女大使说，取自路线自身，与详情同源；未填写时为 null"
           },
           "city": {
             "allOf": [
@@ -2021,7 +2030,7 @@
                 "$ref": "#/components/schemas/RouteCityResponse"
               }
             ],
-            "description": "所属城市对象（id + 中文名）；城市记录已删除时为 null"
+            "description": "所属城市（由 cityName 反查城市表，无同名城市时为 null）"
           }
         }
       },

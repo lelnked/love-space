@@ -253,4 +253,37 @@ class RouteQueryServiceTest extends AbstractPostgresIntegrationTest {
         assertThat(result).hasSize(1);
         assertThat(result.getFirst().city()).isNull();
     }
+
+    // @scenario: route/App 端路线查询#路线列表返回爱女大使说
+    @Test
+    void listReturnsAmbassadorNote() {
+        String cityName = city(true);
+        UUID ambassadorId = ambassador(true);
+        UUID withNote = route(cityName, ambassadorId, 1, List.of());
+        route(cityName, ambassadorId, 2, List.of());
+        Route route = routeRepository.findById(withNote).orElseThrow();
+        route.setAmbassadorNote("跟着我逛老城区");
+        routeRepository.save(route);
+
+        List<RouteItemResponse> result = routeQueryService.list(cityName, null);
+
+        assertThat(result).hasSize(2);
+        assertThat(result.getFirst().ambassadorNote()).isEqualTo("跟着我逛老城区");
+        assertThat(result.get(1).ambassadorNote()).isNull();
+    }
+
+    // @scenario: route/App 端路线查询#路线详情返回大使 id
+    @Test
+    void detailReturnsAmbassadorId() {
+        String cityName = city(true);
+        UUID ambassadorId = ambassador(true);
+        UUID routeId = route(cityName, ambassadorId, 1, List.of());
+
+        RouteDetailResponse detail = routeQueryService.detail(routeId);
+
+        assertThat(detail.ambassador().id()).isEqualTo(ambassadorId);
+        assertThat(routeQueryService.list(null, detail.ambassador().id()))
+                .extracting(RouteItemResponse::id)
+                .contains(routeId);
+    }
 }

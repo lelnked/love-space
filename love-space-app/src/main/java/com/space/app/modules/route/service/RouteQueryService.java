@@ -82,6 +82,7 @@ public class RouteQueryService {
                             ImageResponses.from(route.getThumbnail(), imageUrlSigner),
                             route.getSortOrder(),
                             ambassador.getName(),
+                            route.getAmbassadorNote(),
                             city == null ? null : new RouteCityResponse(city.getId(), city.getChineseName()));
                 })
                 .filter(Objects::nonNull)
@@ -112,7 +113,8 @@ public class RouteQueryService {
                 route.getTravelTime(),
                 route.getSeason(),
                 route.getTravelStatus(),
-                new AmbassadorView(ambassador.getName(),
+                new AmbassadorView(ambassador.getId(),
+                        ambassador.getName(),
                         ImageResponses.from(ambassador.getAvatar(), imageUrlSigner),
                         ambassador.getTags()),
                 spots,
