@@ -115,7 +115,17 @@ app 端 SHALL 提供只读的周期推荐接口，返回**扁平数组**，按 `
 
 条目仅在自身 `online=true` **且**其关联实体当前可见时下发：`ACTIVITY` 仅需活动 `online=true`（活动不关联城市）；`ROUTE` 仅需其爱女大使 `online=true`（与路线所属城市是否上架无关）；`ARTICLE` 需文章 `online=true`。关联实体已被删除的条目 SHALL 不下发。
 
-每个条目下发内容：target 覆盖的周期集合、类型、banner 签名 URL、该类型的文案字段，以及关联实体 id `targetId`（单字段，指向哪张表由 `type` 判别，供 App 端自行决定跳转）。
+每个条目下发内容：target 覆盖的周期集合、类型、banner 签名 URL、该类型的文案字段、关联实体 id `targetId`（单字段，指向哪张表由 `type` 判别，供 App 端自行决定跳转），以及关联实体的基础信息对象 `target`。
+
+`target` SHALL 随条目一起下发，其字段形状按 `type` 判别，由 App 端自行解析；每种形状只含渲染推荐卡片所需的基础信息，不含详情内容：
+
+| `type` | `target` 字段 |
+|---|---|
+| `ACTIVITY` | `id`、`title`、`cover`（活动首图签名 URL，活动无图时为 null）、`level` |
+| `ROUTE` | `id`、`title`、`thumbnail`（签名 URL）、`cityName`、`ambassadorName` |
+| `ARTICLE` | `id`、`title`、`coverTitle`、`image`（签名 URL） |
+
+因条目仅在关联实体可见时才下发，被下发条目的 `target` SHALL NOT 为 null。`target` 的字段值 SHALL 取自关联实体本身，与条目上手填的文案字段（`title` / `subtitle` / `description` / `note`）相互独立、互不覆盖。
 
 #### Scenario: 查询四个周期的推荐列表
 - **GIVEN** 经期、排卵期下各有一条上线条目（关联不同 target），黄体期下有一条下线条目
@@ -201,6 +211,27 @@ app 端 SHALL 提供只读的周期推荐接口，返回**扁平数组**，按 `
 - **GIVEN** 经期下有 sortOrder 为 2、1、3 的三个上线条目
 - **WHEN** app 端带 `period=MENSTRUAL` 查周期推荐接口
 - **THEN** 数组内条目按 1、2、3 顺序返回
+
+
+#### Scenario: 活动类条目下发活动基础信息
+- **GIVEN** 一个上线的 ACTIVITY 类条目，其关联活动上线且有图片、标题与难度等级
+- **WHEN** app 端查周期推荐接口
+- **THEN** 返回 200，该条目的 `target` 含活动 id、活动标题、首图签名 URL 与难度等级，且条目自身的推荐说明不受影响
+
+#### Scenario: 路线类条目下发路线基础信息且不覆盖手填文案
+- **GIVEN** 一个上线的 ROUTE 类条目，条目手填主标题与路线自身标题不同，路线有缩略图、城市名，其爱女大使已上线
+- **WHEN** app 端查周期推荐接口
+- **THEN** 返回 200，该条目的 `target` 含路线 id、路线自身标题、缩略图签名 URL、路线城市名与大使名称，条目的 `title` 仍为手填主标题
+
+#### Scenario: 文章类条目下发文章基础信息
+- **GIVEN** 一个上线的 ARTICLE 类条目，其关联文章上线且设置了封面标题与封面图
+- **WHEN** app 端查周期推荐接口
+- **THEN** 返回 200，该条目的 `target` 含文章 id、文章标题、封面标题与封面图签名 URL
+
+#### Scenario: 活动无图片时 cover 为 null
+- **GIVEN** 一个上线的 ACTIVITY 类条目，其关联活动上线但未上传任何图片
+- **WHEN** app 端查周期推荐接口
+- **THEN** 返回 200，该条目仍被下发，其 `target.cover` 为 null，其余字段正常
 
 ### Requirement: web 端周期推荐页面
 web 端 SHALL 提供「周期推荐」后台页面：顶部四个周期 Tab 切换，每个 Tab 下为 DataTable 列表（banner 图/内容类型/标题/关联实体/排序号/状态/操作）+ 新增弹窗表单 + 上下线开关 + 删除确认弹窗。表单 SHALL 先选内容类型，再按类型动态展示对应字段与对应实体的下拉选择器；`ARTICLE` 类型选中文章后主标题 SHALL 自动带出文章标题且可编辑。
