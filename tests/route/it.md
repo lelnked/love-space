@@ -271,16 +271,16 @@
 ### TC-route-IT-019: GET /api/app/routes?cityName= 城市表无同名城市时仍返回路线且 city 为 null
 **关联需求**: route/App 端路线查询#城市表中无同名城市时仍返回路线且 city 为 null
 **关联契约**: api-spec.json#/paths/~1api~1app~1routes/get
-**来源**: app-route-query-filters
+**来源**: app-route-query-filters / app-route-list-city-name
 **优先级**: P1
 **测试步骤**:
 1. 前置：admin 侧创建一条路线，cityName 填「不存在城」（城市表中无同名城市），关联大使 online=true
 2. GET http://localhost:8081/api/app/routes?cityName=不存在城（请求头带 X-API-Key）
-**预期结果**: 返回 200，body 含该路线，其 `city` 为 `null`
+**预期结果**: 返回 200，body 含该路线，其 `city` 为 `null`，其 `cityName` 为「不存在城」
 **状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**: `test-evidence/app-list-sort-tiebreak/TC-route-IT-019/`
-**最后更新**: 2026-08-26
+**执行存证**: `test-evidence/regression/route/TC-route-IT-019/`
+**最后更新**: 2026-09-01
 
 ### TC-route-IT-020: GET /api/app/ambassadors 默认返回权重最高的 3 位上线大使
 **关联需求**: route/爱女大使管理
@@ -370,7 +370,7 @@
 **状态**: ✅ 通过
 **执行方式**: api-test-runner
 **执行存证**: `test-evidence/regression/route/TC-route-IT-025/`
-**最后更新**: 2026-08-28
+**最后更新**: 2026-09-01
 
 ### TC-route-IT-026: GET /api/app/routes/{id} 详情 ambassador 含 id
 **关联需求**: route/App 端路线查询#路线详情返回大使 id
@@ -386,3 +386,18 @@
 **执行方式**: api-test-runner
 **执行存证**: `test-evidence/regression/route/TC-route-IT-026/`
 **最后更新**: 2026-08-28
+
+### TC-route-IT-027: GET /api/app/routes 列表项返回路线自身城市名 cityName
+**关联需求**: route/App 端路线查询#列表项返回路线自身城市名
+**关联契约**: api-spec.json#/paths/~1api~1app~1routes/get
+**来源**: app-route-list-city-name
+**优先级**: P1
+**测试步骤**:
+1. admin 侧（http://localhost:21423）登录，创建城市「成都」，再创建一条 cityName 为「成都」的路线 R，关联大使 online=true
+2. GET http://localhost:8081/api/app/routes，请求头 `X-API-Key: test-api-key`
+3. GET http://localhost:8081/api/app/routes/{R.id}，请求头同上
+**预期结果**: 步骤 2 返回 200，R 对应列表项 `cityName` == "成都"，`city` 为 `{id, name:"成都"}`；步骤 3 详情 `cityName` == "成都"，与列表项一致
+**状态**: ✅ 通过
+**执行方式**: api-test-runner
+**执行存证**: `test-evidence/regression/route/TC-route-IT-027/`
+**最后更新**: 2026-09-01

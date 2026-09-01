@@ -2016,6 +2016,10 @@
             "format": "int32",
             "description": "排序号，升序展示"
           },
+          "cityName": {
+            "type": "string",
+            "description": "所属城市名称，取自路线自身，与详情同源；不依赖城市表，路线未填写时为 null"
+          },
           "ambassadorName": {
             "type": "string",
             "description": "关联爱女大使名称"

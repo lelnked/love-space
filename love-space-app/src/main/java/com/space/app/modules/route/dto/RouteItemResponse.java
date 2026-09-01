@@ -13,6 +13,7 @@ import java.util.UUID;
  * @param title          路线主标题
  * @param thumbnail      缩略图（签名 URL）
  * @param sortOrder      排序号，升序展示
+ * @param cityName       所属城市名称，取自路线自身（与详情同源，路线未填写时为 null），不依赖城市表
  * @param ambassadorName 关联爱女大使名称
  * @param ambassadorNote 爱女大使说，取自路线自身，与详情同源；未填写时为 null
  * @param city           所属城市（由 cityName 反查城市表，无同名城市时为 null）
@@ -22,6 +23,7 @@ public record RouteItemResponse(
         String title,
         ImageResponse thumbnail,
         int sortOrder,
+        String cityName,
         String ambassadorName,
         String ambassadorNote,
         RouteCityResponse city

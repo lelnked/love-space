@@ -29,7 +29,8 @@ import java.util.stream.Collectors;
  * 路线查询服务（App 端只读）：路线可见性仅取决于关联大使是否在线，与所属城市是否上架无关，
  * 按 sortOrder 升序。大使下线的级联靠查询过滤，不落库。
  * <p>列表支持可选的城市名与大使 ID 过滤（AND，均不传即不过滤）。
- * <p>城市信息由路线 cityName 反查城市表生成：无同名城市时 city 为 null，多条同名取最新创建的。
+ * <p>城市名 cityName 取自路线自身，列表与详情同源，与城市表无关；
+ * city 对象则由该 cityName 反查城市表生成：无同名城市时 city 为 null，多条同名取最新创建的。
  */
 @Service
 @Transactional(readOnly = true)
@@ -52,7 +53,7 @@ public class RouteQueryService {
 
     /**
      * 路线列表：cityName 与 ambassadorId 均为可选过滤条件，都不传则返回全部可见路线；
-     * cityName 按路线上的城市名原样匹配（城市表中无同名城市时 city 为 null，不影响路线返回）。
+     * cityName 按路线上的城市名原样匹配（城市表中无同名城市时 city 为 null，不影响路线与其 cityName 的返回）。
      * 可见性仍仅取决于关联大使是否在线。
      */
     public List<RouteItemResponse> list(String cityName, UUID ambassadorId) {
@@ -81,6 +82,7 @@ public class RouteQueryService {
                             route.getTitle(),
                             ImageResponses.from(route.getThumbnail(), imageUrlSigner),
                             route.getSortOrder(),
+                            route.getCityName(),
                             ambassador.getName(),
                             route.getAmbassadorNote(),
                             city == null ? null : new RouteCityResponse(city.getId(), city.getChineseName()));

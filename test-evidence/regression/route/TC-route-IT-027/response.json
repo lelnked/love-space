@@ -1,0 +1,55 @@
+{
+  "listItem": {
+    "id": "01a03bdd-ce3e-702c-ad68-7d0f7dc1d2ec",
+    "title": "路线B-021653",
+    "thumbnail": {
+      "id": "bound/8b23da6f-63c7-4260-87e1-3a549b3216f4.png",
+      "url": "http://test-bucket.oss-cn-chengdu.aliyuncs.com/bound/8b23da6f-63c7-4260-87e1-3a549b3216f4.png?Expires=1788233843&OSSAccessKeyId=testak&Signature=DUeSEErQ9g0M13dWwbKSJXQDZPk%3D"
+    },
+    "sortOrder": 0,
+    "cityName": "排序测试城021653",
+    "ambassadorName": "排序大使021653",
+    "ambassadorNote": null,
+    "city": {
+      "id": "01a03bdb-28ed-763c-a0ed-0e1852d2347e",
+      "name": "排序测试城021653"
+    }
+  },
+  "detail": {
+    "cityName": "排序测试城021653",
+    "sortOrder": 0,
+    "title": "路线B-021653",
+    "ambassadorNote": null,
+    "thumbnail": {
+      "id": "bound/8b23da6f-63c7-4260-87e1-3a549b3216f4.png",
+      "url": "http://test-bucket.oss-cn-chengdu.aliyuncs.com/bound/8b23da6f-63c7-4260-87e1-3a549b3216f4.png?Expires=1788233843&OSSAccessKeyId=testak&Signature=DUeSEErQ9g0M13dWwbKSJXQDZPk%3D"
+    },
+    "images": [
+      {
+        "id": "bound/38f13c69-fe1a-4a61-90aa-c20b01995d2f.png",
+        "url": "http://test-bucket.oss-cn-chengdu.aliyuncs.com/bound/38f13c69-fe1a-4a61-90aa-c20b01995d2f.png?Expires=1788233843&OSSAccessKeyId=testak&Signature=Fgsy3Rz8UMxNfvChx9PddhYrR7E%3D"
+      }
+    ],
+    "travelTime": null,
+    "season": null,
+    "travelStatus": null,
+    "ambassador": {
+      "id": "01a03bdd-5798-77c2-81ca-672d360f8da7",
+      "name": "排序大使021653",
+      "avatar": {
+        "id": "bound/aaf89b6f-436c-477e-ac82-fde385411f4a.png",
+        "url": "http://test-bucket.oss-cn-chengdu.aliyuncs.com/bound/aaf89b6f-436c-477e-ac82-fde385411f4a.png?Expires=1788233843&OSSAccessKeyId=testak&Signature=ql%2BPTI7HLQidFoR1rK9ZRzOj1Ak%3D"
+      },
+      "tags": [
+        "古着"
+      ]
+    },
+    "spots": [],
+    "city": {
+      "id": "01a03bdb-28ed-763c-a0ed-0e1852d2347e",
+      "name": "排序测试城021653"
+    },
+    "createdAt": "2026-08-26T02:19:47.133947Z",
+    "updatedAt": "2026-08-26T02:19:47.133947Z"
+  }
+}
