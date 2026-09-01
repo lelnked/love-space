@@ -553,7 +553,7 @@
           "FeaturedCycleItem"
         ],
         "summary": "推荐信息流",
-        "description": "推荐信息流；period / type 可选且可同用，非法值由枚举转换失败返回 400。",
+        "description": "推荐信息流；period / type 可选且可同用，非法值由枚举转换失败返回 400。每条附 target 对象，按 type 分三种形状携带关联实体基础信息。",
         "operationId": "FeaturedCycleItem_feed",
         "parameters": [
           {
@@ -1427,7 +1427,7 @@
       },
       "FeaturedCycleItemResponse": {
         "type": "object",
-        "description": "周期推荐条目响应（App 端）。\nperiod 为所属周期，扁平列表下客户端据此自行分组；不属于当前 type 的关联 id 与文案字段恒为 null；\n关联实体 id 供 App 端自行决定跳转。",
+        "description": "周期推荐条目响应（App 端）。\nperiod 为该 target（type 与 targetId 都相同者为同一 target）覆盖的周期数组，在全部可下发条目上计算，不受请求的 period / type 过滤参数影响；不属于当前 type 的文案字段恒为 null；\ntargetId 指向哪张表由 type 判别，target 为该关联实体的基础信息（形状按 type 判别）。",
         "properties": {
           "id": {
             "type": "string",
@@ -1435,12 +1435,11 @@
             "description": "推荐条目 ID"
           },
           "period": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/Period"
-              }
-            ],
-            "description": "所属生理周期（MENSTRUAL / FOLLICULAR / OVULATION / LUTEAL），不传 period 过滤时客户端据此分组"
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Period"
+            },
+            "description": "该 target 覆盖的周期数组，按 MENSTRUAL / FOLLICULAR / OVULATION / LUTEAL 枚举声明顺序排列"
           },
           "type": {
             "allOf": [
@@ -1458,20 +1457,14 @@
             ],
             "description": "Banner 图片（objectKey + 签名 URL）"
           },
-          "activityId": {
+          "targetId": {
             "type": "string",
             "format": "uuid",
-            "description": "关联活动 id（type=ACTIVITY 时有值）"
+            "description": "关联实体 id，指向哪张表由 type 判别（ACTIVITY→活动 / ROUTE→路线 / ARTICLE→文章）"
           },
-          "routeId": {
-            "type": "string",
-            "format": "uuid",
-            "description": "关联路线 id（type=ROUTE 时有值）"
-          },
-          "articleId": {
-            "type": "string",
-            "format": "uuid",
-            "description": "关联文章 id（type=ARTICLE 时有值）"
+          "target": {
+            "$ref": "#/components/schemas/FeaturedCycleItemTargetResponse",
+            "description": "关联实体基础信息，形状按 type 判别；条目仅在关联实体可见时下发，故恒非 null"
           },
           "title": {
             "type": "string",
@@ -2098,6 +2091,105 @@
           "name": {
             "type": "string",
             "description": "标签名"
+          }
+        }
+      },
+      "FeaturedCycleItemTargetResponse": {
+        "description": "周期推荐关联实体的基础信息；形状按条目的 type 判别，由 App 端自行解析",
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/FeaturedCycleItemActivityTarget"
+          },
+          {
+            "$ref": "#/components/schemas/FeaturedCycleItemRouteTarget"
+          },
+          {
+            "$ref": "#/components/schemas/FeaturedCycleItemArticleTarget"
+          }
+        ]
+      },
+      "FeaturedCycleItemActivityTarget": {
+        "type": "object",
+        "description": "type=ACTIVITY 时的 target 形状",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "活动 id"
+          },
+          "title": {
+            "type": "string",
+            "description": "活动标题"
+          },
+          "cover": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ImageResponse"
+              }
+            ],
+            "description": "活动首图（签名 URL）；活动无图片时为 null"
+          },
+          "level": {
+            "type": "string",
+            "description": "活动难度等级"
+          }
+        }
+      },
+      "FeaturedCycleItemRouteTarget": {
+        "type": "object",
+        "description": "type=ROUTE 时的 target 形状",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "路线 id"
+          },
+          "title": {
+            "type": "string",
+            "description": "路线自身标题（与条目手填主标题相互独立）"
+          },
+          "thumbnail": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ImageResponse"
+              }
+            ],
+            "description": "路线缩略图（签名 URL）"
+          },
+          "cityName": {
+            "type": "string",
+            "description": "所属城市名，取自路线自身；路线未填写时为 null"
+          },
+          "ambassadorName": {
+            "type": "string",
+            "description": "关联爱女大使名称"
+          }
+        }
+      },
+      "FeaturedCycleItemArticleTarget": {
+        "type": "object",
+        "description": "type=ARTICLE 时的 target 形状",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "文章 id"
+          },
+          "title": {
+            "type": "string",
+            "description": "文章标题"
+          },
+          "coverTitle": {
+            "type": "string",
+            "description": "文章封面标题；未设置时为 null"
+          },
+          "image": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ImageResponse"
+              }
+            ],
+            "description": "文章封面图（签名 URL）"
           }
         }
       }

@@ -1,6 +1,7 @@
 package com.space.app.modules.featuredcycle.service;
 
 import com.space.app.common.enums.Period;
+import com.space.app.common.dto.ImageResponse;
 import com.space.app.common.util.ImageResponses;
 import com.space.app.infrastructure.storage.ImageUrlSigner;
 import com.space.app.modules.activity.entity.Activity;
@@ -10,6 +11,7 @@ import com.space.app.modules.ambassador.repository.AmbassadorRepository;
 import com.space.app.modules.article.entity.Article;
 import com.space.app.modules.article.repository.ArticleRepository;
 import com.space.app.modules.featuredcycle.dto.FeaturedCycleItemResponse;
+import com.space.app.modules.featuredcycle.dto.FeaturedCycleItemTargetResponse;
 import com.space.app.modules.featuredcycle.entity.FeaturedCycleItem;
 import com.space.app.modules.featuredcycle.entity.FeaturedCycleItemType;
 import com.space.app.modules.featuredcycle.repository.FeaturedCycleItemRepository;
@@ -21,7 +23,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -63,24 +64,25 @@ public class FeaturedCycleItemQueryService {
      */
     public List<FeaturedCycleItemResponse> feed(Period period, FeaturedCycleItemType type) {
         // ponytail: 运营配置级数据量（每周期个位数），全量捞出在内存过滤即可，无需 join
+        // 保留实体本身（而非只留 id）：可见性判定与 target 基础信息装配复用同一份，查询次数不变
         // 活动可见性只看活动是否上线——活动不再关联地图，城市上架状态与它无关
-        Set<UUID> visibleActivityIds = activityRepository.findAll().stream()
+        Map<UUID, Activity> visibleActivities = activityRepository.findAll().stream()
                 .filter(Activity::isOnline)
-                .map(Activity::getId).collect(Collectors.toSet());
-        Set<UUID> onlineAmbassadorIds = ambassadorRepository.findAll().stream()
+                .collect(Collectors.toMap(Activity::getId, a -> a));
+        Map<UUID, Ambassador> onlineAmbassadors = ambassadorRepository.findAll().stream()
                 .filter(Ambassador::isOnline)
-                .map(Ambassador::getId).collect(Collectors.toSet());
+                .collect(Collectors.toMap(Ambassador::getId, a -> a));
         // 路线可见性只看大使是否上线——城市未上架不影响，运营可在地图上线前先投放该城市的路线
-        Set<UUID> visibleRouteIds = routeRepository.findAll().stream()
-                .filter(route -> onlineAmbassadorIds.contains(route.getAmbassadorId()))
-                .map(Route::getId).collect(Collectors.toSet());
-        Set<UUID> visibleArticleIds = articleRepository.findAll().stream()
+        Map<UUID, Route> visibleRoutes = routeRepository.findAll().stream()
+                .filter(route -> onlineAmbassadors.containsKey(route.getAmbassadorId()))
+                .collect(Collectors.toMap(Route::getId, r -> r));
+        Map<UUID, Article> visibleArticles = articleRepository.findAll().stream()
                 .filter(Article::isOnline)
-                .map(Article::getId).collect(Collectors.toSet());
+                .collect(Collectors.toMap(Article::getId, a -> a));
 
         List<FeaturedCycleItem> visibleItems =
                 featuredCycleItemRepository.findAllByOnlineTrueOrderBySortOrderAscCreatedAtDesc().stream()
-                        .filter(item -> isVisible(item, visibleActivityIds, visibleRouteIds, visibleArticleIds))
+                        .filter(item -> isVisible(item, visibleActivities, visibleRoutes, visibleArticles))
                         .toList();
 
         Map<TargetKey, EnumSet<Period>> periodsByTarget = visibleItems.stream().collect(Collectors.groupingBy(
@@ -91,7 +93,8 @@ public class FeaturedCycleItemQueryService {
         return visibleItems.stream()
                 .filter(item -> period == null || item.getPhase() == period)
                 .filter(item -> type == null || item.getType() == type)
-                .map(item -> toResponse(item, periodsByTarget.get(TargetKey.of(item))))
+                .map(item -> toResponse(item, periodsByTarget.get(TargetKey.of(item)),
+                        toTarget(item, visibleActivities, visibleRoutes, visibleArticles, onlineAmbassadors)))
                 .toList();
     }
 
@@ -103,24 +106,66 @@ public class FeaturedCycleItemQueryService {
     }
 
     private boolean isVisible(FeaturedCycleItem item,
-                              Set<UUID> visibleActivityIds,
-                              Set<UUID> visibleRouteIds,
-                              Set<UUID> visibleArticleIds) {
+                              Map<UUID, Activity> visibleActivities,
+                              Map<UUID, Route> visibleRoutes,
+                              Map<UUID, Article> visibleArticles) {
         return switch (item.getType()) {
-            case ACTIVITY -> visibleActivityIds.contains(item.getTargetId());
-            case ROUTE -> visibleRouteIds.contains(item.getTargetId());
-            case ARTICLE -> visibleArticleIds.contains(item.getTargetId());
+            case ACTIVITY -> visibleActivities.containsKey(item.getTargetId());
+            case ROUTE -> visibleRoutes.containsKey(item.getTargetId());
+            case ARTICLE -> visibleArticles.containsKey(item.getTargetId());
+        };
+    }
+
+    /**
+     * 关联实体基础信息：形状按类型分派，取值一律来自实体本身，与条目上手填的文案字段互不覆盖。
+     * <p>只在已通过可见性过滤的条目上调用，故 map 中必有对应实体。
+     */
+    private FeaturedCycleItemTargetResponse toTarget(FeaturedCycleItem item,
+                                                     Map<UUID, Activity> visibleActivities,
+                                                     Map<UUID, Route> visibleRoutes,
+                                                     Map<UUID, Article> visibleArticles,
+                                                     Map<UUID, Ambassador> onlineAmbassadors) {
+        return switch (item.getType()) {
+            case ACTIVITY -> {
+                Activity activity = visibleActivities.get(item.getTargetId());
+                List<ImageResponse> images = ImageResponses.fromList(activity.getImages(), imageUrlSigner);
+                yield new FeaturedCycleItemTargetResponse.ActivityTarget(
+                        activity.getId(),
+                        activity.getTitle(),
+                        images.isEmpty() ? null : images.getFirst(),
+                        activity.getLevel());
+            }
+            case ROUTE -> {
+                Route route = visibleRoutes.get(item.getTargetId());
+                Ambassador ambassador = onlineAmbassadors.get(route.getAmbassadorId());
+                yield new FeaturedCycleItemTargetResponse.RouteTarget(
+                        route.getId(),
+                        route.getTitle(),
+                        ImageResponses.from(route.getThumbnail(), imageUrlSigner),
+                        route.getCityName(),
+                        ambassador.getName());
+            }
+            case ARTICLE -> {
+                Article article = visibleArticles.get(item.getTargetId());
+                yield new FeaturedCycleItemTargetResponse.ArticleTarget(
+                        article.getId(),
+                        article.getTitle(),
+                        article.getCoverTitle(),
+                        ImageResponses.from(article.getImage(), imageUrlSigner));
+            }
         };
     }
 
     /** {@code periods} 用 EnumSet 传入：天然去重且按 Period 声明顺序迭代，转 List 后即为契约要求的顺序。 */
-    private FeaturedCycleItemResponse toResponse(FeaturedCycleItem item, EnumSet<Period> periods) {
+    private FeaturedCycleItemResponse toResponse(FeaturedCycleItem item, EnumSet<Period> periods,
+                                                 FeaturedCycleItemTargetResponse target) {
         return new FeaturedCycleItemResponse(
                 item.getId(),
                 List.copyOf(periods),
                 item.getType(),
                 ImageResponses.from(item.getBanner(), imageUrlSigner),
                 item.getTargetId(),
+                target,
                 item.getTitle(),
                 item.getSubtitle(),
                 item.getDescription(),

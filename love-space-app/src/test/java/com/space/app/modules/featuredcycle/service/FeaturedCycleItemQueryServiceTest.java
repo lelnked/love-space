@@ -12,6 +12,7 @@ import com.space.app.modules.article.repository.ArticleRepository;
 import com.space.app.modules.city.entity.City;
 import com.space.app.modules.city.repository.CityRepository;
 import com.space.app.modules.featuredcycle.dto.FeaturedCycleItemResponse;
+import com.space.app.modules.featuredcycle.dto.FeaturedCycleItemTargetResponse;
 import com.space.app.modules.featuredcycle.entity.FeaturedCycleItem;
 import com.space.app.modules.featuredcycle.entity.FeaturedCycleItemType;
 import com.space.app.modules.featuredcycle.repository.FeaturedCycleItemRepository;
@@ -83,6 +84,16 @@ class FeaturedCycleItemQueryServiceTest extends AbstractPostgresIntegrationTest 
         Activity activity = new Activity();
         activity.setTitle("活动-" + UUID.randomUUID());
         activity.setOnline(online);
+        return activityRepository.save(activity);
+    }
+
+    /** 带首图与难度等级的活动，用于断言 target 基础信息。 */
+    private Activity activityWithCoverAndLevel() {
+        Activity activity = new Activity();
+        activity.setTitle("活动-" + UUID.randomUUID());
+        activity.setOnline(true);
+        activity.setImages(List.of("images/cover-1.png", "images/cover-2.png"));
+        activity.setLevel("轻松");
         return activityRepository.save(activity);
     }
 
@@ -346,5 +357,81 @@ class FeaturedCycleItemQueryServiceTest extends AbstractPostgresIntegrationTest 
                 .containsExactly(aMenstrual, bMenstrual);
         assertThat(menstrual.getFirst().period()).containsExactly(Period.MENSTRUAL, Period.LUTEAL);
         assertThat(menstrual.getLast().period()).containsExactly(Period.MENSTRUAL);
+    }
+
+    // @scenario: featured/App 端周期推荐查询#活动类条目下发活动基础信息
+    @Test
+    void activityItemCarriesActivityBasicInfo() {
+        Activity activity = activityWithCoverAndLevel();
+        item(Period.MENSTRUAL, FeaturedCycleItemType.ACTIVITY, activity.getId(), true, 0);
+
+        FeaturedCycleItemResponse response =
+                featuredCycleItemQueryService.feed(null, FeaturedCycleItemType.ACTIVITY).getFirst();
+
+        assertThat(response.target()).isInstanceOf(FeaturedCycleItemTargetResponse.ActivityTarget.class);
+        FeaturedCycleItemTargetResponse.ActivityTarget target =
+                (FeaturedCycleItemTargetResponse.ActivityTarget) response.target();
+        assertThat(target.id()).isEqualTo(activity.getId());
+        assertThat(target.title()).isEqualTo(activity.getTitle());
+        assertThat(target.cover().id()).isEqualTo("images/cover-1.png");
+        assertThat(target.cover().url()).startsWith("https://signed.example.com/");
+        assertThat(target.level()).isEqualTo("轻松");
+        // 条目自身手填文案不被 target 覆盖
+        assertThat(response.description()).isEqualTo("推荐说明");
+    }
+
+    // @scenario: featured/App 端周期推荐查询#路线类条目下发路线基础信息且不覆盖手填文案
+    @Test
+    void routeItemCarriesRouteBasicInfoWithoutOverridingCopy() {
+        Ambassador ambassador = ambassador(true);
+        Route route = route(ambassador.getId());
+        item(Period.OVULATION, FeaturedCycleItemType.ROUTE, route.getId(), true, 0);
+
+        FeaturedCycleItemResponse response =
+                featuredCycleItemQueryService.feed(null, FeaturedCycleItemType.ROUTE).getFirst();
+
+        FeaturedCycleItemTargetResponse.RouteTarget target =
+                (FeaturedCycleItemTargetResponse.RouteTarget) response.target();
+        assertThat(target.id()).isEqualTo(route.getId());
+        assertThat(target.title()).isEqualTo(route.getTitle());
+        assertThat(target.thumbnail().id()).isEqualTo("images/thumb.png");
+        assertThat(target.cityName()).isEqualTo(route.getCityName());
+        assertThat(target.ambassadorName()).isEqualTo(ambassador.getName());
+        // 条目手填主标题与路线自身标题各自独立
+        assertThat(response.title()).isEqualTo("主标题").isNotEqualTo(route.getTitle());
+    }
+
+    // @scenario: featured/App 端周期推荐查询#文章类条目下发文章基础信息
+    @Test
+    void articleItemCarriesArticleBasicInfo() {
+        Article article = article(true);
+        article.setCoverTitle("封面标题");
+        articleRepository.save(article);
+        item(Period.LUTEAL, FeaturedCycleItemType.ARTICLE, article.getId(), true, 0);
+
+        FeaturedCycleItemResponse response =
+                featuredCycleItemQueryService.feed(null, FeaturedCycleItemType.ARTICLE).getFirst();
+
+        FeaturedCycleItemTargetResponse.ArticleTarget target =
+                (FeaturedCycleItemTargetResponse.ArticleTarget) response.target();
+        assertThat(target.id()).isEqualTo(article.getId());
+        assertThat(target.title()).isEqualTo(article.getTitle());
+        assertThat(target.coverTitle()).isEqualTo("封面标题");
+        assertThat(target.image().id()).isEqualTo("images/article.png");
+    }
+
+    // @scenario: featured/App 端周期推荐查询#活动无图片时 cover 为 null
+    @Test
+    void activityTargetCoverIsNullWhenActivityHasNoImages() {
+        item(Period.FOLLICULAR, FeaturedCycleItemType.ACTIVITY, activity(true).getId(), true, 0);
+
+        FeaturedCycleItemResponse response =
+                featuredCycleItemQueryService.feed(Period.FOLLICULAR, FeaturedCycleItemType.ACTIVITY).getFirst();
+
+        FeaturedCycleItemTargetResponse.ActivityTarget target =
+                (FeaturedCycleItemTargetResponse.ActivityTarget) response.target();
+        assertThat(target.cover()).isNull();
+        assertThat(target.id()).isNotNull();
+        assertThat(target.title()).isNotBlank();
     }
 }

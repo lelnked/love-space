@@ -828,7 +828,7 @@
     },
     "/api/app/featured-cycle-items": {
       "get": {
-        "summary": "App 周期推荐（扁平数组，条目不去重；响应 period 为该 target（type+targetId 相同者）覆盖的周期数组，按枚举声明顺序、在全部可下发条目上计算；关联实体为单字段 targetId；period / type 可选过滤且可同用；条目上线∧关联实体可见，sortOrder 升序）",
+        "summary": "App 周期推荐（扁平数组，条目不去重；响应 period 为该 target（type+targetId 相同者）覆盖的周期数组，按枚举声明顺序、在全部可下发条目上计算；关联实体为单字段 targetId；period / type 可选过滤且可同用；条目上线∧关联实体可见，sortOrder 升序；每条附 target 对象，按 type 分三种形状携带关联实体基础信息：ACTIVITY={id,title,cover,level}、ROUTE={id,title,thumbnail,cityName,ambassadorName}、ARTICLE={id,title,coverTitle,image}）",
         "parameters": [
           {
             "name": "period",

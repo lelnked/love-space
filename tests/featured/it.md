@@ -498,3 +498,59 @@
 **执行方式**: api-test-runner
 **执行存证**: `test-evidence/featured-cycle-item-multi-period-tags/TC-featured-IT-033/`
 **最后更新**: 2026-08-28
+
+### TC-featured-IT-034: GET /api/app/featured-cycle-items 活动类条目下发活动基础信息
+**关联需求**: featured/App 端周期推荐查询#活动类条目下发活动基础信息
+**关联契约**: api-spec.json#/paths/~1api~1app~1featured-cycle-items/get
+**来源**: featured-cycle-item-target-basic-info
+**优先级**: P0
+**测试步骤**:
+1. 前置：创建上线活动（含 ≥1 张图片、标题、难度等级 level），在 MENSTRUAL 下创建 1 个上线 ACTIVITY 条目并填推荐说明
+2. GET http://localhost:8081/api/app/featured-cycle-items?type=ACTIVITY（请求头带 X-API-Key）
+**预期结果**: 返回 200；该条目 `target` 非 null，`target.id` = 活动 id，`target.title` = 活动标题，`target.cover` 为首图签名 URL 对象，`target.level` = 活动难度等级；条目自身的 `description` 仍为条目上手填的推荐说明
+**状态**: ⬜ 未测试
+**执行方式**: api-test-runner
+**执行存证**: `test-evidence/regression/featured/TC-featured-IT-034/`
+**最后更新**: -
+
+### TC-featured-IT-035: GET /api/app/featured-cycle-items 路线类条目下发路线基础信息且不覆盖手填文案
+**关联需求**: featured/App 端周期推荐查询#路线类条目下发路线基础信息且不覆盖手填文案
+**关联契约**: api-spec.json#/paths/~1api~1app~1featured-cycle-items/get
+**来源**: featured-cycle-item-target-basic-info
+**优先级**: P0
+**测试步骤**:
+1. 前置：创建上线爱女大使，创建关联该大使的路线（含缩略图、cityName、路线标题 T1）；在 OVULATION 下创建 1 个上线 ROUTE 条目，手填主标题 T2（T2 ≠ T1）
+2. GET http://localhost:8081/api/app/featured-cycle-items?type=ROUTE（请求头带 X-API-Key）
+**预期结果**: 返回 200；`target.id` = 路线 id，`target.title` = T1，`target.thumbnail` 为签名 URL 对象，`target.cityName` = 路线自身城市名，`target.ambassadorName` = 大使名称；条目的 `title` 仍为 T2
+**状态**: ⬜ 未测试
+**执行方式**: api-test-runner
+**执行存证**: `test-evidence/regression/featured/TC-featured-IT-035/`
+**最后更新**: -
+
+### TC-featured-IT-036: GET /api/app/featured-cycle-items 文章类条目下发文章基础信息
+**关联需求**: featured/App 端周期推荐查询#文章类条目下发文章基础信息
+**关联契约**: api-spec.json#/paths/~1api~1app~1featured-cycle-items/get
+**来源**: featured-cycle-item-target-basic-info
+**优先级**: P0
+**测试步骤**:
+1. 前置：创建上线文章（含标题、封面标题 coverTitle、封面图 image），在 LUTEAL 下创建 1 个上线 ARTICLE 条目
+2. GET http://localhost:8081/api/app/featured-cycle-items?type=ARTICLE（请求头带 X-API-Key）
+**预期结果**: 返回 200；`target.id` = 文章 id，`target.title` = 文章标题，`target.coverTitle` = 文章封面标题，`target.image` 为签名 URL 对象
+**状态**: ⬜ 未测试
+**执行方式**: api-test-runner
+**执行存证**: `test-evidence/regression/featured/TC-featured-IT-036/`
+**最后更新**: -
+
+### TC-featured-IT-037: GET /api/app/featured-cycle-items 活动无图片时 target.cover 为 null
+**关联需求**: featured/App 端周期推荐查询#活动无图片时 cover 为 null
+**关联契约**: api-spec.json#/paths/~1api~1app~1featured-cycle-items/get
+**来源**: featured-cycle-item-target-basic-info
+**优先级**: P1
+**测试步骤**:
+1. 前置：创建上线活动但不上传任何图片，在 FOLLICULAR 下创建 1 个上线 ACTIVITY 条目
+2. GET http://localhost:8081/api/app/featured-cycle-items?type=ACTIVITY&period=FOLLICULAR（请求头带 X-API-Key）
+**预期结果**: 返回 200；该条目仍被下发，`target` 非 null，`target.cover` 为 null，`target.id` / `target.title` 正常有值
+**状态**: ⬜ 未测试
+**执行方式**: api-test-runner
+**执行存证**: `test-evidence/regression/featured/TC-featured-IT-037/`
+**最后更新**: -
