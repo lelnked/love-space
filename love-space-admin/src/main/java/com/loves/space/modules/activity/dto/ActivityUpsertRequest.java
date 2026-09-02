@@ -12,6 +12,7 @@ import java.util.List;
  *
  * @param images         活动图片 objectKey，≥1 张
  * @param title          活动标题，必填
+ * @param subtitle       活动副标题，可空
  * @param tags           活动标签，多个
  * @param periods        适合周期，多选（MENSTRUAL/FOLLICULAR/OVULATION/LUTEAL）
  * @param level          活动级别，单选（L1/L2/L3）
@@ -29,6 +30,7 @@ import java.util.List;
 public record ActivityUpsertRequest(
         @NotEmpty(message = "活动图片至少 1 张") List<@NotBlank(message = "活动图片不能为空白") String> images,
         @NotBlank(message = "活动标题不能为空") String title,
+        String subtitle,
         List<@NotBlank(message = "标签不能为空白") String> tags,
         List<@Pattern(regexp = "MENSTRUAL|FOLLICULAR|OVULATION|LUTEAL", message = "适合周期取值不合法") String> periods,
         @Pattern(regexp = "L1|L2|L3", message = "活动级别取值不合法") String level,

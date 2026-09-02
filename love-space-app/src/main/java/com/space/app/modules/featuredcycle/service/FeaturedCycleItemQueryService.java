@@ -132,6 +132,7 @@ public class FeaturedCycleItemQueryService {
                 yield new FeaturedCycleItemTargetResponse.ActivityTarget(
                         activity.getId(),
                         activity.getTitle(),
+                        activity.getSubtitle(),
                         images.isEmpty() ? null : images.getFirst(),
                         activity.getLevel());
             }

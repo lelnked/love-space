@@ -37,6 +37,7 @@ public class ActivityQueryService {
                 .map(activity -> new ActivityItemResponse(
                         activity.getId(),
                         activity.getTitle(),
+                        activity.getSubtitle(),
                         ImageResponses.fromList(activity.getImages(), imageUrlSigner),
                         activity.getTags(),
                         activity.getPeriods(),
@@ -54,6 +55,7 @@ public class ActivityQueryService {
                 activity.getId(),
                 ImageResponses.fromList(activity.getImages(), imageUrlSigner),
                 activity.getTitle(),
+                activity.getSubtitle(),
                 activity.getTags(),
                 activity.getPeriods(),
                 activity.getLevel(),

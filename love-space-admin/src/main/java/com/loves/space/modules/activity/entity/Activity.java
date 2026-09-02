@@ -31,6 +31,10 @@ public class Activity extends BaseAuditEntity {
     @Column(name = "title", nullable = false)
     private String title;
 
+    /** 活动副标题，可空。 */
+    @Column(name = "subtitle")
+    private String subtitle;
+
     /** 活动标签（多个），jsonb。 */
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "tags", nullable = false, columnDefinition = "jsonb")

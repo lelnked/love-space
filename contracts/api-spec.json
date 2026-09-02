@@ -496,7 +496,7 @@
     },
     "/api/app/activities": {
       "get": {
-        "summary": "App 活动列表（全部上线活动，创建时间倒序；与地图无关）",
+        "summary": "App 活动列表（全部上线活动，列表项含 subtitle 副标题（未填为 null，不回落为 title），创建时间倒序；与地图无关）",
         "x-requirement": "activity/App 端活动查询"
       }
     },
@@ -828,7 +828,7 @@
     },
     "/api/app/featured-cycle-items": {
       "get": {
-        "summary": "App 周期推荐（扁平数组，条目不去重；响应 period 为该 target（type+targetId 相同者）覆盖的周期数组，按枚举声明顺序、在全部可下发条目上计算；关联实体为单字段 targetId；period / type 可选过滤且可同用；条目上线∧关联实体可见，sortOrder 升序；每条附 target 对象，按 type 分三种形状携带关联实体基础信息：ACTIVITY={id,title,cover,level}、ROUTE={id,title,thumbnail,cityName,ambassadorName}、ARTICLE={id,title,coverTitle,image}）",
+        "summary": "App 周期推荐（扁平数组，条目不去重；响应 period 为该 target（type+targetId 相同者）覆盖的周期数组，按枚举声明顺序、在全部可下发条目上计算；关联实体为单字段 targetId；period / type 可选过滤且可同用；条目上线∧关联实体可见，sortOrder 升序；每条附 target 对象，按 type 分三种形状携带关联实体基础信息：ACTIVITY={id,title,subtitle,cover,level}、ROUTE={id,title,thumbnail,cityName,ambassadorName}、ARTICLE={id,title,coverTitle,image}）",
         "parameters": [
           {
             "name": "period",
@@ -1320,6 +1320,10 @@
           "title": {
             "type": "string",
             "description": "活动标题，必填"
+          },
+          "subtitle": {
+            "type": "string",
+            "description": "活动副标题，可空"
           },
           "tags": {
             "type": "array",

@@ -1016,6 +1016,11 @@
             "type": "string",
             "description": "活动标题"
           },
+          "subtitle": {
+            "type": "string",
+            "nullable": true,
+            "description": "活动副标题；未填写时为 null（不回落为标题）"
+          },
           "tags": {
             "type": "array",
             "items": {
@@ -1087,6 +1092,11 @@
           "title": {
             "type": "string",
             "description": "活动标题"
+          },
+          "subtitle": {
+            "type": "string",
+            "nullable": true,
+            "description": "活动副标题；未填写时为 null（不回落为标题）"
           },
           "images": {
             "type": "array",
@@ -2120,6 +2130,11 @@
           "title": {
             "type": "string",
             "description": "活动标题"
+          },
+          "subtitle": {
+            "type": "string",
+            "nullable": true,
+            "description": "活动副标题；活动未填写时为 null（不回落为标题），与条目手填的 subtitle 相互独立"
           },
           "cover": {
             "allOf": [

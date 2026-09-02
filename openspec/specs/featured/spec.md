@@ -121,7 +121,7 @@ app 端 SHALL 提供只读的周期推荐接口，返回**扁平数组**，按 `
 
 | `type` | `target` 字段 |
 |---|---|
-| `ACTIVITY` | `id`、`title`、`cover`（活动首图签名 URL，活动无图时为 null）、`level` |
+| `ACTIVITY` | `id`、`title`、`subtitle`（活动副标题，活动未填写时为 null）、`cover`（活动首图签名 URL，活动无图时为 null）、`level` |
 | `ROUTE` | `id`、`title`、`thumbnail`（签名 URL）、`cityName`、`ambassadorName` |
 | `ARTICLE` | `id`、`title`、`coverTitle`、`image`（签名 URL） |
 
@@ -212,11 +212,15 @@ app 端 SHALL 提供只读的周期推荐接口，返回**扁平数组**，按 `
 - **WHEN** app 端带 `period=MENSTRUAL` 查周期推荐接口
 - **THEN** 数组内条目按 1、2、3 顺序返回
 
-
 #### Scenario: 活动类条目下发活动基础信息
-- **GIVEN** 一个上线的 ACTIVITY 类条目，其关联活动上线且有图片、标题与难度等级
+- **GIVEN** 一个上线的 ACTIVITY 类条目，其关联活动上线且有图片、标题、副标题与难度等级
 - **WHEN** app 端查周期推荐接口
-- **THEN** 返回 200，该条目的 `target` 含活动 id、活动标题、首图签名 URL 与难度等级，且条目自身的推荐说明不受影响
+- **THEN** 返回 200，该条目的 `target` 含活动 id、活动标题、活动副标题、首图签名 URL 与难度等级，且条目自身的推荐说明不受影响
+
+#### Scenario: 活动未填副标题时 target.subtitle 为 null
+- **GIVEN** 一个上线的 ACTIVITY 类条目，其关联活动未填写副标题，条目自身手填了推荐说明
+- **WHEN** app 端查周期推荐接口
+- **THEN** 返回 200，该条目的 `target.subtitle` 为 null（不回落为活动标题），条目自身的 `description` 仍为手填值——ACTIVITY 类条目本身不持有 `subtitle` 文案（该文案字段只适用于 `ROUTE`），故两者不存在覆盖关系
 
 #### Scenario: 路线类条目下发路线基础信息且不覆盖手填文案
 - **GIVEN** 一个上线的 ROUTE 类条目，条目手填主标题与路线自身标题不同，路线有缩略图、城市名，其爱女大使已上线

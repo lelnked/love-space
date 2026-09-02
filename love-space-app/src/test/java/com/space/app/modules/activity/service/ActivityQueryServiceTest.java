@@ -20,6 +20,7 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
@@ -69,6 +70,25 @@ class ActivityQueryServiceTest extends AbstractPostgresIntegrationTest {
         city.setEnglishProvince("Province");
         city.setOnline(false);
         cityRepository.save(city);
+    }
+
+    // @scenario: activity/App 端活动查询#活动副标题下发且未填时为 null
+    @Test
+    void listAndDetailCarrySubtitleAndNullWhenAbsent() {
+        String tag = UUID.randomUUID().toString().substring(0, 8);
+        UUID withSubtitle = activity(true, "有副标题-" + tag);
+        Activity a = activityRepository.findById(withSubtitle).orElseThrow();
+        a.setSubtitle("山野轻装");
+        activityRepository.save(a);
+        UUID withoutSubtitle = activity(true, "无副标题-" + tag);
+
+        assertThat(activityQueryService.listAll())
+                .filteredOn(i -> i.title().endsWith(tag))
+                .extracting(ActivityItemResponse::title, ActivityItemResponse::subtitle)
+                .contains(tuple("有副标题-" + tag, "山野轻装"), tuple("无副标题-" + tag, null));
+        assertThat(activityQueryService.detail(withSubtitle).subtitle()).isEqualTo("山野轻装");
+        // 未填写时为 null，不回落为标题
+        assertThat(activityQueryService.detail(withoutSubtitle).subtitle()).isNull();
     }
 
     // @scenario: activity/App 端活动查询#活动详情返回景观

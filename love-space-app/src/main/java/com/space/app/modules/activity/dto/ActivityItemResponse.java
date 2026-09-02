@@ -11,6 +11,7 @@ import java.util.UUID;
 public record ActivityItemResponse(
         UUID id,
         String title,
+        String subtitle,
         List<ImageResponse> images,
         List<String> tags,
         List<String> periods,

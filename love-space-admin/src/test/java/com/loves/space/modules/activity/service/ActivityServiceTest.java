@@ -43,7 +43,7 @@ class ActivityServiceTest extends AbstractPostgresIntegrationTest {
     }
 
     private ActivityUpsertRequest request(String title) {
-        return new ActivityUpsertRequest(List.of("images/a.png"), title,
+        return new ActivityUpsertRequest(List.of("images/a.png"), title, "山野轻装",
                 List.of("徒步"), List.of("FOLLICULAR", "OVULATION"), "L2",
                 "简介", "编辑说", "集合地", "解散地", "交通", "签证", "海岸线景观",
                 List.of(new ActivityItineraryItemRequest("第一天", "内容一"),
@@ -84,16 +84,43 @@ class ActivityServiceTest extends AbstractPostgresIntegrationTest {
 
         ActivityUpsertRequest base = request("景观活动");
         ActivityUpsertRequest volcano = new ActivityUpsertRequest(base.images(), base.title(),
-                base.tags(), base.periods(), base.level(), base.introduction(), base.editorNote(),
+                base.subtitle(), base.tags(), base.periods(), base.level(), base.introduction(), base.editorNote(),
                 base.gatheringPlace(), base.dismissalPlace(), base.transportation(), base.visa(),
                 "火山地貌", base.itinerary(), base.detailHtml(), base.online());
         assertThat(activityService.update(created.id(), volcano).landscape()).isEqualTo("火山地貌");
 
         ActivityUpsertRequest blank = new ActivityUpsertRequest(base.images(), base.title(),
-                base.tags(), base.periods(), base.level(), base.introduction(), base.editorNote(),
+                base.subtitle(), base.tags(), base.periods(), base.level(), base.introduction(), base.editorNote(),
                 base.gatheringPlace(), base.dismissalPlace(), base.transportation(), base.visa(),
                 null, base.itinerary(), base.detailHtml(), base.online());
         assertThat(activityService.update(created.id(), blank).landscape()).isNull();
+    }
+
+    // @scenario: activity/活动管理#副标题可写可改可空
+    @Test
+    void subtitleIsWritableUpdatableAndNullable() {
+        ActivityDetailResponse created = activityService.create(request("副标题活动"));
+        assertThat(created.subtitle()).isEqualTo("山野轻装");
+
+        ActivityUpsertRequest base = request("副标题活动");
+        ActivityUpsertRequest renamed = new ActivityUpsertRequest(base.images(), base.title(),
+                "两日徒步", base.tags(), base.periods(), base.level(), base.introduction(),
+                base.editorNote(), base.gatheringPlace(), base.dismissalPlace(),
+                base.transportation(), base.visa(), base.landscape(), base.itinerary(),
+                base.detailHtml(), base.online());
+        assertThat(activityService.update(created.id(), renamed).subtitle()).isEqualTo("两日徒步");
+
+        ActivityUpsertRequest cleared = new ActivityUpsertRequest(base.images(), base.title(),
+                null, base.tags(), base.periods(), base.level(), base.introduction(),
+                base.editorNote(), base.gatheringPlace(), base.dismissalPlace(),
+                base.transportation(), base.visa(), base.landscape(), base.itinerary(),
+                base.detailHtml(), base.online());
+        assertThat(activityService.update(created.id(), cleared).subtitle()).isNull();
+
+        // 列表项同样带 subtitle
+        assertThat(activityService.page("副标题活动", PageRequest.of(0, 20)).content())
+                .extracting(ActivityItemResponse::subtitle)
+                .contains((String) null);
     }
 
     // @scenario: activity/活动管理#活动上下线切换

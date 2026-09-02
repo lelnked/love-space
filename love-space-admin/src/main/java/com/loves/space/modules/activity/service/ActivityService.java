@@ -97,6 +97,7 @@ public class ActivityService {
                 .map(objectKeyValidator::validateAndBind)
                 .toList()));
         activity.setTitle(request.title());
+        activity.setSubtitle(request.subtitle());
         activity.setTags(new ArrayList<>(request.tags() == null ? List.of() : request.tags()));
         activity.setPeriods(new ArrayList<>(request.periods() == null ? List.of() : request.periods()));
         activity.setLevel(request.level());
@@ -124,6 +125,7 @@ public class ActivityService {
                 activity.getId(),
                 ImageResponses.from(cover, imageUrlSigner),
                 activity.getTitle(),
+                activity.getSubtitle(),
                 activity.getTags(),
                 activity.getPeriods(),
                 activity.getLevel(),
@@ -137,6 +139,7 @@ public class ActivityService {
                 activity.getId(),
                 ImageResponses.fromList(activity.getImages(), imageUrlSigner),
                 activity.getTitle(),
+                activity.getSubtitle(),
                 activity.getTags(),
                 activity.getPeriods(),
                 activity.getLevel(),

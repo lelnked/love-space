@@ -19,9 +19,11 @@ public sealed interface FeaturedCycleItemTargetResponse
     /**
      * 活动基础信息。
      *
-     * @param cover 活动首图签名 URL，活动未上传图片时为 null
+     * @param subtitle 活动自身的副标题，活动未填写时为 null（不回落为标题）；
+     *                 与条目手填的 {@code subtitle} 文案是两个独立字段，互不覆盖
+     * @param cover    活动首图签名 URL，活动未上传图片时为 null
      */
-    record ActivityTarget(UUID id, String title, ImageResponse cover, String level)
+    record ActivityTarget(UUID id, String title, String subtitle, ImageResponse cover, String level)
             implements FeaturedCycleItemTargetResponse {
     }
 

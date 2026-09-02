@@ -94,6 +94,7 @@ class FeaturedCycleItemQueryServiceTest extends AbstractPostgresIntegrationTest 
         activity.setOnline(true);
         activity.setImages(List.of("images/cover-1.png", "images/cover-2.png"));
         activity.setLevel("轻松");
+        activity.setSubtitle("山野轻装");
         return activityRepository.save(activity);
     }
 
@@ -373,6 +374,7 @@ class FeaturedCycleItemQueryServiceTest extends AbstractPostgresIntegrationTest 
                 (FeaturedCycleItemTargetResponse.ActivityTarget) response.target();
         assertThat(target.id()).isEqualTo(activity.getId());
         assertThat(target.title()).isEqualTo(activity.getTitle());
+        assertThat(target.subtitle()).isEqualTo("山野轻装");
         assertThat(target.cover().id()).isEqualTo("images/cover-1.png");
         assertThat(target.cover().url()).startsWith("https://signed.example.com/");
         assertThat(target.level()).isEqualTo("轻松");
@@ -418,6 +420,24 @@ class FeaturedCycleItemQueryServiceTest extends AbstractPostgresIntegrationTest 
         assertThat(target.title()).isEqualTo(article.getTitle());
         assertThat(target.coverTitle()).isEqualTo("封面标题");
         assertThat(target.image().id()).isEqualTo("images/article.png");
+    }
+
+    // @scenario: featured/App 端周期推荐查询#活动未填副标题时 target.subtitle 为 null
+    @Test
+    void activityTargetSubtitleIsNullWhenActivityHasNoSubtitle() {
+        // ACTIVITY 类条目手填的是 description（subtitle 文案只适用于 ROUTE），item() 已写入「推荐说明」
+        item(Period.MENSTRUAL, FeaturedCycleItemType.ACTIVITY, activity(true).getId(), true, 0);
+
+        FeaturedCycleItemResponse response =
+                featuredCycleItemQueryService.feed(null, FeaturedCycleItemType.ACTIVITY).getFirst();
+
+        FeaturedCycleItemTargetResponse.ActivityTarget target =
+                (FeaturedCycleItemTargetResponse.ActivityTarget) response.target();
+        // 活动未填副标题 → null，不回落为活动标题
+        assertThat(target.subtitle()).isNull();
+        assertThat(target.title()).isNotBlank();
+        // 条目自身手填文案不被 target 覆盖
+        assertThat(response.description()).isEqualTo("推荐说明");
     }
 
     // @scenario: featured/App 端周期推荐查询#活动无图片时 cover 为 null

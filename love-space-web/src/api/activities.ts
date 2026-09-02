@@ -23,6 +23,7 @@ export interface ActivityItem {
   id: string;
   cover: ImageResponse | null;
   title: string;
+  subtitle: string | null;
   tags: string[];
   periods: Period[];
   level: ActivityLevel | null;
@@ -35,6 +36,7 @@ export interface ActivityDetail {
   id: string;
   images: ImageResponse[];
   title: string;
+  subtitle: string | null;
   tags: string[];
   periods: Period[];
   level: ActivityLevel | null;
@@ -63,6 +65,7 @@ export interface ActivityUpsertRequest {
   /** 图片 objectKey 列表，至少 1 张。 */
   images: string[];
   title: string;
+  subtitle?: string | null;
   tags?: string[];
   periods?: Period[];
   level?: ActivityLevel | null;

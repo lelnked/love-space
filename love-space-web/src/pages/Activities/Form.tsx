@@ -37,6 +37,7 @@ export default function ActivityForm() {
   const [tags, setTags] = useState<string[]>([]);
   const [periods, setPeriods] = useState<Period[]>([]);
   const [level, setLevel] = useState<ActivityLevel | "">("");
+  const [subtitle, setSubtitle] = useState("");
   const [introduction, setIntroduction] = useState("");
   const [editorNote, setEditorNote] = useState("");
   const [gatheringPlace, setGatheringPlace] = useState("");
@@ -64,6 +65,7 @@ export default function ActivityForm() {
         setTags(d.tags);
         setPeriods(d.periods);
         setLevel(d.level ?? "");
+        setSubtitle(d.subtitle ?? "");
         setIntroduction(d.introduction ?? "");
         setEditorNote(d.editorNote ?? "");
         setGatheringPlace(d.gatheringPlace ?? "");
@@ -110,6 +112,7 @@ export default function ActivityForm() {
       tags: cleanTags,
       periods,
       level: level || null,
+      subtitle: subtitle.trim() || null,
       introduction: introduction.trim() || null,
       editorNote: editorNote.trim() || null,
       gatheringPlace: gatheringPlace.trim() || null,
@@ -167,6 +170,13 @@ export default function ActivityForm() {
                   onChange={(e) => setTitle(e.target.value)}
                   error={Boolean(fieldErrors.title)}
                   hint={fieldErrors.title}
+                />
+              </div>
+              <div>
+                <Label>副标题</Label>
+                <Input
+                  value={subtitle}
+                  onChange={(e) => setSubtitle(e.target.value)}
                 />
               </div>
             </div>

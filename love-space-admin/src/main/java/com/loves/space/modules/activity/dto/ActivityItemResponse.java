@@ -13,6 +13,7 @@ public record ActivityItemResponse(
         UUID id,
         ImageResponse cover,
         String title,
+        String subtitle,
         List<String> tags,
         List<String> periods,
         String level,

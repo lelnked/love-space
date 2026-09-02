@@ -502,16 +502,16 @@
 ### TC-featured-IT-034: GET /api/app/featured-cycle-items 活动类条目下发活动基础信息
 **关联需求**: featured/App 端周期推荐查询#活动类条目下发活动基础信息
 **关联契约**: api-spec.json#/paths/~1api~1app~1featured-cycle-items/get
-**来源**: featured-cycle-item-target-basic-info
+**来源**: featured-cycle-item-target-basic-info → activity-subtitle
 **优先级**: P0
 **测试步骤**:
-1. 前置：创建上线活动（含 ≥1 张图片、标题、难度等级 level），在 MENSTRUAL 下创建 1 个上线 ACTIVITY 条目并填推荐说明
+1. 前置：创建上线活动（含 ≥1 张图片、标题、副标题 subtitle="山野轻装"、难度等级 level），在 MENSTRUAL 下创建 1 个上线 ACTIVITY 条目并填推荐说明
 2. GET http://localhost:8081/api/app/featured-cycle-items?type=ACTIVITY（请求头带 X-API-Key）
-**预期结果**: 返回 200；该条目 `target` 非 null，`target.id` = 活动 id，`target.title` = 活动标题，`target.cover` 为首图签名 URL 对象，`target.level` = 活动难度等级；条目自身的 `description` 仍为条目上手填的推荐说明
-**状态**: ⬜ 未测试
+**预期结果**: 返回 200；该条目 `target` 非 null，`target.id` = 活动 id，`target.title` = 活动标题，`target.subtitle` = "山野轻装"（取自活动实体），`target.cover` 为首图签名 URL 对象，`target.level` = 活动难度等级；条目自身的 `description` 仍为条目上手填的推荐说明
+**状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**: `test-evidence/regression/featured/TC-featured-IT-034/`
-**最后更新**: -
+**执行存证**: `test-evidence/activity-subtitle/TC-featured-IT-034/`
+**最后更新**: 2026-09-02
 
 ### TC-featured-IT-035: GET /api/app/featured-cycle-items 路线类条目下发路线基础信息且不覆盖手填文案
 **关联需求**: featured/App 端周期推荐查询#路线类条目下发路线基础信息且不覆盖手填文案
@@ -550,7 +550,21 @@
 1. 前置：创建上线活动但不上传任何图片，在 FOLLICULAR 下创建 1 个上线 ACTIVITY 条目
 2. GET http://localhost:8081/api/app/featured-cycle-items?type=ACTIVITY&period=FOLLICULAR（请求头带 X-API-Key）
 **预期结果**: 返回 200；该条目仍被下发，`target` 非 null，`target.cover` 为 null，`target.id` / `target.title` 正常有值
-**状态**: ⬜ 未测试
+**状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**: `test-evidence/regression/featured/TC-featured-IT-037/`
-**最后更新**: -
+**执行存证**: `test-evidence/activity-subtitle/TC-featured-IT-037/`
+**最后更新**: 2026-09-02
+
+### TC-featured-IT-038: GET /api/app/featured-cycle-items 活动未填副标题时 target.subtitle 为 null
+**关联需求**: featured/App 端周期推荐查询#活动未填副标题时 target.subtitle 为 null
+**关联契约**: api-spec.json#/paths/~1api~1app~1featured-cycle-items/get
+**来源**: activity-subtitle
+**优先级**: P0
+**测试步骤**:
+1. 前置：创建上线活动（含标题、≥1 张图片，**不填** subtitle），在 OVULATION 下创建 1 个上线 ACTIVITY 条目，条目自身手填 `description`="限时开团"（ACTIVITY 类条目不持有 subtitle 文案，该字段只适用于 ROUTE）
+2. GET http://localhost:8081/api/app/featured-cycle-items?type=ACTIVITY&period=OVULATION（请求头带 X-API-Key）
+**预期结果**: 返回 200；该条目 `target` 非 null，`target.subtitle` 为 null——不回落为活动标题；条目自身的 `description` 仍为「限时开团」不被 target 覆盖，`target.title` 为活动标题
+**状态**: ✅ 通过
+**执行方式**: api-test-runner
+**执行存证**: `test-evidence/activity-subtitle/TC-featured-IT-038/`
+**最后更新**: 2026-09-02
