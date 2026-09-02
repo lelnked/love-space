@@ -1,15 +1,19 @@
 package com.loves.space.modules.featuredcycle.entity;
 
 import com.loves.space.common.entity.BaseAuditEntity;
-import com.loves.space.common.enums.Period;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -20,15 +24,21 @@ import java.util.UUID;
  * <p>全局配置，不关联地图（城市）。
  */
 @Entity
-@Table(name = "loves_featured_cycle_item")
+@Table(name = "loves_featured_cycle_item",
+        uniqueConstraints = @UniqueConstraint(name = "ux_loves_featured_cycle_item_target",
+                columnNames = {"type", "target_id"}))
 @Getter
 @Setter
 public class FeaturedCycleItem extends BaseAuditEntity {
 
-    /** 所属生理周期，创建后不可变。 */
-    @Enumerated(EnumType.STRING)
-    @Column(name = "phase", nullable = false)
-    private Period phase;
+    /**
+     * 投放的生理周期集合（{@code Period} 枚举名），以 PostgreSQL jsonb 字符串数组形式存储，
+     * 与 {@code loves_merchant.periods} 同构。至少一个，创建后可修改；
+     * 写入侧已去重并按 {@code Period} 枚举声明顺序排序。
+     */
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "phases", nullable = false, columnDefinition = "jsonb")
+    private List<String> phases = new ArrayList<>();
 
     /** 内容类型，创建后不可变。 */
     @Enumerated(EnumType.STRING)

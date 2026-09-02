@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { AxiosError } from "axios";
+import FilterBar, { FilterField, FilterValues } from "../../components/filter/FilterBar";
 import Pagination from "../../components/pagination/Pagination";
 import PageMeta from "../../components/common/PageMeta";
 import ComponentCard from "../../components/common/ComponentCard";
@@ -18,8 +19,18 @@ import {
   setFeaturedCycleItemOnline,
 } from "../../api/featuredCycleItems";
 
+const FILTER_FIELDS: FilterField[] = [
+  {
+    name: "phase",
+    label: "投放周期",
+    type: "select",
+    options: PERIOD_VALUES.map((p) => ({ label: PERIOD_LABEL[p], value: p })),
+  },
+];
+
 export default function FeaturedCycleItemList() {
-  const [phase, setPhase] = useState<Period>("MENSTRUAL");
+  // 空串 = FilterBar 的「全部」项，此时请求不带 phase 参数
+  const [filters, setFilters] = useState<FilterValues>({});
   const [page, setPage] = useState(1);
   const [size, setSize] = useState(20);
   const [items, setItems] = useState<FeaturedCycleItem[]>([]);
@@ -37,7 +48,11 @@ export default function FeaturedCycleItemList() {
     setLoading(true);
     setLoadError("");
     try {
-      const data = await pageFeaturedCycleItems({ phase, page, size });
+      const data = await pageFeaturedCycleItems({
+        phase: (filters.phase as Period) || undefined,
+        page,
+        size,
+      });
       setItems(data.content);
       setTotal(data.totalElements);
       setTotalPages(data.totalPages);
@@ -48,7 +63,7 @@ export default function FeaturedCycleItemList() {
     } finally {
       setLoading(false);
     }
-  }, [phase, page, size]);
+  }, [filters, page, size]);
 
   useEffect(() => {
     void load();
@@ -70,7 +85,9 @@ export default function FeaturedCycleItemList() {
     if (
       !(await confirm({
         title: "删除周期推荐",
-        message: `确认删除「${PERIOD_LABEL[it.phase]}」下的这条${CYCLE_ITEM_TYPE_LABELS[it.type]}推荐？`,
+        message: `确认删除投放于「${it.phases.map((p) => PERIOD_LABEL[p]).join("、")}」的这条${
+          CYCLE_ITEM_TYPE_LABELS[it.type]
+        }推荐？`,
         confirmText: "删除",
         danger: true,
       }))
@@ -122,6 +139,20 @@ export default function FeaturedCycleItemList() {
         it.relatedTitle ?? <span className="text-error-500 text-xs">已删除</span>,
     },
     {
+      key: "phases",
+      header: "投放周期",
+      width: "13rem",
+      render: (it) => (
+        <div className="flex flex-wrap gap-1">
+          {it.phases.map((p) => (
+            <span key={p} className="rounded bg-brand-50 px-2 py-1 text-xs text-brand-500 dark:bg-brand-500/15">
+              {PERIOD_LABEL[p]}
+            </span>
+          ))}
+        </div>
+      ),
+    },
+    {
       key: "sortOrder",
       header: "排序号",
       width: "6rem",
@@ -166,7 +197,7 @@ export default function FeaturedCycleItemList() {
       <PageMeta title="周期推荐 | Love Space Admin" description="精选·你的周期活动推荐配置" />
       <div className="flex items-center justify-end mb-6">
         <Link
-          to={`/featured-cycle-items/create?phase=${phase}`}
+          to="/featured-cycle-items/create"
           className="px-4 py-2 text-sm rounded-lg bg-brand-500 text-white hover:bg-brand-600"
         >
           新增周期推荐
@@ -174,25 +205,18 @@ export default function FeaturedCycleItemList() {
       </div>
       <div className="space-y-6">
         <ComponentCard title="周期推荐列表">
-          <nav className="flex gap-2 border-b border-gray-200 dark:border-white/10">
-            {PERIOD_VALUES.map((p) => (
-              <button
-                key={p}
-                type="button"
-                onClick={() => {
-                  setPhase(p);
-                  setPage(1);
-                }}
-                className={`-mb-px border-b-2 px-4 py-2 text-sm ${
-                  phase === p
-                    ? "border-brand-500 text-brand-500"
-                    : "border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400"
-                }`}
-              >
-                {PERIOD_LABEL[p]}
-              </button>
-            ))}
-          </nav>
+          <FilterBar
+            fields={FILTER_FIELDS}
+            initialValues={filters}
+            onApply={(v) => {
+              setFilters(v);
+              setPage(1);
+            }}
+            onReset={() => {
+              setFilters({});
+              setPage(1);
+            }}
+          />
 
           {loadError ? (
             <div className="py-10 text-center">
@@ -208,7 +232,7 @@ export default function FeaturedCycleItemList() {
                 rows={items}
                 rowKey={(it) => it.id}
                 loading={loading}
-                emptyText="该周期暂无推荐"
+                emptyText="暂无周期推荐"
               />
 
               <Pagination

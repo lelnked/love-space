@@ -124,8 +124,13 @@ class FeaturedCycleItemQueryServiceTest extends AbstractPostgresIntegrationTest 
     }
 
     private UUID item(Period phase, FeaturedCycleItemType type, UUID relatedId, boolean online, int sortOrder) {
+        return item(List.of(phase), type, relatedId, online, sortOrder);
+    }
+
+    private UUID item(List<Period> phases, FeaturedCycleItemType type, UUID relatedId, boolean online,
+                      int sortOrder) {
         FeaturedCycleItem item = new FeaturedCycleItem();
-        item.setPhase(phase);
+        item.setPhases(phases.stream().map(Enum::name).toList());
         item.setType(type);
         item.setOnline(online);
         item.setSortOrder(sortOrder);
@@ -290,72 +295,72 @@ class FeaturedCycleItemQueryServiceTest extends AbstractPostgresIntegrationTest 
     // @scenario: featured/App 端周期推荐查询#同一 target 跨周期时下发全部周期
     @Test
     void sameTargetAcrossPhasesCarriesAllPhases() {
-        UUID activityId = activity(true).getId();
-        UUID menstrualItem = item(Period.MENSTRUAL, FeaturedCycleItemType.ACTIVITY, activityId, true, 0);
-        UUID lutealItem = item(Period.LUTEAL, FeaturedCycleItemType.ACTIVITY, activityId, true, 1);
+        // 一个 target 只能有一条条目，跨周期投放靠这条条目自身的 phases 多值表达
+        UUID multiPhaseItem = item(List.of(Period.LUTEAL, Period.MENSTRUAL),
+                FeaturedCycleItemType.ACTIVITY, activity(true).getId(), true, 0);
 
         List<FeaturedCycleItemResponse> feed = featuredCycleItemQueryService.feed(null, null);
 
-        assertThat(feed).extracting(FeaturedCycleItemResponse::id)
-                .containsExactly(menstrualItem, lutealItem);
-        // 枚举声明顺序：MENSTRUAL 在 LUTEAL 之前，与条目自身的 sortOrder 无关
-        assertThat(feed).extracting(FeaturedCycleItemResponse::period)
-                .containsOnly(List.of(Period.MENSTRUAL, Period.LUTEAL));
+        assertThat(feed).extracting(FeaturedCycleItemResponse::id).containsExactly(multiPhaseItem);
+        // 枚举声明顺序：MENSTRUAL 在 LUTEAL 之前，与持久化的元素顺序无关
+        assertThat(feed.getFirst().period()).containsExactly(Period.MENSTRUAL, Period.LUTEAL);
     }
 
     // @scenario: featured/App 端周期推荐查询#按周期过滤时 period 数组仍含其他周期
     @Test
     void periodFilterDoesNotNarrowPeriodArray() {
-        UUID activityId = activity(true).getId();
-        item(Period.MENSTRUAL, FeaturedCycleItemType.ACTIVITY, activityId, true, 0);
-        UUID lutealItem = item(Period.LUTEAL, FeaturedCycleItemType.ACTIVITY, activityId, true, 1);
+        UUID multiPhaseItem = item(List.of(Period.MENSTRUAL, Period.LUTEAL),
+                FeaturedCycleItemType.ACTIVITY, activity(true).getId(), true, 0);
+        // 只投经期的另一条，用来确认过滤确实生效
+        item(Period.MENSTRUAL, FeaturedCycleItemType.ARTICLE, article(true).getId(), true, 1);
 
         List<FeaturedCycleItemResponse> luteal = featuredCycleItemQueryService.feed(Period.LUTEAL, null);
 
-        assertThat(luteal).extracting(FeaturedCycleItemResponse::id).containsExactly(lutealItem);
+        assertThat(luteal).extracting(FeaturedCycleItemResponse::id).containsExactly(multiPhaseItem);
         assertThat(luteal.getFirst().period()).containsExactly(Period.MENSTRUAL, Period.LUTEAL);
     }
 
     // @scenario: featured/App 端周期推荐查询#类型过滤不影响 period 数组
     @Test
     void typeFilterDoesNotNarrowPeriodArray() {
-        UUID activityId = activity(true).getId();
-        UUID menstrualItem = item(Period.MENSTRUAL, FeaturedCycleItemType.ACTIVITY, activityId, true, 0);
-        item(Period.LUTEAL, FeaturedCycleItemType.ACTIVITY, activityId, true, 1);
+        UUID multiPhaseItem = item(List.of(Period.MENSTRUAL, Period.LUTEAL),
+                FeaturedCycleItemType.ACTIVITY, activity(true).getId(), true, 0);
+        item(Period.MENSTRUAL, FeaturedCycleItemType.ARTICLE, article(true).getId(), true, 1);
 
         List<FeaturedCycleItemResponse> filtered =
                 featuredCycleItemQueryService.feed(Period.MENSTRUAL, FeaturedCycleItemType.ACTIVITY);
 
-        assertThat(filtered).extracting(FeaturedCycleItemResponse::id).containsExactly(menstrualItem);
+        assertThat(filtered).extracting(FeaturedCycleItemResponse::id).containsExactly(multiPhaseItem);
         assertThat(filtered.getFirst().period()).containsExactly(Period.MENSTRUAL, Period.LUTEAL);
     }
 
     // @scenario: featured/App 端周期推荐查询#不可下发条目不贡献周期
     @Test
     void undeliverableItemsDoNotContributePhases() {
-        UUID activityId = activity(true).getId();
-        UUID menstrualItem = item(Period.MENSTRUAL, FeaturedCycleItemType.ACTIVITY, activityId, true, 0);
-        item(Period.LUTEAL, FeaturedCycleItemType.ACTIVITY, activityId, false, 1);
+        UUID onlineItem = item(Period.MENSTRUAL, FeaturedCycleItemType.ACTIVITY,
+                activity(true).getId(), true, 0);
+        // 下线条目整条不下发，其 phases 也就无从出现在响应里
+        item(List.of(Period.LUTEAL, Period.OVULATION), FeaturedCycleItemType.ACTIVITY,
+                activity(true).getId(), false, 1);
 
         List<FeaturedCycleItemResponse> feed = featuredCycleItemQueryService.feed(null, null);
 
-        assertThat(feed).extracting(FeaturedCycleItemResponse::id).containsExactly(menstrualItem);
+        assertThat(feed).extracting(FeaturedCycleItemResponse::id).containsExactly(onlineItem);
         assertThat(feed.getFirst().period()).containsExactly(Period.MENSTRUAL);
+        assertThat(featuredCycleItemQueryService.feed(Period.LUTEAL, null)).isEmpty();
     }
 
     // @scenario: featured/App 端周期推荐查询#不同 target 的周期集合互不影响
     @Test
     void distinctTargetsKeepSeparatePhaseSets() {
-        UUID activityA = activity(true).getId();
-        UUID activityB = activity(true).getId();
-        UUID aMenstrual = item(Period.MENSTRUAL, FeaturedCycleItemType.ACTIVITY, activityA, true, 0);
-        item(Period.LUTEAL, FeaturedCycleItemType.ACTIVITY, activityA, true, 2);
-        UUID bMenstrual = item(Period.MENSTRUAL, FeaturedCycleItemType.ACTIVITY, activityB, true, 1);
+        UUID itemA = item(List.of(Period.MENSTRUAL, Period.LUTEAL), FeaturedCycleItemType.ACTIVITY,
+                activity(true).getId(), true, 0);
+        UUID itemB = item(Period.MENSTRUAL, FeaturedCycleItemType.ACTIVITY,
+                activity(true).getId(), true, 1);
 
         List<FeaturedCycleItemResponse> menstrual = featuredCycleItemQueryService.feed(Period.MENSTRUAL, null);
 
-        assertThat(menstrual).extracting(FeaturedCycleItemResponse::id)
-                .containsExactly(aMenstrual, bMenstrual);
+        assertThat(menstrual).extracting(FeaturedCycleItemResponse::id).containsExactly(itemA, itemB);
         assertThat(menstrual.getFirst().period()).containsExactly(Period.MENSTRUAL, Period.LUTEAL);
         assertThat(menstrual.getLast().period()).containsExactly(Period.MENSTRUAL);
     }

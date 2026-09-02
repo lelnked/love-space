@@ -59,8 +59,8 @@ public class FeaturedCycleItemQueryService {
     /**
      * 可见条目扁平列表，sortOrder 升序、同序号创建时间倒序。
      * <p>{@code period} / {@code type} 均可选：为 null 时不过滤；过滤后无条目返回空列表。
-     * <p>响应的 {@code period} 是该 target 覆盖的周期集合，在全部可下发条目上算好后再做参数过滤——
-     * 若在过滤后的结果集上聚合，带 {@code period=X} 时集合会恒为 {@code [X]}，字段就退化回单值了。
+     * <p>响应的 {@code period} 直接取自条目自身的 {@code phases}，不跨条目聚合——
+     * {@code (type, targetId)} 全局唯一，一个 target 至多一条条目，聚合已无对象。
      */
     public List<FeaturedCycleItemResponse> feed(Period period, FeaturedCycleItemType type) {
         // ponytail: 运营配置级数据量（每周期个位数），全量捞出在内存过滤即可，无需 join
@@ -85,24 +85,24 @@ public class FeaturedCycleItemQueryService {
                         .filter(item -> isVisible(item, visibleActivities, visibleRoutes, visibleArticles))
                         .toList();
 
-        Map<TargetKey, EnumSet<Period>> periodsByTarget = visibleItems.stream().collect(Collectors.groupingBy(
-                TargetKey::of,
-                Collectors.mapping(FeaturedCycleItem::getPhase,
-                        Collectors.toCollection(() -> EnumSet.noneOf(Period.class)))));
-
         return visibleItems.stream()
-                .filter(item -> period == null || item.getPhase() == period)
-                .filter(item -> type == null || item.getType() == type)
-                .map(item -> toResponse(item, periodsByTarget.get(TargetKey.of(item)),
-                        toTarget(item, visibleActivities, visibleRoutes, visibleArticles, onlineAmbassadors)))
+                .map(item -> Map.entry(item, phasesOf(item)))
+                .filter(entry -> period == null || entry.getValue().contains(period))
+                .filter(entry -> type == null || entry.getKey().getType() == type)
+                .map(entry -> toResponse(entry.getKey(), entry.getValue(),
+                        toTarget(entry.getKey(), visibleActivities, visibleRoutes, visibleArticles,
+                                onlineAmbassadors)))
                 .toList();
     }
 
-    /** 同一 target 的判定：type 与 targetId 都相同。targetId 指向三张不同的表，带上 type 语义更直白。 */
-    private record TargetKey(FeaturedCycleItemType type, UUID targetId) {
-        static TargetKey of(FeaturedCycleItem item) {
-            return new TargetKey(item.getType(), item.getTargetId());
-        }
+    /**
+     * 条目持久化的周期枚举名转 {@code EnumSet}：天然去重且按 {@code Period} 声明顺序迭代，
+     * 即契约要求的下发顺序。
+     */
+    private static EnumSet<Period> phasesOf(FeaturedCycleItem item) {
+        EnumSet<Period> phases = EnumSet.noneOf(Period.class);
+        item.getPhases().forEach(name -> phases.add(Period.valueOf(name)));
+        return phases;
     }
 
     private boolean isVisible(FeaturedCycleItem item,
@@ -157,7 +157,7 @@ public class FeaturedCycleItemQueryService {
         };
     }
 
-    /** {@code periods} 用 EnumSet 传入：天然去重且按 Period 声明顺序迭代，转 List 后即为契约要求的顺序。 */
+    /** {@code periods} 即条目自身的 {@code phases}，EnumSet 保证去重与 Period 声明顺序。 */
     private FeaturedCycleItemResponse toResponse(FeaturedCycleItem item, EnumSet<Period> periods,
                                                  FeaturedCycleItemTargetResponse target) {
         return new FeaturedCycleItemResponse(

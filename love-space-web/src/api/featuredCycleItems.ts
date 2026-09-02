@@ -15,7 +15,8 @@ export const CYCLE_ITEM_TYPES: FeaturedCycleItemType[] = ["ACTIVITY", "ROUTE", "
 
 export interface FeaturedCycleItem {
   id: string;
-  phase: Period;
+  /** 投放周期集合，已按 Period 枚举声明顺序排列。 */
+  phases: Period[];
   type: FeaturedCycleItemType;
   sortOrder: number;
   online: boolean;
@@ -33,6 +34,7 @@ export interface FeaturedCycleItem {
 }
 
 export interface FeaturedCycleItemQuery {
+  /** 按周期过滤，语义为 phases 包含该周期；不传返回全部条目。 */
   phase?: Period;
   type?: FeaturedCycleItemType;
   page?: number;
@@ -41,8 +43,8 @@ export interface FeaturedCycleItemQuery {
 
 /** 三种类型共用的请求体；必填性由后端按 type 分派校验。 */
 export interface FeaturedCycleItemUpsertRequest {
-  /** 所属周期，创建后不可变。 */
-  phase: Period;
+  /** 投放周期集合，至少一个；创建后可修改。 */
+  phases: Period[];
   /** 内容类型，创建后不可变。 */
   type: FeaturedCycleItemType;
   /** banner 图片 objectKey。 */

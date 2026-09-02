@@ -744,7 +744,7 @@
     },
     "/api/admin/featured-cycle-items/page": {
       "get": {
-        "summary": "周期推荐分页（phase/type 过滤，sortOrder 升序）",
+        "summary": "周期推荐分页（phase 过滤为「phases 包含」语义，type 过滤，sortOrder 升序）",
         "parameters": [
           {
             "name": "phase",
@@ -752,7 +752,8 @@
             "required": false,
             "schema": {
               "$ref": "#/components/schemas/Period"
-            }
+            },
+            "description": "按周期过滤，可选；语义为条目的 phases 数组包含该周期；不传则返回全部条目"
           },
           {
             "name": "type",
@@ -784,7 +785,7 @@
     },
     "/api/admin/featured-cycle-items": {
       "post": {
-        "summary": "创建周期推荐（phase/type 必选且创建后不可变）",
+        "summary": "创建周期推荐（phases 至少一个、创建后可改；type 必选且创建后不可变；(type,targetId) 全局唯一，重复返回 400）",
         "requestBody": {
           "content": {
             "application/json": {
@@ -803,7 +804,7 @@
         "x-requirement": "featured/周期推荐条目管理"
       },
       "put": {
-        "summary": "更新周期推荐（忽略 phase/type 变更）",
+        "summary": "更新周期推荐（phases 与 targetId 可改；忽略 type 变更；(type,targetId) 与其他条目冲突时返回 400）",
         "requestBody": {
           "content": {
             "application/json": {
@@ -828,13 +829,13 @@
     },
     "/api/app/featured-cycle-items": {
       "get": {
-        "summary": "App 周期推荐（扁平数组，条目不去重；响应 period 为该 target（type+targetId 相同者）覆盖的周期数组，按枚举声明顺序、在全部可下发条目上计算；关联实体为单字段 targetId；period / type 可选过滤且可同用；条目上线∧关联实体可见，sortOrder 升序；每条附 target 对象，按 type 分三种形状携带关联实体基础信息：ACTIVITY={id,title,subtitle,cover,level}、ROUTE={id,title,thumbnail,cityName,ambassadorName}、ARTICLE={id,title,coverTitle,image}）",
+        "summary": "App 周期推荐（扁平数组；响应 period 为条目自身 phases，按枚举声明顺序，不跨条目聚合；因 (type,targetId) 全局唯一，一个 target 至多出现一次；关联实体为单字段 targetId；period / type 可选过滤且可同用；条目上线∧关联实体可见，sortOrder 升序；每条附 target 对象，按 type 分三种形状携带关联实体基础信息：ACTIVITY={id,title,subtitle,cover,level}、ROUTE={id,title,thumbnail,cityName,ambassadorName}、ARTICLE={id,title,coverTitle,image}）",
         "parameters": [
           {
             "name": "period",
             "in": "query",
             "required": false,
-            "description": "按条目自身所属周期过滤，可选；不传则下发全部周期，非法值返回 400。注意与响应体的 period 数组不是同一语义——过滤看归属，下发的是该 target 覆盖的全部周期",
+            "description": "按周期过滤，可选；语义为响应 period 数组包含该值；不传则下发全部条目，非法值返回 400",
             "schema": {
               "$ref": "#/components/schemas/Period"
             }
@@ -1505,15 +1506,20 @@
       "FeaturedCycleItemUpsertRequest": {
         "type": "object",
         "required": [
-          "phase",
+          "phases",
           "type",
           "banner",
           "targetId"
         ],
-        "description": "宽 record：文案字段的必填性按 type 在服务端分派校验；不属于该 type 的文案字段被忽略且不落库",
+        "description": "宽 record：文案字段的必填性按 type 在服务端分派校验；不属于该 type 的文案字段被忽略且不落库。(type,targetId) 全局唯一，重复返回 400",
         "properties": {
-          "phase": {
-            "$ref": "#/components/schemas/Period"
+          "phases": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "$ref": "#/components/schemas/Period"
+            },
+            "description": "投放周期集合，至少一个；创建后可修改；服务端去重并按枚举声明顺序落库"
           },
           "type": {
             "$ref": "#/components/schemas/FeaturedCycleItemType"
@@ -1533,7 +1539,7 @@
           "targetId": {
             "type": "string",
             "format": "uuid",
-            "description": "关联实体 id，指向哪类实体由 type 判别（ACTIVITY→活动 / ROUTE→路线 / ARTICLE→文章）；必填，按 type 分派到对应实体校验存在性"
+            "description": "关联实体 id，指向哪类实体由 type 判别（ACTIVITY→活动 / ROUTE→路线 / ARTICLE→文章）；必填，按 type 分派到对应实体校验存在性；创建后可修改，改动后原实体的唯一位释放"
           },
           "title": {
             "type": "string",

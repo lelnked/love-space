@@ -24,12 +24,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.UUID;
 
 /**
  * 精选·周期推荐服务（运营后台）：CRUD + 上下线。
- * <p>无外键，关联实体存在性在这里校验；phase 与 type 创建后不可变。
+ * <p>无外键，关联实体存在性在这里校验；type 创建后不可变，phases 与 targetId 可改。
+ * <p>{@code (type, targetId)} 全局唯一——一个活动/路线/文章只能有一条推荐；DB 唯一索引兜底并发，
+ * 这里预查一次只为把 500 换成 400 + 中文文案。
  * <p>三种内容类型共用一张表，{@link #applyByType} 按 type 分派必填校验，
  * 并把不属于该类型的关联 id 与文案列一律置 null，避免切类型后残留脏值。
  */
@@ -45,13 +48,17 @@ public class FeaturedCycleItemService {
     private final ObjectKeyValidator objectKeyValidator;
     private final ImageUrlSigner imageUrlSigner;
 
-    /** 分页列表：phase / type 过滤，sortOrder 升序、同序号创建时间倒序。 */
+    /** 分页列表：phase（语义为 phases 包含该周期）/ type 过滤，sortOrder 升序、同序号创建时间倒序。 */
     @Transactional(readOnly = true)
     public PageResponse<FeaturedCycleItemResponse> page(Period phase, FeaturedCycleItemType type, Pageable pageable) {
         Specification<FeaturedCycleItem> spec = (root, cq, cb) -> {
             List<jakarta.persistence.criteria.Predicate> predicates = new ArrayList<>();
             if (phase != null) {
-                predicates.add(cb.equal(root.get(FeaturedCycleItem_.phase), phase));
+                // phases 列为 jsonb 字符串数组，用 PostgreSQL jsonb_exists 判断是否包含该周期枚举名
+                predicates.add(cb.isTrue(cb.function(
+                        "jsonb_exists", Boolean.class,
+                        root.get(FeaturedCycleItem_.phases),
+                        cb.literal(phase.name()))));
             }
             if (type != null) {
                 predicates.add(cb.equal(root.get(FeaturedCycleItem_.type), type));
@@ -70,16 +77,15 @@ public class FeaturedCycleItemService {
         return toResponse(find(id));
     }
 
-    /** 创建周期推荐：phase 与 type 取自请求，之后不可变。 */
+    /** 创建周期推荐：type 取自请求且之后不可变，phases 与 targetId 之后可改。 */
     public FeaturedCycleItemResponse create(FeaturedCycleItemUpsertRequest request) {
         FeaturedCycleItem item = new FeaturedCycleItem();
-        item.setPhase(request.phase());
         item.setType(request.type());
         apply(item, request);
         return toResponse(featuredCycleItemRepository.save(item));
     }
 
-    /** 更新周期推荐（phase 与 type 不可变，请求中的对应值被忽略）。 */
+    /** 更新周期推荐（type 不可变，请求中的对应值被忽略；phases 与 targetId 可改）。 */
     public FeaturedCycleItemResponse update(UUID id, FeaturedCycleItemUpsertRequest request) {
         FeaturedCycleItem item = find(id);
         apply(item, request);
@@ -104,6 +110,7 @@ public class FeaturedCycleItemService {
     }
 
     private void apply(FeaturedCycleItem item, FeaturedCycleItemUpsertRequest request) {
+        item.setPhases(normalizePhases(request.phases()));
         item.setBanner(objectKeyValidator.validateAndBind(request.banner()));
         item.setSortOrder(request.sortOrder() == null ? 0 : request.sortOrder());
         item.setOnline(Boolean.TRUE.equals(request.online()));
@@ -115,7 +122,11 @@ public class FeaturedCycleItemService {
      * 并把无关列置 null。
      */
     private void applyByType(FeaturedCycleItem item, FeaturedCycleItemUpsertRequest request) {
-        item.setTargetId(requireTarget(item.getType(), request.targetId()));
+        UUID targetId = requireTarget(item.getType(), request.targetId());
+        // 必须在写回实体**之前**校验：受管实体一旦脏，随后的查询会触发 flush，
+        // UPDATE 先撞上唯一索引，抛的就是 DataIntegrityViolationException（500）而非中文 400 了
+        requireTargetNotTaken(item, targetId);
+        item.setTargetId(targetId);
         item.setTitle(null);
         item.setSubtitle(null);
         item.setDescription(null);
@@ -159,6 +170,45 @@ public class FeaturedCycleItemService {
         return targetId;
     }
 
+    /**
+     * 去重并按 {@code Period} 枚举声明顺序排序后转枚举名列表。
+     * <p>用 {@code EnumSet} 是因为它天然去重且按声明顺序迭代，正好是契约要求的落库顺序。
+     */
+    private static List<String> normalizePhases(List<Period> phases) {
+        // @NotEmpty 只在 controller 的 @Valid 层生效，service 直调（含内部调用）在这里兜底
+        if (phases == null || phases.isEmpty()) {
+            throw new IllegalArgumentException("投放周期不能为空");
+        }
+        EnumSet<Period> distinct = EnumSet.noneOf(Period.class);
+        for (Period phase : phases) {
+            if (phase == null) {
+                throw new IllegalArgumentException("投放周期不能为空");
+            }
+            distinct.add(phase);
+        }
+        return distinct.stream().map(Enum::name).toList();
+    }
+
+    /**
+     * {@code (type, targetId)} 唯一性校验：同一活动/路线/文章只能有一条推荐。
+     * <p>与上下线状态无关——下线条目同样占位，否则「下线后再建一条」会绕过约束、上线时才炸。
+     * <p>新建实体此时 id 仍为 null（UUIDv7 在 {@code @PrePersist} 才生成），故按 id 是否存在分派查询。
+     */
+    private void requireTargetNotTaken(FeaturedCycleItem item, UUID targetId) {
+        boolean taken = item.getId() == null
+                ? featuredCycleItemRepository.existsByTypeAndTargetId(item.getType(), targetId)
+                : featuredCycleItemRepository.existsByTypeAndTargetIdAndIdNot(
+                        item.getType(), targetId, item.getId());
+        if (taken) {
+            String label = switch (item.getType()) {
+                case ACTIVITY -> "该活动";
+                case ROUTE -> "该路线";
+                case ARTICLE -> "该文章";
+            };
+            throw new IllegalArgumentException(label + "已存在周期推荐");
+        }
+    }
+
     private static String requireText(String value, String label) {
         if (value == null || value.isBlank()) {
             throw new IllegalArgumentException(label + "不能为空");
@@ -173,7 +223,7 @@ public class FeaturedCycleItemService {
     private FeaturedCycleItemResponse toResponse(FeaturedCycleItem item) {
         return new FeaturedCycleItemResponse(
                 item.getId(),
-                item.getPhase(),
+                item.getPhases().stream().map(Period::valueOf).toList(),
                 item.getType(),
                 item.getSortOrder(),
                 item.isOnline(),

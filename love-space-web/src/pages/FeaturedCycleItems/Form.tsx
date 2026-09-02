@@ -1,5 +1,5 @@
 import { FormEvent, useEffect, useState } from "react";
-import { useNavigate, useParams, useSearchParams } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import { AxiosError } from "axios";
 import Button from "../../components/ui/button/Button";
 import PageMeta from "../../components/common/PageMeta";
@@ -28,19 +28,14 @@ interface FieldError {
 /** 下拉数据一次拉一页即可——运营配置级数据量。 */
 const OPTION_PAGE_SIZE = 30;
 
-const isPeriod = (v: string | null): v is Period =>
-  v !== null && (PERIOD_VALUES as readonly string[]).includes(v);
-
 export default function FeaturedCycleItemForm() {
   const navigate = useNavigate();
   const { id } = useParams<{ id?: string }>();
-  const [searchParams] = useSearchParams();
   const editing = Boolean(id);
   const toast = useToast();
 
-  // 新增时归属周期取自列表 Tab 带来的 ?phase=；编辑时以条目自身周期为准，两种情况都不可改
-  const phaseParam = searchParams.get("phase");
-  const [phase, setPhase] = useState<Period>(isPeriod(phaseParam) ? phaseParam : "MENSTRUAL");
+  // 投放周期多选，至少一个；新增与编辑都可改（周期不再是不可变字段）
+  const [phases, setPhases] = useState<Period[]>([]);
   const [type, setType] = useState<FeaturedCycleItemType>("ACTIVITY");
   const [bannerKey, setBannerKey] = useState("");
   const [bannerPreview, setBannerPreview] = useState("");
@@ -77,7 +72,7 @@ export default function FeaturedCycleItemForm() {
     setLoading(true);
     getFeaturedCycleItem(id)
       .then((d) => {
-        setPhase(d.phase);
+        setPhases(d.phases);
         setType(d.type);
         setBannerKey(d.banner?.id ?? "");
         setBannerPreview(d.banner?.url ?? "");
@@ -117,8 +112,17 @@ export default function FeaturedCycleItemForm() {
     if (article) setTitle(article.title);
   };
 
+  /** 勾选/取消一个周期；结果按 PERIOD_VALUES 声明顺序排列，与后端落库顺序一致。 */
+  const togglePhase = (p: Period) =>
+    setPhases((prev) =>
+      prev.includes(p)
+        ? prev.filter((x) => x !== p)
+        : PERIOD_VALUES.filter((x) => x === p || prev.includes(x)),
+    );
+
   const validate = (): Record<string, string> => {
     const errs: Record<string, string> = {};
+    if (phases.length === 0) errs.phases = "请至少选择一个投放周期";
     if (!bannerKey.trim()) errs.banner = "请上传 banner 图片";
     if (type === "ACTIVITY") {
       if (!targetId) errs.targetId = "请选择关联活动";
@@ -149,7 +153,7 @@ export default function FeaturedCycleItemForm() {
     setSubmitting(true);
     try {
       const payload: FeaturedCycleItemUpsertRequest = {
-        phase,
+        phases,
         type,
         banner: bannerKey.trim(),
         sortOrder: Number(sortOrder) || 0,
@@ -208,9 +212,25 @@ export default function FeaturedCycleItemForm() {
           <fieldset className={sectionClass}>
             <legend className={sectionTitleClass}>基础信息</legend>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label>所属周期</Label>
-                <input className={inputClass} value={PERIOD_LABEL[phase]} disabled readOnly />
+              <div className="md:col-span-2">
+                <Label>
+                  投放周期 <span className="text-error-500">*</span>
+                </Label>
+                <div className="flex flex-wrap gap-4 pt-1">
+                  {PERIOD_VALUES.map((p) => (
+                    <label key={p} className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                      <input
+                        type="checkbox"
+                        className="size-4"
+                        checked={phases.includes(p)}
+                        onChange={() => togglePhase(p)}
+                      />
+                      {PERIOD_LABEL[p]}
+                    </label>
+                  ))}
+                </div>
+                <div className="text-xs text-gray-400 mt-1">可多选，至少选一个；创建后仍可修改</div>
+                {error("phases")}
               </div>
               <div>
                 <Label>

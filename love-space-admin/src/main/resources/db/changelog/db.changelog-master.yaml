@@ -45,3 +45,5 @@ databaseChangeLog:
       file: db/changelog/changes/022-merge-featured-cycle-item-target-id.sql
   - include:
       file: db/changelog/changes/023-add-activity-subtitle.sql
+  - include:
+      file: db/changelog/changes/024-featured-cycle-item-multi-phase.sql

@@ -20,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
+import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -29,7 +30,7 @@ import static org.mockito.Mockito.when;
 
 /**
  * {@link FeaturedCycleItemService} 集成测试：三种内容类型的创建与分派校验、
- * phase/type 不可变、按周期过滤、上下线。
+ * 多周期 phases、(type,targetId) 唯一约束、type 不可变而 phases/targetId 可改、按周期过滤、上下线。
  */
 class FeaturedCycleItemServiceTest extends AbstractPostgresIntegrationTest {
 
@@ -89,7 +90,12 @@ class FeaturedCycleItemServiceTest extends AbstractPostgresIntegrationTest {
     }
 
     private FeaturedCycleItemUpsertRequest activityRequest(UUID targetId) {
-        return new FeaturedCycleItemUpsertRequest(Period.MENSTRUAL, FeaturedCycleItemType.ACTIVITY,
+        return activityRequest(targetId, List.of(Period.MENSTRUAL));
+    }
+
+    private FeaturedCycleItemUpsertRequest activityRequest(UUID targetId, List<Period> phases) {
+        return new FeaturedCycleItemUpsertRequest(
+                phases, FeaturedCycleItemType.ACTIVITY,
                 "images/banner.png", 1, null, targetId, null, null, "经期慢下来", "周末两日");
     }
 
@@ -101,7 +107,7 @@ class FeaturedCycleItemServiceTest extends AbstractPostgresIntegrationTest {
         FeaturedCycleItemResponse created = featuredCycleItemService.create(activityRequest(activity.getId()));
         FeaturedCycleItemResponse detail = featuredCycleItemService.detail(created.id());
 
-        assertThat(detail.phase()).isEqualTo(Period.MENSTRUAL);
+        assertThat(detail.phases()).containsExactly(Period.MENSTRUAL);
         assertThat(detail.type()).isEqualTo(FeaturedCycleItemType.ACTIVITY);
         assertThat(detail.targetId()).isEqualTo(activity.getId());
         assertThat(detail.relatedTitle()).isEqualTo("成都周末");
@@ -120,7 +126,8 @@ class FeaturedCycleItemServiceTest extends AbstractPostgresIntegrationTest {
         Route route = route("路线实体自己的标题");
 
         FeaturedCycleItemResponse created = featuredCycleItemService.create(
-                new FeaturedCycleItemUpsertRequest(Period.OVULATION, FeaturedCycleItemType.ROUTE,
+                new FeaturedCycleItemUpsertRequest(
+                        List.of(Period.OVULATION), FeaturedCycleItemType.ROUTE,
                         "images/banner.png", null, null, route.getId(),
                         "排卵期就该出门", "三天两夜", "体力最好的几天", null));
         FeaturedCycleItemResponse detail = featuredCycleItemService.detail(created.id());
@@ -139,7 +146,8 @@ class FeaturedCycleItemServiceTest extends AbstractPostgresIntegrationTest {
         Article article = article("黄体期怎么吃");
 
         FeaturedCycleItemResponse created = featuredCycleItemService.create(
-                new FeaturedCycleItemUpsertRequest(Period.LUTEAL, FeaturedCycleItemType.ARTICLE,
+                new FeaturedCycleItemUpsertRequest(
+                        List.of(Period.LUTEAL), FeaturedCycleItemType.ARTICLE,
                         "images/banner.png", null, null, article.getId(),
                         "黄体期生活法", null, null, null));
         FeaturedCycleItemResponse detail = featuredCycleItemService.detail(created.id());
@@ -160,14 +168,16 @@ class FeaturedCycleItemServiceTest extends AbstractPostgresIntegrationTest {
         Activity activity = activity("活动");
 
         assertThatThrownBy(() -> featuredCycleItemService.create(
-                new FeaturedCycleItemUpsertRequest(Period.OVULATION, FeaturedCycleItemType.ROUTE,
+                new FeaturedCycleItemUpsertRequest(
+                        List.of(Period.OVULATION), FeaturedCycleItemType.ROUTE,
                         "images/banner.png", null, null, route.getId(),
                         "主标题", null, "推荐说明", null)))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("副标题");
 
         assertThatThrownBy(() -> featuredCycleItemService.create(
-                new FeaturedCycleItemUpsertRequest(Period.MENSTRUAL, FeaturedCycleItemType.ACTIVITY,
+                new FeaturedCycleItemUpsertRequest(
+                        List.of(Period.MENSTRUAL), FeaturedCycleItemType.ACTIVITY,
                         "images/banner.png", null, null, activity.getId(),
                         null, null, null, "活动说明")))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -182,14 +192,16 @@ class FeaturedCycleItemServiceTest extends AbstractPostgresIntegrationTest {
                 .hasMessageContaining("关联活动不存在");
 
         assertThatThrownBy(() -> featuredCycleItemService.create(
-                new FeaturedCycleItemUpsertRequest(Period.OVULATION, FeaturedCycleItemType.ROUTE,
+                new FeaturedCycleItemUpsertRequest(
+                        List.of(Period.OVULATION), FeaturedCycleItemType.ROUTE,
                         "images/banner.png", null, null, UUID.randomUUID(),
                         "主标题", "副标题", "推荐说明", null)))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("关联路线不存在");
 
         assertThatThrownBy(() -> featuredCycleItemService.create(
-                new FeaturedCycleItemUpsertRequest(Period.LUTEAL, FeaturedCycleItemType.ARTICLE,
+                new FeaturedCycleItemUpsertRequest(
+                        List.of(Period.LUTEAL), FeaturedCycleItemType.ARTICLE,
                         "images/banner.png", null, null, UUID.randomUUID(),
                         "主标题", null, null, null)))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -198,17 +210,18 @@ class FeaturedCycleItemServiceTest extends AbstractPostgresIntegrationTest {
 
     // @scenario: featured/周期推荐条目管理#周期与类型创建后不可变
     @Test
-    void updateIgnoresPhaseAndTypeAndDoesNotLeakOtherTypeColumns() {
+    void updateChangesPhasesButKeepsTypeAndDoesNotLeakOtherTypeColumns() {
         Activity activity = activity("活动");
-        Article article = article("文章");
         UUID id = featuredCycleItemService.create(activityRequest(activity.getId())).id();
 
+        // 请求里传了 ARTICLE，type 应保持 ACTIVITY；phases 则按请求改掉
         featuredCycleItemService.update(id, new FeaturedCycleItemUpsertRequest(
-                Period.LUTEAL, FeaturedCycleItemType.ARTICLE, "images/banner2.png", 5, true,
+                List.of(Period.FOLLICULAR, Period.OVULATION), FeaturedCycleItemType.ARTICLE,
+                "images/banner2.png", 5, true,
                 activity.getId(), "改名", null, "改后的推荐说明", null));
         FeaturedCycleItemResponse detail = featuredCycleItemService.detail(id);
 
-        assertThat(detail.phase()).isEqualTo(Period.MENSTRUAL);
+        assertThat(detail.phases()).containsExactly(Period.FOLLICULAR, Period.OVULATION);
         assertThat(detail.type()).isEqualTo(FeaturedCycleItemType.ACTIVITY);
         assertThat(detail.description()).isEqualTo("改后的推荐说明");
         assertThat(detail.sortOrder()).isEqualTo(5);
@@ -226,7 +239,7 @@ class FeaturedCycleItemServiceTest extends AbstractPostgresIntegrationTest {
 
         // 条目持久化类型是 ACTIVITY，传文章 id 应按 ACTIVITY 校验并报「关联活动不存在」
         assertThatThrownBy(() -> featuredCycleItemService.update(id, new FeaturedCycleItemUpsertRequest(
-                Period.LUTEAL, FeaturedCycleItemType.ARTICLE, "images/banner2.png", 5, true,
+                List.of(Period.LUTEAL), FeaturedCycleItemType.ARTICLE, "images/banner2.png", 5, true,
                 article.getId(), "改名", null, "改后的推荐说明", null)))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("关联活动不存在");
@@ -240,14 +253,16 @@ class FeaturedCycleItemServiceTest extends AbstractPostgresIntegrationTest {
                 .hasMessageContaining("关联活动不能为空");
 
         assertThatThrownBy(() -> featuredCycleItemService.create(
-                new FeaturedCycleItemUpsertRequest(Period.OVULATION, FeaturedCycleItemType.ROUTE,
+                new FeaturedCycleItemUpsertRequest(
+                        List.of(Period.OVULATION), FeaturedCycleItemType.ROUTE,
                         "images/banner.png", null, null, null,
                         "主标题", "副标题", "推荐说明", null)))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("关联路线不能为空");
 
         assertThatThrownBy(() -> featuredCycleItemService.create(
-                new FeaturedCycleItemUpsertRequest(Period.LUTEAL, FeaturedCycleItemType.ARTICLE,
+                new FeaturedCycleItemUpsertRequest(
+                        List.of(Period.LUTEAL), FeaturedCycleItemType.ARTICLE,
                         "images/banner.png", null, null, null,
                         "主标题", null, null, null)))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -268,13 +283,14 @@ class FeaturedCycleItemServiceTest extends AbstractPostgresIntegrationTest {
     // @scenario: featured/周期推荐条目管理#按周期过滤列表
     @Test
     void pageFiltersByPhaseAndSortsBySortOrderAsc() {
-        Activity activity = activity("活动");
+        // (type,targetId) 唯一，每条条目必须挂在不同活动上
         for (int sortOrder : new int[]{2, 1, 3}) {
             featuredCycleItemService.create(new FeaturedCycleItemUpsertRequest(
-                    Period.FOLLICULAR, FeaturedCycleItemType.ACTIVITY, "images/banner.png",
-                    sortOrder, null, activity.getId(), null, null, "说明", null));
+                    List.of(Period.FOLLICULAR), FeaturedCycleItemType.ACTIVITY, "images/banner.png",
+                    sortOrder, null, activity("卵泡期活动-" + sortOrder).getId(), null, null, "说明", null));
         }
-        UUID menstrualId = featuredCycleItemService.create(activityRequest(activity.getId())).id();
+        UUID menstrualId =
+                featuredCycleItemService.create(activityRequest(activity("经期活动").getId())).id();
 
         PageResponse<FeaturedCycleItemResponse> follicular =
                 featuredCycleItemService.page(Period.FOLLICULAR, null, PageRequest.of(0, 20));
@@ -282,7 +298,7 @@ class FeaturedCycleItemServiceTest extends AbstractPostgresIntegrationTest {
                 featuredCycleItemService.page(null, null, PageRequest.of(0, 20));
 
         assertThat(follicular.content())
-                .allSatisfy(item -> assertThat(item.phase()).isEqualTo(Period.FOLLICULAR))
+                .allSatisfy(item -> assertThat(item.phases()).containsExactly(Period.FOLLICULAR))
                 .extracting(FeaturedCycleItemResponse::sortOrder)
                 .containsExactly(1, 2, 3);
         assertThat(all.content()).extracting(FeaturedCycleItemResponse::id).contains(menstrualId);
@@ -308,5 +324,129 @@ class FeaturedCycleItemServiceTest extends AbstractPostgresIntegrationTest {
         activityRepository.deleteById(activity.getId());
 
         assertThat(featuredCycleItemService.detail(id).relatedTitle()).isNull();
+    }
+
+    // @scenario: featured/周期推荐条目管理#创建多周期条目
+    @Test
+    void createWithMultiplePhasesStoresSortedDistinctSet() {
+        Route route = route("多周期路线");
+
+        FeaturedCycleItemResponse created = featuredCycleItemService.create(
+                new FeaturedCycleItemUpsertRequest(
+                        // 乱序且含重复，落库应去重并按枚举声明顺序排列
+                        List.of(Period.LUTEAL, Period.MENSTRUAL, Period.LUTEAL),
+                        FeaturedCycleItemType.ROUTE, "images/banner.png", null, null, route.getId(),
+                        "主标题", "副标题", "推荐说明", null));
+        FeaturedCycleItemResponse detail = featuredCycleItemService.detail(created.id());
+
+        assertThat(detail.phases()).containsExactly(Period.MENSTRUAL, Period.LUTEAL);
+        // 两个周期各自过滤都能查到同一条
+        assertThat(featuredCycleItemService.page(Period.MENSTRUAL, null, PageRequest.of(0, 20)).content())
+                .extracting(FeaturedCycleItemResponse::id).contains(created.id());
+        assertThat(featuredCycleItemService.page(Period.LUTEAL, null, PageRequest.of(0, 20)).content())
+                .extracting(FeaturedCycleItemResponse::id).contains(created.id());
+    }
+
+    // @scenario: featured/周期推荐条目管理#phases 为空被拒绝
+    @Test
+    void emptyPhasesRejected() {
+        Activity activity = activity("活动");
+
+        assertThatThrownBy(() -> featuredCycleItemService.create(activityRequest(activity.getId(), List.of())))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("投放周期不能为空");
+    }
+
+    // @scenario: featured/周期推荐条目管理#同一关联实体重复创建被拒绝
+    @Test
+    void duplicateTargetRejected() {
+        Activity activity = activity("已被占用的活动");
+        featuredCycleItemService.create(activityRequest(activity.getId()));
+
+        assertThatThrownBy(() -> featuredCycleItemService.create(
+                activityRequest(activity.getId(), List.of(Period.FOLLICULAR))))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("该活动已存在周期推荐");
+    }
+
+    // @scenario: featured/周期推荐条目管理#下线条目同样占用唯一位
+    @Test
+    void offlineItemStillOccupiesTargetSlot() {
+        Article article = article("文章");
+        UUID id = featuredCycleItemService.create(new FeaturedCycleItemUpsertRequest(
+                List.of(Period.MENSTRUAL), FeaturedCycleItemType.ARTICLE, "images/banner.png",
+                null, null, article.getId(), "主标题", null, null, null)).id();
+        featuredCycleItemService.setOnline(id, false);
+
+        assertThatThrownBy(() -> featuredCycleItemService.create(new FeaturedCycleItemUpsertRequest(
+                List.of(Period.FOLLICULAR), FeaturedCycleItemType.ARTICLE, "images/banner.png",
+                null, null, article.getId(), "主标题", null, null, null)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("该文章已存在周期推荐");
+
+        // 占位条目删除后该实体重新可用
+        featuredCycleItemService.delete(id);
+        assertThat(featuredCycleItemService.create(new FeaturedCycleItemUpsertRequest(
+                List.of(Period.FOLLICULAR), FeaturedCycleItemType.ARTICLE, "images/banner.png",
+                null, null, article.getId(), "主标题", null, null, null)).phases())
+                .containsExactly(Period.FOLLICULAR);
+    }
+
+    // @scenario: featured/周期推荐条目管理#更新条目自身不触发唯一冲突
+    @Test
+    void updatingItselfDoesNotTriggerUniqueConflict() {
+        Activity activity = activity("活动");
+        UUID id = featuredCycleItemService.create(activityRequest(activity.getId())).id();
+
+        FeaturedCycleItemResponse updated = featuredCycleItemService.update(id,
+                activityRequest(activity.getId(), List.of(Period.OVULATION)));
+
+        assertThat(updated.targetId()).isEqualTo(activity.getId());
+        assertThat(updated.phases()).containsExactly(Period.OVULATION);
+    }
+
+    // @scenario: featured/周期推荐条目管理#更新关联实体
+    @Test
+    void updateSwitchesTargetAndReleasesOldSlot() {
+        Activity activityA = activity("活动 A");
+        Activity activityB = activity("活动 B");
+        UUID id = featuredCycleItemService.create(activityRequest(activityA.getId())).id();
+
+        FeaturedCycleItemResponse updated =
+                featuredCycleItemService.update(id, activityRequest(activityB.getId()));
+
+        assertThat(updated.targetId()).isEqualTo(activityB.getId());
+        assertThat(updated.relatedTitle()).isEqualTo("活动 B");
+        // A 的唯一位随 targetId 改动而释放
+        assertThat(featuredCycleItemService.create(activityRequest(activityA.getId())).targetId())
+                .isEqualTo(activityA.getId());
+    }
+
+    // @scenario: featured/周期推荐条目管理#更新指向已被占用的实体被拒绝
+    @Test
+    void updateToOccupiedTargetRejected() {
+        Activity activityA = activity("活动 A");
+        Activity activityB = activity("活动 B");
+        UUID idA = featuredCycleItemService.create(activityRequest(activityA.getId())).id();
+        featuredCycleItemService.create(activityRequest(activityB.getId()));
+
+        assertThatThrownBy(() -> featuredCycleItemService.update(idA, activityRequest(activityB.getId())))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("该活动已存在周期推荐");
+    }
+
+    // @scenario: featured/周期推荐条目管理#不传周期返回全部条目
+    @Test
+    void pageWithoutPhaseReturnsAllItems() {
+        UUID menstrual = featuredCycleItemService.create(
+                activityRequest(activity("经期活动").getId(), List.of(Period.MENSTRUAL))).id();
+        UUID luteal = featuredCycleItemService.create(
+                activityRequest(activity("黄体期活动").getId(), List.of(Period.LUTEAL))).id();
+
+        PageResponse<FeaturedCycleItemResponse> all =
+                featuredCycleItemService.page(null, null, PageRequest.of(0, 20));
+
+        assertThat(all.content()).extracting(FeaturedCycleItemResponse::id)
+                .contains(menstrual, luteal);
     }
 }

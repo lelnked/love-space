@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.List;
 import java.util.UUID;
 
 import static org.hamcrest.Matchers.contains;
@@ -76,24 +77,23 @@ class FeaturedCycleItemControllerWebMvcTest extends AbstractPostgresIntegrationT
         activity.setTitle("跨周期活动");
         activity.setOnline(true);
         UUID targetId = activityRepository.save(activity).getId();
-        item(Period.MENSTRUAL, targetId, 0);
-        item(Period.LUTEAL, targetId, 1);
+        // 一个 target 只有一条条目，跨周期靠该条目的 phases 多值表达
+        item(List.of(Period.MENSTRUAL, Period.LUTEAL), targetId, 0);
 
         mockMvc.perform(get("/api/app/featured-cycle-items").header("X-API-Key", TEST_API_KEY))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$[0].period").isArray())
                 .andExpect(jsonPath("$[0].period", contains("MENSTRUAL", "LUTEAL")))
-                .andExpect(jsonPath("$[1].period", contains("MENSTRUAL", "LUTEAL")))
                 .andExpect(jsonPath("$[0].targetId").value(targetId.toString()))
                 .andExpect(jsonPath("$[0].activityId").doesNotExist())
                 .andExpect(jsonPath("$[0].routeId").doesNotExist())
                 .andExpect(jsonPath("$[0].articleId").doesNotExist());
     }
 
-    private void item(Period phase, UUID targetId, int sortOrder) {
+    private void item(List<Period> phases, UUID targetId, int sortOrder) {
         FeaturedCycleItem item = new FeaturedCycleItem();
-        item.setPhase(phase);
+        item.setPhases(phases.stream().map(Enum::name).toList());
         item.setType(FeaturedCycleItemType.ACTIVITY);
         item.setTargetId(targetId);
         item.setOnline(true);

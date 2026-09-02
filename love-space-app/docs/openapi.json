@@ -560,7 +560,7 @@
             "name": "period",
             "in": "query",
             "required": false,
-            "description": "按推荐生理周期过滤；缺省不过滤",
+            "description": "按推荐生理周期过滤；语义为条目的 period 数组包含该值，缺省不过滤",
             "schema": {
               "$ref": "#/components/schemas/Period"
             }
@@ -1449,7 +1449,7 @@
             "items": {
               "$ref": "#/components/schemas/Period"
             },
-            "description": "该 target 覆盖的周期数组，按 MENSTRUAL / FOLLICULAR / OVULATION / LUTEAL 枚举声明顺序排列"
+            "description": "该条目自身配置的投放周期数组，按 MENSTRUAL / FOLLICULAR / OVULATION / LUTEAL 枚举声明顺序排列"
           },
           "type": {
             "allOf": [
