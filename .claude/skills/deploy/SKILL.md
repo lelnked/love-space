@@ -88,16 +88,18 @@ $ARGUMENTS
 每一步把要执行的命令直接打出来，并在每个外部命令前用一句中文说明它在做什么。
 **禁止**用 `&&` 把多个高风险命令拼一行，方便失败时定位。
 
-### 通用：上传部署脚本（仅当本地 `deploy/*.sh` 有变更或用户明确要求）
+### 通用：上传部署脚本（当本地 `deploy/` 有变更或用户明确要求时执行）
 
 ```bash
 ssh <SSH> "mkdir -p <部署根>/deploy"
+scp deploy/.env.example <SSH>:<部署根>/deploy/
 scp deploy/*.sh <SSH>:<部署根>/deploy/
 ssh <SSH> "chmod +x <部署根>/deploy/*.sh"
 ```
 
-**只传 `*.sh`。** `deploy/.env.<环境>` 属于目标服务器、由服务器自己维护（含密钥），
-**不要从打包机传或覆盖它**。只有模板 `deploy/.env.example` 在 git 里，可以传。
+- **传 `deploy/.env.example` + `deploy/*.sh`**：模板可以覆盖；脚本变更时两样都传。
+- **不要传 `deploy/.env.<环境>`**：它属于目标服务器、含密钥、不在 git 里，不要从打包机覆盖。
+- 如果用户要求“重新上传 deploy 目录”，按上面三条命令执行，不要只传 `*.sh` 而漏掉 `.env.example`。
 
 ### 分支 A：`web`（前端）
 
@@ -169,6 +171,7 @@ ssh <SSH> "curl -fsSI <该环境前端地址> | head -1"
 ## 失败处理与回滚
 
 - 本地 `mvn package` 失败：停下来，不要把旧 jar 传上去。
+- 前端 `npm run build` 失败：最常见报错是 `vite.config.ts: Cannot find module 'node:fs'`，这是 `@types/node` 缺失或 `tsconfig.json` 没正确引用 Node 类型导致的。应先修复类型依赖再重试，不要把缺失类型声明的包打出去。
 - 前端 build 出的 API base 不对：停下来，不要上传，先修 `.env`。
 - `scp` 失败：检查 SSH，重试一次；仍失败则报告。
 - 容器起不来 / Liquibase 失败：把 `docker logs` 末尾错误整段贴出，并告知用户：
