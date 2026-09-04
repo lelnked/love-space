@@ -21,6 +21,7 @@ interface SpotRow {
   imageKey: string;
   imagePreview: string;
   introduction: string;
+  address: string;
 }
 
 export default function RouteForm() {
@@ -74,6 +75,7 @@ export default function RouteForm() {
             imageKey: s.image.id,
             imagePreview: s.image.url,
             introduction: s.introduction,
+            address: s.address ?? "",
           })),
         );
       })
@@ -122,6 +124,7 @@ export default function RouteForm() {
         name: s.name.trim(),
         image: s.imageKey.trim(),
         introduction: s.introduction.trim(),
+        address: s.address.trim() || null,
       })),
     };
 
@@ -169,11 +172,12 @@ export default function RouteForm() {
                 <Input
                   value={cityName}
                   onChange={(e) => setCityName(e.target.value)}
+                  disabled={editing}
                   error={Boolean(fieldErrors.cityName)}
                   hint={fieldErrors.cityName}
                 />
                 <div className="text-xs text-gray-400 mt-1">
-                  输入已有的城市中文名，创建/编辑时写入路线并校验城市库。
+                  自由输入城市中文名，不校验城市库；创建后不可修改。
                 </div>
               </div>
               <div>
@@ -316,6 +320,14 @@ export default function RouteForm() {
                     )}
                   </div>
                   <div>
+                    <Label>地址</Label>
+                    <Input
+                      placeholder="地点地址，可留空"
+                      value={s.address}
+                      onChange={(e) => updateSpot(i, { address: e.target.value })}
+                    />
+                  </div>
+                  <div>
                     <Label>
                       介绍 <span className="text-error-500">*</span>
                     </Label>
@@ -340,7 +352,7 @@ export default function RouteForm() {
                 onClick={() =>
                   setSpots((prev) => [
                     ...prev,
-                    { name: "", imageKey: "", imagePreview: "", introduction: "" },
+                    { name: "", imageKey: "", imagePreview: "", introduction: "", address: "" },
                   ])
                 }
               >

@@ -1217,6 +1217,11 @@
           "introduction": {
             "type": "string",
             "description": "地点介绍"
+          },
+          "address": {
+            "type": "string",
+            "nullable": true,
+            "description": "地点地址，可空；未填时为 null"
           }
         }
       },

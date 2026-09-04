@@ -19,6 +19,8 @@ export interface RouteSpot {
   name: string;
   image: ImageResponse;
   introduction: string;
+  /** 地点地址，未填为 null。 */
+  address: string | null;
 }
 
 export interface RouteDetail {
@@ -50,6 +52,8 @@ export interface RouteSpotRequest {
   /** 地点图片 objectKey，必填。 */
   image: string;
   introduction: string;
+  /** 地点地址，可空。 */
+  address?: string | null;
 }
 
 export interface RouteUpsertRequest {

@@ -68,6 +68,7 @@ public class RouteService {
     /** 创建路线。 */
     public RouteDetailResponse create(RouteUpsertRequest request) {
         Route route = new Route();
+        route.setCityName(request.cityName()); // 所属城市创建后不可变，只在 create 写入
         apply(route, request);
         return toDetail(routeRepository.save(route));
     }
@@ -95,7 +96,6 @@ public class RouteService {
         }
         route.setSortOrder(request.sortOrder() == null ? 0 : request.sortOrder());
         route.setTitle(request.title());
-        route.setCityName(request.cityName());
         route.setAmbassadorNote(request.ambassadorNote());
         route.setThumbnail(objectKeyValidator.validateAndBind(request.thumbnail()));
         route.setImages(new ArrayList<>(request.images().stream()
@@ -107,7 +107,7 @@ public class RouteService {
         route.setAmbassadorId(request.ambassadorId());
         List<RouteSpotRequest> spots = request.spots() == null ? List.of() : request.spots();
         route.setSpots(new ArrayList<>(spots.stream()
-                .map(s -> new RouteSpot(s.name(), objectKeyValidator.validateAndBind(s.image()), s.introduction()))
+                .map(s -> new RouteSpot(s.name(), objectKeyValidator.validateAndBind(s.image()), s.introduction(), s.address()))
                 .toList()));
     }
 
@@ -131,7 +131,7 @@ public class RouteService {
 
     private RouteDetailResponse toDetail(Route route) {
         List<RouteSpotResponse> spots = (route.getSpots() == null ? List.<RouteSpot>of() : route.getSpots()).stream()
-                .map(s -> new RouteSpotResponse(s.name(), ImageResponses.from(s.image(), imageUrlSigner), s.introduction()))
+                .map(s -> new RouteSpotResponse(s.name(), ImageResponses.from(s.image(), imageUrlSigner), s.introduction(), s.address()))
                 .toList();
         return new RouteDetailResponse(
                 route.getId(),

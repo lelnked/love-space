@@ -1,25 +1,4 @@
-# route Specification
-
-## Purpose
-TBD - created by archiving change ambassador-route-activity. Update Purpose after archive.
-## Requirements
-### Requirement: 爱女大使管理
-admin 端 SHALL 提供爱女大使 CRUD：头像图片 1 张（必填）、名称（必填）、标签（文本，最多 3 条）、上线/下线状态。
-
-#### Scenario: 创建大使
-- **GIVEN** 已登录 admin
-- **WHEN** 提交头像、名称「小满」、标签 ["古着", "咖啡"]、上线
-- **THEN** 返回 200，详情含全部字段且标签顺序保持
-
-#### Scenario: 标签超过 3 条被拒绝
-- **GIVEN** 已登录 admin
-- **WHEN** 提交带 4 条标签的大使
-- **THEN** 返回 400 及中文业务错误
-
-#### Scenario: 大使上下线切换
-- **GIVEN** 一个上线大使
-- **WHEN** 将其下线
-- **THEN** 返回 200，详情 online=false
+## MODIFIED Requirements
 
 ### Requirement: 路线管理
 admin 端 SHALL 提供路线 CRUD：所属地图自由输入（必填、创建后不可变，允许任意输入且不再校验城市库）、排序号 sortOrder（默认 0）、主标题（必填）、爱女大使说、缩略图 1 张（必填）、路线图片最少 1 张、旅行时间/适合季节/旅行状态（文本）、关联爱女大使单选（必填）、地点列表（每个地点含名称、图片 1 张、介绍、地址 `address`（可空文本），按添加顺序正序保存与展示）。路线无上下架，删除为物理删除（连带地点）。

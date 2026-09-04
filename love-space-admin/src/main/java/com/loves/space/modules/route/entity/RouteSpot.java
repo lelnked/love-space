@@ -6,6 +6,7 @@ package com.loves.space.modules.route.entity;
  * @param name         地点名称
  * @param image        地点图片 objectKey（1 张）
  * @param introduction 地点介绍
+ * @param address      地点地址（可空）
  */
-public record RouteSpot(String name, String image, String introduction) {
+public record RouteSpot(String name, String image, String introduction, String address) {
 }

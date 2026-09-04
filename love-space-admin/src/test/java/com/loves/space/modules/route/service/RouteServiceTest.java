@@ -86,8 +86,8 @@ class RouteServiceTest extends AbstractPostgresIntegrationTest {
         String cityName = cityName();
         UUID ambassadorId = ambassadorId();
         RouteDetailResponse detail = routeService.create(request(cityName, ambassadorId, 1, "路线一", List.of(
-                new RouteSpotRequest("地点甲", "images/s1.png", "介绍甲"),
-                new RouteSpotRequest("地点乙", "images/s2.png", "介绍乙"))));
+                new RouteSpotRequest("地点甲", "images/s1.png", "介绍甲", null),
+                new RouteSpotRequest("地点乙", "images/s2.png", "介绍乙", null))));
         assertThat(detail.cityName()).isEqualTo(cityName);
         // 编辑页回显依赖 ambassadorId，详情必须带上
         assertThat(routeService.detail(detail.id()).ambassadorId()).isEqualTo(ambassadorId);
@@ -95,6 +95,24 @@ class RouteServiceTest extends AbstractPostgresIntegrationTest {
         assertThat(detail.spots()).extracting(RouteSpotResponse::name)
                 .containsExactly("地点甲", "地点乙");
         assertThat(detail.thumbnail().url()).contains("bound/images/thumb.png");
+    }
+
+    // @scenario: route/路线管理#地点地址可写可改可空
+    @Test
+    void spotAddressIsWritableUpdatableAndNullable() {
+        String cityName = cityName();
+        UUID ambassadorId = ambassadorId();
+        RouteDetailResponse created = routeService.create(request(cityName, ambassadorId, 1, "路线", List.of(
+                new RouteSpotRequest("地点甲", "images/s1.png", "介绍甲", "成都市青羊区宽窄巷子"),
+                new RouteSpotRequest("地点乙", "images/s2.png", "介绍乙", null))));
+        assertThat(created.spots()).extracting(RouteSpotResponse::address)
+                .containsExactly("成都市青羊区宽窄巷子", null);
+
+        RouteDetailResponse updated = routeService.update(created.id(), request(cityName, ambassadorId, 1, "路线", List.of(
+                new RouteSpotRequest("地点甲", "images/s1.png", "介绍甲", "成都市锦江区春熙路"),
+                new RouteSpotRequest("地点乙", "images/s2.png", "介绍乙", null))));
+        assertThat(routeService.detail(updated.id()).spots()).extracting(RouteSpotResponse::address)
+                .containsExactly("成都市锦江区春熙路", null);
     }
 
     // @scenario: route/路线管理#缺少必填项被拒绝
@@ -130,7 +148,7 @@ class RouteServiceTest extends AbstractPostgresIntegrationTest {
     void deleteRemovesRouteWithSpots() {
         String cityName = cityName();
         UUID id = routeService.create(request(cityName, ambassadorId(), 0, "待删路线",
-                List.of(new RouteSpotRequest("地点", "images/s.png", "介绍")))).id();
+                List.of(new RouteSpotRequest("地点", "images/s.png", "介绍", null)))).id();
         routeService.delete(id);
         assertThatThrownBy(() -> routeService.detail(id))
                 .isInstanceOf(IllegalArgumentException.class)

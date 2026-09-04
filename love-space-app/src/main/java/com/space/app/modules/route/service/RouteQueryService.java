@@ -100,7 +100,7 @@ public class RouteQueryService {
                 .orElseThrow(() -> new ResourceNotFoundException("route not found: " + id));
 
         List<RouteSpotItemResponse> spots = (route.getSpots() == null ? List.<RouteSpot>of() : route.getSpots()).stream()
-                .map(s -> new RouteSpotItemResponse(s.name(), ImageResponses.from(s.image(), imageUrlSigner), s.introduction()))
+                .map(s -> new RouteSpotItemResponse(s.name(), ImageResponses.from(s.image(), imageUrlSigner), s.introduction(), s.address()))
                 .toList();
 
         City city = route.getCityName() == null ? null

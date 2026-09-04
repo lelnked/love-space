@@ -87,8 +87,8 @@
 **预期结果**: 创建返回 200；详情字段与提交一致，spots 按 S1→S2 顺序返回且每个含 name/image/intro，thumbnail/images/地点图片均为签名 URL
 **状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**: `test-evidence/ambassador-route-activity/TC-route-IT-006/`
-**最后更新**: 2026-08-16
+**执行存证**: `test-evidence/route-spot-address/TC-route-IT-006/`
+**最后更新**: 2026-09-04
 
 ### TC-route-IT-007: POST /api/admin/routes 缺必填或大使不存在被拒绝（城市名不校验）
 **关联需求**: route/路线管理#缺少必填项被拒绝
@@ -131,8 +131,8 @@
 **预期结果**: title/sortOrder/spots 更新生效（spots 仅剩新地点）；cityId 仍为城市 A（不可变——被忽略或返回 400 中文业务错误，按实现口径断言其一并记录）
 **状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**: `test-evidence/ambassador-route-activity/TC-route-IT-009/`
-**最后更新**: 2026-08-16
+**执行存证**: `test-evidence/route-spot-address/TC-route-IT-009/`
+**最后更新**: 2026-09-04
 
 ### TC-route-IT-010: GET /api/admin/routes/page 按 sortOrder 升序并支持过滤
 **关联需求**: route/路线管理#路线列表按排序号升序
@@ -198,16 +198,16 @@
 ### TC-route-IT-014: GET /api/app/routes/{id} 路线详情返回地点明细与大使信息
 **关联需求**: route/App 端路线查询#路线详情返回地点明细
 **关联契约**: api-spec.json#/paths/~1api~1app~1routes~1{id}/get
-**来源**: ambassador-route-activity
+**来源**: route-spot-address
 **优先级**: P0
 **测试步骤**:
 1. 前置：一条可见路线含 2 个地点（顺序 S1、S2），关联大使配有头像/名称/标签
 2. GET http://localhost:8081/api/app/routes/{id}（请求头带 X-API-Key）
-**预期结果**: 返回 200；含路线图片列表（签名 URL）、地点按 S1→S2 顺序返回且每个含名称/图片/介绍；含大使信息（名称、头像签名 URL）
+**预期结果**: 返回 200；含路线图片列表（签名 URL）、地点按 S1→S2 顺序返回且每个含名称/图片/介绍/地址（`address` 字段存在，未填时为 null）；含大使信息（名称、头像签名 URL）
 **状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**: `test-evidence/app-route-query-filters/TC-route-IT-014/`
-**最后更新**: 2026-08-24
+**执行存证**: `test-evidence/route-spot-address/TC-route-IT-014/`
+**最后更新**: 2026-09-04
 
 ### TC-route-IT-015: GET /api/app/routes 未上架城市的路线仍可见且详情返回 cityName
 **关联需求**: route/App 端路线查询#未上架城市的路线仍可见
@@ -401,3 +401,34 @@
 **执行方式**: api-test-runner
 **执行存证**: `test-evidence/regression/route/TC-route-IT-027/`
 **最后更新**: 2026-09-01
+
+### TC-route-IT-028: POST/PUT /api/admin/routes 地点地址可写可改可空
+**关联需求**: route/路线管理#地点地址可写可改可空
+**关联契约**: api-spec.json#/paths/~1api~1admin~1routes/post、api-spec.json#/paths/~1api~1admin~1routes~1{id}/put、api-spec.json#/paths/~1api~1admin~1routes~1{id}/get
+**来源**: route-spot-address
+**优先级**: P0
+**测试步骤**:
+1. 前置：admin（http://localhost:21423）已登录，存在上线大使
+2. POST /api/admin/routes，body 含全部必填字段，spots 2 个：S1 带 `address`「成都市青羊区宽窄巷子」，S2 **不带** `address` key
+3. GET /api/admin/routes/{id}
+4. PUT /api/admin/routes/{id}，body 同上但 S1 的 `address` 改为「成都市锦江区春熙路」、S2 显式传 `address: null`
+5. GET /api/admin/routes/{id}
+**预期结果**: 步骤 2/4 均返回 200；步骤 3 详情 spots[0].address == "成都市青羊区宽窄巷子"、spots[1].address == null；步骤 5 详情 spots[0].address == "成都市锦江区春熙路"、spots[1].address == null；name/image/introduction 不受影响
+**状态**: ✅ 通过
+**执行方式**: api-test-runner
+**执行存证**: `test-evidence/route-spot-address/TC-route-IT-028/`
+**最后更新**: 2026-09-04
+
+### TC-route-IT-029: GET /api/app/routes/{id} 地点地址下发且未填时为 null
+**关联需求**: route/App 端路线查询#地点地址下发且未填时为 null
+**关联契约**: api-spec.json#/paths/~1api~1app~1routes~1{id}/get
+**来源**: route-spot-address
+**优先级**: P0
+**测试步骤**:
+1. admin 侧（http://localhost:21423）登录，创建 online=true 的大使，再创建路线 R：spots 2 个，S1 `address`「成都市青羊区宽窄巷子」，S2 不带 `address`
+2. GET http://localhost:8081/api/app/routes/{R.id}，请求头 `X-API-Key: test-api-key`
+**预期结果**: 返回 200；spots 按 S1→S2 顺序返回，spots[0].address == "成都市青羊区宽窄巷子"，spots[1] 含 `address` key 且值为 null；每个地点仍含名称/图片/介绍
+**状态**: ✅ 通过
+**执行方式**: api-test-runner
+**执行存证**: `test-evidence/route-spot-address/TC-route-IT-029/`
+**最后更新**: 2026-09-04

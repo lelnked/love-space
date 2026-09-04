@@ -136,8 +136,8 @@ class RouteQueryServiceTest extends AbstractPostgresIntegrationTest {
     void detailReturnsSpotsAndAmbassador() {
         String cityName = city(true);
         UUID routeId = route(cityName, ambassador(true), 0, List.of(
-                new RouteSpot("地点甲", "bound/s1.png", "介绍甲"),
-                new RouteSpot("地点乙", "bound/s2.png", "介绍乙")));
+                new RouteSpot("地点甲", "bound/s1.png", "介绍甲", "成都市青羊区宽窄巷子"),
+                new RouteSpot("地点乙", "bound/s2.png", "介绍乙", null)));
 
         RouteDetailResponse detail = routeQueryService.detail(routeId);
 
@@ -145,6 +145,18 @@ class RouteQueryServiceTest extends AbstractPostgresIntegrationTest {
                 .containsExactly("地点甲", "地点乙");
         assertThat(detail.ambassador().name()).isEqualTo("大使-在线");
         assertThat(detail.ambassador().tags()).containsExactly("向导");
+    }
+
+    // @scenario: route/App 端路线查询#地点地址下发且未填时为 null
+    @Test
+    void detailReturnsSpotAddressAndNullWhenAbsent() {
+        String cityName = city(true);
+        UUID routeId = route(cityName, ambassador(true), 0, List.of(
+                new RouteSpot("地点甲", "bound/s1.png", "介绍甲", "成都市青羊区宽窄巷子"),
+                new RouteSpot("地点乙", "bound/s2.png", "介绍乙", null)));
+
+        assertThat(routeQueryService.detail(routeId).spots()).extracting(RouteSpotItemResponse::address)
+                .containsExactly("成都市青羊区宽窄巷子", null);
     }
 
     // @scenario: route/App 端路线查询#未上架城市的路线仍可见
