@@ -31,9 +31,9 @@
 - **featured/web 端精选推荐页面**: 精选推荐列表与上下线 / 新增精选推荐
 - **featured/周期推荐条目管理**: 创建活动类周期推荐 / 创建多周期条目 / phases 为空被拒绝 / 创建路线类周期推荐 / 创建文章类周期推荐 / 同一关联实体重复创建被拒绝 / 下线条目同样占用唯一位 / 更新条目自身不触发唯一冲突 / 更新关联实体 / 更新指向已被占用的实体被拒绝 / 缺少类型必填项被拒绝 / 缺少 targetId 被拒绝 / 关联实体不存在被拒绝 / 周期与类型创建后不可变 / 按周期过滤列表 / 不传周期返回全部条目 / 周期推荐上下线切换
 - **featured/精选推荐管理**: 创建精选推荐 / 缺少必填项被拒绝 / 精选推荐上下线切换
-- **file/objectKey 两段式生命周期与绑定校验**: 未绑定图片在业务保存时被绑定 / 已绑定图片重复提交不再复制 / 非法 objectKey 格式被拒绝 / 业务保存失败后源图仍可重试
-- **file/图片上传凭证签发**: 签发合法图片类型的上传凭证 / 非图片类型被拒绝 / 未登录无法获取凭证
-- **file/图片上传的界面交互**: 单图控件三态切换 / 多图并发上传 / 非图片类型在选择阶段被拦 / 上传失败不阻塞表单
+- **file/objectKey 两段式生命周期与绑定校验**: 未绑定图片在业务保存时被绑定 / 已绑定图片重复提交不再复制 / 非法 objectKey 格式被拒绝 / 业务保存失败后源图仍可重试 / 富文本内联小图放行 / 富文本内联图超限被拒绝 / 富文本内联图类型不符被拒绝
+- **file/图片上传凭证签发**: 签发合法图片类型的上传凭证 / 非图片类型被拒绝 / 未登录无法获取凭证 / 签发 gif 类型的上传凭证
+- **file/图片上传的界面交互**: 单图控件三态切换 / 多图并发上传 / 非图片类型在选择阶段被拦 / 上传失败不阻塞表单 / 富文本粘贴大图走 OSS 上传 / 富文本粘贴小表情内联 / 富文本粘贴非白名单类型被拦
 - **file/图片签名访问地址**: 业务详情返回签名地址 / 空图片字段不生成地址 / 多图字段保持顺序
 - **file/图片链路的自动化覆盖边界**: 测试档位下绑定校验不访问存储 / 上传凭证成功分支在测试档位不可用
 - **manager/web 端管理员管理页面**: 列表按角色与状态渲染 / 内置 admin 行不显示启停按钮 / 弹窗创建新账号 / 密码不足 8 位前端拦截
@@ -50,10 +50,10 @@
 - **recommend-list/web 端推荐清单管理页面**: 清单列表与筛选 / 维护清单商户 / 删除清单需确认
 - **recommend-list/推荐清单管理**: 创建清单 / 缺少必填项被拒绝 / 修改所属城市需清单内商户同属新城市 / 人工恢复清单 / 删除清单 / 清单列表按排序号升序
 - **recommend-list/清单内商户维护**: 添加本城市商户 / 拒绝跨城市商户 / 重复添加同一商户被拒绝 / 拒绝已下架商户 / 从清单移除商户
-- **route/App 端路线查询**: 查询上架城市的路线 / 同排序号路线按创建时间倒序 / 不传任何过滤参数返回全部可见路线 / 按大使 ID 过滤路线 / 城市名与大使 ID 组合过滤 / 城市表中无同名城市时仍返回路线且 city 为 null / 列表项返回路线自身城市名 / 未上架城市的路线仍可见 / 大使下线后路线隐藏 / 路线详情返回地点明细 / 路线列表返回爱女大使说 / 路线详情返回大使 id
-- **route/web 端大使与路线管理页面**: 大使列表与上下线 / 路线表单可选未上架城市 / 路线表单维护地点 / 删除路线需确认
+- **route/App 端路线查询**: 查询上架城市的路线 / 同排序号路线按创建时间倒序 / 不传任何过滤参数返回全部可见路线 / 按大使 ID 过滤路线 / 城市名与大使 ID 组合过滤 / 城市表中无同名城市时仍返回路线且 city 为 null / 列表项返回路线自身城市名 / 未上架城市的路线仍可见 / 大使下线后路线隐藏 / 路线详情返回地点明细 / 路线列表返回爱女大使说 / 路线详情返回大使 id / 地点地址下发且未填时为 null
+- **route/web 端大使与路线管理页面**: 大使列表与上下线 / 路线表单可选未上架城市 / 路线表单维护地点 / 路线表单填写地点地址并回显 / 删除路线需确认
 - **route/爱女大使管理**: 创建大使 / 标签超过 3 条被拒绝 / 大使上下线切换
-- **route/路线管理**: 创建路线 / 缺少必填项被拒绝 / 路线列表按排序号升序 / 删除路线
+- **route/路线管理**: 创建路线 / 缺少必填项被拒绝 / 路线列表按排序号升序 / 删除路线 / 地点地址可写可改可空
 
 ## 测试用例追溯
 
@@ -64,20 +64,26 @@
 | TC-activity-IT-003 | PUT /api/admin/activities/{id}/online 活动上下线切换 | activity/活动管理#活动上下线切换 | api-spec.json#/paths/~1api~1admin~1activities~1{id}~1online/put | ambassador-route-activity | IT | `test-evidence/ambassador-route-activity/TC-activity-IT-003/` | ✅ |
 | TC-activity-IT-004 | PUT /api/admin/activities/{id} 更新活动，请求体 cityId 被忽略 | activity/活动管理#请求体携带 cityId 不影响创建 | api-spec.json#/paths/~1api~1admin~1activities~1{id}/put | ambassador-route-activity → activity-drop-city-link | IT | `test-evidence/activity-subtitle/TC-activity-IT-004/` | ✅ |
 | TC-activity-IT-005 | DELETE /api/admin/activities/{id} 物理删除活动 | activity/活动管理#创建活动 | api-spec.json#/paths/~1api~1admin~1activities~1{id}/delete | ambassador-route-activity → activity-drop-city-link | IT | `test-evidence/ambassador-route-activity/TC-activity-IT-005/` | ⬜ |
-| TC-activity-IT-006 | POST /api/admin/activities 富文本 img src 存 objectKey、admin 读时替换签名 URL | activity/活动管理#创建活动 | api-spec.json#/paths/~1api~1admin~1activities/post | ambassador-route-activity | IT | `test-evidence/ambassador-route-activity/TC-activity-IT-006/` | ✅ |
+| TC-activity-IT-006 | POST /api/admin/activities 富文本 img src 存 objectKey、admin 读时替换签名 URL | activity/活动管理#创建活动 | api-spec.json#/paths/~1api~1admin~1activities/post | ambassador-route-activity → rich-text-gif-and-inline-sticker | IT | `test-evidence/rich-text-gif-and-inline-sticker/TC-activity-IT-006/` | ✅ |
 | TC-activity-IT-007 | GET /api/app/activities 全局上线活动列表 | activity/App 端活动查询#查询上架城市的活动 | api-spec.json#/paths/~1api~1app~1activities/get | ambassador-route-activity → activity-drop-city-link → activity-subtitle | IT | `test-evidence/activity-subtitle/TC-activity-IT-007/` | ✅ |
 | TC-activity-IT-008 | GET /api/app/activities 下线活动不可见、详情 404 | activity/App 端活动查询#下线活动不可见 | api-spec.json#/paths/~1api~1app~1activities~1{id}/get | ambassador-route-activity → activity-drop-city-link | IT | `test-evidence/ambassador-route-activity/TC-activity-IT-008/` | ⬜ |
-| TC-activity-IT-009 | GET /api/app/activities/{id} 详情返回富文本且 img src 为签名 URL | activity/App 端活动查询#活动详情返回富文本 | api-spec.json#/paths/~1api~1app~1activities~1{id}/get | ambassador-route-activity → activity-drop-city-link | IT | `test-evidence/activity-subtitle/TC-activity-IT-009/` | ✅ |
+| TC-activity-IT-009 | GET /api/app/activities/{id} 详情返回富文本且 img src 为签名 URL | activity/App 端活动查询#活动详情返回富文本 | api-spec.json#/paths/~1api~1app~1activities~1{id}/get | ambassador-route-activity → activity-drop-city-link → rich-text-gif-and-inline-sticker | IT | `test-evidence/rich-text-gif-and-inline-sticker/TC-activity-IT-009/` | ✅ |
 | TC-activity-IT-020 | 活动景观字段贯通 admin 写入与 admin/app 查询 | activity/活动管理#景观字段可写可改可空 | api-spec.json#/components/schemas/ActivityUpsertRequest | activity-landscape-field → activity-drop-city-link | IT | `test-evidence/activity-subtitle/TC-activity-IT-020/` | ✅ |
 | TC-activity-IT-021 | GET /api/admin/activities/page 携带 cityId 不收窄结果 | activity/活动管理#活动列表不按城市过滤 | api-spec.json#/paths/~1api~1admin~1activities~1page/get | activity-drop-city-link | IT | `test-evidence/regression/activity/TC-activity-IT-021/` | ⬜ |
 | TC-activity-IT-022 | GET /api/app/activities/{id} 详情不受城市上架状态影响 | activity/App 端活动查询#城市上架状态不影响活动详情可见性 | api-spec.json#/paths/~1api~1app~1activities~1{id}/get | activity-drop-city-link | IT | `test-evidence/regression/activity/TC-activity-IT-022/` | ⬜ |
 | TC-activity-IT-023 | 活动副标题可写可改可清空（admin 侧） | activity/活动管理#副标题可写可改可空 | api-spec.json#/components/schemas/ActivityUpsertRequest | activity-subtitle | IT | `test-evidence/activity-subtitle/TC-activity-IT-023/` | ✅ |
 | TC-activity-IT-024 | GET /api/app/activities 列表与详情下发 subtitle，未填时为 null | activity/App 端活动查询#活动副标题下发且未填时为 null | api-spec.json#/paths/~1api~1app~1activities/get | activity-subtitle | IT | `test-evidence/activity-subtitle/TC-activity-IT-024/` | ✅ |
+| TC-activity-IT-025 | POST/PUT /api/admin/activities 富文本内联小图放行，admin/app 读取原样透传 | file/objectKey 两段式生命周期与绑定校验#富文本内联小图放行 | api-spec.json#/paths/~1api~1admin~1activities/post | rich-text-gif-and-inline-sticker | IT | `test-evidence/rich-text-gif-and-inline-sticker/TC-activity-IT-025/` | ✅ |
+| TC-activity-IT-026 | POST /api/admin/activities 富文本内联图超限被拒绝（3 KB 边界） | file/objectKey 两段式生命周期与绑定校验#富文本内联图超限被拒绝 | api-spec.json#/paths/~1api~1admin~1activities/post | rich-text-gif-and-inline-sticker | IT | `test-evidence/rich-text-gif-and-inline-sticker/TC-activity-IT-026/` | ✅ |
+| TC-activity-IT-027 | POST /api/admin/activities 富文本内联图类型不符被拒绝 | file/objectKey 两段式生命周期与绑定校验#富文本内联图类型不符被拒绝 | api-spec.json#/paths/~1api~1admin~1activities/post | rich-text-gif-and-inline-sticker | IT | `test-evidence/rich-text-gif-and-inline-sticker/TC-activity-IT-027/` | ✅ |
 | TC-activity-WEB-001 | 活动列表展示与上下线开关 | activity/web 端活动管理页面#活动列表与上下线 | - | ambassador-route-activity → activity-drop-city-link | WEB | `test-evidence/ambassador-route-activity/TC-activity-WEB-001/` | ⬜ |
 | TC-activity-WEB-002 | 活动表单富文本编辑并回显 | activity/web 端活动管理页面#活动表单富文本编辑 | - | ambassador-route-activity → activity-drop-city-link | WEB | `test-evidence/ambassador-route-activity/TC-activity-WEB-002/` | ⬜ |
 | TC-activity-WEB-003 | 活动表单填写景观并回显 | activity/web 端活动管理页面#活动表单填写景观并回显 | - | activity-landscape-field → activity-drop-city-link | WEB | `test-evidence/activity-landscape-field/TC-activity-WEB-003/` | ⬜ |
 | TC-activity-WEB-004 | 活动表单无地图选项即可保存 | activity/web 端活动管理页面#活动表单无地图选项即可保存 | - | activity-drop-city-link | WEB | `test-evidence/regression/activity/TC-activity-WEB-004/` | ⬜ |
 | TC-activity-WEB-005 | 活动表单填写副标题并回显 | activity/web 端活动管理页面#活动表单填写副标题并回显 | - | activity-subtitle | WEB | `test-evidence/regression/activity/TC-activity-WEB-005/` | ⬜ |
+| TC-activity-WEB-006 | 富文本粘贴大图（> 3 KB）走 OSS 上传链路 | file/图片上传的界面交互#富文本粘贴大图走 OSS 上传 | - | rich-text-gif-and-inline-sticker | WEB | `test-evidence/regression/activity/TC-activity-WEB-006/` | ⬜ |
+| TC-activity-WEB-007 | 富文本粘贴小表情（≤ 3 KB gif）内联为 data URL，不发起上传 | file/图片上传的界面交互#富文本粘贴小表情内联 | - | rich-text-gif-and-inline-sticker | WEB | `test-evidence/regression/activity/TC-activity-WEB-007/` | ⬜ |
+| TC-activity-WEB-008 | 富文本粘贴非白名单类型（svg）被拦并提示 | file/图片上传的界面交互#富文本粘贴非白名单类型被拦 | - | rich-text-gif-and-inline-sticker | WEB | `test-evidence/regression/activity/TC-activity-WEB-008/` | ⬜ |
 | TC-article-IT-001 | POST /api/admin/article-categories 创建栏目 | article/文章栏目管理#创建栏目 | api-spec.json#/paths/~1api~1admin~1article-categories/post | article-and-featured-feed | IT | `test-evidence/article-cover-title-intro-tags/TC-article-IT-001/` | ✅ |
 | TC-article-IT-002 | POST /api/admin/article-categories 缺必填被拒绝 | article/文章栏目管理#缺少必填项被拒绝 | api-spec.json#/paths/~1api~1admin~1article-categories/post | article-and-featured-feed | IT | `test-evidence/article-cover-title-intro-tags/TC-article-IT-002/` | ✅ |
 | TC-article-IT-003 | PUT /api/admin/article-categories/{id} 更新栏目 | article/文章栏目管理#创建栏目 | api-spec.json#/paths/~1api~1admin~1article-categories~1{id}/put | article-and-featured-feed | IT | `test-evidence/article-cover-title-intro-tags/TC-article-IT-003/` | ✅ |
@@ -87,17 +93,19 @@
 | TC-article-IT-007 | PUT /api/admin/articles/{id} 更新文章与栏目关联 | article/文章管理#创建文章 | api-spec.json#/paths/~1api~1admin~1articles~1{id}/put | article-and-featured-feed | IT | `test-evidence/article-cover-title-intro-tags/TC-article-IT-007/` | ✅ |
 | TC-article-IT-008 | PUT /api/admin/articles/{id}/online 文章上下线切换 | article/文章管理#文章上下线切换 | api-spec.json#/paths/~1api~1admin~1articles~1{id}~1online/put | article-and-featured-feed | IT | `test-evidence/article-cover-title-intro-tags/TC-article-IT-008/` | ✅ |
 | TC-article-IT-009 | DELETE /api/admin/articles/{id} 物理删除文章 | article/文章管理#创建文章 | api-spec.json#/paths/~1api~1admin~1articles~1{id}/delete | article-and-featured-feed | IT | `test-evidence/article-cover-title-intro-tags/TC-article-IT-009/` | ✅ |
-| TC-article-IT-010 | POST /api/admin/articles 富文本 img src 存 objectKey、admin 读时替换签名 URL | article/文章管理#创建文章 | api-spec.json#/paths/~1api~1admin~1articles/post | article-and-featured-feed | IT | `test-evidence/article-cover-title-intro-tags/TC-article-IT-010/` | ✅ |
+| TC-article-IT-010 | POST /api/admin/articles 富文本 img src 存 objectKey、admin 读时替换签名 URL | article/文章管理#创建文章 | api-spec.json#/paths/~1api~1admin~1articles/post | article-and-featured-feed → rich-text-gif-and-inline-sticker | IT | `test-evidence/rich-text-gif-and-inline-sticker/TC-article-IT-010/` | ✅ |
 | TC-article-IT-011 | GET /api/app/article-categories 与 /api/app/articles 均按权重升序 | article/App 端文章查询#查询栏目与文章列表 | api-spec.json#/paths/~1api~1app~1article-categories/get | article-cover-title-intro-tags | IT | `test-evidence/app-article-optional-category-and-featured-period-filter/TC-article-IT-011/` | ✅ |
 | TC-article-IT-012 | GET /api/app/articles 下线文章不可见、详情 404 | article/App 端文章查询#下线文章不可见 | api-spec.json#/paths/~1api~1app~1articles~1{id}/get | article-and-featured-feed | IT | `test-evidence/app-article-optional-category-and-featured-period-filter/TC-article-IT-012/` | ✅ |
 | TC-article-IT-013 | GET /api/app/articles/{id} 失去所有栏目的文章不可见 | article/App 端文章查询#失去所有栏目的文章不可见 | api-spec.json#/paths/~1api~1app~1articles~1{id}/get | article-and-featured-feed | IT | `test-evidence/article-cover-title-intro-tags/TC-article-IT-013/` | ✅ |
-| TC-article-IT-014 | GET /api/app/articles/{id} 详情返回富文本且 img src 为签名 URL | article/App 端文章查询#文章详情返回富文本 | api-spec.json#/paths/~1api~1app~1articles~1{id}/get | article-and-featured-feed | IT | `test-evidence/article-cover-title-intro-tags/TC-article-IT-014/` | ✅ |
+| TC-article-IT-014 | GET /api/app/articles/{id} 详情返回富文本且 img src 为签名 URL | article/App 端文章查询#文章详情返回富文本 | api-spec.json#/paths/~1api~1app~1articles~1{id}/get | article-and-featured-feed → rich-text-gif-and-inline-sticker | IT | `test-evidence/rich-text-gif-and-inline-sticker/TC-article-IT-014/` | ✅ |
 | TC-article-IT-015 | POST /api/admin/articles 创建带封面标题、引言与标签的文章 | article/文章管理#创建带封面标题、引言与标签的文章 | api-spec.json#/paths/~1api~1admin~1articles/post | article-cover-title-intro-tags | IT | `test-evidence/article-cover-title-intro-tags/TC-article-IT-015/` | ✅ |
 | TC-article-IT-016 | POST /api/admin/articles 省略封面标题、引言、标签 | article/文章管理#封面标题、引言、标签均可省略 | api-spec.json#/paths/~1api~1admin~1articles/post | article-cover-title-intro-tags | IT | `test-evidence/article-cover-title-intro-tags/TC-article-IT-016/` | ✅ |
 | TC-article-IT-017 | PUT /api/admin/articles/{id} 空白值按 null 存、标签空白项剔除 | article/文章管理#创建带封面标题、引言与标签的文章 | api-spec.json#/paths/~1api~1admin~1articles~1{id}/put | article-cover-title-intro-tags | IT | `test-evidence/article-cover-title-intro-tags/TC-article-IT-017/` | ✅ |
 | TC-article-IT-018 | GET /api/app/articles 未设封面标题时回落文章标题 | article/App 端文章查询#未设封面标题时列表回落文章标题 | api-spec.json#/paths/~1api~1app~1articles/get | article-cover-title-intro-tags | IT | `test-evidence/app-article-optional-category-and-featured-period-filter/TC-article-IT-018/` | ✅ |
 | TC-article-IT-019 | GET /api/app/articles/{id} 详情返回引言与标签 | article/App 端文章查询#详情返回引言与标签 | api-spec.json#/paths/~1api~1app~1articles~1{id}/get | article-cover-title-intro-tags | IT | `test-evidence/article-cover-title-intro-tags/TC-article-IT-019/` | ✅ |
 | TC-article-IT-020 | GET /api/app/articles 不传 categoryId 返回全部可见文章 | article/App 端文章查询#不传栏目返回全部可见文章 | api-spec.json#/paths/~1api~1app~1articles/get | app-article-optional-category-and-featured-period-filter | IT | `test-evidence/app-article-optional-category-and-featured-period-filter/TC-article-IT-020/` | ✅ |
+| TC-article-IT-021 | POST/PUT /api/admin/articles 富文本内联小图放行，admin/app 读取原样透传 | file/objectKey 两段式生命周期与绑定校验#富文本内联小图放行 | api-spec.json#/paths/~1api~1admin~1articles/post | rich-text-gif-and-inline-sticker | IT | `test-evidence/rich-text-gif-and-inline-sticker/TC-article-IT-021/` | ✅ |
+| TC-article-IT-022 | POST /api/admin/articles 富文本内联图超限或类型不符被拒绝 | file/objectKey 两段式生命周期与绑定校验#富文本内联图超限被拒绝 | api-spec.json#/paths/~1api~1admin~1articles/post | rich-text-gif-and-inline-sticker | IT | `test-evidence/rich-text-gif-and-inline-sticker/TC-article-IT-022/` | ✅ |
 | TC-article-WEB-001 | 文章栏目页新增与删除 | article/web 端文章管理页面#栏目管理增删改 | - | article-and-featured-feed | WEB | `test-evidence/regression/article/TC-article-WEB-001/` | ✅ |
 | TC-article-WEB-002 | 文章列表展示与上下线开关 | article/web 端文章管理页面#文章列表与上下线 | - | article-cover-title-intro-tags | WEB | `test-evidence/article-cover-title-intro-tags/TC-article-WEB-002/` | ✅ |
 | TC-article-WEB-003 | 文章表单富文本编辑与栏目多选回显 | article/web 端文章管理页面#文章表单富文本编辑 | - | article-and-featured-feed | WEB | `test-evidence/article-cover-title-intro-tags/TC-article-WEB-003/` | ✅ |
@@ -210,19 +218,21 @@
 | TC-featured-WEB-009 | 未勾选周期无法提交 | featured/web 端周期推荐页面#未勾选周期无法提交 | - | featured-cycle-item-multi-phase-single-target | WEB | `test-evidence/featured-cycle-item-multi-phase-single-target/TC-featured-WEB-009/` | ⬜ |
 | TC-featured-WEB-010 | 编辑时修改周期 | featured/web 端周期推荐页面#编辑时修改周期 | - | featured-cycle-item-multi-phase-single-target | WEB | `test-evidence/featured-cycle-item-multi-phase-single-target/TC-featured-WEB-010/` | ⬜ |
 | TC-featured-WEB-011 | 关联实体重复时展示后端中文业务错误 | featured/web 端周期推荐页面#关联实体重复时展示错误 | - | featured-cycle-item-multi-phase-single-target | WEB | `test-evidence/featured-cycle-item-multi-phase-single-target/TC-featured-WEB-011/` | ⬜ |
-| TC-file-IT-001 | 签发合法图片类型的上传凭证（测试档位不可实跑） | file/图片上传凭证签发#签发合法图片类型的上传凭证 | api-spec.json#/paths/~1api~1admin~1files~1upload-credentials/post | baseline-auth-manager-banner-log-file | IT | - | ⬜ |
-| TC-file-IT-002 | 非图片 contentType 返回 400 | file/图片上传凭证签发#非图片类型被拒绝 | api-spec.json#/paths/~1api~1admin~1files~1upload-credentials/post | baseline-auth-manager-banner-log-file | IT | - | ⬜ |
+| TC-file-IT-001 | 签发合法图片类型的上传凭证（测试档位不可实跑） | file/图片上传凭证签发#签发合法图片类型的上传凭证 | api-spec.json#/paths/~1api~1admin~1files~1upload-credentials/post | baseline-auth-manager-banner-log-file → rich-text-gif-and-inline-sticker | IT | `test-evidence/rich-text-gif-and-inline-sticker/TC-file-IT-001/` | ✅ |
+| TC-file-IT-002 | 非图片 contentType 返回 400 | file/图片上传凭证签发#非图片类型被拒绝 | api-spec.json#/paths/~1api~1admin~1files~1upload-credentials/post | baseline-auth-manager-banner-log-file → rich-text-gif-and-inline-sticker | IT | `test-evidence/rich-text-gif-and-inline-sticker/TC-file-IT-002/` | ✅ |
 | TC-file-IT-003 | 未登录请求上传凭证返回 401 | file/图片上传凭证签发#未登录无法获取凭证 | api-spec.json#/paths/~1api~1admin~1files~1upload-credentials/post | baseline-auth-manager-banner-log-file | IT | - | ⬜ |
-| TC-file-IT-004 | 未绑定图片在业务保存时被改写为 bound/ 前缀 | file/objectKey 两段式生命周期与绑定校验#未绑定图片在业务保存时被绑定 | api-spec.json#/paths/~1api~1admin~1banners/post | baseline-auth-manager-banner-log-file | IT | - | ⬜ |
+| TC-file-IT-004 | 未绑定图片在业务保存时被改写为 bound/ 前缀 | file/objectKey 两段式生命周期与绑定校验#未绑定图片在业务保存时被绑定 | api-spec.json#/paths/~1api~1admin~1banners/post | baseline-auth-manager-banner-log-file | IT | `test-evidence/rich-text-gif-and-inline-sticker/TC-file-IT-004/` | ✅ |
 | TC-file-IT-005 | 已绑定图片原样回传不再复制，objectKey 保持不变 | file/objectKey 两段式生命周期与绑定校验#已绑定图片重复提交不再复制 | api-spec.json#/paths/~1api~1admin~1banners~1{id}/put | baseline-auth-manager-banner-log-file | IT | - | ⬜ |
-| TC-file-IT-006 | 非白名单前缀的 objectKey 被拒绝 | file/objectKey 两段式生命周期与绑定校验#非法 objectKey 格式被拒绝 | api-spec.json#/paths/~1api~1admin~1banners/post | baseline-auth-manager-banner-log-file | IT | - | ⬜ |
-| TC-file-IT-007 | 非白名单后缀与路径穿越的 objectKey 被拒绝 | file/objectKey 两段式生命周期与绑定校验#非法 objectKey 格式被拒绝 | api-spec.json#/paths/~1api~1admin~1banners/post | baseline-auth-manager-banner-log-file | IT | - | ⬜ |
+| TC-file-IT-006 | 非白名单前缀的 objectKey 被拒绝 | file/objectKey 两段式生命周期与绑定校验#非法 objectKey 格式被拒绝 | api-spec.json#/paths/~1api~1admin~1banners/post | baseline-auth-manager-banner-log-file | IT | `test-evidence/rich-text-gif-and-inline-sticker/TC-file-IT-006/` | ✅ |
+| TC-file-IT-007 | 非白名单后缀与路径穿越的 objectKey 被拒绝 | file/objectKey 两段式生命周期与绑定校验#非法 objectKey 格式被拒绝 | api-spec.json#/paths/~1api~1admin~1banners/post | baseline-auth-manager-banner-log-file | IT | `test-evidence/rich-text-gif-and-inline-sticker/TC-file-IT-007/` | ✅ |
 | TC-file-IT-008 | 业务保存失败后同一 objectKey 可重试成功 | file/objectKey 两段式生命周期与绑定校验#业务保存失败后源图仍可重试 | api-spec.json#/paths/~1api~1admin~1banners/post | baseline-auth-manager-banner-log-file | IT | - | ⬜ |
 | TC-file-IT-009 | 业务详情的图片字段为 {id, url} 结构且 url 带签名 | file/图片签名访问地址#业务详情返回签名地址 | api-spec.json#/paths/~1api~1admin~1banners~1{id}/get | baseline-auth-manager-banner-log-file | IT | - | ⬜ |
 | TC-file-IT-010 | 空图片字段返回 null 不生成签名地址 | file/图片签名访问地址#空图片字段不生成地址 | api-spec.json#/paths/~1api~1admin~1cities/post | baseline-auth-manager-banner-log-file | IT | - | ⬜ |
 | TC-file-IT-011 | 多图字段按保存顺序返回 | file/图片签名访问地址#多图字段保持顺序 | api-spec.json#/paths/~1api~1admin~1banners/post | baseline-auth-manager-banner-log-file | IT | - | ⬜ |
 | TC-file-IT-012 | 测试档位下绑定校验不访问存储（对象不存在也成功） | file/图片链路的自动化覆盖边界#测试档位下绑定校验不访问存储 | api-spec.json#/paths/~1api~1admin~1banners/post | baseline-auth-manager-banner-log-file | IT | - | ⬜ |
 | TC-file-IT-013 | 上传凭证成功分支在测试档位不可用 | file/图片链路的自动化覆盖边界#上传凭证成功分支在测试档位不可用 | api-spec.json#/paths/~1api~1admin~1files~1upload-credentials/post | baseline-auth-manager-banner-log-file | IT | - | ⬜ |
+| TC-file-IT-014 | 签发 gif 类型的上传凭证（测试档位不可实跑） | file/图片上传凭证签发#签发 gif 类型的上传凭证 | api-spec.json#/paths/~1api~1admin~1files~1upload-credentials/post | rich-text-gif-and-inline-sticker | IT | `test-evidence/rich-text-gif-and-inline-sticker/TC-file-IT-014/` | ✅ |
+| TC-file-IT-015 | gif 后缀 objectKey 通过绑定校验，svg 后缀仍被拒绝 | file/objectKey 两段式生命周期与绑定校验#未绑定图片在业务保存时被绑定 | api-spec.json#/paths/~1api~1admin~1banners/post | rich-text-gif-and-inline-sticker | IT | `test-evidence/rich-text-gif-and-inline-sticker/TC-file-IT-015/` | ✅ |
 | TC-manager-IT-001 | POST /api/admin/managers 创建账号强制 MEMBER 角色 | manager/运营账号管理#创建账号强制为 MEMBER 角色 | api-spec.json#/paths/~1api~1admin~1managers/post | baseline-auth-manager-banner-log-file | IT | - | ⬜ |
 | TC-manager-IT-002 | 用户名重复创建返回 400 | manager/运营账号管理#用户名重复被拒绝 | api-spec.json#/paths/~1api~1admin~1managers/post | baseline-auth-manager-banner-log-file | IT | - | ⬜ |
 | TC-manager-IT-003 | 密码 7 位创建返回 400 | manager/运营账号管理#密码长度不足被拒绝 | api-spec.json#/paths/~1api~1admin~1managers/post | baseline-auth-manager-banner-log-file | IT | - | ⬜ |
@@ -294,15 +304,15 @@
 | TC-route-IT-003 | PUT /api/admin/ambassadors/{id}/online 大使上下线切换 | route/爱女大使管理#大使上下线切换 | api-spec.json#/paths/~1api~1admin~1ambassadors~1{id}~1online/put | ambassador-route-activity | IT | `test-evidence/ambassador-route-activity/TC-route-IT-003/` | ✅ |
 | TC-route-IT-004 | PUT /api/admin/ambassadors/{id} 更新大使字段 | route/爱女大使管理#创建大使 | api-spec.json#/paths/~1api~1admin~1ambassadors~1{id}/put | ambassador-route-activity | IT | `test-evidence/ambassador-route-activity/TC-route-IT-004/` | ✅ |
 | TC-route-IT-005 | DELETE /api/admin/ambassadors/{id} 物理删除大使 | route/爱女大使管理#创建大使 | api-spec.json#/paths/~1api~1admin~1ambassadors~1{id}/delete | ambassador-route-activity | IT | `test-evidence/ambassador-route-activity/TC-route-IT-005/` | ✅ |
-| TC-route-IT-006 | POST /api/admin/routes 创建路线含 2 个地点按提交顺序返回 | route/路线管理#创建路线 | api-spec.json#/paths/~1api~1admin~1routes/post | ambassador-route-activity | IT | `test-evidence/ambassador-route-activity/TC-route-IT-006/` | ✅ |
+| TC-route-IT-006 | POST /api/admin/routes 创建路线含 2 个地点按提交顺序返回 | route/路线管理#创建路线 | api-spec.json#/paths/~1api~1admin~1routes/post | ambassador-route-activity | IT | `test-evidence/route-spot-address/TC-route-IT-006/` | ✅ |
 | TC-route-IT-007 | POST /api/admin/routes 缺必填或大使不存在被拒绝（城市名不校验） | route/路线管理#缺少必填项被拒绝 | api-spec.json#/paths/~1api~1admin~1routes/post | ambassador-route-activity | IT | `test-evidence/ambassador-route-activity/TC-route-IT-007/` | ⬜ |
 | TC-route-IT-008 | POST /api/admin/routes 路线图片边界 1 张通过、空数组拒绝 | route/路线管理#缺少必填项被拒绝 | api-spec.json#/paths/~1api~1admin~1routes/post | ambassador-route-activity | IT | `test-evidence/ambassador-route-activity/TC-route-IT-008/` | ✅ |
-| TC-route-IT-009 | PUT /api/admin/routes/{id} 更新路线且 cityId 不可变 | route/路线管理#创建路线 | api-spec.json#/paths/~1api~1admin~1routes~1{id}/put | ambassador-route-activity | IT | `test-evidence/ambassador-route-activity/TC-route-IT-009/` | ✅ |
+| TC-route-IT-009 | PUT /api/admin/routes/{id} 更新路线且 cityId 不可变 | route/路线管理#创建路线 | api-spec.json#/paths/~1api~1admin~1routes~1{id}/put | ambassador-route-activity | IT | `test-evidence/route-spot-address/TC-route-IT-009/` | ✅ |
 | TC-route-IT-010 | GET /api/admin/routes/page 按 sortOrder 升序并支持过滤 | route/路线管理#路线列表按排序号升序 | api-spec.json#/paths/~1api~1admin~1routes~1page/get | ambassador-route-activity | IT | `test-evidence/ambassador-route-activity/TC-route-IT-010/` | ✅ |
 | TC-route-IT-011 | DELETE /api/admin/routes/{id} 物理删除路线连带地点 | route/路线管理#删除路线 | api-spec.json#/paths/~1api~1admin~1routes~1{id}/delete | ambassador-route-activity | IT | `test-evidence/ambassador-route-activity/TC-route-IT-011/` | ✅ |
 | TC-route-IT-012 | GET /api/app/routes?cityName= 按城市名查路线列表并按 sortOrder 升序 | route/App 端路线查询#查询上架城市的路线 | api-spec.json#/paths/~1api~1app~1routes/get | app-route-query-filters | IT | `test-evidence/app-list-sort-tiebreak/TC-route-IT-012/` | ✅ |
 | TC-route-IT-013 | GET /api/app/routes 大使下线后路线隐藏、详情 404 | route/App 端路线查询#大使下线后路线隐藏 | api-spec.json#/paths/~1api~1app~1routes~1{id}/get | app-route-query-filters | IT | `test-evidence/app-route-query-filters/TC-route-IT-013/` | ✅ |
-| TC-route-IT-014 | GET /api/app/routes/{id} 路线详情返回地点明细与大使信息 | route/App 端路线查询#路线详情返回地点明细 | api-spec.json#/paths/~1api~1app~1routes~1{id}/get | ambassador-route-activity | IT | `test-evidence/app-route-query-filters/TC-route-IT-014/` | ✅ |
+| TC-route-IT-014 | GET /api/app/routes/{id} 路线详情返回地点明细与大使信息 | route/App 端路线查询#路线详情返回地点明细 | api-spec.json#/paths/~1api~1app~1routes~1{id}/get | route-spot-address | IT | `test-evidence/route-spot-address/TC-route-IT-014/` | ✅ |
 | TC-route-IT-015 | GET /api/app/routes 未上架城市的路线仍可见且详情返回 cityName | route/App 端路线查询#未上架城市的路线仍可见 | api-spec.json#/paths/~1api~1app~1routes/get、api-spec.json#/paths/~1api~1app~1routes~1{id}/get | app-route-query-filters | IT | `test-evidence/app-route-query-filters/TC-route-IT-015/` | ✅ |
 | TC-route-IT-016 | GET /api/app/routes 不带任何参数返回全部可见路线 | route/App 端路线查询#不传任何过滤参数返回全部可见路线 | api-spec.json#/paths/~1api~1app~1routes/get | app-route-query-filters | IT | `test-evidence/app-route-query-filters/TC-route-IT-016/` | ✅ |
 | TC-route-IT-017 | GET /api/app/routes?ambassadorId= 按大使过滤路线 | route/App 端路线查询#按大使 ID 过滤路线 | api-spec.json#/paths/~1api~1app~1routes/get | app-route-query-filters | IT | `test-evidence/app-route-query-filters/TC-route-IT-017/` | ✅ |
@@ -316,10 +326,13 @@
 | TC-route-IT-025 | GET /api/app/routes 列表项返回 ambassadorNote | route/App 端路线查询#路线列表返回爱女大使说 | api-spec.json#/paths/~1api~1app~1routes/get | app-route-ambassador-fields | IT | `test-evidence/regression/route/TC-route-IT-025/` | ✅ |
 | TC-route-IT-026 | GET /api/app/routes/{id} 详情 ambassador 含 id | route/App 端路线查询#路线详情返回大使 id | api-spec.json#/paths/~1api~1app~1routes~1{id}/get | app-route-ambassador-fields | IT | `test-evidence/regression/route/TC-route-IT-026/` | ✅ |
 | TC-route-IT-027 | GET /api/app/routes 列表项返回路线自身城市名 cityName | route/App 端路线查询#列表项返回路线自身城市名 | api-spec.json#/paths/~1api~1app~1routes/get | app-route-list-city-name | IT | `test-evidence/regression/route/TC-route-IT-027/` | ✅ |
+| TC-route-IT-028 | POST/PUT /api/admin/routes 地点地址可写可改可空 | route/路线管理#地点地址可写可改可空 | api-spec.json#/paths/~1api~1admin~1routes/post、api-spec.json#/paths/~1api~1admin~1routes~1{id}/put、api-spec.json#/paths/~1api~1admin~1routes~1{id}/get | route-spot-address | IT | `test-evidence/route-spot-address/TC-route-IT-028/` | ✅ |
+| TC-route-IT-029 | GET /api/app/routes/{id} 地点地址下发且未填时为 null | route/App 端路线查询#地点地址下发且未填时为 null | api-spec.json#/paths/~1api~1app~1routes~1{id}/get | route-spot-address | IT | `test-evidence/route-spot-address/TC-route-IT-029/` | ✅ |
 | TC-route-WEB-001 | 大使列表展示与上下线开关 | route/web 端大使与路线管理页面#大使列表与上下线 | - | ambassador-route-activity | WEB | `test-evidence/regression/route/TC-route-WEB-001/` | ✅ |
 | TC-route-WEB-002 | 路线表单维护地点子列表并按添加顺序回显 | route/web 端大使与路线管理页面#路线表单维护地点 | - | ambassador-route-activity | WEB | `test-evidence/regression/route/TC-route-WEB-002/` | ✅ |
 | TC-route-WEB-003 | 删除路线需确认（确认删除、取消保留） | route/web 端大使与路线管理页面#删除路线需确认 | - | ambassador-route-activity | WEB | `test-evidence/regression/route/TC-route-WEB-003/` | ✅ |
 | TC-route-WEB-004 | 路线表单所属城市下拉列出全部城市（下架带「（已下架）」）并可保存 | route/web 端大使与路线管理页面#路线表单可选未上架城市 | - | route-decouple-city-online | WEB | `test-evidence/regression/route/TC-route-WEB-004/` | ✅ |
+| TC-route-WEB-005 | 路线表单填写地点地址并回显 | route/web 端大使与路线管理页面#路线表单填写地点地址并回显 | - | route-spot-address | WEB | `test-evidence/regression/route/TC-route-WEB-005/` | ⬜ |
 
 ## 覆盖核对
 
@@ -363,7 +376,7 @@
 - ⚠ 未覆盖：operation-log/运营写操作留痕#登录不产生日志 无 WEB/APP 用例且无 UT(@scenario) 覆盖
 
 ## 测试统计
-- 总数：261
-- ✅ 通过：172 (65.9%)
+- 总数：274
+- ✅ 通过：186 (67.9%)
 - ❌ 失败：0
-- ⬜ 未测：89
+- ⬜ 未测：88
