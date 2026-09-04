@@ -1,0 +1,31 @@
+# TC-file-IT-014 请求/响应存证
+
+签发 gif 类型的上传凭证
+
+执行日期: 2026-09-04 ｜ admin=http://localhost:21423（test profile） ｜ app=http://localhost:8081
+认证: admin 侧 POST /api/admin/auth/login（fixture: admin / 8@y2eoRLyStM*UVU，返回 JWT，下文以 $TOKEN 代指，`export TOKEN=<登录返回 token>` 后命令可直接执行）；app 侧请求头 X-API-Key: test-api-key（测试 fixture，明文入存证）
+
+## Step 1: POST /api/admin/files/upload-credentials contentType=image/gif
+
+```bash
+curl -s -i -X POST http://localhost:21423/api/admin/files/upload-credentials -H 'Content-Type: application/json' -H 'Authorization: Bearer $TOKEN' -d '{"contentType": "image/gif"}'
+```
+
+实际响应（HTTP 200）:
+
+```
+HTTP/1.1 200
+Content-Type: application/json
+
+{
+  "host": "https://love-space-test-0524.oss-cn-hangzhou.aliyuncs.com",
+  "objectKey": "images/01a06b3a-15c1-77a7-8533-2f473b959f44.gif",
+  "policy": "eyJleHBpcmF0aW9uIjoiMjAyNi0wOS0wNFQwNzoxNzo0My4wMDBaIiwiY29uZGl0aW9ucyI6W3siYnVja2V0IjoibG92ZS1zcGFjZS10ZXN0LTA1MjQifSx7Ingtb3NzLXNlY3VyaXR5LXRva2VuIjoiQ0FJU2xnTjFxNkZ0NUIyeWZTaklyNXZlS1AvK2lwNUQ1UFdsUkd6Y3ZFZzBiZnNWdUkzdHFEejJJSGhNZjNWcEEra2R2L1F6bW1GUTUvb2JscTUwVUlRQVhsRGZOVFM3R1NhNXJWSFBXWkhJbnVEb3gzSnQ2dlQ4YTZENmFYUFMyTXZWZkorMkxyZjBjZXVzYkZicGp6SjZ4YUNBR3h5cFExMmlOKy91Ni90Z2RjOUZaaFNrU2pCRUNkeEtYQTBBenZVWExuek1MLzJnSHdmM2kyN0xkaXBTdHhGN2xIbDA1TmFGb1BXVjRRR01pMGJobUsxSDVkYjFKWWFwS3RKME5aeHlGc3U0eC9Bekx2ZWJqR2xSN2hGRitid3gxUFZOb1duTjVkallXZ1JhdWxEWmJPT0x0NDB5ZDFROFBLWm1SUFZPL2FXdG02RWsvT1BTbWFhUGtrd1haYnNLQW4rRUdkanhrSnFZUk5uRWJJaHBLZXpKWEYzV3ljMktPNVhQdEFjcFhHa1dMZ3NpZWFCNmNpY3JWVVYyRTJxTGV2UDVxUWliUGw2NUpLK2V5K1F0ellGbFo0a3VkMVJZMmpKbEtwVHVNa1p3VXZkVUJ5dEF2STdBVDhGRUxOUlA5WUFZeHJmTDB5cFhxUkZKTFhFNDUrcWg5bWJaYlJaTDdXcDB0UGFkTEpqdDhwd1hVWTkyVk9wTXlZSnpEQ28vaXB4MEp6eWZHb0FCbzN4eGo5Y3dYY2FZbjg4SXVUSjJZNXR5NjdQWFkrOHl4S1ZZNkc5NmlmTFpkbnRnUkRtMTdYdStBcjIzMnFDMTlyTjZ1Tlo3KzFudmlDL05JS0dyQnhqK2U1TlRZN0NEVXdXOVZlbUxDUzFhNDlZMVIxTWRFaFI2MHVjcXBRdzZPZE5iOGFIZnA4eWorc25JYUFSRXRJMTJwS3ZVR2Nld0w4d3RXMnBJb2pVZ0FBPT0ifSx7Ingtb3NzLXNpZ25hdHVyZS12ZXJzaW9uIjoiT1NTNC1ITUFDLVNIQTI1NiJ9LHsieC1vc3MtY3JlZGVudGlhbCI6IlNUUy5OWGtjRUpnQWJTN05GSm1YSGFhdDlXSEZKLzIwMjYwOTA0L2NuLWhhbmd6aG91L29zcy9hbGl5dW5fdjRfcmVxdWVzdCJ9LHsieC1vc3MtZGF0ZSI6IjIwMjYwOTA0VDA3MDI0M1oifSxbImNvbnRlbnQtbGVuZ3RoLXJhbmdlIiwxLDIwOTcxNTIwXSxbImVxIiwiJHN1Y2Nlc3NfYWN0aW9uX3N0YXR1cyIsIjIwMCJdLFsiZXEiLCIka2V5IiwiaW1hZ2VzLzAxYTA2YjNhLTE1YzEtNzdhNy04NTMzLTJmNDczYjk1OWY0NC5naWYiXV19",
+  "signature": "c02eb0d3954008b7cd51676041b98108c593d8b23b3f9c0845f45f94d8c411e7",
+  "signatureVersion": "OSS4-HMAC-SHA256",
+  "xOssCredential": "STS.NXkcEJgAbS7NFJmXHaat9WHFJ/20260904/cn-hangzhou/oss/aliyun_v4_request",
+  "xOssDate": "20260904T070243Z",
+  "securityToken": "CAISlgN1q6Ft5B2yfSjIr5veKP/+ip5D5PWlRGzcvEg0bfsVuI3tqDz2IHhMf3VpA+kdv/QzmmFQ5/oblq50UIQAXlDfNTS7GSa5rVHPWZHInuDox3Jt6vT8a6D6aXPS2MvVfJ+2Lrf0ceusbFbpjzJ6xaCAGxypQ12iN+/u6/tgdc9FZhSkSjBECdxKXA0AzvUXLnzML/2gHwf3i27LdipStxF7lHl05NaFoPWV4QGMi0bhmK1H5db1JYapKtJ0NZxyFsu4x/AzLvebjGlR7hFF+bwx1PVNoWnN5djYWgRaulDZbOOLt40yd1Q8PKZmRPVO/aWtm6Ek/OPSmaaPkkwXZbsKAn+EGdjxkJqYRNnEbIhpKezJXF3Wyc2KO5XPtAcpXGkWLgsieaB6cicrVUV2E2qLevP5qQibPl65JK+ey+QtzYFlZ4kud1RY2jJlKpTuMkZwUvdUBytAvI7AT8FELNRP9YAYxrfL0ypXqRFJLXE45+qh9mbZbRZL7Wp0tPadLJjt8pwXUY92VOpMyYJzDCo/ipx0JzyfGoABo3xxj9cwXcaYn88IuTJ2Y5ty67PXY+8yxKVY6G96ifLZdntgRDm17Xu+Ar232qC19rN6uNZ7+1nviC/NIKGrBxj+e5NTY7CDUwW9VemLCS1a49Y1R1MdEhR60ucqpQw6OdNb8aHfp8yj+snIaAREtI12pKvUGcewL8wtW2pIojUgAA==",
+  "expiration": "2026-09-04T07:17:43Z"
+}
+```

@@ -1,0 +1,171 @@
+# TC-article-IT-021 请求/响应存证
+
+POST/PUT /api/admin/articles 富文本内联小图放行，admin/app 读取原样透传
+
+执行日期: 2026-09-04 ｜ admin=http://localhost:21423（test profile） ｜ app=http://localhost:8081
+认证: admin 侧 POST /api/admin/auth/login（fixture: admin / 8@y2eoRLyStM*UVU，返回 JWT，下文以 $TOKEN 代指，`export TOKEN=<登录返回 token>` 后命令可直接执行）；app 侧请求头 X-API-Key: test-api-key（测试 fixture，明文入存证）
+
+## Step 1: POST /api/admin/articles contentHtml=内联 webp(2048B) + objectKey
+
+```bash
+curl -s -i -X POST http://localhost:21423/api/admin/articles -H 'Content-Type: application/json' -H 'Authorization: Bearer $TOKEN' -d '{"image": "images/0199aaaa-bbbb-7ccc-8ddd-eeeeffff0002.png", "title": "内联小图21-af4f49", "subtitle": "副标题", "contentHtml": "<p>表情</p><img src=\"data:image/webp;base64,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\"><img src=\"images/0199aaaa-bbbb-7ccc-8ddd-eeeeffff2101.png\">", "sortOrder": 0, "categoryIds": ["01a06b34-0262-7574-87b4-259859cf92d1"], "online": true}'
+```
+
+实际响应（HTTP 200）:
+
+```
+HTTP/1.1 200
+Content-Type: application/json
+
+{
+  "id": "01a06b3a-17fb-74d3-bbba-473d29c9cbe7",
+  "image": {
+    "id": "bound/0199aaaa-bbbb-7ccc-8ddd-eeeeffff0002.png",
+    "url": "http://love-space-test-0524.oss-cn-hangzhou.aliyuncs.com/bound/0199aaaa-bbbb-7ccc-8ddd-eeeeffff0002.png?Expires=1788507164&OSSAccessKeyId=LTAI5t7p1oaVfmzDSvrF7mQm&Signature=zo6YzmZhKxqEWLtwCZOoHASz3QU%3D"
+  },
+  "title": "内联小图21-af4f49",
+  "coverTitle": null,
+  "subtitle": "副标题",
+  "intro": null,
+  "tags": [],
+  "contentHtml": "<p>表情</p><img src=\"data:image/webp;base64,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\"><img src=\"http://love-space-test-0524.oss-cn-hangzhou.aliyuncs.com/bound/0199aaaa-bbbb-7ccc-8ddd-eeeeffff2101.png?Expires=1788507164&OSSAccessKeyId=LTAI5t7p1oaVfmzDSvrF7mQm&Signature=PY1ZaWdSHm8dsrlEPO4heuYR8Pg%3D\">",
+  "sortOrder": 0,
+  "categoryIds": [
+    "01a06b34-0262-7574-87b4-259859cf92d1"
+  ],
+  "online": true,
+  "createdAt": "2026-09-04T07:02:44.475246414Z",
+  "updatedAt": "2026-09-04T07:02:44.475246414Z"
+}
+```
+
+## Step 2: GET /api/admin/articles/01a06b3a-17fb-74d3-bbba-473d29c9cbe7
+
+```bash
+curl -s -i -X GET http://localhost:21423/api/admin/articles/01a06b3a-17fb-74d3-bbba-473d29c9cbe7 -H 'Authorization: Bearer $TOKEN'
+```
+
+实际响应（HTTP 200）:
+
+```
+HTTP/1.1 200
+Content-Type: application/json
+
+{
+  "id": "01a06b3a-17fb-74d3-bbba-473d29c9cbe7",
+  "image": {
+    "id": "bound/0199aaaa-bbbb-7ccc-8ddd-eeeeffff0002.png",
+    "url": "http://love-space-test-0524.oss-cn-hangzhou.aliyuncs.com/bound/0199aaaa-bbbb-7ccc-8ddd-eeeeffff0002.png?Expires=1788507164&OSSAccessKeyId=LTAI5t7p1oaVfmzDSvrF7mQm&Signature=zo6YzmZhKxqEWLtwCZOoHASz3QU%3D"
+  },
+  "title": "内联小图21-af4f49",
+  "coverTitle": null,
+  "subtitle": "副标题",
+  "intro": null,
+  "tags": [],
+  "contentHtml": "<p>表情</p><img src=\"data:image/webp;base64,HEa15H4JaGnjls8xdYC8uRxRfTgo6us6AMIXXlYqTnzz+QeGRd0t6XFLo0mvQgQjl1hnQuajMz7K+VK9nKuN8PkvAzt4NVyil/08BymAy0lQ4p1TZ6iEZaMrR1MD9B+R3K1ISS95jhq4bNkQj6icsUXQHrHNUuvE47c26W0u516YZj8qzvoY3ICk2GD9fu1Fe6SbfDuhvRXDi92cilLweewKAed+QhDyHOoT6Ij4AuaPV6QV2JyykQP3u+zc7Eu5guOoMZ8pqVYNyEioabuXwmC2jDsKgszZe1X037h897VB8EYcDf+v+DuHeBMDiI2zabX/K55IN6xohq+BD5p3xfHCjhEXigd7OfsBuv9DUj82GA/eGz4AyNCRYO24Dvgl4ugiRGsmDqeoddXEFPdUznliHzK2vyKoA69BF5X2MTYFmv4CLmZFYB951wY9L7YNp/QIRw4tWKKI2ws+32jOUc5Uw7zfmdzRl85SgMyQDd6jxa7xLnwIwY3dhF+3KjeV/MFTLVP+wx8IIc0evtTm87Wzb2FQat4yakvCtDOieD/BXfgaT1XP0ERABE+X4LaSZfcG57QCc//sZDoqkkMmMdCLYXMK1WkjFhfE2AX4pR96umiZk9A2GuuQyJyQIW94MLuBbekVeTVqyium/9kotULMQlVrMb4kiQvqxKqihPi51Vkhky1u1V9QJXAyKHv0zrYS57oAGspP7kUUroRpYE9B+zprQkaDL+bPi1GuxUDpH35+6HotrJMchWpKFBTsKIbKJyuLbkdbvWl9QHMiUnHjIYBs4jOYWoWogn02X33KgP2ePlAy9jZLdhDgfr6omPepeuSQ8UO6ZWxxWNvmR2DEpeqxFvmyFRitNrX/o+gxRWiZ/ZH6ecCUAA8kgiiS0C3NSGhEjjxmi9ExAFEtgTChFEOv9aF3cBvs/qWtcc0+/qB1rKHTp00RiTYi5KUtEiZR3H/X6T/81S7AJR7vw6Kyi31a6VgS2BhR+SnTcmLVXw0hMvyzqRAkJ/KeakfgpXQfCX1Ckf4z7z1zYMWNT70BmMFdwn+n77wbbLo323eDg0QH/ON91d18jk2luRyD8ti79XyWihEZ1fmfu5EJ6wBN88IhvcY8F+mExcAe8MEU4DHoR1rldmccrWFb1+d2xIrgOVRr997c6QFu0UA1693rRwCCUuTRGXc4bQ404T7fNPYxBPtwzT1c/GRVeglvr3z485OX0S+/uScYZjdmr9J7SRdWqlr5/gS7Ywc2tUTb/ysno8hDlfGtaaBF7vQB+B0oyxvZ/bw6T6GQAYrMO9azeWBIOCZE56m2uQpfqDF5T2f/JvNsL7xHUbeGzAMlmxdMNeyIzPVm0tIHrjTKzFTiXyZIaciB5Ah1P03tHJMbqdgemYPK/kRPX5iA5YMyPJB4I8u9p4Rb+GsB2C3wjkfNnHzLCZZZkSqH5azslIeavfhRbh1Z0L2HPt/OdsHLNeg7s6fSp+Dzvsn59XYSLpuUKQr71gaz4vOiJSRPTtVTLtZpeFEGFJWmPJCvVLvaHds74s5qkOHgIoiRSSrbuMTQ2q6YmEpjnVXoa1A8vESq+uwJzeiwBSRGndkEqKTk5FH5NRK0RWL3SYflaQ3UcCdbrnEjQ3P4aVXXjwo3a8nHvsDu5OwY2HkPZJLC2wOMDimgmUGHcufglVdixGphC9IKzQufn6smAbiXhjigBdfy/YwaMJleI/SnPnTCMonaFSKR17Pir47RxrfBrEKDRfo8rmU8h4E2UnFkinQyKiWoFc9zXTT9U42dKb0rDdri3GijS7Yfgf7nsAlB83MMJ3T7PeaSv2N0j3h2FlBC2rvFkkR4kaOGMqfg2osSt/a5uwS4h5nivBlWgJ3BV1PT4FxzcXfkudrFrMcDRdF+2lU0F5KoHB4LAywuZM1nVVmjsWo+DcA8/YSlXLHzfuqr+PSyh084uA5mCkKsGiX3CAdNslJEgb6D9+8R1YdBmUODOEzzuWFUD2cWdVOAeB5mpkiXSnjcvg9e9ByHGuD+pT4aATiVh7I9E5fufjYpqU9imxFAoxbj8Yg09CWRJjydZVH2/xZfdNs++70Smmg8omjIPHbsBsRJSQOGaOFpUnDpgThaJF4MCWywmgtJlFkur6cRpFIGvpfpYS103JdtlFCmUfPTqXxuZT1LI/za75l2VLs8y+Sbk0wTddkkrYNSNMpYB3RI8mUJyoym6vdqo48bbV1tN6CcJTawgdkatrrE59AtxEG7wIbSBzbD3XwNTZJCsfVQyQFuNOY1n9AHWKgN2EWW47PWtkEPO7afgPIgpZRcYtoMQWDHdcBGtvAAoFqPH5fJTl585DBvCsrUnJSJmZviiBwQGKZ8jpgqNveH7o7wws+48a6cBtWn1jNojJmNshNTQrFk700aL9bAj+FnzuYswAIsM8FR5Xv0qj/5jrws92XEMBo6AJ0DaBUe9OmV349yw60P1x6jTur0pZG5srNNy+FWZOxygYwpoOFjJ2oobedtDO1UmsgOfYTRIV3ZxLlNGGJ0vjISyKPLpnAT5ulXfWhrNzPGMkQBNxIchTT6+mX1G7iuH97HyYwX3Xqsb7OjQ70VAtvExYaBREHfGw8xfykj2bXi4+zBa71XaKsE5QnFyP30y9z1UTfzOA1IYfS48HkENhTlcuFNIb/bm8uvmnGqRQF+ohE7TjMDE6BJ3BWbUGyKXvV447k5bpQWcqFkk1UvycaqVRhHKV0=\"><img src=\"http://love-space-test-0524.oss-cn-hangzhou.aliyuncs.com/bound/0199aaaa-bbbb-7ccc-8ddd-eeeeffff2101.png?Expires=1788507164&OSSAccessKeyId=LTAI5t7p1oaVfmzDSvrF7mQm&Signature=PY1ZaWdSHm8dsrlEPO4heuYR8Pg%3D\">",
+  "sortOrder": 0,
+  "categoryIds": [
+    "01a06b34-0262-7574-87b4-259859cf92d1"
+  ],
+  "online": true,
+  "createdAt": "2026-09-04T07:02:44.475246Z",
+  "updatedAt": "2026-09-04T07:02:44.475246Z"
+}
+```
+
+## Step 3: GET http://localhost:8081/api/app/articles/01a06b3a-17fb-74d3-bbba-473d29c9cbe7
+
+```bash
+curl -s -i -X GET http://localhost:8081/api/app/articles/01a06b3a-17fb-74d3-bbba-473d29c9cbe7 -H 'X-API-Key: test-api-key'
+```
+
+实际响应（HTTP 200）:
+
+```
+HTTP/1.1 200
+Content-Type: application/json
+
+{
+  "id": "01a06b3a-17fb-74d3-bbba-473d29c9cbe7",
+  "image": {
+    "id": "bound/0199aaaa-bbbb-7ccc-8ddd-eeeeffff0002.png",
+    "url": "https://test.oss-cn-test.aliyuncs.com/bound/0199aaaa-bbbb-7ccc-8ddd-eeeeffff0002.png?Expires=1788507164&OSSAccessKeyId=x&Signature=WcRgxWfZLnzWOC%2BoY%2F%2FQ%2FlzuURc%3D"
+  },
+  "title": "内联小图21-af4f49",
+  "subtitle": "副标题",
+  "intro": null,
+  "tags": [],
+  "contentHtml": "<p>表情</p><img src=\"data:image/webp;base64,HEa15H4JaGnjls8xdYC8uRxRfTgo6us6AMIXXlYqTnzz+QeGRd0t6XFLo0mvQgQjl1hnQuajMz7K+VK9nKuN8PkvAzt4NVyil/08BymAy0lQ4p1TZ6iEZaMrR1MD9B+R3K1ISS95jhq4bNkQj6icsUXQHrHNUuvE47c26W0u516YZj8qzvoY3ICk2GD9fu1Fe6SbfDuhvRXDi92cilLweewKAed+QhDyHOoT6Ij4AuaPV6QV2JyykQP3u+zc7Eu5guOoMZ8pqVYNyEioabuXwmC2jDsKgszZe1X037h897VB8EYcDf+v+DuHeBMDiI2zabX/K55IN6xohq+BD5p3xfHCjhEXigd7OfsBuv9DUj82GA/eGz4AyNCRYO24Dvgl4ugiRGsmDqeoddXEFPdUznliHzK2vyKoA69BF5X2MTYFmv4CLmZFYB951wY9L7YNp/QIRw4tWKKI2ws+32jOUc5Uw7zfmdzRl85SgMyQDd6jxa7xLnwIwY3dhF+3KjeV/MFTLVP+wx8IIc0evtTm87Wzb2FQat4yakvCtDOieD/BXfgaT1XP0ERABE+X4LaSZfcG57QCc//sZDoqkkMmMdCLYXMK1WkjFhfE2AX4pR96umiZk9A2GuuQyJyQIW94MLuBbekVeTVqyium/9kotULMQlVrMb4kiQvqxKqihPi51Vkhky1u1V9QJXAyKHv0zrYS57oAGspP7kUUroRpYE9B+zprQkaDL+bPi1GuxUDpH35+6HotrJMchWpKFBTsKIbKJyuLbkdbvWl9QHMiUnHjIYBs4jOYWoWogn02X33KgP2ePlAy9jZLdhDgfr6omPepeuSQ8UO6ZWxxWNvmR2DEpeqxFvmyFRitNrX/o+gxRWiZ/ZH6ecCUAA8kgiiS0C3NSGhEjjxmi9ExAFEtgTChFEOv9aF3cBvs/qWtcc0+/qB1rKHTp00RiTYi5KUtEiZR3H/X6T/81S7AJR7vw6Kyi31a6VgS2BhR+SnTcmLVXw0hMvyzqRAkJ/KeakfgpXQfCX1Ckf4z7z1zYMWNT70BmMFdwn+n77wbbLo323eDg0QH/ON91d18jk2luRyD8ti79XyWihEZ1fmfu5EJ6wBN88IhvcY8F+mExcAe8MEU4DHoR1rldmccrWFb1+d2xIrgOVRr997c6QFu0UA1693rRwCCUuTRGXc4bQ404T7fNPYxBPtwzT1c/GRVeglvr3z485OX0S+/uScYZjdmr9J7SRdWqlr5/gS7Ywc2tUTb/ysno8hDlfGtaaBF7vQB+B0oyxvZ/bw6T6GQAYrMO9azeWBIOCZE56m2uQpfqDF5T2f/JvNsL7xHUbeGzAMlmxdMNeyIzPVm0tIHrjTKzFTiXyZIaciB5Ah1P03tHJMbqdgemYPK/kRPX5iA5YMyPJB4I8u9p4Rb+GsB2C3wjkfNnHzLCZZZkSqH5azslIeavfhRbh1Z0L2HPt/OdsHLNeg7s6fSp+Dzvsn59XYSLpuUKQr71gaz4vOiJSRPTtVTLtZpeFEGFJWmPJCvVLvaHds74s5qkOHgIoiRSSrbuMTQ2q6YmEpjnVXoa1A8vESq+uwJzeiwBSRGndkEqKTk5FH5NRK0RWL3SYflaQ3UcCdbrnEjQ3P4aVXXjwo3a8nHvsDu5OwY2HkPZJLC2wOMDimgmUGHcufglVdixGphC9IKzQufn6smAbiXhjigBdfy/YwaMJleI/SnPnTCMonaFSKR17Pir47RxrfBrEKDRfo8rmU8h4E2UnFkinQyKiWoFc9zXTT9U42dKb0rDdri3GijS7Yfgf7nsAlB83MMJ3T7PeaSv2N0j3h2FlBC2rvFkkR4kaOGMqfg2osSt/a5uwS4h5nivBlWgJ3BV1PT4FxzcXfkudrFrMcDRdF+2lU0F5KoHB4LAywuZM1nVVmjsWo+DcA8/YSlXLHzfuqr+PSyh084uA5mCkKsGiX3CAdNslJEgb6D9+8R1YdBmUODOEzzuWFUD2cWdVOAeB5mpkiXSnjcvg9e9ByHGuD+pT4aATiVh7I9E5fufjYpqU9imxFAoxbj8Yg09CWRJjydZVH2/xZfdNs++70Smmg8omjIPHbsBsRJSQOGaOFpUnDpgThaJF4MCWywmgtJlFkur6cRpFIGvpfpYS103JdtlFCmUfPTqXxuZT1LI/za75l2VLs8y+Sbk0wTddkkrYNSNMpYB3RI8mUJyoym6vdqo48bbV1tN6CcJTawgdkatrrE59AtxEG7wIbSBzbD3XwNTZJCsfVQyQFuNOY1n9AHWKgN2EWW47PWtkEPO7afgPIgpZRcYtoMQWDHdcBGtvAAoFqPH5fJTl585DBvCsrUnJSJmZviiBwQGKZ8jpgqNveH7o7wws+48a6cBtWn1jNojJmNshNTQrFk700aL9bAj+FnzuYswAIsM8FR5Xv0qj/5jrws92XEMBo6AJ0DaBUe9OmV349yw60P1x6jTur0pZG5srNNy+FWZOxygYwpoOFjJ2oobedtDO1UmsgOfYTRIV3ZxLlNGGJ0vjISyKPLpnAT5ulXfWhrNzPGMkQBNxIchTT6+mX1G7iuH97HyYwX3Xqsb7OjQ70VAtvExYaBREHfGw8xfykj2bXi4+zBa71XaKsE5QnFyP30y9z1UTfzOA1IYfS48HkENhTlcuFNIb/bm8uvmnGqRQF+ohE7TjMDE6BJ3BWbUGyKXvV447k5bpQWcqFkk1UvycaqVRhHKV0=\"><img src=\"https://test.oss-cn-test.aliyuncs.com/bound/0199aaaa-bbbb-7ccc-8ddd-eeeeffff2101.png?Expires=1788507164&OSSAccessKeyId=x&Signature=ky%2FgJuBjWFvVq758pPaY0Tp4FNA%3D\">",
+  "categoryIds": [
+    "01a06b34-0262-7574-87b4-259859cf92d1"
+  ]
+}
+```
+
+## Step 4: PUT /api/admin/articles/01a06b3a-17fb-74d3-bbba-473d29c9cbe7 contentHtml=<p>改</p><img src=D1>
+
+```bash
+curl -s -i -X PUT http://localhost:21423/api/admin/articles/01a06b3a-17fb-74d3-bbba-473d29c9cbe7 -H 'Content-Type: application/json' -H 'Authorization: Bearer $TOKEN' -d '{"image": "images/0199aaaa-bbbb-7ccc-8ddd-eeeeffff0002.png", "title": "内联小图21-af4f49", "subtitle": "副标题", "contentHtml": "<p>改</p><img src=\"data:image/webp;base64,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\">", "sortOrder": 0, "categoryIds": ["01a06b34-0262-7574-87b4-259859cf92d1"], "online": true}'
+```
+
+实际响应（HTTP 200）:
+
+```
+HTTP/1.1 200
+Content-Type: application/json
+
+{
+  "id": "01a06b3a-17fb-74d3-bbba-473d29c9cbe7",
+  "image": {
+    "id": "bound/0199aaaa-bbbb-7ccc-8ddd-eeeeffff0002.png",
+    "url": "http://love-space-test-0524.oss-cn-hangzhou.aliyuncs.com/bound/0199aaaa-bbbb-7ccc-8ddd-eeeeffff0002.png?Expires=1788507164&OSSAccessKeyId=LTAI5t7p1oaVfmzDSvrF7mQm&Signature=zo6YzmZhKxqEWLtwCZOoHASz3QU%3D"
+  },
+  "title": "内联小图21-af4f49",
+  "coverTitle": null,
+  "subtitle": "副标题",
+  "intro": null,
+  "tags": [],
+  "contentHtml": "<p>改</p><img src=\"data:image/webp;base64,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\">",
+  "sortOrder": 0,
+  "categoryIds": [
+    "01a06b34-0262-7574-87b4-259859cf92d1"
+  ],
+  "online": true,
+  "createdAt": "2026-09-04T07:02:44.475246Z",
+  "updatedAt": "2026-09-04T07:02:44.510826735Z"
+}
+```
+
+## Step 5: GET /api/admin/articles/01a06b3a-17fb-74d3-bbba-473d29c9cbe7
+
+```bash
+curl -s -i -X GET http://localhost:21423/api/admin/articles/01a06b3a-17fb-74d3-bbba-473d29c9cbe7 -H 'Authorization: Bearer $TOKEN'
+```
+
+实际响应（HTTP 200）:
+
+```
+HTTP/1.1 200
+Content-Type: application/json
+
+{
+  "id": "01a06b3a-17fb-74d3-bbba-473d29c9cbe7",
+  "image": {
+    "id": "bound/0199aaaa-bbbb-7ccc-8ddd-eeeeffff0002.png",
+    "url": "http://love-space-test-0524.oss-cn-hangzhou.aliyuncs.com/bound/0199aaaa-bbbb-7ccc-8ddd-eeeeffff0002.png?Expires=1788507164&OSSAccessKeyId=LTAI5t7p1oaVfmzDSvrF7mQm&Signature=zo6YzmZhKxqEWLtwCZOoHASz3QU%3D"
+  },
+  "title": "内联小图21-af4f49",
+  "coverTitle": null,
+  "subtitle": "副标题",
+  "intro": null,
+  "tags": [],
+  "contentHtml": "<p>改</p><img src=\"data:image/webp;base64,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\">",
+  "sortOrder": 0,
+  "categoryIds": [
+    "01a06b34-0262-7574-87b4-259859cf92d1"
+  ],
+  "online": true,
+  "createdAt": "2026-09-04T07:02:44.475246Z",
+  "updatedAt": "2026-09-04T07:02:44.511418Z"
+}
+```

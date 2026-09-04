@@ -35,11 +35,13 @@ class FileServiceTest {
     private final FileService service = new FileService(issuer, signer, PROPS);
 
     // @scenario: file/图片上传凭证签发#签发合法图片类型的上传凭证
+    // @scenario: file/图片上传凭证签发#签发 gif 类型的上传凭证
     @ParameterizedTest
     @CsvSource({
             "image/png, png",
             "image/jpeg, jpg",
-            "image/webp, webp"
+            "image/webp, webp",
+            "image/gif, gif"
     })
     void objectKeyExtensionMatchesContentType(String contentType, String expectedExt) {
         when(issuer.issueFor(anyString()))

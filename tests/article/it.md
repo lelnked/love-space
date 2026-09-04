@@ -140,7 +140,7 @@
 ### TC-article-IT-010: POST /api/admin/articles 富文本 img src 存 objectKey、admin 读时替换签名 URL
 **关联需求**: article/文章管理#创建文章
 **关联契约**: api-spec.json#/paths/~1api~1admin~1articles/post
-**来源**: article-and-featured-feed
+**来源**: article-and-featured-feed → rich-text-gif-and-inline-sticker
 **优先级**: P0
 **测试步骤**:
 1. POST /api/admin/articles，contentHtml 含 2 个 `<img src="<images/ 前缀 objectKey>">` 与段落文本
@@ -149,8 +149,8 @@
 **预期结果**: 创建返回 200；步骤 2 详情 contentHtml 文本部分与提交一致，2 个 img 的 src 均被替换为签名 URL（http 开头、非裸 objectKey），说明存储层保存的是 bound objectKey；步骤 3 无 img 的 HTML 原样往返不报错
 **状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**: `test-evidence/article-cover-title-intro-tags/TC-article-IT-010/`
-**最后更新**: 2026-08-25
+**执行存证**: `test-evidence/rich-text-gif-and-inline-sticker/TC-article-IT-010/`
+**最后更新**: 2026-09-04
 
 ### TC-article-IT-011: GET /api/app/article-categories 与 /api/app/articles 均按权重升序
 **关联需求**: article/App 端文章查询#查询栏目与文章列表
@@ -201,7 +201,7 @@
 ### TC-article-IT-014: GET /api/app/articles/{id} 详情返回富文本且 img src 为签名 URL
 **关联需求**: article/App 端文章查询#文章详情返回富文本
 **关联契约**: api-spec.json#/paths/~1api~1app~1articles~1{id}/get
-**来源**: article-and-featured-feed
+**来源**: article-and-featured-feed → rich-text-gif-and-inline-sticker
 **优先级**: P0
 **测试步骤**:
 1. 前置：一篇可见文章，contentHtml 后台保存为含图片标签与文本的 HTML
@@ -209,8 +209,8 @@
 **预期结果**: 返回 200；含图片、标题、副标题字段；contentHtml 文本与后台保存内容一致，img src 已替换为可访问的签名 URL
 **状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**: `test-evidence/article-cover-title-intro-tags/TC-article-IT-014/`
-**最后更新**: 2026-08-25
+**执行存证**: `test-evidence/rich-text-gif-and-inline-sticker/TC-article-IT-014/`
+**最后更新**: 2026-09-04
 
 ### TC-article-IT-015: POST /api/admin/articles 创建带封面标题、引言与标签的文章
 **关联需求**: article/文章管理#创建带封面标题、引言与标签的文章
@@ -301,3 +301,36 @@
 **执行方式**: api-test-runner
 **执行存证**: `test-evidence/app-article-optional-category-and-featured-period-filter/TC-article-IT-020/`
 **最后更新**: 2026-08-25
+
+### TC-article-IT-021: POST/PUT /api/admin/articles 富文本内联小图放行，admin/app 读取原样透传
+**关联需求**: file/objectKey 两段式生命周期与绑定校验#富文本内联小图放行
+**关联契约**: api-spec.json#/paths/~1api~1admin~1articles/post
+**来源**: rich-text-gif-and-inline-sticker
+**优先级**: P0
+**前置条件**: admin `http://localhost:21423`（test profile）、app `http://localhost:8081`；存在栏目 A；准备 `D1` = `data:image/webp;base64,<2048 字节内容的 base64>`（`head -c 2048 /dev/urandom | base64 -w0`）
+**测试步骤**:
+1. POST /api/admin/articles，image/title/categoryIds=[A]/online=true 合法，contentHtml 为 `<p>表情</p><img src="D1"><img src="images/0199aaaa-bbbb-7ccc-8ddd-eeeeffff2101.png">`
+2. GET /api/admin/articles/{id}
+3. GET http://localhost:8081/api/app/articles/{id}（请求头带 X-API-Key）
+4. PUT /api/admin/articles/{id}，contentHtml 改为 `<p>改</p><img src="D1">`，再 GET admin 详情
+**预期结果**: 步骤 1 返回 200；步骤 2、3 返回 200，contentHtml 中第一个 img 的 src 与 D1 逐字符相等（未签名替换、未改写），第二个 img 的 src 为 http 签名 URL；步骤 4 返回 200 且 src 仍与 D1 相等
+**状态**: ✅ 通过
+**执行方式**: api-test-runner
+**执行存证**: `test-evidence/rich-text-gif-and-inline-sticker/TC-article-IT-021/`
+**最后更新**: 2026-09-04
+
+### TC-article-IT-022: POST /api/admin/articles 富文本内联图超限或类型不符被拒绝
+**关联需求**: file/objectKey 两段式生命周期与绑定校验#富文本内联图超限被拒绝
+**关联契约**: api-spec.json#/paths/~1api~1admin~1articles/post
+**来源**: rich-text-gif-and-inline-sticker
+**优先级**: P0
+**前置条件**: 存在栏目 A；准备 `D4K` = `data:image/jpeg;base64,<4096 字节>`、`DSVG` = `data:image/svg+xml;base64,<1024 字节>`
+**测试步骤**:
+1. POST /api/admin/articles，其余字段合法，contentHtml 为 `<p>x</p><img src="D4K">`
+2. POST /api/admin/articles，contentHtml 为 `<p>x</p><img src="DSVG">`（同时覆盖 Scenario「富文本内联图类型不符被拒绝」）
+3. GET /api/admin/articles/page 核对数量
+**预期结果**: 步骤 1、2 均返回 400 且 `message` 为「图片对象不可用」（统一文案，不区分超限/类型）；步骤 3 列表数量未增加
+**状态**: ✅ 通过
+**执行方式**: api-test-runner
+**执行存证**: `test-evidence/rich-text-gif-and-inline-sticker/TC-article-IT-022/`
+**最后更新**: 2026-09-04

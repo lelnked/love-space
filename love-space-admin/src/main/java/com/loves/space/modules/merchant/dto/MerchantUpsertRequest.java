@@ -40,7 +40,7 @@ import java.util.UUID;
 public record MerchantUpsertRequest(
         @NotBlank(message = "商户名称不能为空") String name,
         @NotBlank(message = "商户 LOGO 不能为空")
-        @Pattern(regexp = "^(images|bound)/[\\w-]+\\.(png|jpg|webp)$",
+        @Pattern(regexp = "^(images|bound)/[\\w-]+\\.(png|jpg|webp|gif)$",
                 message = "logo 仅接受 OSS objectKey（images/<id>.<ext> 或 bound/<id>.<ext>）")
         String logo,
         @NotBlank(message = "详细地址不能为空") String address,
@@ -62,7 +62,7 @@ public record MerchantUpsertRequest(
         Boolean online,
         List<Period> periods,
         List<UUID> tagIds,
-        List<@NotBlank(message = "商户图片不能为空") @Pattern(regexp = "^(images|bound)/[\\w-]+\\.(png|jpg|webp)$",
+        List<@NotBlank(message = "商户图片不能为空") @Pattern(regexp = "^(images|bound)/[\\w-]+\\.(png|jpg|webp|gif)$",
                 message = "images 仅接受 OSS objectKey（images/<id>.<ext> 或 bound/<id>.<ext>）") String> images
 ) {
 }

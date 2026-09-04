@@ -79,7 +79,7 @@
 ### TC-activity-IT-006: POST /api/admin/activities 富文本 img src 存 objectKey、admin 读时替换签名 URL
 **关联需求**: activity/活动管理#创建活动
 **关联契约**: api-spec.json#/paths/~1api~1admin~1activities/post
-**来源**: ambassador-route-activity
+**来源**: ambassador-route-activity → rich-text-gif-and-inline-sticker
 **优先级**: P0
 **测试步骤**:
 1. POST /api/admin/activities，detailHtml 含 2 个 `<img src="<images/ 前缀 objectKey>">` 与段落文本
@@ -88,8 +88,8 @@
 **预期结果**: 创建返回 200；步骤 2 详情 detailHtml 文本部分与提交一致，2 个 img 的 src 均被替换为签名 URL（http 开头、非裸 objectKey），说明存储层保存的是 bound objectKey；步骤 3 无 img 的 HTML 原样往返不报错
 **状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**: `test-evidence/ambassador-route-activity/TC-activity-IT-006/`
-**最后更新**: 2026-08-16
+**执行存证**: `test-evidence/rich-text-gif-and-inline-sticker/TC-activity-IT-006/`
+**最后更新**: 2026-09-04
 
 ### TC-activity-IT-007: GET /api/app/activities 全局上线活动列表
 **关联需求**: activity/App 端活动查询#查询上架城市的活动
@@ -124,7 +124,7 @@
 ### TC-activity-IT-009: GET /api/app/activities/{id} 详情返回富文本且 img src 为签名 URL
 **关联需求**: activity/App 端活动查询#活动详情返回富文本
 **关联契约**: api-spec.json#/paths/~1api~1app~1activities~1{id}/get
-**来源**: ambassador-route-activity → activity-drop-city-link
+**来源**: ambassador-route-activity → activity-drop-city-link → rich-text-gif-and-inline-sticker
 **优先级**: P0
 **测试步骤**:
 1. 前置：一个可见活动，detailHtml 后台保存为含图片标签与文本的 HTML
@@ -132,8 +132,8 @@
 **预期结果**: 返回 200；含全部展示字段（title/images/tags/periods/level/introduction/editorNote/gatheringPlace/dismissalPlace/transportation/visa/itinerary）且**不含 cityId**；detailHtml 文本与后台保存内容一致，img src 已替换为可访问的签名 URL
 **状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**: `test-evidence/activity-subtitle/TC-activity-IT-009/`
-**最后更新**: 2026-09-02
+**执行存证**: `test-evidence/rich-text-gif-and-inline-sticker/TC-activity-IT-009/`
+**最后更新**: 2026-09-04
 
 ### TC-activity-IT-020: 活动景观字段贯通 admin 写入与 admin/app 查询
 **关联需求**: activity/活动管理#景观字段可写可改可空
@@ -214,3 +214,54 @@
 **执行方式**: api-test-runner
 **执行存证**: `test-evidence/activity-subtitle/TC-activity-IT-024/`
 **最后更新**: 2026-09-02
+
+### TC-activity-IT-025: POST/PUT /api/admin/activities 富文本内联小图放行，admin/app 读取原样透传
+**关联需求**: file/objectKey 两段式生命周期与绑定校验#富文本内联小图放行
+**关联契约**: api-spec.json#/paths/~1api~1admin~1activities/post
+**来源**: rich-text-gif-and-inline-sticker
+**优先级**: P0
+**前置条件**: admin `http://localhost:21423`（test profile）、app `http://localhost:8081`；准备 data URL fixture `D1` = `data:image/gif;base64,<2048 字节内容的 base64>`（内容任意，如 `head -c 2048 /dev/urandom | base64 -w0`；后端只校验 MIME 前缀与解码字节数）
+**测试步骤**:
+1. POST /api/admin/activities，其余字段合法、online=true，detailHtml 为 `<p>表情</p><img src="D1"><img src="images/0199aaaa-bbbb-7ccc-8ddd-eeeeffff2501.png"><p>结束</p>`（一个内联小图 + 一个 objectKey 图混排）
+2. GET /api/admin/activities/{id}
+3. GET http://localhost:8081/api/app/activities/{id}（请求头带 X-API-Key）
+4. PUT /api/admin/activities/{id}，detailHtml 改为 `<p>改</p><img src="D1">`（内联图经编辑回传），再 GET admin 详情
+**预期结果**: 步骤 1 返回 200；步骤 2、3 返回 200，detailHtml 中第一个 img 的 src **与 D1 逐字符相等**（未被替换为签名地址、未被当作 objectKey 改写），第二个 img 的 src 为签名 URL（http 开头），段落文本原样；步骤 4 返回 200 且 src 仍与 D1 相等——内联小图可反复回传保存
+**状态**: ✅ 通过
+**执行方式**: api-test-runner
+**执行存证**: `test-evidence/rich-text-gif-and-inline-sticker/TC-activity-IT-025/`
+**最后更新**: 2026-09-04
+
+### TC-activity-IT-026: POST /api/admin/activities 富文本内联图超限被拒绝（3 KB 边界）
+**关联需求**: file/objectKey 两段式生命周期与绑定校验#富文本内联图超限被拒绝
+**关联契约**: api-spec.json#/paths/~1api~1admin~1activities/post
+**来源**: rich-text-gif-and-inline-sticker
+**优先级**: P0
+**前置条件**: 准备三个 png data URL fixture：`D4K` 解码后 4096 字节、`D3073` 解码后 3073 字节、`D3072` 解码后恰 3072 字节（`head -c N /dev/urandom | base64 -w0`）
+**测试步骤**:
+1. POST /api/admin/activities，其余字段合法，detailHtml 为 `<p>x</p><img src="D4K">`
+2. POST /api/admin/activities，detailHtml 为 `<p>x</p><img src="D3073">`
+3. POST /api/admin/activities，detailHtml 为 `<p>x</p><img src="D3072">`，再 GET admin 详情
+4. GET /api/admin/activities/page 核对数量
+**预期结果**: 步骤 1、2 返回 400 且 `message` 为「图片对象不可用」，活动未创建；步骤 3 返回 200（边界值 3072 字节放行），详情中 src 与 D3072 相等；步骤 4 列表仅多出步骤 3 的一条
+**状态**: ✅ 通过
+**执行方式**: api-test-runner
+**执行存证**: `test-evidence/rich-text-gif-and-inline-sticker/TC-activity-IT-026/`
+**最后更新**: 2026-09-04
+
+### TC-activity-IT-027: POST /api/admin/activities 富文本内联图类型不符被拒绝
+**关联需求**: file/objectKey 两段式生命周期与绑定校验#富文本内联图类型不符被拒绝
+**关联契约**: api-spec.json#/paths/~1api~1admin~1activities/post
+**来源**: rich-text-gif-and-inline-sticker
+**优先级**: P0
+**前置条件**: 准备 `DSVG` = `data:image/svg+xml;base64,<1024 字节内容的 base64>`；`DTXT` = `data:text/plain;base64,aGVsbG8=`；`DNB` = `data:image/png,rawbytes`（非 base64 形态）
+**测试步骤**:
+1. POST /api/admin/activities，其余字段合法，detailHtml 为 `<p>x</p><img src="DSVG">`
+2. POST /api/admin/activities，detailHtml 为 `<p>x</p><img src="DTXT">`
+3. POST /api/admin/activities，detailHtml 为 `<p>x</p><img src="DNB">`
+4. PUT /api/admin/activities/{既有活动 id}，detailHtml 为 `<p>x</p><img src="DSVG">`，再 GET 详情
+**预期结果**: 步骤 1~3 均返回 400 且 `message` 为「图片对象不可用」（不区分类型/大小原因），活动未创建；步骤 4 返回 400 且详情 detailHtml 保持更新前内容（事务回滚，svg 未落库）
+**状态**: ✅ 通过
+**执行方式**: api-test-runner
+**执行存证**: `test-evidence/rich-text-gif-and-inline-sticker/TC-activity-IT-027/`
+**最后更新**: 2026-09-04

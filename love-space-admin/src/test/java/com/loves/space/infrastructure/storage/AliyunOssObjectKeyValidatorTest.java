@@ -55,6 +55,20 @@ class AliyunOssObjectKeyValidatorTest {
                 .isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> validator.validateAndBind("images/abc.exe"))
                 .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> validator.validateAndBind("images/abc.svg"))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    // @scenario: file/objectKey 两段式生命周期与绑定校验#未绑定图片在业务保存时被绑定
+    @Test
+    void gifKeyBound() {
+        ObjectMetadata meta = new ObjectMetadata();
+        meta.setContentType("image/gif");
+        meta.setContentLength(1024);
+        when(oss.getObjectMetadata(eq(BUCKET), eq("images/g1.gif"))).thenReturn(meta);
+
+        assertThat(validator.validateAndBind("images/g1.gif")).isEqualTo("bound/g1.gif");
+        verify(oss).copyObject(BUCKET, "images/g1.gif", BUCKET, "bound/g1.gif");
     }
 
     // @scenario: file/图片链路的自动化覆盖边界#测试档位下绑定校验不访问存储

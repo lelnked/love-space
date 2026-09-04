@@ -17,7 +17,7 @@ public final class RichTextImages {
     private RichTextImages() {
     }
 
-    /** 对 HTML 内每个 img src 应用转换函数；null/空白原样返回。 */
+    /** 对 HTML 内每个 img src 应用转换函数；null/空白原样返回。data URL（内联小图）原样透传、不调用 fn。 */
     public static String rewriteSrc(String html, UnaryOperator<String> fn) {
         if (html == null || html.isBlank()) {
             return html;
@@ -25,6 +25,9 @@ public final class RichTextImages {
         Matcher m = IMG_SRC.matcher(html);
         StringBuilder sb = new StringBuilder();
         while (m.find()) {
+            if (m.group(2).regionMatches(true, 0, "data:", 0, 5)) {
+                continue;
+            }
             m.appendReplacement(sb, Matcher.quoteReplacement(m.group(1) + fn.apply(m.group(2)) + m.group(3)));
         }
         m.appendTail(sb);

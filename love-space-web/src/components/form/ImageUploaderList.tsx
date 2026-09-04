@@ -30,7 +30,7 @@ interface UploadingItem {
   progress: number;
 }
 
-const ACCEPT = "image/png,image/jpeg,image/webp";
+const ACCEPT = "image/png,image/jpeg,image/webp,image/gif";
 
 /**
  * 多图上传公用组件（Element Plus 照片墙 picture-card 风格）。

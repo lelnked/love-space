@@ -20,7 +20,7 @@ public record CityUpdateRequest(
         @NotBlank(message = "英文名不能为空") @Size(max = 100, message = "英文名长度不能超过 100 个字符") String englishName,
         @NotBlank(message = "中文省份不能为空") @Size(max = 50, message = "中文省份长度不能超过 50 个字符") String chineseProvince,
         @NotBlank(message = "英文省份不能为空") @Size(max = 100, message = "英文省份长度不能超过 100 个字符") String englishProvince,
-        @Pattern(regexp = "^(images|bound)/[\\w-]+\\.(png|jpg|webp)$",
+        @Pattern(regexp = "^(images|bound)/[\\w-]+\\.(png|jpg|webp|gif)$",
                 message = "backgroundImage 仅接受 OSS objectKey（images/<id>.<ext> 或 bound/<id>.<ext>）")
         String backgroundImage,
         @Size(max = 200, message = "编辑说长度不能超过 200 个字符") String editorNote,

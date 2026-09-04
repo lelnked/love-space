@@ -25,7 +25,8 @@ public class FileService {
     private static final Map<String, String> CONTENT_TYPE_TO_EXT = Map.of(
             "image/png", "png",
             "image/jpeg", "jpg",
-            "image/webp", "webp"
+            "image/webp", "webp",
+            "image/gif", "gif"
     );
 
     private final StsCredentialIssuer stsCredentialIssuer;

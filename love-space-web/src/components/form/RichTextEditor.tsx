@@ -1,4 +1,4 @@
-import { useRef, useMemo, forwardRef, useImperativeHandle } from "react";
+import { useRef, useMemo, useEffect, forwardRef, useImperativeHandle } from "react";
 import ReactQuill from "react-quill-new";
 import type { Quill } from "react-quill-new";
 import "react-quill-new/dist/quill.snow.css";
@@ -21,7 +21,11 @@ interface RichTextEditorProps {
   disabled?: boolean;
 }
 
-const ACCEPT = "image/png,image/jpeg,image/webp";
+const ACCEPT = "image/png,image/jpeg,image/webp,image/gif";
+const ACCEPT_LIST = ACCEPT.split(",");
+const TYPE_HINT = "仅支持 png/jpeg/webp/gif 图片";
+/** ≤ 3 KB 的小图（表情包）直接以 data URL 内联，不上传 OSS；与后端 RichTextImages.INLINE_MAX_BYTES 一致。 */
+const INLINE_MAX_BYTES = 3 * 1024;
 
 /**
  * 富文本编辑公用组件（Quill）。
@@ -75,6 +79,8 @@ export default forwardRef<RichTextEditorRef, RichTextEditorProps>(function RichT
     });
     editor.insertEmbed(range.index, "image", dataUrl);
     editor.setSelection(range.index + 1);
+    // 小图内联：不上传、不注册映射，提交时 data URL 原样保留
+    if (file.size <= INLINE_MAX_BYTES) return;
 
     // 2. 后台上传到 OSS，成功后注册 dataUrl -> objectKey 映射
     try {
@@ -90,6 +96,34 @@ export default forwardRef<RichTextEditorRef, RichTextEditorProps>(function RichT
       keyMapRef.current.set(dataUrl, dataUrl);
     }
   };
+
+  // Ctrl+V / 拖入文件：Quill 默认剪贴板会把任何图片转成 base64 塞进 HTML，绕过白名单与 OSS 上传，
+  // 提交时后端校验必然拒绝。这里截获文件走 insertImage 同一链路（内联/上传分流在其内部）。
+  useEffect(() => {
+    const root = quillRef.current?.getEditor().root;
+    if (!root) return;
+    // 有文件才接管；白名单内的走 insertImage，非白名单的不插入并提示
+    const handleFiles = (e: Event, items?: DataTransferItemList | null) => {
+      const files = Array.from(items ?? [])
+        .filter((it) => it.kind === "file")
+        .map((it) => it.getAsFile())
+        .filter((f): f is File => !!f);
+      if (files.length === 0) return;
+      e.preventDefault();
+      const rejected = files.some((f) => !ACCEPT_LIST.includes(f.type));
+      if (rejected) toast.error(TYPE_HINT);
+      files.filter((f) => ACCEPT_LIST.includes(f.type)).forEach((f) => void insertImage(f));
+    };
+    const onPaste = (e: ClipboardEvent) => handleFiles(e, e.clipboardData?.items);
+    const onDrop = (e: DragEvent) => handleFiles(e, e.dataTransfer?.items);
+    root.addEventListener("paste", onPaste);
+    root.addEventListener("drop", onDrop);
+    return () => {
+      root.removeEventListener("paste", onPaste);
+      root.removeEventListener("drop", onDrop);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const insertVideo = () => {
     if (!quillRef.current) return;

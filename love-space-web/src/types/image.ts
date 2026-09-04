@@ -6,7 +6,7 @@ export interface ImageResponse {
 
 /** 申请上传凭证请求体。 */
 export interface UploadCredentialRequest {
-  /** 图片 MIME，仅支持 image/png | image/jpeg | image/webp。 */
+  /** 图片 MIME，仅支持 image/png | image/jpeg | image/webp | image/gif。 */
   contentType: string;
 }
 

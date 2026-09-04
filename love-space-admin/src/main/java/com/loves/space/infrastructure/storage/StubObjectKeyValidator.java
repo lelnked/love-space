@@ -16,7 +16,7 @@ import java.util.regex.Pattern;
 public class StubObjectKeyValidator implements ObjectKeyValidator {
 
     private static final Pattern OBJECT_KEY_PATTERN =
-            Pattern.compile("^(images|bound)/([\\w-]+)\\.(png|jpg|webp)$");
+            Pattern.compile("^(images|bound)/([\\w-]+)\\.(png|jpg|webp|gif)$");
 
     @Override
     public String validateAndBind(String rawObjectKey) {

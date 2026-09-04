@@ -39,10 +39,10 @@ public class AliyunOssObjectKeyValidator implements ObjectKeyValidator {
     static final String UNAVAILABLE_MESSAGE = "图片对象不可用";
 
     private static final Pattern OBJECT_KEY_PATTERN =
-            Pattern.compile("^(images|bound)/([\\w-]+)\\.(png|jpg|webp)$");
+            Pattern.compile("^(images|bound)/([\\w-]+)\\.(png|jpg|webp|gif)$");
 
     private static final Set<String> ALLOWED_CONTENT_TYPES =
-            Set.of("image/png", "image/jpeg", "image/webp");
+            Set.of("image/png", "image/jpeg", "image/webp", "image/gif");
 
     private final OSS ossClient;
     private final StorageProperties.Oss ossProperties;

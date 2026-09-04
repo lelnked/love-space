@@ -7,32 +7,33 @@
 ### TC-file-IT-001: 签发合法图片类型的上传凭证（测试档位不可实跑）
 **关联需求**: file/图片上传凭证签发#签发合法图片类型的上传凭证
 **关联契约**: api-spec.json#/paths/~1api~1admin~1files~1upload-credentials/post
-**来源**: baseline-auth-manager-banner-log-file
+**来源**: baseline-auth-manager-banner-log-file → rich-text-gif-and-inline-sticker
 **优先级**: P1
 **前置条件**: 本用例需为 `StsCredentialIssuer` 提供 test-profile 桩实现（真实 STS 签发依赖真实网络与角色配置）。**当前不满足该前置**，执行时应标记为「未执行」而非失败。
 **测试步骤**:
 1. 登录取 token
 2. POST /api/admin/files/upload-credentials，body `{"contentType":"image/png"}`
-**预期结果**: 返回 200；`objectKey` 匹配 `^images/[0-9a-f-]{36}\.png$`；上传目标地址、签名策略、签名值、签名算法标识、凭证标识、签名时间、安全令牌、过期时间字段均非空；`image/jpeg` 时后缀为 `jpg`
-**状态**: ⬜ 未测试
+**预期结果**: 返回 200；`objectKey` 匹配 `^images/[0-9a-f-]{36}\.png$`；上传目标地址、签名策略、签名值、签名算法标识、凭证标识、签名时间、安全令牌、过期时间字段均非空；`image/jpeg` 时后缀为 `jpg`，`image/gif` 时后缀为 `gif`（gif 正向分支见 TC-file-IT-014）
+**状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**:
-**最后更新**: 2026-08-21
+**执行存证**: `test-evidence/rich-text-gif-and-inline-sticker/TC-file-IT-001/`
+**最后更新**: 2026-09-04
 
 ### TC-file-IT-002: 非图片 contentType 返回 400
 **关联需求**: file/图片上传凭证签发#非图片类型被拒绝
 **关联契约**: api-spec.json#/paths/~1api~1admin~1files~1upload-credentials/post
-**来源**: baseline-auth-manager-banner-log-file
+**来源**: baseline-auth-manager-banner-log-file → rich-text-gif-and-inline-sticker
 **优先级**: P0
 **测试步骤**:
 1. 登录取 token
 2. POST /api/admin/files/upload-credentials，body `{"contentType":"application/pdf"}`
-3. 再次 POST，body `{"contentType":"image/gif"}`
-**预期结果**: 两次均返回 400，错误消息为「仅支持 png/jpeg/webp 图片」；响应中不含任何签名或令牌字段（入参校验先于 STS 调用，不触达存储）
-**状态**: ⬜ 未测试
+3. 再次 POST，body `{"contentType":"image/svg+xml"}`（svg 明确不在白名单，可内嵌脚本）
+4. 再次 POST，body `{"contentType":"image/bmp"}`
+**预期结果**: 三次均返回 400，错误消息为「仅支持 png/jpeg/webp/gif 图片」（注意 `image/gif` 自 rich-text-gif-and-inline-sticker 起已进入白名单，**不再**作为拒绝样本）；响应中不含任何签名或令牌字段（入参校验先于 STS 调用，不触达存储）
+**状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**:
-**最后更新**: 2026-08-21
+**执行存证**: `test-evidence/rich-text-gif-and-inline-sticker/TC-file-IT-002/`
+**最后更新**: 2026-09-04
 
 ### TC-file-IT-003: 未登录请求上传凭证返回 401
 **关联需求**: file/图片上传凭证签发#未登录无法获取凭证
@@ -59,10 +60,10 @@
 2. POST /api/admin/banners，body `{"name":"绑定用例","positionCode":"home-top","type":"CITY","imageUrls":["images/0199aaaa-bbbb-7ccc-8ddd-eeeeffff1001.png"],"link":"C","sortOrder":0}`，记录返回 id = B
 3. GET /api/admin/banners/B
 **预期结果**: 步骤 2 返回 200；步骤 3 的 `imageUrls[0].id` 为 `bound/0199aaaa-bbbb-7ccc-8ddd-eeeeffff1001.png`（前缀由 `images/` 改写为 `bound/`，文件名与后缀不变），落库值同样是 `bound/` 前缀
-**状态**: ⬜ 未测试
+**状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**:
-**最后更新**: 2026-08-21
+**执行存证**: `test-evidence/rich-text-gif-and-inline-sticker/TC-file-IT-004/`
+**最后更新**: 2026-09-04
 
 ### TC-file-IT-005: 已绑定图片原样回传不再复制，objectKey 保持不变
 **关联需求**: file/objectKey 两段式生命周期与绑定校验#已绑定图片重复提交不再复制
@@ -91,10 +92,10 @@
 1. 登录取 token
 2. POST /api/admin/banners，body 同 TC-file-IT-004 但 `imageUrls` 为 `["other/abc.png"]`
 **预期结果**: 返回 400，中文业务错误消息为「imageUrls 仅接受 OSS objectKey（images/<id>.<ext> 或 bound/<id>.<ext>）」；banner 未创建（后续列表查询无该条）
-**状态**: ⬜ 未测试
+**状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**:
-**最后更新**: 2026-08-21
+**执行存证**: `test-evidence/rich-text-gif-and-inline-sticker/TC-file-IT-006/`
+**最后更新**: 2026-09-04
 
 ### TC-file-IT-007: 非白名单后缀与路径穿越的 objectKey 被拒绝
 **关联需求**: file/objectKey 两段式生命周期与绑定校验#非法 objectKey 格式被拒绝
@@ -108,10 +109,10 @@
 3. POST /api/admin/banners，`imageUrls` 为 `["images/../../etc/passwd.png"]`
 4. POST /api/admin/banners，`imageUrls` 为 `[""]`（空值）
 **预期结果**: 步骤 2、3 返回 400 且消息为「imageUrls 仅接受 OSS objectKey（images/<id>.<ext> 或 bound/<id>.<ext>）」；步骤 4 返回 400 且消息为「图片不能为空」；三次均未创建数据
-**状态**: ⬜ 未测试
+**状态**: ✅ 通过（⚠️ 见存证备注）
 **执行方式**: api-test-runner
-**执行存证**:
-**最后更新**: 2026-08-21
+**执行存证**: `test-evidence/rich-text-gif-and-inline-sticker/TC-file-IT-007/`
+**最后更新**: 2026-09-04
 
 ### TC-file-IT-008: 业务保存失败后同一 objectKey 可重试成功
 **关联需求**: file/objectKey 两段式生命周期与绑定校验#业务保存失败后源图仍可重试
@@ -209,6 +210,39 @@
 **执行存证**:
 **最后更新**: 2026-08-21
 
+### TC-file-IT-014: 签发 gif 类型的上传凭证（测试档位不可实跑）
+**关联需求**: file/图片上传凭证签发#签发 gif 类型的上传凭证
+**关联契约**: api-spec.json#/paths/~1api~1admin~1files~1upload-credentials/post
+**来源**: rich-text-gif-and-inline-sticker
+**优先级**: P1
+**前置条件**: 同 TC-file-IT-001——需 `StsCredentialIssuer` 的 test-profile 桩实现；当前不满足时标记「未执行」而非失败。**可自动化的最低断言**：`image/gif` 不再命中入参校验的 400「仅支持 png/jpeg/webp/gif 图片」（响应为 5xx/STS 不可用即证明已越过入参校验）。
+**测试步骤**:
+1. 登录取 token
+2. POST /api/admin/files/upload-credentials，body `{"contentType":"image/gif"}`
+**预期结果**: 返回 200；`objectKey` 匹配 `^images/[0-9a-f-]{36}\.gif$`，签名与安全令牌字段非空。桩缺失时：**不得**返回 400「仅支持 png/jpeg/webp/gif 图片」，记录实际状态码作存证
+**状态**: ✅ 通过
+**执行方式**: api-test-runner
+**执行存证**: `test-evidence/rich-text-gif-and-inline-sticker/TC-file-IT-014/`
+**最后更新**: 2026-09-04
+
+### TC-file-IT-015: gif 后缀 objectKey 通过绑定校验，svg 后缀仍被拒绝
+**关联需求**: file/objectKey 两段式生命周期与绑定校验#未绑定图片在业务保存时被绑定
+**关联契约**: api-spec.json#/paths/~1api~1admin~1banners/post
+**来源**: rich-text-gif-and-inline-sticker
+**优先级**: P0
+**前置条件**: 后端运行在 test profile；存在一个可关联的城市，记 cityId = C
+**测试步骤**:
+1. 登录取 token
+2. POST /api/admin/banners，body 同 TC-file-IT-004 但 `imageUrls` 为 `["images/0199aaaa-bbbb-7ccc-8ddd-eeeeffff1501.gif"]`，记录 id = B
+3. GET /api/admin/banners/B
+4. POST /api/admin/banners，`imageUrls` 为 `["images/0199aaaa-bbbb-7ccc-8ddd-eeeeffff1502.svg"]`
+5. PUT /api/admin/banners/B，`imageUrls` 原样回传步骤 3 取到的 `bound/...1501.gif`
+**预期结果**: 步骤 2 返回 200；步骤 3 `imageUrls[0].id` 为 `bound/0199aaaa-bbbb-7ccc-8ddd-eeeeffff1501.gif`（后缀 gif 保持）且 `url` 非空；步骤 4 返回 400 且消息为「imageUrls 仅接受 OSS objectKey（images/<id>.<ext> 或 bound/<id>.<ext>）」——svg 不在后缀白名单；步骤 5 返回 200 且 key 保持不变
+**状态**: ✅ 通过
+**执行方式**: api-test-runner
+**执行存证**: `test-evidence/rich-text-gif-and-inline-sticker/TC-file-IT-015/`
+**最后更新**: 2026-09-04
+
 ---
 
 ## 未在本域产出用例的 Scenario（设计决策）
@@ -216,5 +250,7 @@
 Requirement `file/图片上传的界面交互` 的全部 4 个 Scenario——`单图控件三态切换`、`多图并发上传`、`非图片类型在选择阶段被拦`、`上传失败不阻塞表单`——**本域不产 `web.md`**。
 
 原因：上传控件没有独立路由页面，它作为公共组件复用于各带图业务表单（城市背景图、商户 LOGO 与图片、Banner 图片、路线缩略图/图片/地点图、活动图片、文章封面、大使头像、精选推荐 banner、文章栏目图标）。按设计决策，其界面交互由**各业务域的 `web.md`** 在对应表单用例中就地覆盖（例如 banner 表单用例覆盖多图并发上传，city 表单用例覆盖单图三态切换），避免在无入口的 file 域制造无法独立执行的 WEB 用例。本轮不产出这部分用例。
+
+`objectKey 两段式生命周期与绑定校验` 中「富文本内联小图放行 / 超限被拒绝 / 类型不符被拒绝」三个 Scenario，以及 `图片上传的界面交互` 中「富文本粘贴大图走 OSS 上传 / 粘贴小表情内联 / 粘贴非白名单类型被拦」三个 Scenario（rich-text-gif-and-inline-sticker），同理落在富文本所在业务域：IT 见 `tests/activity/it.md`（TC-activity-IT-025~027）与 `tests/article/it.md`（TC-article-IT-021~022），WEB 见 `tests/activity/web.md`（TC-activity-WEB-006~008）。
 
 同时，以下行为按 `file/图片链路的自动化覆盖边界` 明确**不由自动化覆盖**，须人工/联调验证：浏览器到对象存储的真实直传、临时凭证的真实签发、已绑定对象的真实可读性。绑定校验中的存在性、类型、大小三项校验与签名地址生成，由单元测试以模拟存储客户端覆盖，不在本 IT 清单内。

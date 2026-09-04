@@ -19,7 +19,7 @@ interface ImageUploaderProps {
   hideRemove?: boolean;
 }
 
-const ACCEPT = "image/png,image/jpeg,image/webp";
+const ACCEPT = "image/png,image/jpeg,image/webp,image/gif";
 
 /**
  * 单图上传公用组件（Element Plus 照片墙 picture-card 风格）。
@@ -29,7 +29,7 @@ const ACCEPT = "image/png,image/jpeg,image/webp";
  * - 已上传：缩略图，悬停浮出半透明遮罩，提供「预览 / 替换 / 删除」。
  *
  * 受控组件：父级持有 objectKey（value）与可选签名 previewUrl，上传完成回传新的 objectKey。
- * 仅支持 png/jpeg/webp；失败用全局 toast 提示，不阻塞表单。
+ * 仅支持 png/jpeg/webp/gif；失败用全局 toast 提示，不阻塞表单。
  *
  * 注：点击通过自有 inputRef.click() 触发，不依赖 react-dropzone 的 open()
  * （后者在 React 19 下不可靠）；拖拽用原生 drag 事件实现。

@@ -1114,7 +1114,7 @@
     },
     "/api/admin/files/upload-credentials": {
       "post": {
-        "summary": "签发 OSS 直传上传凭证；仅接受 image/png|jpeg|webp，否则 400；权限收敛到单一 objectKey",
+        "summary": "签发 OSS 直传上传凭证；仅接受 image/png|jpeg|webp|gif，否则 400；权限收敛到单一 objectKey",
         "x-requirement": "file/图片上传凭证签发"
       }
     }

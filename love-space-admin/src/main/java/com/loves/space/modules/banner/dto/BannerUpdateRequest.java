@@ -21,7 +21,7 @@ public record BannerUpdateRequest(
         @NotBlank(message = "banner 名称不能为空") @Size(max = 128, message = "banner 名称长度不能超过 128 个字符") String name,
         @NotBlank(message = "展示位编码不能为空") @Size(max = 64, message = "展示位编码长度不能超过 64 个字符") String positionCode,
         @NotNull(message = "banner 类型不能为空") BannerType type,
-        @NotEmpty(message = "至少上传一张图片") List<@NotBlank(message = "图片不能为空") @Pattern(regexp = "^(images|bound)/[\\w-]+\\.(png|jpg|webp)$",
+        @NotEmpty(message = "至少上传一张图片") List<@NotBlank(message = "图片不能为空") @Pattern(regexp = "^(images|bound)/[\\w-]+\\.(png|jpg|webp|gif)$",
                 message = "imageUrls 仅接受 OSS objectKey（images/<id>.<ext> 或 bound/<id>.<ext>）") String> imageUrls,
         @JsonProperty("link") @NotNull(message = "请选择关联城市") UUID linkedEntityId,
         @NotNull(message = "排序值不能为空") @PositiveOrZero(message = "排序值不能为负") Integer sortOrder,

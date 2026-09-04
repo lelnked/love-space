@@ -30,8 +30,8 @@ export async function uploadToOss(
   file: File,
   onProgress?: UploadProgressHandler,
 ): Promise<string> {
-  if (!file.type || !["image/png", "image/jpeg", "image/webp"].includes(file.type)) {
-    throw new Error("仅支持 png/jpeg/webp 图片");
+  if (!file.type || !["image/png", "image/jpeg", "image/webp", "image/gif"].includes(file.type)) {
+    throw new Error("仅支持 png/jpeg/webp/gif 图片");
   }
   const credential = await fetchUploadCredential(file.type);
   // host 必须是绝对地址，否则会被当成相对路径拼到当前页面 URL 上。

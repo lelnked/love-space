@@ -76,3 +76,48 @@
 **执行方式**: web-test-runner（@playwright/mcp）
 **执行存证**: `test-evidence/regression/activity/TC-activity-WEB-005/`
 **最后更新**: -
+
+### TC-activity-WEB-006: 富文本粘贴大图（> 3 KB）走 OSS 上传链路
+**关联需求**: file/图片上传的界面交互#富文本粘贴大图走 OSS 上传
+**来源**: rich-text-gif-and-inline-sticker
+**优先级**: P1
+**前置条件**: Manager 已登录 http://100.93.172.18:5173/love-space/；活动表单可打开；后端 OSS 直传链路可用（本地仅占位符时 `POST /api/admin/files/upload-credentials` 不返回 200，本用例退化为只断言「已发起凭证请求 + 无内联 data URL」，并注明环境阻塞）；准备一张 > 3 KB 的 png（如 8 KB）
+**测试步骤**:
+1. 进入 /love-space/activities，打开活动新增表单，填写标题与 ≥1 张图片
+2. 聚焦「活动详情说明」富文本编辑区，通过 `page.evaluate` 构造 `ClipboardEvent('paste')`（`clipboardData` 含该 png `File`）派发到编辑器 root；同时用 `page.waitForRequest` 监听 `/api/admin/files/upload-credentials`
+3. 保存；重新打开该活动的编辑表单
+**预期结果**: 步骤 2 编辑器立即出现该图预览，且捕获到一次 `POST /api/admin/files/upload-credentials`（body `contentType` 为 `image/png`）；编辑器 HTML 中该 img 的 src **不是** `data:` 前缀（走上传，非内联）；步骤 3 保存成功有提示，重新打开后该图以 http 签名地址回显、正常渲染
+**状态**: ⬜ 未测试
+**执行方式**: web-test-runner（@playwright/mcp）
+**执行存证**: `test-evidence/regression/activity/TC-activity-WEB-006/`
+**最后更新**: -
+
+### TC-activity-WEB-007: 富文本粘贴小表情（≤ 3 KB gif）内联为 data URL，不发起上传
+**关联需求**: file/图片上传的界面交互#富文本粘贴小表情内联
+**来源**: rich-text-gif-and-inline-sticker
+**优先级**: P1
+**前置条件**: Manager 已登录 http://100.93.172.18:5173/love-space/；活动表单可打开；准备一张 ≤ 3 KB 的 gif（如 1.5 KB，`GIF89a` 头即可）
+**测试步骤**:
+1. 进入 /love-space/activities，打开活动新增表单，填写标题与 ≥1 张图片
+2. 记录当前网络请求数；向「活动详情说明」编辑器 root 派发 `paste` 事件（`clipboardData` 含该 gif `File`）
+3. 保存；重新打开该活动的编辑表单
+**预期结果**: 步骤 2 编辑器立即出现该图，其 img src 以 `data:image/gif;base64,` 开头；**未**发起任何 `POST /api/admin/files/upload-credentials` 请求；步骤 3 保存成功（后端 200，不弹「图片对象不可用」），重新打开后该图仍以同一 `data:image/gif;base64,` 地址回显并正常渲染
+**状态**: ⬜ 未测试
+**执行方式**: web-test-runner（@playwright/mcp）
+**执行存证**: `test-evidence/regression/activity/TC-activity-WEB-007/`
+**最后更新**: -
+
+### TC-activity-WEB-008: 富文本粘贴非白名单类型（svg）被拦并提示
+**关联需求**: file/图片上传的界面交互#富文本粘贴非白名单类型被拦
+**来源**: rich-text-gif-and-inline-sticker
+**优先级**: P1
+**前置条件**: Manager 已登录 http://100.93.172.18:5173/love-space/；活动表单可打开；准备一个 svg 文件（`image/svg+xml`，1 KB）与一段纯文本
+**测试步骤**:
+1. 进入 /love-space/activities，打开活动表单，在「活动详情说明」编辑器输入「基线文本」，记录编辑器 innerHTML
+2. 向编辑器 root 派发 `paste` 事件（`clipboardData` 含该 svg `File`）
+3. 再派发一次 `paste` 事件，`clipboardData` 仅含纯文本「附加文本」（不含文件）
+**预期结果**: 步骤 2 弹出全局提示「仅支持 png/jpeg/webp/gif 图片」，编辑器 innerHTML 与步骤 1 记录一致（无新增 `<img>`、无 data URL），未发起任何 `/api/admin/files/upload-credentials` 请求；步骤 3 编辑器出现「附加文本」——不含图片文件的粘贴保持编辑器默认行为，不被误拦
+**状态**: ⬜ 未测试
+**执行方式**: web-test-runner（@playwright/mcp）
+**执行存证**: `test-evidence/regression/activity/TC-activity-WEB-008/`
+**最后更新**: -
