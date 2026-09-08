@@ -56,9 +56,18 @@ class FieldValidationTest {
     @Test
     void cityEditorNoteOver200Rejected() {
         CityCreateRequest request = new CityCreateRequest(
-                "城", "EN", "省", "Province", null, "字".repeat(201), true);
+                "城", "EN", "省", "Province", null, null, "字".repeat(201), true);
         assertThat(messages(VALIDATOR.validate(request)))
                 .contains("编辑说长度不能超过 200 个字符");
+    }
+
+    // @scenario: city/城市第二背景图#非法 objectKey 被拒绝
+    @Test
+    void citySecondaryBackgroundImageRejectsNonObjectKey() {
+        CityCreateRequest request = new CityCreateRequest(
+                "城", "EN", "省", "Province", null, "https://x.com/a.png", null, true);
+        assertThat(messages(VALIDATOR.validate(request)))
+                .contains("secondaryBackgroundImage 仅接受 OSS objectKey（images/<id>.<ext> 或 bound/<id>.<ext>）");
     }
 
     // @scenario: recommend-list/推荐清单管理#缺少必填项被拒绝

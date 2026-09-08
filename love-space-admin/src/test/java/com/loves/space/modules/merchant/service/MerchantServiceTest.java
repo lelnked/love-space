@@ -62,13 +62,13 @@ class MerchantServiceTest extends AbstractPostgresIntegrationTest {
     /** 创建一个已上架城市，返回其 ID（上架商户的前置条件）。 */
     private UUID onlineCityId() {
         return cityService.create(new CityCreateRequest(
-                "城-" + UUID.randomUUID(), "EN", "省", "Province", null, null, true)).id();
+                "城-" + UUID.randomUUID(), "EN", "省", "Province", null, null, null, true)).id();
     }
 
     /** 创建一个未上架城市，返回其 ID。 */
     private UUID offlineCityId() {
         return cityService.create(new CityCreateRequest(
-                "城-" + UUID.randomUUID(), "EN", "省", "Province", null, null, false)).id();
+                "城-" + UUID.randomUUID(), "EN", "省", "Province", null, null, null, false)).id();
     }
 
     /** 创建一个已上架分类，返回其 ID（上架商户的前置条件）。 */

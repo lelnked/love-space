@@ -1407,6 +1407,15 @@
             ],
             "description": "城市背景图 URL"
           },
+          "secondaryBackgroundImage": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ImageResponse"
+              }
+            ],
+            "description": "城市第二背景图（可空）",
+            "nullable": true
+          },
           "editorNote": {
             "type": "string",
             "description": "地图编辑说（可空）"

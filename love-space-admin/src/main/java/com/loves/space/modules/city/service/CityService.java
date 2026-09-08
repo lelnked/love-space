@@ -51,8 +51,8 @@ public class CityService {
         this.imageUrlSigner = imageUrlSigner;
     }
 
-    /** 可空 backgroundImage：null/blank 直接返回 null，否则 validateAndBind。 */
-    private String bindBackgroundImage(String raw) {
+    /** 可空图片字段：null/blank 直接返回 null，否则 validateAndBind。 */
+    private String bindImage(String raw) {
         if (raw == null || raw.isBlank()) {
             return null;
         }
@@ -68,7 +68,7 @@ public class CityService {
             throw new IllegalArgumentException("城市中文名已存在：" + request.chineseName());
         }
         City city = new City();
-        applyCreate(city, request, bindBackgroundImage(request.backgroundImage()));
+        applyCreate(city, request, bindImage(request.backgroundImage()), bindImage(request.secondaryBackgroundImage()));
         City saved = cityRepository.save(city);
         return toDetail(saved);
     }
@@ -87,7 +87,8 @@ public class CityService {
         city.setEnglishName(request.englishName());
         city.setChineseProvince(request.chineseProvince());
         city.setEnglishProvince(request.englishProvince());
-        city.setBackgroundImage(bindBackgroundImage(request.backgroundImage()));
+        city.setBackgroundImage(bindImage(request.backgroundImage()));
+        city.setSecondaryBackgroundImage(bindImage(request.secondaryBackgroundImage()));
         city.setEditorNote(request.editorNote());
         if (request.online() != null) {
             city.setOnline(request.online());
@@ -176,13 +177,15 @@ public class CityService {
         eventPublisher.publishEvent(new CityDeletedEvent(id));
     }
 
-    /** 创建场景下把请求体字段拷贝到实体；backgroundImage 已 validateAndBind。 */
-    private static void applyCreate(City city, CityCreateRequest request, String boundBackgroundImage) {
+    /** 创建场景下把请求体字段拷贝到实体；两个背景图均已 validateAndBind。 */
+    private static void applyCreate(City city, CityCreateRequest request,
+                                    String boundBackgroundImage, String boundSecondaryBackgroundImage) {
         city.setChineseName(request.chineseName());
         city.setEnglishName(request.englishName());
         city.setChineseProvince(request.chineseProvince());
         city.setEnglishProvince(request.englishProvince());
         city.setBackgroundImage(boundBackgroundImage);
+        city.setSecondaryBackgroundImage(boundSecondaryBackgroundImage);
         city.setEditorNote(request.editorNote());
         city.setOnline(request.online() != null && request.online());
     }
@@ -196,6 +199,7 @@ public class CityService {
                 city.getChineseProvince(),
                 city.getEnglishProvince(),
                 ImageResponses.from(city.getBackgroundImage(), imageUrlSigner),
+                ImageResponses.from(city.getSecondaryBackgroundImage(), imageUrlSigner),
                 city.getEditorNote(),
                 city.isOnline(),
                 city.getCreatedAt(),
@@ -211,6 +215,7 @@ public class CityService {
                 city.getChineseProvince(),
                 city.getEnglishProvince(),
                 ImageResponses.from(city.getBackgroundImage(), imageUrlSigner),
+                ImageResponses.from(city.getSecondaryBackgroundImage(), imageUrlSigner),
                 city.getEditorNote(),
                 city.isOnline(),
                 city.getCreatedAt(),

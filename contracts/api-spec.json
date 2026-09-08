@@ -30,14 +30,14 @@
     },
     "/api/admin/cities": {
       "post": {
-        "summary": "创建城市/地图（DTO 新增 editorNote ≤200 字，非必填）",
-        "x-requirement": "city/地图编辑说"
+        "summary": "创建城市/地图（DTO 含 editorNote ≤200 字；backgroundImage 与 secondaryBackgroundImage 均为可空 OSS objectKey）",
+        "x-requirement": "city/城市第二背景图"
       }
     },
     "/api/admin/cities/{id}": {
       "put": {
-        "summary": "更新城市/地图（DTO 新增 editorNote）",
-        "x-requirement": "city/地图编辑说"
+        "summary": "更新城市/地图（全字段覆盖；secondaryBackgroundImage 可空、可清空，与 backgroundImage 相互独立）",
+        "x-requirement": "city/城市第二背景图"
       },
       "delete": {
         "summary": "删除城市/地图（物理删除，无前置校验；提交后异步下架该城市的 CITY Banner 与其下全部商户，只下架不删除）",
@@ -46,8 +46,8 @@
     },
     "/api/app/cities": {
       "get": {
-        "summary": "App 城市列表（响应新增 editorNote）",
-        "x-requirement": "city/地图编辑说"
+        "summary": "城市列表（响应含 secondaryBackgroundImage，ImageResponse 或 null）",
+        "x-requirement": "city/城市第二背景图"
       }
     },
     "/api/app/cities/{id}": {

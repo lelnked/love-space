@@ -30,6 +30,8 @@ export default function CityForm() {
   const [englishProvince, setEnglishProvince] = useState("");
   const [backgroundImageKey, setBackgroundImageKey] = useState("");
   const [backgroundImagePreview, setBackgroundImagePreview] = useState("");
+  const [secondaryBackgroundImageKey, setSecondaryBackgroundImageKey] = useState("");
+  const [secondaryBackgroundImagePreview, setSecondaryBackgroundImagePreview] = useState("");
   const [editorNote, setEditorNote] = useState("");
   const [online, setOnline] = useState(false);
 
@@ -49,6 +51,8 @@ export default function CityForm() {
         setEnglishProvince(d.englishProvince);
         setBackgroundImageKey(d.backgroundImage?.id ?? "");
         setBackgroundImagePreview(d.backgroundImage?.url ?? "");
+        setSecondaryBackgroundImageKey(d.secondaryBackgroundImage?.id ?? "");
+        setSecondaryBackgroundImagePreview(d.secondaryBackgroundImage?.url ?? "");
         setEditorNote(d.editorNote ?? "");
         setOnline(d.online);
       })
@@ -80,6 +84,7 @@ export default function CityForm() {
       chineseProvince: chineseProvince.trim(),
       englishProvince: englishProvince.trim(),
       backgroundImage: backgroundImageKey.trim() || null,
+      secondaryBackgroundImage: secondaryBackgroundImageKey.trim() || null,
       editorNote: editorNote.trim() || null,
       online,
     };
@@ -163,6 +168,15 @@ export default function CityForm() {
               value={backgroundImageKey}
               previewUrl={backgroundImagePreview}
               onChange={setBackgroundImageKey}
+              className="h-40 w-full max-w-md"
+            />
+          </div>
+          <div>
+            <Label>第二背景图</Label>
+            <ImageUploader
+              value={secondaryBackgroundImageKey}
+              previewUrl={secondaryBackgroundImagePreview}
+              onChange={setSecondaryBackgroundImageKey}
               className="h-40 w-full max-w-md"
             />
           </div>

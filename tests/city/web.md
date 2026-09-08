@@ -54,3 +54,19 @@
 **执行方式**: web-test-runner（@playwright/mcp）
 **执行存证**: `test-evidence/article-and-featured-feed/TC-city-WEB-004/`
 **最后更新**: 2026-08-19
+
+### TC-city-WEB-005: 地图表单可维护第二背景图
+**关联需求**: city/城市第二背景图#web 后台表单维护第二背景图
+**来源**: city-secondary-background-image
+**优先级**: P1
+**前置条件**: Manager 已登录；地图管理列表存在至少一个城市
+**测试步骤**:
+1. 进入 /love-space/cities，点击新增（或编辑某城市）
+2. 确认表单中「背景图」下方存在独立的「第二背景图」上传控件
+3. 为「第二背景图」上传一张图片并保存
+4. 重新进入该城市编辑页
+**预期结果**: 步骤 2 两个上传控件独立并存；步骤 3 保存成功提示；步骤 4 「第二背景图」回显刚上传的图片，「背景图」保持原值不受影响
+**状态**: ⬜ 未测试
+**执行方式**: web-test-runner（@playwright/mcp）
+**执行存证**: `test-evidence/regression/city/TC-city-WEB-005/`
+**最后更新**: -

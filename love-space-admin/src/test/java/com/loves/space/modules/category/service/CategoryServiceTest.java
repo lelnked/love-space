@@ -63,7 +63,7 @@ class CategoryServiceTest extends AbstractPostgresIntegrationTest {
                 new CategoryUpsertRequest("测试分类-" + UUID.randomUUID(), 0, true));
 
         UUID cityId = cityService.create(new CityCreateRequest(
-                "城-" + UUID.randomUUID(), "EN", "省", "Province", null, null, true)).id();
+                "城-" + UUID.randomUUID(), "EN", "省", "Province", null, null, null, true)).id();
         MerchantUpsertRequest request = new MerchantUpsertRequest(
                 "分类下商户",
                 "https://example.com/logo.png",
@@ -129,7 +129,7 @@ class CategoryServiceTest extends AbstractPostgresIntegrationTest {
                 new CategoryUpsertRequest("上架分类-" + UUID.randomUUID(), 0, true));
 
         UUID cityId = cityService.create(new CityCreateRequest(
-                "城-" + UUID.randomUUID(), "EN", "省", "Province", null, null, true)).id();
+                "城-" + UUID.randomUUID(), "EN", "省", "Province", null, null, null, true)).id();
         MerchantUpsertRequest request = new MerchantUpsertRequest(
                 "分类下商户",
                 "https://example.com/logo.png",

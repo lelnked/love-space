@@ -38,6 +38,10 @@ public class City extends BaseAuditEntity {
     @Column(name = "background_image")
     private String backgroundImage;
 
+    /** 城市第二背景图 URL，可空。 */
+    @Column(name = "secondary_background_image")
+    private String secondaryBackgroundImage;
+
     /** 地图编辑说（可空）。 */
     @Column(name = "editor_note")
     private String editorNote;

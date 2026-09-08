@@ -14,6 +14,7 @@ import java.util.UUID;
  * @param chineseProvince 中文省份
  * @param englishProvince 英文省份
  * @param backgroundImage 背景图 URL（可空）
+ * @param secondaryBackgroundImage 第二背景图 URL（可空）
  * @param editorNote      地图编辑说（可空）
  * @param online          是否上架
  * @param createdAt       创建时间
@@ -26,6 +27,7 @@ public record CityDetailResponse(
         String chineseProvince,
         String englishProvince,
         ImageResponse backgroundImage,
+        ImageResponse secondaryBackgroundImage,
         String editorNote,
         boolean online,
         OffsetDateTime createdAt,

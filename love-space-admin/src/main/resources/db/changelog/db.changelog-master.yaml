@@ -47,3 +47,5 @@ databaseChangeLog:
       file: db/changelog/changes/023-add-activity-subtitle.sql
   - include:
       file: db/changelog/changes/024-featured-cycle-item-multi-phase.sql
+  - include:
+      file: db/changelog/changes/025-add-city-secondary-background-image.sql

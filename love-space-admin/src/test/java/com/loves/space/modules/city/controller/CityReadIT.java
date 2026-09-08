@@ -72,6 +72,7 @@ class CityReadIT extends AbstractPostgresIntegrationTest {
                 .thenAnswer(inv -> "https://signed.example.com/" + inv.getArgument(0));
     }
 
+    // @scenario: city/城市第二背景图#admin 创建城市时设置第二背景图
     @Test
     void detailReturnsImageResponseWhenBackgroundImagePresent() throws Exception {
         CityCreateRequest request = new CityCreateRequest(
@@ -80,6 +81,7 @@ class CityReadIT extends AbstractPostgresIntegrationTest {
                 "上海",
                 "shanghai",
                 "images/bg.png",
+                "images/sec.png",
                 null,
                 true
         );
@@ -92,6 +94,7 @@ class CityReadIT extends AbstractPostgresIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.backgroundImage.id").value("bound/bg.png"))
                 .andExpect(jsonPath("$.backgroundImage.url").value("https://signed.example.com/bound/bg.png"))
+                .andExpect(jsonPath("$.secondaryBackgroundImage.id").value("bound/sec.png"))
                 .andReturn().getResponse().getContentAsString();
 
         String id = objectMapper.readTree(created).path("id").asText();
@@ -117,6 +120,7 @@ class CityReadIT extends AbstractPostgresIntegrationTest {
                 "zhejiang",
                 null,
                 null,
+                null,
                 true
         );
         String body = objectMapper.writeValueAsString(request);
@@ -126,6 +130,7 @@ class CityReadIT extends AbstractPostgresIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.backgroundImage").value(Matchers.nullValue()));
+                .andExpect(jsonPath("$.backgroundImage").value(Matchers.nullValue()))
+                .andExpect(jsonPath("$.secondaryBackgroundImage").value(Matchers.nullValue()));
     }
 }

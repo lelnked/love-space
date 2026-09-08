@@ -56,6 +56,7 @@ public class CityService {
                 city.getChineseProvince(),
                 city.getEnglishProvince(),
                 ImageResponses.from(city.getBackgroundImage(), imageUrlSigner),
+                ImageResponses.from(city.getSecondaryBackgroundImage(), imageUrlSigner),
                 city.getEditorNote());
     }
 }

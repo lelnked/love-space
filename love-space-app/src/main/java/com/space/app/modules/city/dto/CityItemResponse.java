@@ -13,6 +13,7 @@ import java.util.UUID;
  * @param chineseProvince 中文省份
  * @param englishProvince 英文省份
  * @param backgroundImage 城市背景图 URL
+ * @param secondaryBackgroundImage 城市第二背景图 URL（可空）
  * @param editorNote      地图编辑说（可空）
  */
 public record CityItemResponse(
@@ -22,6 +23,7 @@ public record CityItemResponse(
         String chineseProvince,
         String englishProvince,
         ImageResponse backgroundImage,
+        ImageResponse secondaryBackgroundImage,
         String editorNote
 ) {
 }

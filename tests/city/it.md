@@ -12,8 +12,8 @@
 **预期结果**: 创建返回 200，详情响应 `editorNote` 与提交值逐字一致
 **状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**: `test-evidence/city-drop-route-delete-guard/TC-city-IT-001/`
-**最后更新**: 2026-08-25
+**执行存证**: `test-evidence/city-secondary-background-image/TC-city-IT-001/`
+**最后更新**: 2026-09-08
 
 ### TC-city-IT-002: PUT /api/admin/cities/{id} 编辑说 200 字边界通过
 **关联需求**: city/地图编辑说#admin 保存编辑说
@@ -182,3 +182,60 @@
 **执行方式**: api-test-runner
 **执行存证**: `test-evidence/city-drop-route-delete-guard/TC-city-IT-014/`
 **最后更新**: 2026-08-25
+
+### TC-city-IT-015: POST/GET /api/admin/cities 创建时设置第二背景图
+**关联需求**: city/城市第二背景图#admin 创建城市时设置第二背景图
+**关联契约**: api-spec.json#/paths/~1api~1admin~1cities/post
+**来源**: city-secondary-background-image
+**优先级**: P0
+**测试步骤**:
+1. POST /api/admin/auth/login 获取 JWT token
+2. POST /api/admin/cities，body 同时带合法 objectKey 的 `backgroundImage` 与 `secondaryBackgroundImage`
+3. GET /api/admin/cities/{id}
+**预期结果**: 步骤 2 返回 200；步骤 3 中 `secondaryBackgroundImage` 为 `{id, url}` 结构且 id 等于提交的 objectKey，`backgroundImage` 仍为其各自提交值（两字段互不覆盖）
+**状态**: ✅ 通过
+**执行方式**: api-test-runner
+**执行存证**: `test-evidence/city-secondary-background-image/TC-city-IT-015/`
+**最后更新**: 2026-09-08
+
+### TC-city-IT-016: PUT /api/admin/cities/{id} 更新与清空第二背景图
+**关联需求**: city/城市第二背景图#admin 更新城市的第二背景图
+**关联契约**: api-spec.json#/paths/~1api~1admin~1cities~1{id}/put
+**来源**: city-secondary-background-image
+**优先级**: P0
+**测试步骤**:
+1. 前置：创建一个带 `backgroundImage` 与 `secondaryBackgroundImage` 的城市
+2. PUT 更新 `secondaryBackgroundImage` 为另一个合法 objectKey，GET 详情
+3. PUT 提交 `secondaryBackgroundImage: null`，GET 详情
+**预期结果**: 步骤 2 详情返回新 objectKey；步骤 3 详情 `secondaryBackgroundImage` 为 null，且 `backgroundImage` 两步中均保持原值不变
+**状态**: ✅ 通过
+**执行方式**: api-test-runner
+**执行存证**: `test-evidence/city-secondary-background-image/TC-city-IT-016/`
+**最后更新**: 2026-09-08
+
+### TC-city-IT-017: POST /api/admin/cities 非法 secondaryBackgroundImage 被拒绝
+**关联需求**: city/城市第二背景图#非法 objectKey 被拒绝
+**关联契约**: api-spec.json#/paths/~1api~1admin~1cities/post
+**来源**: city-secondary-background-image
+**优先级**: P1
+**测试步骤**:
+1. POST /api/admin/cities，`secondaryBackgroundImage` 传完整 http URL（如 `https://x.com/a.png`）
+**预期结果**: 返回 400 及中文校验错误信息（口径同 backgroundImage：仅接受 OSS objectKey）
+**状态**: ✅ 通过
+**执行方式**: api-test-runner
+**执行存证**: `test-evidence/city-secondary-background-image/TC-city-IT-017/`
+**最后更新**: 2026-09-08
+
+### TC-city-IT-018: GET /api/app/cities 返回第二背景图
+**关联需求**: city/城市第二背景图#app 端城市数据返回第二背景图
+**关联契约**: api-spec.json#/paths/~1api~1app~1cities/get
+**来源**: city-secondary-background-image
+**优先级**: P0
+**测试步骤**:
+1. 前置：一个上架城市配置了 `secondaryBackgroundImage`，另一个上架城市未配置
+2. 带 API key 调 GET /api/app/cities
+**预期结果**: 返回 200；已配置城市的 `secondaryBackgroundImage` 为 `{id, url}`（url 为签名地址），未配置城市该字段为 null；`backgroundImage` 字段行为不变
+**状态**: ✅ 通过
+**执行方式**: api-test-runner
+**执行存证**: `test-evidence/city-secondary-background-image/TC-city-IT-018/`
+**最后更新**: 2026-09-08

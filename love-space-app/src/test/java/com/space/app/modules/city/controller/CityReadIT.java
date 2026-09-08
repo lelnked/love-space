@@ -59,6 +59,43 @@ class CityReadIT extends AbstractPostgresIntegrationTest {
                 .andExpect(jsonPath("$[0].backgroundImage.url").value("https://signed.example.com/bound/bg.png"));
     }
 
+    // @scenario: city/城市第二背景图#app 端城市数据返回第二背景图
+    @Test
+    void listReturnsSecondaryBackgroundImage() throws Exception {
+        City withSecondary = new City();
+        withSecondary.setChineseName("成都-app-it");
+        withSecondary.setEnglishName("chengdu-app-it");
+        withSecondary.setChineseProvince("四川");
+        withSecondary.setEnglishProvince("sichuan");
+        withSecondary.setBackgroundImage("bound/bg.png");
+        withSecondary.setSecondaryBackgroundImage("bound/sec.png");
+        withSecondary.setOnline(true);
+        cityRepository.save(withSecondary);
+
+        mockMvc.perform(get("/api/app/cities").header("X-API-Key", TEST_API_KEY))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].secondaryBackgroundImage.id").value("bound/sec.png"))
+                .andExpect(jsonPath("$[0].secondaryBackgroundImage.url").value("https://signed.example.com/bound/sec.png"))
+                .andExpect(jsonPath("$[0].backgroundImage.id").value("bound/bg.png"));
+    }
+
+    // @scenario: city/城市第二背景图#未配置第二背景图时为 null
+    @Test
+    void listReturnsNullSecondaryBackgroundImageWhenAbsent() throws Exception {
+        City noSecondary = new City();
+        noSecondary.setChineseName("厦门-app-it");
+        noSecondary.setEnglishName("xiamen-app-it");
+        noSecondary.setChineseProvince("福建");
+        noSecondary.setEnglishProvince("fujian");
+        noSecondary.setBackgroundImage("bound/bg.png");
+        noSecondary.setOnline(true);
+        cityRepository.save(noSecondary);
+
+        mockMvc.perform(get("/api/app/cities").header("X-API-Key", TEST_API_KEY))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].secondaryBackgroundImage").value(Matchers.nullValue()));
+    }
+
     // @scenario: city/地图编辑说#app 端城市数据返回编辑说
     @Test
     void listReturnsEditorNote() throws Exception {
