@@ -25,6 +25,7 @@
 - **city/地图下架对路线与活动均不级联**: 下架城市后 app 端路线仍可见 / 下架城市后 app 端活动仍可见 / web 下架确认提示不含路线与活动
 - **city/地图删除**: 删除地图 / 有路线的地图可以直接删除 / 删除地图连带下架 Banner 与商户
 - **city/地图编辑说**: admin 保存编辑说 / 编辑说超长被拒绝 / app 端城市数据返回编辑说
+- **city/城市第二背景图**: admin 创建城市时设置第二背景图 / admin 更新城市的第二背景图 / 第二背景图可清空 / 非法 objectKey 被拒绝 / 未配置第二背景图时为 null / app 端城市数据返回第二背景图 / web 后台表单维护第二背景图
 - **featured/App 端周期推荐查询**: 查询四个周期的推荐列表 / 同一 target 跨周期时下发全部周期 / 按周期过滤时 period 数组仍含其他周期 / 类型过滤不影响 period 数组 / 不可下发条目不贡献周期 / 不同 target 的周期集合互不影响 / 按周期过滤 / 周期与类型同时过滤 / 按内容类型过滤 / 类型过滤后周期为空仍返回空数组 / 周期过滤后无条目返回空数组 / 非法类型值被拒绝 / 非法周期值被拒绝 / 关联实体不可见时条目不下发 / 城市未上架不影响路线类条目 / 大使下线连带隐藏路线类条目 / 组内按排序号升序 / 活动类条目下发活动基础信息 / 活动未填副标题时 target.subtitle 为 null / 路线类条目下发路线基础信息且不覆盖手填文案 / 文章类条目下发文章基础信息 / 活动无图片时 cover 为 null
 - **featured/App 端精选推荐查询**: 查询精选推荐信息流
 - **featured/web 端周期推荐页面**: 周期 Tab 切换与列表展示 / 周期筛选下拉 / 新增周期推荐 / 未勾选周期无法提交 / 编辑时修改周期 / 关联实体重复时展示错误 / 表单按类型切换字段 / 文章类型自动带出主标题 / 周期推荐上下线与删除
@@ -145,7 +146,7 @@
 | TC-banner-WEB-002 | 上架乐观更新失败后回滚并提示 | banner/web 端 Banner 管理页面#上下架乐观更新失败回滚 | - | baseline-auth-manager-banner-log-file | WEB | - | ⬜ |
 | TC-banner-WEB-003 | 删除 Banner 需二次确认 | banner/web 端 Banner 管理页面#删除需确认 | - | baseline-auth-manager-banner-log-file | WEB | - | ⬜ |
 | TC-banner-WEB-004 | 表单关联城市下拉只列出已上架城市 | banner/web 端 Banner 管理页面#表单城市下拉只列上架城市 | - | baseline-auth-manager-banner-log-file | WEB | - | ⬜ |
-| TC-city-IT-001 | POST /api/admin/cities 创建城市保存编辑说 | city/地图编辑说#admin 保存编辑说 | api-spec.json#/paths/~1api~1admin~1cities/post | map-and-recommend-list | IT | `test-evidence/city-drop-route-delete-guard/TC-city-IT-001/` | ✅ |
+| TC-city-IT-001 | POST /api/admin/cities 创建城市保存编辑说 | city/地图编辑说#admin 保存编辑说 | api-spec.json#/paths/~1api~1admin~1cities/post | map-and-recommend-list | IT | `test-evidence/city-secondary-background-image/TC-city-IT-001/` | ✅ |
 | TC-city-IT-002 | PUT /api/admin/cities/{id} 编辑说 200 字边界通过 | city/地图编辑说#admin 保存编辑说 | api-spec.json#/paths/~1api~1admin~1cities~1{id}/put | map-and-recommend-list | IT | `test-evidence/city-drop-route-delete-guard/TC-city-IT-002/` | ✅ |
 | TC-city-IT-003 | PUT /api/admin/cities/{id} 编辑说 201 字被拒绝 | city/地图编辑说#编辑说超长被拒绝 | api-spec.json#/paths/~1api~1admin~1cities~1{id}/put | map-and-recommend-list | IT | `test-evidence/city-drop-route-delete-guard/TC-city-IT-003/` | ✅ |
 | TC-city-IT-004 | GET /api/app/cities app 端城市列表返回编辑说 | city/地图编辑说#app 端城市数据返回编辑说 | api-spec.json#/paths/~1api~1app~1cities/get | map-and-recommend-list | IT | `test-evidence/city-drop-route-delete-guard/TC-city-IT-004/` | ✅ |
@@ -157,10 +158,15 @@
 | TC-city-IT-012 | GET /api/app/cities/{id} 未上架或不存在返回 404 | city/地图编辑说#app 端城市数据返回编辑说 | api-spec.json#/paths/~1api~1app~1cities~1{id}/get | 直接实现（未走 change） | IT | `test-evidence/city-drop-route-delete-guard/TC-city-IT-012/` | ✅ |
 | TC-city-IT-013 | DELETE /api/admin/cities/{id} 删除地图并连带下架 Banner 与商户 | city/地图删除#删除地图 | api-spec.json#/paths/~1api~1admin~1cities~1{id}/delete | city-drop-route-delete-guard | IT | `test-evidence/city-drop-route-delete-guard/TC-city-IT-013/` | ✅ |
 | TC-city-IT-014 | DELETE /api/admin/cities/{id} 存在路线时地图仍可直接删除 | city/地图删除#有路线的地图可以直接删除 | api-spec.json#/paths/~1api~1admin~1cities~1{id}/delete | city-drop-route-delete-guard | IT | `test-evidence/city-drop-route-delete-guard/TC-city-IT-014/` | ✅ |
+| TC-city-IT-015 | POST/GET /api/admin/cities 创建时设置第二背景图 | city/城市第二背景图#admin 创建城市时设置第二背景图 | api-spec.json#/paths/~1api~1admin~1cities/post | city-secondary-background-image | IT | `test-evidence/city-secondary-background-image/TC-city-IT-015/` | ✅ |
+| TC-city-IT-016 | PUT /api/admin/cities/{id} 更新与清空第二背景图 | city/城市第二背景图#admin 更新城市的第二背景图 | api-spec.json#/paths/~1api~1admin~1cities~1{id}/put | city-secondary-background-image | IT | `test-evidence/city-secondary-background-image/TC-city-IT-016/` | ✅ |
+| TC-city-IT-017 | POST /api/admin/cities 非法 secondaryBackgroundImage 被拒绝 | city/城市第二背景图#非法 objectKey 被拒绝 | api-spec.json#/paths/~1api~1admin~1cities/post | city-secondary-background-image | IT | `test-evidence/city-secondary-background-image/TC-city-IT-017/` | ✅ |
+| TC-city-IT-018 | GET /api/app/cities 返回第二背景图 | city/城市第二背景图#app 端城市数据返回第二背景图 | api-spec.json#/paths/~1api~1app~1cities/get | city-secondary-background-image | IT | `test-evidence/city-secondary-background-image/TC-city-IT-018/` | ✅ |
 | TC-city-WEB-001 | 侧栏与页面标题展示「地图管理」 | city/后台入口更名为地图管理#侧栏与页面标题展示地图管理 | - | map-and-recommend-list | WEB | `test-evidence/map-and-recommend-list/TC-city-WEB-001/` | ✅ |
 | TC-city-WEB-002 | 城市下架确认提示包含推荐清单级联说明 | city/地图下架对推荐清单级联生效#web 下架确认提示包含清单 | - | map-and-recommend-list | WEB | `test-evidence/map-and-recommend-list/TC-city-WEB-002/` | ✅ |
 | TC-city-WEB-003 | 城市下架确认提示的级联说明不含路线与活动 | city/地图下架对路线与活动均不级联#web 下架确认提示不含路线与活动 | - | city-drop-route-delete-guard | WEB | `test-evidence/regression/city/TC-city-WEB-003/` | ⬜ |
 | TC-city-WEB-004 | 城市下架确认提示包含精选推荐级联说明 | city/地图下架对精选推荐级联生效#web 下架确认提示包含精选推荐 | - | route-decouple-city-online | WEB | `test-evidence/article-and-featured-feed/TC-city-WEB-004/` | ✅ |
+| TC-city-WEB-005 | 地图表单可维护第二背景图 | city/城市第二背景图#web 后台表单维护第二背景图 | - | city-secondary-background-image | WEB | `test-evidence/regression/city/TC-city-WEB-005/` | ⬜ |
 | TC-featured-IT-001 | POST /api/admin/featured-items 创建精选推荐 | featured/精选推荐管理#创建精选推荐 | api-spec.json#/paths/~1api~1admin~1featured-items/post | article-and-featured-feed | IT | `test-evidence/featured-cycle-feed/TC-featured-IT-001/` | ✅ |
 | TC-featured-IT-002 | POST /api/admin/featured-items 缺 banner 或城市不存在被拒绝 | featured/精选推荐管理#缺少必填项被拒绝 | api-spec.json#/paths/~1api~1admin~1featured-items/post | article-and-featured-feed | IT | `test-evidence/featured-cycle-feed/TC-featured-IT-002/` | ✅ |
 | TC-featured-IT-003 | PUT /api/admin/featured-items/{id}/online 上下线切换 | featured/精选推荐管理#精选推荐上下线切换 | api-spec.json#/paths/~1api~1admin~1featured-items~1{id}~1online/put | article-and-featured-feed | IT | `test-evidence/featured-cycle-feed/TC-featured-IT-003/` | ✅ |
@@ -376,7 +382,7 @@
 - ⚠ 未覆盖：operation-log/运营写操作留痕#登录不产生日志 无 WEB/APP 用例且无 UT(@scenario) 覆盖
 
 ## 测试统计
-- 总数：274
-- ✅ 通过：186 (67.9%)
+- 总数：279
+- ✅ 通过：190 (68.1%)
 - ❌ 失败：0
-- ⬜ 未测：88
+- ⬜ 未测：89
