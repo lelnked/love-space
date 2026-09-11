@@ -15,7 +15,7 @@ public record PageQuery(Integer page, Integer size) {
 
     public static final int DEFAULT_PAGE = 1;
     public static final int DEFAULT_SIZE = 20;
-    public static final int ALT_SIZE = 30;
+    public static final int ALT_SIZE = 200;
 
     public Pageable toPageable(Sort sort) {
         int safePage = page == null || page < 1 ? DEFAULT_PAGE : page;

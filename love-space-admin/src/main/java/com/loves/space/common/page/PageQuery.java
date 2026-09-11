@@ -19,7 +19,7 @@ public final class PageQuery {
     /** 默认每页大小。 */
     public static final int DEFAULT_SIZE = 20;
     /** 备选每页大小。 */
-    public static final int ALT_SIZE = 30;
+    public static final int ALT_SIZE = 200;
 
     private PageQuery() {
     }

@@ -102,7 +102,7 @@ toast.error(ax.response?.data?.detail ?? "加载失败");
 
 1. **`FilterBar`** — 顶部筛选，字段用 `FilterField[]` 声明（`text` / `select` / `date`），自带 **Apply / Reset**。
 2. **`DataTable`** — 列用 `Column[]` 声明。
-3. **`Pagination`** — 放在**表格右下角**，props `{page, size, total, totalPages, onChange}`；默认每页 **20**，可切 **30**（与后端 size 白名单一致）。
+3. **`Pagination`** — 放在**表格右下角**，props `{page, size, total, totalPages, onChange}`；默认每页 **20**，可切 **200**（与后端 size 白名单一致）。
 
 外层套 `ComponentCard`，页面顶部放 `PageMeta`。删除等破坏性操作走 `useConfirm()`，结果反馈走 `useToast()`。
 参考实现：`src/pages/Cities/List.tsx`（后端全量返回 + 前端切片）、`src/pages/Merchants/List.tsx`（跳独立表单页 + 行点击进详情）。

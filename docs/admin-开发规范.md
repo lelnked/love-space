@@ -123,7 +123,7 @@ public interface CityRepository extends JpaRepository<City, UUID>, JpaSpecificat
 ## 9. 分页
 
 - 前端传的 `page` 是 **1 基**（`WebMvcConfig#pageableResolverCustomizer` 已设 `setOneIndexedParameters(true)`）。
-- `size` 白名单 **20 / 30**，其他值一律按 20 处理（`PageQuery.DEFAULT_SIZE` / `ALT_SIZE`）。
+- `size` 白名单 **20 / 200**，其他值一律按 20 处理（`PageQuery.DEFAULT_SIZE` / `PageQuery.ALT_SIZE`）。
 - 出参结构 `PageResponse{content, page(1 基), size, totalElements, totalPages}`，与前端 `Page<T>` 契约一一对应。
 
 ## 10. 图片 / 对象存储
