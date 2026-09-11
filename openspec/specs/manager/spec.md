@@ -68,7 +68,7 @@ admin 端账号列表 SHALL 支持过滤：`username`（**模糊匹配**，不�
 
 排序 SHALL 固定为创建时间倒序，不接受客户端指定。
 
-分页 SHALL 遵循项目统一口径：`page` 从 1 开始计数，缺省第 1 页，小于等于 0 归一为第 1 页；`size` 仅接受 **20 与 30** 两个值，其余任何值一律校正为 20。响应结构为 `{content, page, size, totalElements, totalPages}`，其中 `page` 以 1 为基回传。
+分页 SHALL 遵循项目统一口径：`page` 从 1 开始计数，缺省第 1 页，小于等于 0 归一为第 1 页；`size` 仅接受 **20 与 200** 两个值，其余任何值一律校正为 20。响应结构为 `{content, page, size, totalElements, totalPages}`，其中 `page` 以 1 为基回传。
 
 资源不存在时 SHALL 返回 **400**「管理员不存在：{id}」（本项目统一口径，非 404）。
 

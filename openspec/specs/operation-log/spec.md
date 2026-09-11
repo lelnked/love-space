@@ -64,7 +64,7 @@ admin 端 SHALL 提供 `GET /api/admin/logs/page` 分页查询操作日志。该
 
 过滤参数：`username`（**模糊匹配**，去除首尾空白，空白视为不传）、`module`（**精确匹配**，同样去空白）、`createdAtFrom` / `createdAtTo`（创建时间，**均含边界**）。无 action、target、操作人 id 的过滤。
 
-排序 SHALL 固定为创建时间倒序，客户端指定的排序参数无效。分页遵循项目统一口径：`page` 从 1 开始，`size` 仅接受 20 与 30，其余值校正为 20。
+排序 SHALL 固定为创建时间倒序，客户端指定的排序参数无效。分页遵循项目统一口径：`page` 从 1 开始，`size` 仅接受 20 与 200，其余值校正为 20。
 
 响应条目字段为 `{id, username, module, action, target, createdAt}`——**不含 payload**。payload 只写不读，无任何接口可查询。
 
