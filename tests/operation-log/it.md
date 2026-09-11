@@ -226,8 +226,8 @@
 **测试步骤**:
 1. 登录取 token
 2. GET /api/admin/logs/page?page=1&size=50
-3. GET /api/admin/logs/page?page=1&size=30&sort=createdAt,asc
-**预期结果**: 步骤 2 返回 200 且实际每页条数为 20（size 仅接受 20/30，其余校正为 20）；步骤 3 返回 200 且 `items` 的 `createdAt` 仍为**倒序**（客户端排序参数无效）
+3. GET /api/admin/logs/page?page=1&size=200&sort=createdAt,asc
+**预期结果**: 步骤 2 返回 200 且实际每页条数为 20（size 仅接受 20/200，其余校正为 20）；步骤 3 返回 200 且 `items` 的 `createdAt` 仍为**倒序**（客户端排序参数无效）
 **状态**: ⬜ 未测试
 **执行方式**: api-test-runner
 **执行存证**:

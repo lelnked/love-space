@@ -46,7 +46,7 @@ public class ManagerService {
      * <p>支持 username 模糊、role 精确、enable 精确、createdAt 区间过滤；按 createdAt DESC 排序。
      *
      * @param query    查询条件
-     * @param pageable 分页参数（page 1 基，size 20/30）
+     * @param pageable 分页参数（page 1 基，size 20/200）
      * @return 分页结果（含列表项与分页元数据）
      */
     @Transactional(readOnly = true)

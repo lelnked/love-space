@@ -421,7 +421,7 @@
             "name": "size",
             "in": "query",
             "required": false,
-            "description": "每页大小，仅支持 20 或 30；其他值回落 20",
+            "description": "每页大小，仅支持 20 或 200；其他值回落 20",
             "schema": {
               "type": "integer",
               "format": "int32"
@@ -650,7 +650,7 @@
             "name": "size",
             "in": "query",
             "required": false,
-            "description": "每页大小，仅支持 20 或 30；其他值回落 20",
+            "description": "每页大小，仅支持 20 或 200；其他值回落 20",
             "schema": {
               "type": "integer",
               "format": "int32"

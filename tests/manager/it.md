@@ -130,9 +130,9 @@
 **测试步骤**:
 1. 以 ADMIN token 批量创建账号使总数多于 30（如 `it_mgr_p001`~`it_mgr_p031`）
 2. GET /api/admin/managers/page?page=1&size=25
-3. GET /api/admin/managers/page?page=1&size=30（白名单值对照）
+3. GET /api/admin/managers/page?page=1&size=200（白名单值对照）
 4. GET /api/admin/managers/page?page=0&size=20（page 归一对照）
-**预期结果**: 步骤 2 返回 200，响应 `size` = 20 且 `content` 长度为 20；步骤 3 响应 `size` = 30；步骤 4 响应 `page` = 1（以 1 为基回传）
+**预期结果**: 步骤 2 返回 200，响应 `size` = 20 且 `content` 长度为 20；步骤 3 响应 `size` = 200 且 `content` 长度等于 `totalElements`（账号总数不足 200 时全量返回）；步骤 4 响应 `page` = 1（以 1 为基回传）
 **状态**: ⬜ 未测试
 **执行方式**: api-test-runner
 **执行存证**: 

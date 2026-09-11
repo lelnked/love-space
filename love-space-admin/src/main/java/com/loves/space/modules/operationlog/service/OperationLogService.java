@@ -74,7 +74,7 @@ public class OperationLogService {
      * 分页查询操作日志。
      *
      * @param query    查询条件
-     * @param pageable 分页参数（page 1 基，size 20/30）
+     * @param pageable 分页参数（page 1 基，size 20/200）
      * @return 分页响应（按 createdAt 倒序）
      */
     @Transactional(readOnly = true)

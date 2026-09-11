@@ -21,7 +21,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
      *   <li>page 参数按 1 基解析（前端语义），缺省第 1 页；</li>
      *   <li>缺省每页 {@link PageQuery#DEFAULT_SIZE}，上限 {@link PageQuery#ALT_SIZE}。</li>
      * </ul>
-     * <p>size 仅允许 {@code 20/30} 的白名单校正由 {@link PageQuery#normalize} 在 service 层完成。
+     * <p>size 仅允许 {@code 20/200} 的白名单校正由 {@link PageQuery#normalize} 在 service 层完成。
      */
     @Bean
     public PageableHandlerMethodArgumentResolverCustomizer pageableResolverCustomizer() {

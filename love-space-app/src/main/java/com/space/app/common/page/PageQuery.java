@@ -6,10 +6,10 @@ import org.springframework.data.domain.Sort;
 
 /**
  * 通用分页查询参数。
- * <p>默认 size=20，可选 20/30；非法值统一回落到 20。
+ * <p>默认 size=20，可选 20/200；非法值统一回落到 20。
  *
  * @param page 页码，从 1 开始
- * @param size 每页大小：20 或 30
+ * @param size 每页大小：20 或 200
  */
 public record PageQuery(Integer page, Integer size) {
 

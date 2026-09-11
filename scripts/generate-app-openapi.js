@@ -85,7 +85,7 @@ const PARAM_DICT = {
   type: '内容类型过滤；缺省返回全部类型',
   period: '按推荐生理周期过滤；缺省不过滤',
   page: '页码，从 1 开始；缺省或小于 1 回落 1',
-  size: '每页大小，仅支持 20 或 30；其他值回落 20',
+  size: '每页大小，仅支持 20 或 200；其他值回落 20',
 };
 // 由控制器中文名推导 {id} 说明，如「活动只读 API」→「活动 ID」
 function idParamDesc(tagCn) { return `${tagCn} ID`; }

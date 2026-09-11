@@ -45,7 +45,7 @@ public class BannerController {
      * @param keyword 名称关键字（可空）
      * @param type    类型过滤（可空）
      * @param online   上下架状态过滤（可空）
-     * @param pageable 分页参数（page 1 基，size 20/30，默认第 1 页、每页 20）
+     * @param pageable 分页参数（page 1 基，size 20/200，默认第 1 页、每页 20）
      */
     @GetMapping("/page")
     public PageResponse<BannerListItemResponse> page(

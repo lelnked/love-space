@@ -28,7 +28,7 @@ public class OperationLogController {
      * 分页查询操作日志。
      *
      * @param query    查询条件（用户名模糊 / 模块精确 / 时间区间）
-     * @param pageable 分页参数（page 1 基，size 20/30，默认第 1 页、每页 20）
+     * @param pageable 分页参数（page 1 基，size 20/200，默认第 1 页、每页 20）
      * @return 分页响应，按创建时间倒序
      */
     @GetMapping("/page")
