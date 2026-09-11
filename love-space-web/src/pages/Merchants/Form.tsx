@@ -138,7 +138,7 @@ export default function MerchantForm() {
 
     const errs: Record<string, string> = {};
     if (!name.trim()) errs.name = "名称不能为空";
-    else if (Array.from(name.trim()).length > 15) errs.name = "名称最多 15 个字符";
+    else if (Array.from(name.trim()).length > 1000) errs.name = "名称最多 1000 个字符";
     if (!logoKey.trim()) errs.logo = "请上传 LOGO";
     if (!address.trim()) errs.address = "地址不能为空";
     if (!cityId) errs.cityId = "请选择城市";
