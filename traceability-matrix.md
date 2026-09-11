@@ -42,6 +42,7 @@
 - **manager/运营账号分页查询**: 按用户名模糊过滤 / 页大小非白名单值被校正 / 列表按创建时间倒序 / 查询不存在的账号返回 400
 - **manager/运营账号管理**: 创建账号强制为 MEMBER 角色 / 用户名重复被拒绝 / 密码长度不足被拒绝 / 重置密码后旧密码失效
 - **merchant/App 端带排序号列表的排序口径**: 分类列表同序号按创建时间倒序 / 商户评价同序号按创建时间倒序 / 排序号不同时以排序号为准 / weight 型排序号维持降序且已符合口径
+- **merchant/商户名称长度上限**: 名称 1000 字边界通过 / 名称超过 1000 字被拒绝 / 名称超长时既有商户数据保持不变 / 名称 16~1000 字可保存（原 15 字上限放开） / web 表单同口径校验
 - **merchant/商户编辑推荐理由**: admin 创建/更新商户时保存推荐理由 / 推荐理由超长被拒绝 / 推荐理由可为空 / app 端商户详情返回推荐理由 / web 商户表单录入推荐理由
 - **operation-log/web 端操作日志页面**: 按操作人筛选日志 / 模块与动作按中文展示 / 未映射的动作回落显示原值 / 对象为空的记录显示占位符
 - **operation-log/操作日志查询**: 按操作人与模块组合过滤 / 操作人过滤为模糊匹配 / 时间区间含边界 / 响应不含 payload / 非 ADMIN 角色可查询日志
@@ -263,8 +264,13 @@
 | TC-merchant-IT-007 | GET /api/app/categories/page 同排序号分类按创建时间倒序 | merchant/App 端带排序号列表的排序口径#分类列表同序号按创建时间倒序 | ⚠️ 待补契约（api-spec.json 中缺 `/api/app/categories/page` 条目） | app-list-sort-tiebreak | IT | `test-evidence/app-list-sort-tiebreak/TC-merchant-IT-007/` | ✅ |
 | TC-merchant-IT-008 | GET /api/app/categories/page 排序号优先于创建时间 | merchant/App 端带排序号列表的排序口径#排序号不同时以排序号为准 | ⚠️ 待补契约（api-spec.json 中缺 `/api/app/categories/page` 条目） | app-list-sort-tiebreak | IT | `test-evidence/app-list-sort-tiebreak/TC-merchant-IT-008/` | ✅ |
 | TC-merchant-IT-009 | GET /api/app/merchants/{merchantId}/reviews 同排序号评价按创建时间倒序 | merchant/App 端带排序号列表的排序口径#商户评价同序号按创建时间倒序 | ⚠️ 待补契约（api-spec.json 中缺 `/api/app/merchants/{merchantId}/reviews` 条目） | app-list-sort-tiebreak | IT | `test-evidence/app-list-sort-tiebreak/TC-merchant-IT-009/` | ✅ |
+| TC-merchant-IT-010 | 商户名称 1000 字边界通过 | merchant/商户名称长度上限#名称 1000 字边界通过 | api-spec.json#/paths/~1api~1admin~1merchants/post | merchant-name-length-1000 | IT | - | ⬜ |
+| TC-merchant-IT-011 | 商户名称 1001 字被拒绝 | merchant/商户名称长度上限#名称超过 1000 字被拒绝 | api-spec.json#/paths/~1api~1admin~1merchants~1{id}/put | merchant-name-length-1000 | IT | - | ⬜ |
+| TC-merchant-IT-012 | 商户名称 16~1000 字可保存（原 15 字上限放开） | merchant/商户名称长度上限#名称 16~1000 字可保存（原 15 字上限放开） | api-spec.json#/paths/~1api~1admin~1merchants/post | merchant-name-length-1000 | IT | - | ⬜ |
+| TC-merchant-IT-013 | 商户名称超长时既有商户数据保持不变 | merchant/商户名称长度上限#名称超长时既有商户数据保持不变 | api-spec.json#/paths/~1api~1admin~1merchants~1{id}/put | merchant-name-length-1000 | IT | - | ⬜ |
 | TC-merchant-WEB-001 | 商户表单录入推荐理由并回显 | merchant/商户编辑推荐理由#web 商户表单录入推荐理由 | - | map-and-recommend-list | WEB | `test-evidence/regression/merchant/TC-merchant-WEB-001/` | ✅ |
 | TC-merchant-WEB-002 | 推荐理由超长表单校验提示 | merchant/商户编辑推荐理由#web 商户表单录入推荐理由 | - | map-and-recommend-list | WEB | `test-evidence/regression/merchant/TC-merchant-WEB-002/` | ✅ |
+| TC-merchant-WEB-003 | 商户表单名称 16~1000 字可保存回显 | merchant/商户名称长度上限#web 表单同口径校验 | - | merchant-name-length-1000 | WEB | - | ⬜ |
 | TC-operation-log-IT-001 | 创建城市后异步产生 city:create 留痕 | operation-log/运营写操作留痕#创建城市后异步留痕 | api-spec.json#/paths/~1api~1admin~1logs~1page/get | baseline-auth-manager-banner-log-file | IT | - | ⬜ |
 | TC-operation-log-IT-002 | 业务校验失败（400）时不产生留痕 | operation-log/运营写操作留痕#业务方法失败时不留痕 | api-spec.json#/paths/~1api~1admin~1logs~1page/get | baseline-auth-manager-banner-log-file | IT | - | ⬜ |
 | TC-operation-log-IT-003 | 登录不产生 auth:login 日志 | operation-log/运营写操作留痕#登录不产生日志 | api-spec.json#/paths/~1api~1admin~1logs~1page/get | baseline-auth-manager-banner-log-file | IT | - | ⬜ |
@@ -380,9 +386,13 @@
 - ⚠ 未覆盖：operation-log/留痕字段取值与敏感信息脱敏#嵌套资源的 target 取父级 id 无 WEB/APP 用例且无 UT(@scenario) 覆盖
 - ⚠ 未覆盖：operation-log/运营写操作留痕#业务方法失败时不留痕 无 WEB/APP 用例且无 UT(@scenario) 覆盖
 - ⚠ 未覆盖：operation-log/运营写操作留痕#登录不产生日志 无 WEB/APP 用例且无 UT(@scenario) 覆盖
+- ⚠ 状态存疑：TC-route-IT-020 标 ✅ 但存证目录不存在
+- ⚠ 状态存疑：TC-route-IT-021 标 ✅ 但存证目录不存在
+- ⚠ 状态存疑：TC-route-IT-022 标 ✅ 但存证目录不存在
+- ⚠ 状态存疑：TC-route-IT-023 标 ✅ 但存证目录不存在
 
 ## 测试统计
-- 总数：279
-- ✅ 通过：190 (68.1%)
+- 总数：284
+- ✅ 通过：190 (66.9%)
 - ❌ 失败：0
-- ⬜ 未测：89
+- ⬜ 未测：94

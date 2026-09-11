@@ -105,19 +105,67 @@ class MerchantServiceTest extends AbstractPostgresIntegrationTest {
         );
     }
 
+    // @scenario: merchant/商户名称长度上限#名称 1000 字边界通过
     @Test
-    void upsertRejectsNameLongerThan15CodePoints() {
-        MerchantUpsertRequest base = validRequest();
-        String tooLong = "字".repeat(16);
-        MerchantUpsertRequest bad = new MerchantUpsertRequest(
-                tooLong, base.logo(), base.address(), null, null, base.cityId(), base.categoryId(),
-                base.safetyEnvironmentScore(), base.businessRightsScore(),
-                base.experienceFriendlyScore(), base.socialContributionScore(),
-                base.story(), base.recommendReason(), base.weight(), base.online(),
-                base.periods(), base.tagIds(), base.images());
+    void upsertAcceptsNameAt1000CodePoints() {
+        UUID cityId = onlineCityId();
+        MerchantUpsertRequest request = new MerchantUpsertRequest(
+                "字".repeat(1000),
+                "images/logo.png", "测试地址", null, null, cityId, null,
+                (short) 25, (short) 20, (short) 20, (short) 15,
+                null, null, 0, true,
+                List.of(), List.of(), List.of("images/aaa.png"));
 
-        assertThatThrownBy(() -> merchantService.upsert(null, bad))
-                .isInstanceOf(IllegalArgumentException.class);
+        MerchantDetailResponse detail = merchantService.upsert(null, request);
+
+        assertThat(detail.name()).hasSize(1000);
+    }
+
+    // @scenario: merchant/商户名称长度上限#名称 16~1000 字可保存（原 15 字上限放开）
+    @Test
+    void upsertAcceptsNameLongerThan15CodePoints() {
+        UUID cityId = onlineCityId();
+        String name = "深圳南山区科技园万象天地店旗舰店";   // 16 字，旧上限下必定被拒
+        MerchantUpsertRequest request = new MerchantUpsertRequest(
+                name,
+                "images/logo.png", "测试地址", null, null, cityId, null,
+                (short) 25, (short) 20, (short) 20, (short) 15,
+                null, null, 0, true,
+                List.of(), List.of(), List.of("images/aaa.png"));
+
+        MerchantDetailResponse detail = merchantService.upsert(null, request);
+
+        assertThat(detail.name()).isEqualTo(name);
+    }
+
+    // @scenario: merchant/商户名称长度上限#名称超过 1000 字被拒绝
+    // @scenario: merchant/商户名称长度上限#名称超长时既有商户数据保持不变
+    @Test
+    void upsertRejectsNameLongerThan1000CodePoints() {
+        UUID cityId = onlineCityId();
+        String originalName = "原名商户";
+        MerchantUpsertRequest create = new MerchantUpsertRequest(
+                originalName,
+                "images/logo.png", "测试地址", null, null, cityId, null,
+                (short) 25, (short) 20, (short) 20, (short) 15,
+                null, null, 0, true,
+                List.of(), List.of(), List.of("images/aaa.png"));
+        MerchantDetailResponse created = merchantService.upsert(null, create);
+
+        MerchantUpsertRequest tooLong = new MerchantUpsertRequest(
+                "测".repeat(1001),
+                create.logo(), create.address(), null, null, cityId, create.categoryId(),
+                create.safetyEnvironmentScore(), create.businessRightsScore(),
+                create.experienceFriendlyScore(), create.socialContributionScore(),
+                create.story(), create.recommendReason(), create.weight(), create.online(),
+                create.periods(), create.tagIds(), create.images());
+
+        assertThatThrownBy(() -> merchantService.upsert(created.id(), tooLong))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("商户名称长度不能超过 1000 个字符");
+
+        assertThat(merchantRepository.findById(created.id()).orElseThrow().getName())
+                .isEqualTo(originalName);
     }
 
     @Test

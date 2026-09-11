@@ -18,7 +18,7 @@ import java.util.UUID;
  * 商户创建/更新请求（upsert）。
  * <p>主记录与 tag 子表在 service 层一次性写入；images / periods 现已内联在主表；评价由独立 controller 维护。
  *
- * @param name                    商户名称（≤ 15 个字符）
+ * @param name                    商户名称（≤ 1000 个字符）
  * @param logo                    商户 LOGO URL
  * @param address                 详细地址
  * @param longitude               经度（可空）

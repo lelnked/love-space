@@ -49,8 +49,8 @@ import java.util.UUID;
 @Transactional
 public class MerchantService {
 
-    /** 商户名称最大字符数（codePoint）。 */
-    private static final int MAX_NAME_CODE_POINTS = 15;
+    /** 商户名称最大字符数（codePoint），与 web 表单校验口径一致。 */
+    private static final int MAX_NAME_CODE_POINTS = 1000;
     /** 商户故事最大字符数（codePoint）。 */
     private static final int MAX_STORY_CODE_POINTS = 5000;
 

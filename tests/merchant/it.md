@@ -128,3 +128,61 @@
 **执行方式**: api-test-runner
 **执行存证**: `test-evidence/app-list-sort-tiebreak/TC-merchant-IT-009/`
 **最后更新**: 2026-08-26
+
+### TC-merchant-IT-010: 商户名称 1000 字边界通过
+**关联需求**: merchant/商户名称长度上限#名称 1000 字边界通过
+**关联契约**: api-spec.json#/paths/~1api~1admin~1merchants/post
+**来源**: merchant-name-length-1000
+**优先级**: P0
+**测试步骤**:
+1. POST /api/admin/auth/login 获取 JWT token
+2. POST /api/admin/merchants，`name` 为恰好 1000 个字符（「测」重复 1000 次）
+3. GET /api/admin/merchants/{id}，比对 `name` 长度
+**预期结果**: 步骤 2 返回 200；步骤 3 的 `name` 长度为 1000、与提交值一致
+**状态**: ⬜ 未测试
+**执行方式**: 
+**执行存证**: 
+**最后更新**: 2026-09-11
+
+### TC-merchant-IT-011: 商户名称 1001 字被拒绝
+**关联需求**: merchant/商户名称长度上限#名称超过 1000 字被拒绝
+**关联契约**: api-spec.json#/paths/~1api~1admin~1merchants~1{id}/put
+**来源**: merchant-name-length-1000
+**优先级**: P0
+**测试步骤**:
+1. POST /api/admin/auth/login 获取 JWT token
+2. PUT /api/admin/merchants/{id}，`name` 为 1001 个字符（「测」重复 1001 次）
+**预期结果**: 返回 400，message = 「商户名称长度不能超过 1000 个字符」
+**状态**: ⬜ 未测试
+**执行方式**: 
+**执行存证**: 
+**最后更新**: 2026-09-11
+
+### TC-merchant-IT-012: 商户名称 16~1000 字可保存（原 15 字上限放开）
+**关联需求**: merchant/商户名称长度上限#名称 16~1000 字可保存（原 15 字上限放开）
+**关联契约**: api-spec.json#/paths/~1api~1admin~1merchants/post
+**来源**: merchant-name-length-1000
+**优先级**: P0
+**测试步骤**:
+1. POST /api/admin/merchants，`name` 为 16 字完整门店名（如「深圳南山区科技园万象天地店旗舰店」）
+2. GET /api/admin/merchants/{id}，比对 `name`
+**预期结果**: 步骤 1 返回 200（旧 15 字上限下必定 400）；步骤 2 与提交值逐字一致
+**状态**: ⬜ 未测试
+**执行方式**: 
+**执行存证**: 
+**最后更新**: 2026-09-11
+
+### TC-merchant-IT-013: 商户名称超长时既有商户数据保持不变
+**关联需求**: merchant/商户名称长度上限#名称超长时既有商户数据保持不变
+**关联契约**: api-spec.json#/paths/~1api~1admin~1merchants~1{id}/put
+**来源**: merchant-name-length-1000
+**优先级**: P1
+**测试步骤**:
+1. 前置：记录既有商户 A 的名称 N
+2. PUT /api/admin/merchants/{A}，`name` 为 1001 个字符
+3. GET /api/admin/merchants/{A}，比对 `name`
+**预期结果**: 步骤 2 返回 400；步骤 3 的 `name` 仍为 N（超长请求未写库）
+**状态**: ⬜ 未测试
+**执行方式**: 
+**执行存证**: 
+**最后更新**: 2026-09-11

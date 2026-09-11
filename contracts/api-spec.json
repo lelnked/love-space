@@ -18,14 +18,14 @@
   "paths": {
     "/api/admin/merchants": {
       "post": {
-        "summary": "创建商户（DTO 新增 recommendReason ≤2000 字，非必填）",
-        "x-requirement": "merchant/商户编辑推荐理由"
+        "summary": "创建商户（名称 ≤1000 字；DTO 新增 recommendReason ≤2000 字，非必填）",
+        "x-requirement": "merchant/商户名称长度上限"
       }
     },
     "/api/admin/merchants/{id}": {
       "put": {
-        "summary": "更新商户（DTO 新增 recommendReason）",
-        "x-requirement": "merchant/商户编辑推荐理由"
+        "summary": "更新商户（全字段覆盖；名称 ≤1000 字，超限 400；含 recommendReason ≤2000 字）",
+        "x-requirement": "merchant/商户名称长度上限"
       }
     },
     "/api/admin/cities": {

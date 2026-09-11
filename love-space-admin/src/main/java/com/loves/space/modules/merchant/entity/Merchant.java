@@ -25,7 +25,7 @@ import java.util.UUID;
 @Setter
 public class Merchant extends BaseAuditEntity {
 
-    /** 商户名称（长度 ≤ 15 个字符）。 */
+    /** 商户名称（长度 ≤ 1000 个字符）。 */
     @Column(name = "name", nullable = false)
     private String name;
 
