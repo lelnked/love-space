@@ -55,11 +55,22 @@ export default function ImageUploaderList({
   const [uploading, setUploading] = useState<UploadingItem[]>([]);
   // 全屏预览的图片地址（空串表示不展示）。
   const [previewSrc, setPreviewSrc] = useState("");
+  // 正在拖拽的格子下标（null 表示没在拖）。
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
 
   const cellClass = itemClassName ?? "h-28 w-28";
 
   const removeAt = (index: number) =>
     onChange(value.filter((_, i) => i !== index));
+
+  /** 把 from 位置的图片插到 to 位置，用于拖拽排序。 */
+  const moveTo = (from: number, to: number) => {
+    if (from === to) return;
+    const next = [...value];
+    const [moved] = next.splice(from, 1);
+    next.splice(to, 0, moved);
+    onChange(next);
+  };
 
   const setProgress = (id: number, progress: number) =>
     setUploading((list) =>
@@ -116,11 +127,23 @@ export default function ImageUploaderList({
         {value.map((item, i) => (
           <div key={item.objectKey || i} className="flex flex-col gap-1">
             <div
-              className={`group relative overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700 ${cellClass}`}
+              draggable={!disabled}
+              onDragStart={() => setDragIndex(i)}
+              onDragEnter={() => {
+                if (dragIndex === null || dragIndex === i) return;
+                moveTo(dragIndex, i);
+                setDragIndex(i);
+              }}
+              onDragOver={(e) => e.preventDefault()}
+              onDragEnd={() => setDragIndex(null)}
+              className={`group relative overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700 ${cellClass} ${
+                disabled ? "" : "cursor-move"
+              } ${dragIndex === i ? "opacity-40" : ""}`}
             >
               <img
                 src={item.previewUrl}
                 alt="预览"
+                draggable={false}
                 className="h-full w-full object-cover"
               />
               <div className="absolute inset-0 flex items-center justify-center gap-3 bg-black/50 opacity-0 transition group-hover:opacity-100">
@@ -197,6 +220,10 @@ export default function ImageUploaderList({
           }}
         />
       </div>
+
+      {!disabled && value.length > 1 && (
+        <div className="mt-1 text-xs text-gray-400">拖动图片可调整顺序</div>
+      )}
 
       {previewSrc && (
         <div
