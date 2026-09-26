@@ -21,11 +21,11 @@ import java.util.UUID;
 @Transactional(readOnly = true)
 public class AmbassadorQueryService {
 
-    /** limit 缺省值。 */
-    public static final int DEFAULT_LIMIT = 3;
+    /** limit 缺省值：不传 limit 即返回全部上线大使（现量级远小于 2000）。 */
+    public static final int DEFAULT_LIMIT = 2000;
 
-    /** limit 上限。 */
-    public static final int MAX_LIMIT = 20;
+    /** limit 上限：与缺省值同值，纯兜底，防止一次性拉爆响应。 */
+    public static final int MAX_LIMIT = 2000;
 
     /** 列表排序：权重倒序，同权重按创建时间倒序（与商户列表一致）。 */
     private static final Sort SORT = Sort.by(Sort.Order.desc("weight"), Sort.Order.desc("createdAt"));

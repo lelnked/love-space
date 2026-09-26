@@ -14,7 +14,7 @@ import java.util.UUID;
 /**
  * 爱女大使只读 API。
  * <ul>
- *   <li>GET /api/app/ambassadors?limit=：上线大使列表，weight DESC, createdAt DESC，limit 默认 3、最大 20；</li>
+ *   <li>GET /api/app/ambassadors?limit=：上线大使列表，weight DESC, createdAt DESC，limit 默认 2000、最大 2000（不传即全量）；</li>
  *   <li>GET /api/app/ambassadors/{id}：详情，下线/不存在返回 404。</li>
  * </ul>
  */
@@ -28,7 +28,7 @@ public class AmbassadorController {
         this.ambassadorQueryService = ambassadorQueryService;
     }
 
-    /** 大使列表：按权重倒序返回前 limit 条（默认 3，最大 20）。 */
+    /** 大使列表：按权重倒序返回前 limit 条（默认 2000，最大 2000，不传即全量）。 */
     @GetMapping
     public List<AmbassadorItemResponse> list(@RequestParam(value = "limit", required = false) Integer limit) {
         return ambassadorQueryService.list(limit);

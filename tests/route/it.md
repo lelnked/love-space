@@ -282,35 +282,35 @@
 **执行存证**: `test-evidence/regression/route/TC-route-IT-019/`
 **最后更新**: 2026-09-01
 
-### TC-route-IT-020: GET /api/app/ambassadors 默认返回权重最高的 3 位上线大使
+### TC-route-IT-020: GET /api/app/ambassadors 不传 limit 返回全部上线大使
 **关联需求**: route/爱女大使管理
 **关联契约**: api-spec.json#/paths/~1api~1app~1ambassadors/get
-**来源**: 直接实现（未走 change）
+**来源**: change app-ambassador-list-limit-2000（MODIFIED，原直接实现）
 **优先级**: P0
 **测试步骤**:
 1. 前置：创建 4 位 online=true 的大使，weight 分别为 30/20/10/1；另创建 1 位 weight=40 但 online=false
 2. GET /api/app/ambassadors（不传 limit，请求头带 X-API-Key）
-**预期结果**: 返回 200，数组长度 3，顺序为 weight 30 → 20 → 10；下线大使不出现
+**预期结果**: 返回 200，数组长度 4（缺省 limit=2000，即全量），顺序为 weight 30 → 20 → 10 → 1；下线大使不出现
 **状态**: ✅ 通过
-**执行方式**: AmbassadorReadIT#listReturnsTop3OnlineByWeightDescWhenLimitAbsent
+**执行方式**: AmbassadorReadIT#listReturnsAllOnlineByWeightDescWhenLimitAbsent
 **执行存证**: `love-space-app/target/surefire-reports/com.space.app.modules.ambassador.controller.AmbassadorReadIT.txt`
-**最后更新**: 2026-08-24
+**最后更新**: 2026-09-26
 
-### TC-route-IT-021: GET /api/app/ambassadors?limit= 生效且上限 20、非法值回落 3
+### TC-route-IT-021: GET /api/app/ambassadors?limit= 生效且上限 2000、非法值回落缺省
 **关联需求**: route/爱女大使管理
 **关联契约**: api-spec.json#/paths/~1api~1app~1ambassadors/get
-**来源**: 直接实现（未走 change）
+**来源**: change app-ambassador-list-limit-2000（MODIFIED，原直接实现）
 **优先级**: P0
 **测试步骤**:
 1. 前置：25 位 online=true 大使，weight 依次 0..24
 2. GET /api/app/ambassadors?limit=5
-3. GET /api/app/ambassadors?limit=100
+3. GET /api/app/ambassadors?limit=9999
 4. GET /api/app/ambassadors?limit=0
-**预期结果**: 步骤 2 返回 5 条且首条为 weight 最大者；步骤 3 收敛为 20 条；步骤 4 回落为 3 条（与 PageQuery 的非法值回落口径一致，不返回 400）
+**预期结果**: 步骤 2 返回 5 条且首条为 weight 最大者；步骤 3 按上限 2000 收敛，实际返回全部 25 条；步骤 4 回落缺省 2000，返回全部 25 条（与 PageQuery 的非法值回落口径一致，不返回 400）
 **状态**: ✅ 通过
-**执行方式**: AmbassadorReadIT#listHonoursLimitAndClampsAt20
+**执行方式**: AmbassadorReadIT#listHonoursLimitAndClampsAt2000
 **执行存证**: `love-space-app/target/surefire-reports/com.space.app.modules.ambassador.controller.AmbassadorReadIT.txt`
-**最后更新**: 2026-08-24
+**最后更新**: 2026-09-26
 
 ### TC-route-IT-022: GET /api/app/ambassadors/{id} 详情与 404 口径
 **关联需求**: route/爱女大使管理

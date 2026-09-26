@@ -53,6 +53,7 @@
 - **recommend-list/推荐清单管理**: 创建清单 / 缺少必填项被拒绝 / 修改所属城市需清单内商户同属新城市 / 人工恢复清单 / 删除清单 / 清单列表按排序号升序
 - **recommend-list/清单内商户维护**: 添加本城市商户 / 拒绝跨城市商户 / 重复添加同一商户被拒绝 / 拒绝已下架商户 / 从清单移除商户
 - **route/App 端路线查询**: 查询上架城市的路线 / 同排序号路线按创建时间倒序 / 不传任何过滤参数返回全部可见路线 / 按大使 ID 过滤路线 / 城市名与大使 ID 组合过滤 / 城市表中无同名城市时仍返回路线且 city 为 null / 列表项返回路线自身城市名 / 未上架城市的路线仍可见 / 大使下线后路线隐藏 / 路线详情返回地点明细 / 路线列表返回爱女大使说 / 路线详情返回大使 id / 地点地址下发且未填时为 null
+- **route/app 端爱女大使只读查询**: 不传 limit 返回全部上线大使 / limit 生效并在 2000 处收敛 / limit 非法值回落缺省 / 大使详情可见性不变
 - **route/web 端大使与路线管理页面**: 大使列表与上下线 / 路线表单可选未上架城市 / 路线表单维护地点 / 路线表单填写地点地址并回显 / 删除路线需确认
 - **route/爱女大使管理**: 创建大使 / 标签超过 3 条被拒绝 / 大使上下线切换
 - **route/路线管理**: 创建路线 / 缺少必填项被拒绝 / 路线列表按排序号升序 / 删除路线 / 地点地址可写可改可空
@@ -330,8 +331,8 @@
 | TC-route-IT-017 | GET /api/app/routes?ambassadorId= 按大使过滤路线 | route/App 端路线查询#按大使 ID 过滤路线 | api-spec.json#/paths/~1api~1app~1routes/get | app-route-query-filters | IT | `test-evidence/app-route-query-filters/TC-route-IT-017/` | ✅ |
 | TC-route-IT-018 | GET /api/app/routes?cityName=&ambassadorId= 组合过滤取交集 | route/App 端路线查询#城市名与大使 ID 组合过滤 | api-spec.json#/paths/~1api~1app~1routes/get | app-route-query-filters | IT | `test-evidence/app-route-query-filters/TC-route-IT-018/` | ✅ |
 | TC-route-IT-019 | GET /api/app/routes?cityName= 城市表无同名城市时仍返回路线且 city 为 null | route/App 端路线查询#城市表中无同名城市时仍返回路线且 city 为 null | api-spec.json#/paths/~1api~1app~1routes/get | app-route-query-filters / app-route-list-city-name | IT | `test-evidence/regression/route/TC-route-IT-019/` | ✅ |
-| TC-route-IT-020 | GET /api/app/ambassadors 默认返回权重最高的 3 位上线大使 | route/爱女大使管理 | api-spec.json#/paths/~1api~1app~1ambassadors/get | 直接实现（未走 change） | IT | `love-space-app/target/surefire-reports/com.space.app.modules.ambassador.controller.AmbassadorReadIT.txt` | ✅ |
-| TC-route-IT-021 | GET /api/app/ambassadors?limit= 生效且上限 20、非法值回落 3 | route/爱女大使管理 | api-spec.json#/paths/~1api~1app~1ambassadors/get | 直接实现（未走 change） | IT | `love-space-app/target/surefire-reports/com.space.app.modules.ambassador.controller.AmbassadorReadIT.txt` | ✅ |
+| TC-route-IT-020 | GET /api/app/ambassadors 不传 limit 返回全部上线大使 | route/爱女大使管理 | api-spec.json#/paths/~1api~1app~1ambassadors/get | change app-ambassador-list-limit-2000（MODIFIED，原直接实现） | IT | `love-space-app/target/surefire-reports/com.space.app.modules.ambassador.controller.AmbassadorReadIT.txt` | ✅ |
+| TC-route-IT-021 | GET /api/app/ambassadors?limit= 生效且上限 2000、非法值回落缺省 | route/爱女大使管理 | api-spec.json#/paths/~1api~1app~1ambassadors/get | change app-ambassador-list-limit-2000（MODIFIED，原直接实现） | IT | `love-space-app/target/surefire-reports/com.space.app.modules.ambassador.controller.AmbassadorReadIT.txt` | ✅ |
 | TC-route-IT-022 | GET /api/app/ambassadors/{id} 详情与 404 口径 | route/爱女大使管理 | api-spec.json#/paths/~1api~1app~1ambassadors~1{id}/get | 直接实现（未走 change） | IT | `love-space-app/target/surefire-reports/com.space.app.modules.ambassador.controller.AmbassadorReadIT.txt` | ✅ |
 | TC-route-IT-023 | admin 大使创建/更新写入排序权重 | route/爱女大使管理 | api-spec.json#/paths/~1api~1admin~1ambassadors/post | 直接实现（未走 change） | IT | `love-space-admin/target/surefire-reports/com.loves.space.modules.ambassador.service.AmbassadorServiceTest.txt` | ✅ |
 | TC-route-IT-024 | GET /api/app/routes 同排序号路线按创建时间倒序 | route/App 端路线查询#同排序号路线按创建时间倒序 | api-spec.json#/paths/~1api~1app~1routes/get | app-list-sort-tiebreak | IT | `test-evidence/app-list-sort-tiebreak/TC-route-IT-024/` | ✅ |
@@ -386,10 +387,6 @@
 - ⚠ 未覆盖：operation-log/留痕字段取值与敏感信息脱敏#嵌套资源的 target 取父级 id 无 WEB/APP 用例且无 UT(@scenario) 覆盖
 - ⚠ 未覆盖：operation-log/运营写操作留痕#业务方法失败时不留痕 无 WEB/APP 用例且无 UT(@scenario) 覆盖
 - ⚠ 未覆盖：operation-log/运营写操作留痕#登录不产生日志 无 WEB/APP 用例且无 UT(@scenario) 覆盖
-- ⚠ 状态存疑：TC-route-IT-020 标 ✅ 但存证目录不存在
-- ⚠ 状态存疑：TC-route-IT-021 标 ✅ 但存证目录不存在
-- ⚠ 状态存疑：TC-route-IT-022 标 ✅ 但存证目录不存在
-- ⚠ 状态存疑：TC-route-IT-023 标 ✅ 但存证目录不存在
 
 ## 测试统计
 - 总数：284

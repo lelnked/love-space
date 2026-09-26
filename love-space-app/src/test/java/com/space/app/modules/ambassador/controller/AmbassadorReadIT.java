@@ -21,7 +21,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * App 端 {@link AmbassadorController} 读 IT：列表（仅上线、weight 倒序、limit 默认 3/上限 20）与详情 404 口径。
+ * App 端 {@link AmbassadorController} 读 IT：列表（仅上线、weight 倒序、limit 默认 2000/上限 2000）与详情 404 口径。
  */
 @AutoConfigureMockMvc
 class AmbassadorReadIT extends AbstractPostgresIntegrationTest {
@@ -52,8 +52,9 @@ class AmbassadorReadIT extends AbstractPostgresIntegrationTest {
         return ambassadorRepository.saveAndFlush(ambassador);
     }
 
+    // @scenario: route/app 端爱女大使只读查询#不传 limit 返回全部上线大使
     @Test
-    void listReturnsTop3OnlineByWeightDescWhenLimitAbsent() throws Exception {
+    void listReturnsAllOnlineByWeightDescWhenLimitAbsent() throws Exception {
         save("w10", 10, true);
         save("w30", 30, true);
         save("w20", 20, true);
@@ -62,17 +63,20 @@ class AmbassadorReadIT extends AbstractPostgresIntegrationTest {
 
         mockMvc.perform(get("/api/app/ambassadors").header("X-API-Key", TEST_API_KEY))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(3))
+                .andExpect(jsonPath("$.length()").value(4))
                 .andExpect(jsonPath("$[0].name").value("w30"))
                 .andExpect(jsonPath("$[1].name").value("w20"))
                 .andExpect(jsonPath("$[2].name").value("w10"))
+                .andExpect(jsonPath("$[3].name").value("w1"))
                 .andExpect(jsonPath("$[0].avatar.id").value("bound/w30.png"))
                 .andExpect(jsonPath("$[0].avatar.url").value("https://signed.example.com/bound/w30.png"))
                 .andExpect(jsonPath("$[0].tags[0]").value("城市漫游"));
     }
 
+    // @scenario: route/app 端爱女大使只读查询#limit 生效并在 2000 处收敛
+    // @scenario: route/app 端爱女大使只读查询#limit 非法值回落缺省
     @Test
-    void listHonoursLimitAndClampsAt20() throws Exception {
+    void listHonoursLimitAndClampsAt2000() throws Exception {
         for (int i = 0; i < 25; i++) {
             save("a" + i, i, true);
         }
@@ -82,13 +86,13 @@ class AmbassadorReadIT extends AbstractPostgresIntegrationTest {
                 .andExpect(jsonPath("$.length()").value(5))
                 .andExpect(jsonPath("$[0].name").value("a24"));
 
-        mockMvc.perform(get("/api/app/ambassadors").param("limit", "100").header("X-API-Key", TEST_API_KEY))
+        mockMvc.perform(get("/api/app/ambassadors").param("limit", "9999").header("X-API-Key", TEST_API_KEY))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(20));
+                .andExpect(jsonPath("$.length()").value(25));
 
         mockMvc.perform(get("/api/app/ambassadors").param("limit", "0").header("X-API-Key", TEST_API_KEY))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(3));
+                .andExpect(jsonPath("$.length()").value(25));
     }
 
     @Test
@@ -103,6 +107,7 @@ class AmbassadorReadIT extends AbstractPostgresIntegrationTest {
                 .andExpect(jsonPath("$.avatar.url").value("https://signed.example.com/bound/detail.png"));
     }
 
+    // @scenario: route/app 端爱女大使只读查询#大使详情可见性不变
     @Test
     void detailReturns404WhenOfflineOrMissing() throws Exception {
         UUID offlineId = save("hidden", 0, false).getId();
