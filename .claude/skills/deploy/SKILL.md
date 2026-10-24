@@ -127,6 +127,7 @@ scp -r dist/* <SSH>:<部署根>/web/
 ### 分支 B：`admin`（admin 后端）
 
 ```bash
+(cd love-space-ai && ./mvnw clean install -DskipTests)   # admin / app 依赖的 AI 基础库，先装进本地仓库
 cd love-space-admin
 ./mvnw clean package -DskipTests
 ls -1t target/love-space-admin-*.jar | head -1        # 确认刚打好的 jar

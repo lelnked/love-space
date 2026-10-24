@@ -14,10 +14,10 @@
 2. POST /api/admin/cities，body `{"chineseName":"留痕城市<随机后缀>","englishName":"LogCity","chineseProvince":"湖北","englishProvince":"Hubei"}`，记录返回的城市 id
 3. 轮询 GET /api/admin/logs/page?username=admin&module=city&page=1&size=20（最多 20 次、间隔 100ms），直到出现 `action=create` 的新记录
 **预期结果**: 步骤 2 返回 200；轮询在超时前命中，存在一条 `module=city`、`action=create`、`username=admin` 的记录，`createdAt` 非空
-**状态**: ⬜ 未测试
+**状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**:
-**最后更新**: 2026-08-21
+**执行存证**: `test-evidence/ai-management/TC-operation-log-IT-001/`
+**最后更新**: 2026-10-24
 
 ### TC-operation-log-IT-002: 业务校验失败（400）时不产生留痕
 **关联需求**: operation-log/运营写操作留痕#业务方法失败时不留痕
@@ -26,14 +26,14 @@
 **优先级**: P0
 **测试步骤**:
 1. 登录取 token
-2. GET /api/admin/logs/page?module=city&page=1&size=20，记录 `total`（基线值 T0）
+2. GET /api/admin/logs/page?module=city&page=1&size=20，记录 `totalElements`（基线值 T0）
 3. POST /api/admin/cities，body 缺失必填字段（`{"chineseName":"","englishName":"X","chineseProvince":"X","englishProvince":"X"}`），期望被业务校验拒绝
 4. 等待 2s（覆盖异步落库窗口），再次 GET /api/admin/logs/page?module=city&page=1&size=20
-**预期结果**: 步骤 3 返回 400 且消息为「中文名不能为空」；步骤 4 的 `total` 仍等于 T0，日志中不新增 `module=city`、`action=create` 记录
-**状态**: ⬜ 未测试
+**预期结果**: 步骤 3 返回 400 且消息为「中文名不能为空」；步骤 4 的 `totalElements` 仍等于 T0，日志中不新增 `module=city`、`action=create` 记录
+**状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**:
-**最后更新**: 2026-08-21
+**执行存证**: `test-evidence/ai-management/TC-operation-log-IT-002/`
+**最后更新**: 2026-10-24
 
 ### TC-operation-log-IT-003: 登录不产生 auth:login 日志
 **关联需求**: operation-log/运营写操作留痕#登录不产生日志
@@ -44,11 +44,11 @@
 1. POST /api/admin/auth/login 成功登录取 token
 2. 等待 2s（覆盖异步落库窗口）
 3. GET /api/admin/logs/page?module=auth&page=1&size=20
-**预期结果**: 步骤 1 返回 200；步骤 3 返回 200，`items` 中不存在 `module=auth` 且 `action=login` 的记录（若有 auth 记录，其 `action` 只能是 `logout`）
-**状态**: ⬜ 未测试
+**预期结果**: 步骤 1 返回 200；步骤 3 返回 200，`content` 中不存在 `module=auth` 且 `action=login` 的记录（若有 auth 记录，其 `action` 只能是 `logout`）
+**状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**:
-**最后更新**: 2026-08-21
+**执行存证**: `test-evidence/ai-management/TC-operation-log-IT-003/`
+**最后更新**: 2026-10-24
 
 ### TC-operation-log-IT-004: 创建运营账号的 payload 中 password 被脱敏
 **关联需求**: operation-log/留痕字段取值与敏感信息脱敏#密码字段被脱敏
@@ -127,7 +127,7 @@
 3. POST /api/admin/banners，body `{"name":"日志用例 banner","positionCode":"home-top","type":"CITY","imageUrls":["images/0199aaaa-bbbb-7ccc-8ddd-eeeeffff0001.png"],"link":"C","sortOrder":0}`（产生 banner 模块记录）
 4. 轮询（20×100ms）等待两条记录落库
 5. GET /api/admin/logs/page?username=admin&module=city&page=1&size=20
-**预期结果**: 步骤 5 返回 200；`items` 全部满足 `username=admin` 且 `module=city`，不含任何 `module=banner` 的条目
+**预期结果**: 步骤 5 返回 200；`content` 全部满足 `username=admin` 且 `module=city`，不含任何 `module=banner` 的条目
 **状态**: ⬜ 未测试
 **执行方式**: api-test-runner
 **执行存证**:
@@ -159,10 +159,10 @@
 **优先级**: P2
 **测试步骤**:
 1. 登录取 token
-2. GET /api/admin/logs/page?page=1&size=20，记录 `total` = T0
+2. GET /api/admin/logs/page?page=1&size=20，记录 `totalElements` = T0
 3. GET /api/admin/logs/page?username=%20%20&page=1&size=20（两个空格）
 4. GET /api/admin/logs/page?username=%20admin%20&page=1&size=20（首尾带空格）
-**预期结果**: 步骤 3 返回 200 且 `total` 等于 T0（空白视为不传）；步骤 4 返回 200，结果与 `username=admin` 一致（去除首尾空白后模糊匹配）
+**预期结果**: 步骤 3 返回 200 且 `totalElements` 等于 T0（空白视为不传）；步骤 4 返回 200，结果与 `username=admin` 一致（去除首尾空白后模糊匹配）
 **状态**: ⬜ 未测试
 **执行方式**: api-test-runner
 **执行存证**:
@@ -178,7 +178,7 @@
 2. POST /api/admin/cities 创建城市
 3. 轮询（20×100ms）GET /api/admin/logs/page?module=city&page=1&size=20，取最新记录的 `createdAt` = T 与 `id` = L
 4. GET /api/admin/logs/page?createdAtFrom={T}&createdAtTo={T}&page=1&size=20（T 原样 URL-encode 回传）
-**预期结果**: 步骤 4 返回 200；`items` 中包含 id = L 的记录（from 与 to 均含边界）
+**预期结果**: 步骤 4 返回 200；`content` 中包含 id = L 的记录（from 与 to 均含边界）
 **状态**: ⬜ 未测试
 **执行方式**: api-test-runner
 **执行存证**:
@@ -211,7 +211,7 @@
 3. 如账号非启用态，PUT /api/admin/managers/{id}/enable
 4. POST /api/admin/auth/login 以该 MEMBER 账号登录取 tokenMember
 5. 以 tokenMember GET /api/admin/logs/page?page=1&size=20
-**预期结果**: 步骤 5 返回 200（不是 403），`items` 为数组，分页字段正常
+**预期结果**: 步骤 5 返回 200（不是 403），`content` 为数组，分页字段正常
 **状态**: ⬜ 未测试
 **执行方式**: api-test-runner
 **执行存证**:
@@ -227,8 +227,41 @@
 1. 登录取 token
 2. GET /api/admin/logs/page?page=1&size=50
 3. GET /api/admin/logs/page?page=1&size=200&sort=createdAt,asc
-**预期结果**: 步骤 2 返回 200 且实际每页条数为 20（size 仅接受 20/200，其余校正为 20）；步骤 3 返回 200 且 `items` 的 `createdAt` 仍为**倒序**（客户端排序参数无效）
+**预期结果**: 步骤 2 返回 200 且实际每页条数为 20（size 仅接受 20/200，其余校正为 20）；步骤 3 返回 200 且 `content` 的 `createdAt` 仍为**倒序**（客户端排序参数无效）
 **状态**: ⬜ 未测试
 **执行方式**: api-test-runner
 **执行存证**:
 **最后更新**: 2026-08-21
+
+### TC-operation-log-IT-015: 创建 AI 场景后异步产生 ai-scene:create 留痕
+**关联需求**: operation-log/运营写操作留痕#AI 场景创建留痕
+**关联契约**: api-spec.json#/paths/~1api~1admin~1logs~1page/get
+**来源**: ai-management
+**优先级**: P1
+**测试步骤**:
+1. POST /api/admin/auth/login，body `{"username":"admin","password":"8@y2eoRLyStM*UVU"}`，取 JWT token
+2. POST /api/admin/ai/scenes，body `{"sceneId":"log_scene_<随机后缀>","name":"留痕场景"}`
+3. 轮询 GET /api/admin/logs/page?username=admin&module=ai-scene&page=1&size=20（最多 20 次、间隔 100ms），直到出现 `action=create` 的新记录
+**预期结果**: 步骤 2 返回 201；轮询在超时前命中，存在一条 `module=ai-scene`、`action=create`、`username=admin` 的记录
+**状态**: ✅ 通过
+**执行方式**: api-test-runner
+**执行存证**: `test-evidence/ai-management/TC-operation-log-IT-015/`
+**最后更新**: 2026-10-24
+
+### TC-operation-log-IT-016: AI 测试连接与模板测试不产生留痕
+**关联需求**: operation-log/运营写操作留痕#AI 测试类调用不留痕
+**关联契约**: api-spec.json#/paths/~1api~1admin~1logs~1page/get
+**来源**: ai-management
+**优先级**: P1
+**测试步骤**:
+1. 前置：admin 进程配置指向本地假方舟服务（ARK_BASE_URL 指向 mock）或真实测试 Key；`AI_MODELS` 含 `model-a`；存在已配主模型的场景及其下一个可测试模板 T
+2. 登录取 token
+3. GET /api/admin/logs/page?module=ai-scene&page=1&size=200 与 GET /api/admin/logs/page?module=ai-prompt&page=1&size=200，记录两者 `totalElements` 基线
+4. POST /api/admin/ai/models/test-connection，body `{"model":"model-a"}`
+5. POST /api/admin/ai/prompt-templates/{T}/test，body `{"inputs":{<完整变量>}}`
+6. 等待 2s（覆盖异步落库窗口），重复步骤 3 的两次查询
+**预期结果**: 步骤 4、5 返回 200；步骤 6 两个模块的 `totalElements` 与基线一致，不新增 `ai-scene` / `ai-prompt` 记录
+**状态**: ✅ 通过
+**执行方式**: api-test-runner
+**执行存证**: `test-evidence/ai-management/TC-operation-log-IT-016/`
+**最后更新**: 2026-10-24

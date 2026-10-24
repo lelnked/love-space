@@ -3,6 +3,7 @@ import { Link, useLocation } from "react-router";
 
 // Assume these icons are imported from an icon library
 import {
+  BoltIcon,
   BoxCubeIcon,
   CalenderIcon,
   ChevronDownIcon,
@@ -100,6 +101,15 @@ const navItems: NavItem[] = [
     icon: <PageIcon />,
     name: "周期推荐",
     path: "/featured-cycle-items",
+  },
+  {
+    icon: <BoltIcon />,
+    name: "AI 管理",
+    subItems: [
+      { name: "业务配置", path: "/ai/scenes" },
+      { name: "模型配置", path: "/ai/models" },
+      { name: "提示词管理", path: "/ai/prompts" },
+    ],
   },
   {
     icon: <TimeIcon />,

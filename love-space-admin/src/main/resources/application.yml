@@ -49,6 +49,17 @@ app:
       duration-seconds: ${ALIYUN_STS_DURATION_SECONDS:900}
 
 
+love-space:
+  # AI 基础库（love-space-ai）配置，环境变量见 openspec/changes/ai-management/proposal.md
+  ai:
+    api-key: ${ARK_API_KEY:}
+    base-url: ${ARK_BASE_URL:https://ark.cn-beijing.volces.com/api/v3}
+    models: ${AI_MODELS:}
+    temperature: ${AI_TEMPERATURE:}
+    top-p: ${AI_TOP_P:}
+    max-tokens: ${AI_MAX_TOKENS:}
+    timeout-seconds: ${AI_TIMEOUT_SECONDS:30}
+    max-retries: ${AI_MAX_RETRIES:1}
 
 logging:
   config: classpath:logback-spring.xml

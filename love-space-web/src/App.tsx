@@ -31,6 +31,12 @@ import FeaturedItemList from "./pages/FeaturedItems/List";
 import FeaturedCycleItemList from "./pages/FeaturedCycleItems/List";
 import FeaturedCycleItemForm from "./pages/FeaturedCycleItems/Form";
 import LogList from "./pages/Logs/List";
+import AiSceneList from "./pages/AiScenes/List";
+import AiModelList from "./pages/AiModels/List";
+import AiPromptSceneList from "./pages/AiPrompts/SceneList";
+import AiPromptTemplateList from "./pages/AiPrompts/TemplateList";
+import AiPromptTemplateEditor from "./pages/AiPrompts/TemplateEditor";
+import AiPromptCompare from "./pages/AiPrompts/Compare";
 
 export default function App() {
   return (
@@ -82,6 +88,13 @@ export default function App() {
             <Route path="/featured-cycle-items/create" element={<FeaturedCycleItemForm />} />
             <Route path="/featured-cycle-items/:id/edit" element={<FeaturedCycleItemForm />} />
             <Route path="/logs" element={<LogList />} />
+            <Route path="/ai/scenes" element={<AiSceneList />} />
+            <Route path="/ai/models" element={<AiModelList />} />
+            <Route path="/ai/prompts" element={<AiPromptSceneList />} />
+            <Route path="/ai/prompts/:sceneId" element={<AiPromptTemplateList />} />
+            <Route path="/ai/prompts/:sceneId/templates/new" element={<AiPromptTemplateEditor />} />
+            <Route path="/ai/prompts/:sceneId/compare" element={<AiPromptCompare />} />
+            <Route path="/ai/prompt-templates/:id" element={<AiPromptTemplateEditor />} />
           </Route>
 
           <Route path="/signup" element={<Navigate to="/signin" replace />} />

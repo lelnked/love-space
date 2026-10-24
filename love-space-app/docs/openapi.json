@@ -952,6 +952,86 @@
           }
         }
       }
+    },
+    "/api/app/ai/generations": {
+      "post": {
+        "tags": [
+          "AiGeneration"
+        ],
+        "summary": "按业务场景生成 AI 内容",
+        "description": "按业务场景生成 AI 内容：成功与已处理的失败都返回 200（按 status 区分）；400 参数/必填变量缺失/超长，401 API Key 无效，404 场景不存在，409 场景不可用/生成中/clientRequestId 冲突，429 超出每日额度或 IP 限流。",
+        "operationId": "AiGeneration_generate",
+        "parameters": [
+          {
+            "name": "X-Anonymous-Id",
+            "in": "header",
+            "required": true,
+            "description": "匿名用户 ID（必填，≤128，原样记录）",
+            "schema": {
+              "type": "string",
+              "maxLength": 128
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AiGenerationCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AiGenerationResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "description": "场景不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "场景不可用 / 生成中，请稍后重试 / clientRequestId 冲突",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "今日生成次数已达上限 / 服务繁忙，请稍后再试（nginx IP 限流同为 429）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -2219,6 +2299,73 @@
               }
             ],
             "description": "文章封面图（签名 URL）"
+          }
+        }
+      },
+      "AiGenerationCreateRequest": {
+        "type": "object",
+        "description": "生成请求。",
+        "required": [
+          "sceneId",
+          "clientRequestId"
+        ],
+        "properties": {
+          "sceneId": {
+            "type": "string",
+            "description": "业务场景编码（必填）"
+          },
+          "clientRequestId": {
+            "type": "string",
+            "maxLength": 64,
+            "description": "客户端幂等键（必填，≤64，建议 UUID；每次点\"生成/重新生成\"新建，网络重试沿用）"
+          },
+          "appVersion": {
+            "type": "string",
+            "maxLength": 32,
+            "nullable": true,
+            "description": "App 版本（可空，≤32）"
+          },
+          "inputs": {
+            "type": "object",
+            "additionalProperties": true,
+            "nullable": true,
+            "description": "变量取值 {变量名: 值}（可空）；每个值 ≤500 字符，整体序列化后 ≤4KB；非字符串按 JSON 文本代入"
+          }
+        }
+      },
+      "AiGenerationResponse": {
+        "type": "object",
+        "description": "生成结果。成功与已处理的失败都返回 200，App 按 status 区分。",
+        "properties": {
+          "requestId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "生成记录 ID"
+          },
+          "clientRequestId": {
+            "type": "string",
+            "description": "客户端幂等键"
+          },
+          "sceneId": {
+            "type": "string",
+            "description": "业务场景编码"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "SUCCESS",
+              "REFUSED",
+              "EMPTY",
+              "FORMAT_ERROR",
+              "TIMEOUT",
+              "RATE_LIMITED",
+              "UPSTREAM_ERROR"
+            ],
+            "description": "生成状态，仅 SUCCESS 有 content"
+          },
+          "content": {
+            "nullable": true,
+            "description": "模型输出的 JSON，失败为 null"
           }
         }
       }

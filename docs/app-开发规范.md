@@ -13,6 +13,8 @@ cd love-space-app
 ./mvnw -Dtest='*IT' test                 # IT 必须显式指定，默认不跑
 ```
 
+- 依赖 AI 基础库 `love-space-ai`（独立 Maven 项目，不在中央仓库）：新机器或库有改动时先 `cd ../love-space-ai && ./mvnw install`，否则编译报找不到 `com.loves:love-space-ai`。
+- 本地要真实走通 AI 调用又不想花钱：`node scripts/mock-ark.mjs` 起假方舟，启动参数加 `ARK_BASE_URL=http://localhost:18080 ARK_API_KEY=test AI_MODELS=mock-ok,mock-flaky,...`（模型名决定行为，见脚本头注释）。
 - **跑测试必须带 `APP_SECURITY_API_KEYS=<TEST_API_KEY 的 SHA-256 hash>`**，否则全量 `Failed to load ApplicationContext`；传字面量 `TEST_API_KEY` 会全量 401。
 - 测试库是独占的 `love_space_app_test`（`create-drop`），别指到业务库上，会被清空。
 - admin 与 app 的 IT **不要并行跑**。
@@ -49,7 +51,7 @@ public class CityController {
 }
 ```
 
-- **只有 GET**（除非 spec 明确要求，例如埋点上报）。
+- **只有 GET**（除非 spec 明确要求，例如埋点上报；现有例外：`POST /api/app/ai/generations` AI 生成，见 `openspec/specs/ai`）。
 - **只返回上架/已发布数据**：未上架、已下架的资源在列表里不出现，按 id 直取时返回 **404**（不是 403、不是空对象）。
 - 类与方法的中文 javadoc 是硬要求，见第 7 节（openapi.json 从 javadoc 生成）。
 

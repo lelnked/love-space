@@ -259,7 +259,7 @@ function typeToSchema(type, fromRecord) {
     case 'BigDecimal': case 'double': case 'Double': return { type: 'number' };
     case 'OffsetDateTime': case 'Instant': case 'LocalDateTime': return { type: 'string', format: 'date-time' };
     case 'LocalDate': return { type: 'string', format: 'date' };
-    case 'Object': return {};
+    case 'Object': case 'JsonNode': return {};
     case 'List': case 'Set': case 'Collection':
       return { type: 'array', items: typeToSchema(args[0], fromRecord) };
     case 'Map': {

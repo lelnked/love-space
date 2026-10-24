@@ -14,6 +14,8 @@ cd love-space-admin
 ./mvnw package                          # target/*.jar
 ```
 
+- 依赖 AI 基础库 `love-space-ai`（独立 Maven 项目，不在中央仓库）：新机器或库有改动时先 `cd ../love-space-ai && ./mvnw install`，否则编译报找不到 `com.loves:love-space-ai`。
+- 本地要真实走通 AI 调用又不想花钱：`node scripts/mock-ark.mjs` 起假方舟，启动参数加 `ARK_BASE_URL=http://localhost:18080 ARK_API_KEY=test AI_MODELS=mock-ok,mock-flaky,...`（模型名决定行为，见脚本头注释）。
 - 跑测试必须显式传库地址，默认的 5432/love_space 是坏库：
   `SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:25432/love_space SPRING_DATASOURCE_USERNAME=iris SPRING_DATASOURCE_PASSWORD=iris ./mvnw test`
 - 本机 `~/.bashrc` 里的 `SERVER_PORT` / `SPRING_DATASOURCE_URL` 属于别的项目，起服务前 `env -u SERVER_PORT -u SPRING_DATASOURCE_URL ...`。

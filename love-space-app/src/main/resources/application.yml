@@ -34,6 +34,21 @@ app:
       access-key-secret: ${ALIYUN_OSS_ACCESS_KEY_SECRET:}
       url-expiration-seconds: ${ALIYUN_OSS_URL_EXPIRATION_SECONDS:1800}
 
+love-space:
+  # AI 基础库（love-space-ai）配置，环境变量见 openspec/changes/ai-management/proposal.md
+  ai:
+    api-key: ${ARK_API_KEY:}
+    base-url: ${ARK_BASE_URL:https://ark.cn-beijing.volces.com/api/v3}
+    models: ${AI_MODELS:}
+    temperature: ${AI_TEMPERATURE:}
+    top-p: ${AI_TOP_P:}
+    max-tokens: ${AI_MAX_TOKENS:}
+    timeout-seconds: ${AI_TIMEOUT_SECONDS:30}
+    max-retries: ${AI_MAX_RETRIES:1}
+  # 生成接口每日额度（北京时间自然日）
+  ai-limit:
+    per-anon-daily: ${AI_LIMIT_PER_ANON_DAILY:50}
+    global-daily: ${AI_LIMIT_GLOBAL_DAILY:5000}
 
 logging:
   config: classpath:logback-spring.xml

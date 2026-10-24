@@ -3,7 +3,7 @@
   "info": {
     "title": "love-space API 契约（项目级 living 文件）",
     "description": "登记 OpenSpec change 触及的接口；operation 通过 x-requirement 反链到 openspec specs 的 {domain}/{Requirement 名}。存量未被 change 触及的接口暂不回溯登记。",
-    "version": "2026.08.18"
+    "version": "2026.10.24"
   },
   "servers": [
     {
@@ -1117,6 +1117,369 @@
         "summary": "签发 OSS 直传上传凭证；仅接受 image/png|jpeg|webp|gif，否则 400；权限收敛到单一 objectKey",
         "x-requirement": "file/图片上传凭证签发"
       }
+    },
+    "/api/admin/ai/scenes/page": {
+      "get": {
+        "summary": "AI 业务场景分页（keyword 匹配 sceneId/名称，enabled 可选；size 白名单 20/200）",
+        "description": "返回 PageResponse<SceneItem>，SceneItem 含场景基本信息、主/备模型与 activeTemplate（当前生效模板，可空）。",
+        "parameters": [
+          {
+            "name": "keyword",
+            "in": "query",
+            "description": "匹配 sceneId 或名称",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "enabled",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "x-requirement": "ai/业务场景管理"
+      }
+    },
+    "/api/admin/ai/scenes/options": {
+      "get": {
+        "summary": "AI 业务场景下拉选项（全量）",
+        "description": "返回数组 [{id, sceneId, name, enabled}]。",
+        "x-requirement": "ai/业务场景管理"
+      }
+    },
+    "/api/admin/ai/scenes/{id}": {
+      "get": {
+        "summary": "AI 业务场景详情",
+        "description": "返回 SceneDetail：{id, sceneId, name, description, enabled, primaryModel, backupModel, activeTemplate, createdAt, updatedAt}；不存在 404。",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "x-requirement": "ai/业务场景管理"
+      },
+      "put": {
+        "summary": "更新 AI 业务场景（name/description，sceneId 创建后不可改）",
+        "description": "返回 SceneDetail；校验失败 400，不存在 404。",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AiSceneUpdateRequest"
+              }
+            }
+          }
+        },
+        "x-requirement": "ai/业务场景管理"
+      }
+    },
+    "/api/admin/ai/scenes": {
+      "post": {
+        "summary": "创建 AI 业务场景",
+        "description": "201 返回 SceneDetail：{id, sceneId, name, description, enabled, primaryModel, backupModel, activeTemplate, createdAt, updatedAt}；校验失败 400；sceneId 重复 409「scene_id 已存在」。",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AiSceneCreateRequest"
+              }
+            }
+          }
+        },
+        "x-requirement": "ai/业务场景管理"
+      }
+    },
+    "/api/admin/ai/scenes/{id}/enabled": {
+      "put": {
+        "summary": "启用/禁用 AI 业务场景（禁用后 App 生成接口拒绝该场景）",
+        "description": "204；不存在 404。",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AiSceneEnabledRequest"
+              }
+            }
+          }
+        },
+        "x-requirement": "ai/业务场景管理"
+      }
+    },
+    "/api/admin/ai/models": {
+      "get": {
+        "summary": "可选模型列表（来自环境变量 AI_MODELS）",
+        "description": "返回字符串数组，如 [\"doubao-seed-1-6-250615\", \"ep-xxxx\"]。",
+        "x-requirement": "ai/AI 调用配置来自环境变量"
+      }
+    },
+    "/api/admin/ai/scenes/{id}/models": {
+      "put": {
+        "summary": "设置场景主/备模型",
+        "description": "204；模型不在 AI_MODELS 内或主备相同 400；场景不存在 404。",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AiSceneModelsRequest"
+              }
+            }
+          }
+        },
+        "x-requirement": "ai/场景模型配置"
+      }
+    },
+    "/api/admin/ai/models/test-connection": {
+      "post": {
+        "summary": "模型连通性测试（只发极短请求验证可达，不代表业务质量）",
+        "description": "返回 {ok, latencyMs, message}；model 不在 AI_MODELS 内 400。",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AiModelTestConnectionRequest"
+              }
+            }
+          }
+        },
+        "x-requirement": "ai/生成重试、切备用与结果判定"
+      }
+    },
+    "/api/admin/ai/prompt-templates/page": {
+      "get": {
+        "summary": "提示词模板分页（sceneId 必填，按 seq 倒序；size 白名单 20/200）",
+        "description": "返回 PageResponse<TemplateItem>，TemplateItem：{id, seq, name, remark, active, tested, lastTestAt, publishedAt, publishedBy, updatedBy, updatedAt}。",
+        "parameters": [
+          {
+            "name": "sceneId",
+            "in": "query",
+            "required": true,
+            "description": "场景业务编码",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "x-requirement": "ai/提示词模板维护"
+      }
+    },
+    "/api/admin/ai/prompt-templates/{id}": {
+      "get": {
+        "summary": "提示词模板详情",
+        "description": "返回 TemplateDetail：模板全部字段（id, sceneId, seq, name, systemPrompt, userPromptTemplate, variables, remark, tested, lastTestInputs, lastTestOutput, lastTestContent, lastTestModel, lastTestSuccess, lastTestError, lastTestLatencyMs, lastTestAt, lastTestBy, publishedAt, publishedBy, createdBy, updatedBy, createdAt, updatedAt, version）+ active；不存在 404。",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "x-requirement": "ai/提示词模板维护"
+      },
+      "put": {
+        "summary": "修改提示词模板（带 version 乐观锁；任何内容修改都把 tested 置 false）",
+        "description": "返回 TemplateDetail；校验失败 400；不存在 404；生效中 409「生效中的模板不能修改」；版本不一致 409「内容已被他人更新，请刷新」。",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AiPromptTemplateUpdateRequest"
+              }
+            }
+          }
+        },
+        "x-requirement": "ai/提示词模板维护"
+      }
+    },
+    "/api/admin/ai/prompt-templates": {
+      "post": {
+        "summary": "新建提示词模板（seq 自动分配）",
+        "description": "201 返回 TemplateDetail：模板全部字段（id, sceneId, seq, name, systemPrompt, userPromptTemplate, variables, remark, tested, lastTestInputs, lastTestOutput, lastTestContent, lastTestModel, lastTestSuccess, lastTestError, lastTestLatencyMs, lastTestAt, lastTestBy, publishedAt, publishedBy, createdBy, updatedBy, createdAt, updatedAt, version）+ active；校验失败 400；场景不存在 404。",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AiPromptTemplateCreateRequest"
+              }
+            }
+          }
+        },
+        "x-requirement": "ai/提示词模板维护"
+      }
+    },
+    "/api/admin/ai/prompt-templates/{id}/test": {
+      "post": {
+        "summary": "运行提示词模板测试（模型正常返回一次即 tested=true；生效中模板也可测试，只更新测试结果）",
+        "description": "返回 TestResult：{success, model, output, content, errorCode, errorMessage, latencyMs, promptTokens, completionTokens, testedAt}；必填变量缺失或未声明变量 400；不存在 404；场景未配主模型 409。",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AiPromptTemplateTestRequest"
+              }
+            }
+          }
+        },
+        "x-requirement": "ai/提示词模板测试"
+      }
+    },
+    "/api/admin/ai/prompt-templates/{id}/publish": {
+      "post": {
+        "summary": "发布提示词模板（同场景只有一个生效，原生效模板失效；场景禁用也允许发布）",
+        "description": "204；不存在 404；tested=false 409「请先测试」；版本不一致 409「内容已被他人更新，请刷新」。",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AiPromptTemplatePublishRequest"
+              }
+            }
+          }
+        },
+        "x-requirement": "ai/提示词模板发布"
+      }
+    },
+    "/api/app/ai/generations": {
+      "post": {
+        "summary": "App AI 生成（按 sceneId 取生效模板生成；clientRequestId 去重）",
+        "description": "200 返回 GenerationResponse：{requestId, clientRequestId, sceneId, status, content}；status ∈ SUCCESS/REFUSED/EMPTY/FORMAT_ERROR/TIMEOUT/RATE_LIMITED/UPSTREAM_ERROR（PROCESSING 不对外返回），失败时 content 为 null，已处理的失败也返回 200。同 clientRequestId 已有最终状态则原样返回不再调模型。错误：400 参数校验/必填变量缺失/输入超长（指出超长变量名）；401 API Key 无效；404 场景不存在；409「场景不可用」（禁用/无生效模板/无主模型）、「生成中，请稍后重试」、「clientRequestId 冲突」；429「今日生成次数已达上限」/「服务繁忙，请稍后再试」（nginx IP 限流同为 429）。",
+        "parameters": [
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": true,
+            "description": "App 鉴权 API Key",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-Anonymous-Id",
+            "in": "header",
+            "required": true,
+            "description": "匿名用户 ID，服务端原样记录不校验",
+            "schema": {
+              "type": "string",
+              "maxLength": 128
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AiGenerationCreateRequest"
+              }
+            }
+          }
+        },
+        "x-requirement": "ai/App 生成接口"
+      }
     }
   },
   "components": {
@@ -1612,6 +1975,237 @@
               "format": "uuid"
             },
             "description": "清单内商户 ID，有序；null 视为不修改，非 null 整体替换，数组顺序即清单保存顺序。校验同创建"
+          }
+        }
+      },
+      "AiSceneCreateRequest": {
+        "type": "object",
+        "required": [
+          "sceneId",
+          "name"
+        ],
+        "properties": {
+          "sceneId": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]{1,63}$",
+            "description": "业务编码，创建后不可改"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 64,
+            "description": "场景名称"
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 500,
+            "description": "说明"
+          }
+        }
+      },
+      "AiSceneUpdateRequest": {
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 64,
+            "description": "场景名称"
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 500,
+            "description": "说明"
+          }
+        }
+      },
+      "AiSceneEnabledRequest": {
+        "type": "object",
+        "required": [
+          "enabled"
+        ],
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          }
+        }
+      },
+      "AiSceneModelsRequest": {
+        "type": "object",
+        "required": [
+          "primaryModel"
+        ],
+        "properties": {
+          "primaryModel": {
+            "type": "string",
+            "description": "主模型 ID，须在 AI_MODELS 内"
+          },
+          "backupModel": {
+            "type": "string",
+            "nullable": true,
+            "description": "备用模型 ID，可空；须在 AI_MODELS 内且不能与主模型相同"
+          }
+        }
+      },
+      "AiModelTestConnectionRequest": {
+        "type": "object",
+        "required": [
+          "model"
+        ],
+        "properties": {
+          "model": {
+            "type": "string",
+            "description": "模型 ID，须在 AI_MODELS 内"
+          }
+        }
+      },
+      "AiPromptVariable": {
+        "type": "object",
+        "required": [
+          "name",
+          "required"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+            "description": "变量名"
+          },
+          "required": {
+            "type": "boolean",
+            "description": "是否必填"
+          },
+          "description": {
+            "type": "string",
+            "description": "变量说明"
+          }
+        }
+      },
+      "AiPromptTemplateCreateRequest": {
+        "type": "object",
+        "required": [
+          "sceneId",
+          "name",
+          "systemPrompt",
+          "userPromptTemplate"
+        ],
+        "properties": {
+          "sceneId": {
+            "type": "string",
+            "description": "场景业务编码"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 64,
+            "description": "模板名称"
+          },
+          "systemPrompt": {
+            "type": "string",
+            "description": "系统提示词"
+          },
+          "userPromptTemplate": {
+            "type": "string",
+            "description": "用户提示词模板，含 {{变量}} 占位"
+          },
+          "variables": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AiPromptVariable"
+            },
+            "description": "变量声明"
+          },
+          "remark": {
+            "type": "string",
+            "description": "备注"
+          }
+        }
+      },
+      "AiPromptTemplateUpdateRequest": {
+        "type": "object",
+        "required": [
+          "name",
+          "systemPrompt",
+          "userPromptTemplate",
+          "version"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 64,
+            "description": "模板名称"
+          },
+          "systemPrompt": {
+            "type": "string",
+            "description": "系统提示词"
+          },
+          "userPromptTemplate": {
+            "type": "string",
+            "description": "用户提示词模板"
+          },
+          "variables": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AiPromptVariable"
+            },
+            "description": "变量声明"
+          },
+          "remark": {
+            "type": "string",
+            "description": "备注"
+          },
+          "version": {
+            "type": "integer",
+            "description": "乐观锁版本号"
+          }
+        }
+      },
+      "AiPromptTemplateTestRequest": {
+        "type": "object",
+        "properties": {
+          "inputs": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "{变量名: 值}"
+          }
+        }
+      },
+      "AiPromptTemplatePublishRequest": {
+        "type": "object",
+        "required": [
+          "version"
+        ],
+        "properties": {
+          "version": {
+            "type": "integer",
+            "description": "乐观锁版本号"
+          }
+        }
+      },
+      "AiGenerationCreateRequest": {
+        "type": "object",
+        "required": [
+          "sceneId",
+          "clientRequestId"
+        ],
+        "properties": {
+          "sceneId": {
+            "type": "string",
+            "description": "场景业务编码"
+          },
+          "clientRequestId": {
+            "type": "string",
+            "maxLength": 64,
+            "description": "客户端请求 ID（建议 UUID），每次生成/重新生成新建，网络重试沿用"
+          },
+          "appVersion": {
+            "type": "string",
+            "maxLength": 32
+          },
+          "inputs": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "{变量名: 值}；每个值 ≤500 字符、整体序列化后 ≤4KB，超限 400；值非字符串时按 JSON 文本代入"
           }
         }
       }

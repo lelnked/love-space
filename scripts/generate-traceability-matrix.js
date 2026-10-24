@@ -100,7 +100,7 @@ function extractApiSpecOps() {
 // 4. UT：grep 测试代码里的 @scenario 注释（{domain}/{Requirement}#{Scenario}）
 function extractUtScenarios() {
   const found = new Set();
-  const roots = ['./love-space-admin/src', './love-space-app/src', './love-space-web/src'];
+  const roots = ['./love-space-ai/src', './love-space-admin/src', './love-space-app/src', './love-space-web/src'];
   const walk = (dir) => {
     if (!fs.existsSync(dir)) return;
     for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
