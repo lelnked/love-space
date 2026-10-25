@@ -14,6 +14,7 @@ import org.springframework.http.MediaType;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.function.Predicate;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -22,6 +23,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /** AI 管理写操作留痕（切面异步落库，轮询等待）。 */
@@ -103,5 +105,35 @@ class AiOperationLogTest extends AiTestSupport {
         assertThat(operationLogRepository.findAll()).noneMatch(l -> "test".equals(l.getAction())
                 || "test-connection".equals(l.getAction())
                 || t.id().toString().equals(l.getTarget()) && !"create".equals(l.getAction()));
+    }
+
+    // @scenario: ai/生成记录人工评价#评价留痕
+    // @scenario: operation-log/运营写操作留痕#AI 生成记录评价留痕
+    @Test
+    void rateLogged() throws Exception {
+        UUID id = insertGeneration("SUCCESS");
+        mockMvc.perform(put("/api/admin/ai/generations/" + id + "/rating").header(HttpHeaders.AUTHORIZATION, adminToken())
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"rating\":\"UNUSABLE\",\"tags\":[\"VAGUE\"]}"))
+                .andExpect(status().isNoContent());
+
+        assertThat(waitFor(l -> "ai-generation".equals(l.getModule()) && "rate".equals(l.getAction())
+                && id.toString().equals(l.getTarget())))
+                .singleElement()
+                .satisfies(l -> {
+                    assertThat(l.getUsername()).isEqualTo("admin");
+                    assertThat(l.getPayloadJson()).contains("UNUSABLE").contains("VAGUE");
+                });
+    }
+
+    // @scenario: operation-log/运营写操作留痕#业务方法失败时不留痕
+    @Test
+    void rejectedRateNotLogged() throws Exception {
+        UUID id = insertGeneration("PROCESSING");
+        mockMvc.perform(put("/api/admin/ai/generations/" + id + "/rating").header(HttpHeaders.AUTHORIZATION, adminToken())
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"rating\":\"USABLE\"}"))
+                .andExpect(status().isConflict());
+        Thread.sleep(500);
+
+        assertThat(operationLogRepository.findAll()).noneMatch(l -> id.toString().equals(l.getTarget()));
     }
 }

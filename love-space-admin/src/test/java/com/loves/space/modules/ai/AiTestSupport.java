@@ -19,7 +19,12 @@ import com.loves.space.modules.manager.repository.ManagerRepository;
 import com.loves.space.security.jwt.JwtTokenProvider;
 import com.loves.space.support.AbstractPostgresIntegrationTest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Primary;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -28,16 +33,36 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import tools.jackson.databind.ObjectMapper;
 
+import java.time.Clock;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 /**
- * AI 管理测试基类：真实库 + MockMvc，{@link AiGenerator} 打桩（不调方舟），可选模型固定为 model-a / model-b。
+ * AI 管理测试基类：真实库 + MockMvc，{@link AiGenerator} 打桩（不调方舟），可选模型固定为 model-a / model-b；
+ * 北京时间"现在"固定为 {@link #NOW}。
  */
 @AutoConfigureMockMvc
 @TestPropertySource(properties = "love-space.ai.models=model-a,model-b")
+@Import(AiTestSupport.FixedClock.class)
 public abstract class AiTestSupport extends AbstractPostgresIntegrationTest {
+
+    protected static final ZoneOffset BEIJING = ZoneOffset.ofHours(8);
+    protected static final OffsetDateTime NOW = OffsetDateTime.of(2026, 10, 24, 12, 0, 0, 0, BEIJING);
+
+    @TestConfiguration
+    static class FixedClock {
+        @Bean
+        @Primary
+        Clock fixedAiClock() {
+            return Clock.fixed(NOW.toInstant(), BEIJING);
+        }
+    }
+
+    @Autowired
+    protected JdbcTemplate jdbcTemplate;
 
     @MockitoBean
     protected AiGenerator aiGenerator;
@@ -101,6 +126,29 @@ public abstract class AiTestSupport extends AbstractPostgresIntegrationTest {
     protected AiPromptTemplateDetailResponse newTemplate(String sceneId, String userPrompt, AiPromptVariable... variables) {
         return templateService.create(new AiPromptTemplateCreateRequest(sceneId, "模板", "系统", userPrompt,
                 List.of(variables), null));
+    }
+
+    /** 直接插一条生成记录（这张表由 app 端写入），返回 id。 */
+    protected UUID insertGeneration(String sceneId, UUID templateId, String status, OffsetDateTime createdAt,
+                                    String anonymousUserId) {
+        UUID id = UUID.randomUUID();
+        jdbcTemplate.update("""
+                insert into loves_ai_generation (id, client_request_id, anonymous_user_id, scene_id, template_id,
+                  template_seq, inputs, request_messages, request_params, status, final_model, attempt_count,
+                  raw_output, content, latency_ms, created_at)
+                values (?, ?, ?, ?, ?, 1, '{"age":28}', '[{"role":"user","content":"hi"}]', '{"temperature":0.7}',
+                  ?, 'model-a', 1, '{"title":"x"}', cast(? as jsonb), 1200, ?)
+                """, id, "c-" + id, anonymousUserId, sceneId, templateId, status,
+                "SUCCESS".equals(status) ? "{\"title\":\"x\"}" : null, createdAt);
+        return id;
+    }
+
+    protected UUID insertGeneration(String status) {
+        return insertGeneration(uniqueSceneId(), UUID.randomUUID(), status, NOW, uniqueAnonymousUserId());
+    }
+
+    protected static String uniqueAnonymousUserId() {
+        return "u_" + UUID.randomUUID();
     }
 
     protected static AiResult result(AiStatus status, String raw, tools.jackson.databind.JsonNode content) {

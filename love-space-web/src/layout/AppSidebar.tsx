@@ -109,6 +109,7 @@ const navItems: NavItem[] = [
       { name: "业务配置", path: "/ai/scenes" },
       { name: "模型配置", path: "/ai/models" },
       { name: "提示词管理", path: "/ai/prompts" },
+      { name: "生成记录", path: "/ai/generations" },
     ],
   },
   {

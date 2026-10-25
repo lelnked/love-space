@@ -20,7 +20,7 @@
 | article | 文章栏目与文章（富文本、多栏目关联、上下架） | `/api/admin/article-categories/*`、`/api/admin/articles/*`、`/api/app/article-categories`、`/api/app/articles/*` | web | `/love-space/article-categories`、`/love-space/articles` | `tests/article/{it,web}.md` |
 | featured | 精选信息流：地图上新推荐（关联城市，与 Banner 独立）+ 周期推荐（四周期全局配置，内容取自活动/路线/文章） | `/api/admin/featured-items/*`、`/api/app/featured-items`、`/api/admin/featured-cycle-items/*`、`/api/app/featured-cycle-items` | web | `/love-space/featured-items`、`/love-space/featured-cycle-items` | `tests/featured/{it,web}.md` |
 | operation-log | 运营操作审计（横切留痕 + 日志查询） | `/api/admin/logs/*` | web | `/love-space/logs` | `tests/operation-log/{it,web}.md` |
-| ai | AI 管理（业务场景、场景模型、提示词模板测试/发布、App 生成接口与防刷） | `/api/admin/ai/*`、`/api/app/ai/*` | web | `/love-space/ai/scenes`、`/love-space/ai/models`、`/love-space/ai/prompts`（含子路由） | `tests/ai/{it,web}.md` |
+| ai | AI 管理（业务场景、场景模型、提示词模板测试/发布、App 生成接口与防刷） | `/api/admin/ai/*`、`/api/app/ai/*` | web | `/love-space/ai/scenes`、`/love-space/ai/models`、`/love-space/ai/prompts`（含子路由）、`/love-space/ai/generations`（含详情） | `tests/ai/{it,web}.md` |
 | file | 图片上传凭证与对象存储（OSS 直传签名、objectKey 绑定校验、签名访问 URL） | `/api/admin/files/*` |  | 无独立页面（上传组件嵌于各业务表单） | `tests/file/it.md` |
 
 跨域全链路 smoke（极少数）落 `tests/flows/web.md`，不注册为业务域。

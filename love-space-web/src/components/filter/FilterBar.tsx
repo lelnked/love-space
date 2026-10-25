@@ -7,19 +7,28 @@ export type FilterFieldType = "text" | "select" | "date";
 
 /**
  * 日期筛选项：用 flatpickr 提供日历弹窗，输出 "YYYY-MM-DD" 字符串。
- * 受外部 value 控制，value 被清空（Reset）时同步清空日历。
+ * 受外部 value 控制，value 被清空（Reset）时同步清空日历；minDate / maxDate 限制可选范围。
  */
 function DateFilterInput({
   value,
   placeholder,
+  minDate,
+  maxDate,
   onChange,
 }: {
   value: string;
   placeholder?: string;
+  minDate?: string;
+  maxDate?: string;
   onChange: (value: string) => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const fpRef = useRef<flatpickr.Instance | null>(null);
+  // flatpickr 只初始化一次，经 ref 调用最新的 onChange，避免闭包里的筛选值过期
+  const onChangeRef = useRef(onChange);
+  useEffect(() => {
+    onChangeRef.current = onChange;
+  });
 
   useEffect(() => {
     if (!inputRef.current) return;
@@ -27,12 +36,10 @@ function DateFilterInput({
       dateFormat: "Y-m-d",
       static: true,
       monthSelectorType: "static",
-      onChange: (_dates, dateStr) => onChange(dateStr),
+      onChange: (_dates, dateStr) => onChangeRef.current(dateStr),
     });
     fpRef.current = Array.isArray(fp) ? fp[0] : fp;
     return () => fpRef.current?.destroy();
-    // 仅初始化一次；onChange 通过稳定的 setValues 更新，无需重建实例
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -43,6 +50,14 @@ function DateFilterInput({
       else fp.clear();
     }
   }, [value]);
+
+  useEffect(() => {
+    fpRef.current?.set("minDate", minDate || null);
+  }, [minDate]);
+
+  useEffect(() => {
+    fpRef.current?.set("maxDate", maxDate || null);
+  }, [maxDate]);
 
   return (
     <div className="relative">
@@ -69,6 +84,13 @@ export interface FilterField {
   type: FilterFieldType;
   placeholder?: string;
   options?: FilterFieldOption[];
+  /** 仅 date：以该字段的当前值作为可选下限 */
+  minField?: string;
+  /** 仅 date：以该字段的当前值作为可选上限 */
+  maxField?: string;
+  /** 该字段值变化时清空本字段（如模板版本依赖场景） */
+  dependsOn?: string;
+  disabled?: boolean;
 }
 
 export type FilterValues = Record<string, string>;
@@ -77,24 +99,45 @@ interface FilterBarProps {
   fields: FilterField[];
   initialValues?: FilterValues;
   onApply: (values: FilterValues) => void;
-  onReset?: () => void;
+  /** Reset 后的值，默认 {}；同时作为 onReset 的参数 */
+  resetValues?: FilterValues;
+  onReset?: (values: FilterValues) => void;
+  /** 内部值变化（含 Reset）时回调 */
+  onChange?: (values: FilterValues) => void;
   rightSlot?: ReactNode;
 }
 
 /**
  * 通用筛选条：渲染一组输入，提供 Apply / Reset 两个动作。
  * - Apply：把当前内部值回调给 onApply
- * - Reset：清空本地值并触发 onReset
+ * - Reset：回到 resetValues（默认清空）并触发 onReset
  */
-export default function FilterBar({ fields, initialValues, onApply, onReset, rightSlot }: FilterBarProps) {
+export default function FilterBar({
+  fields,
+  initialValues,
+  onApply,
+  resetValues,
+  onReset,
+  onChange,
+  rightSlot,
+}: FilterBarProps) {
   const [values, setValues] = useState<FilterValues>(initialValues ?? {});
 
-  const update = (name: string, value: string) =>
-    setValues((prev) => ({ ...prev, [name]: value }));
+  const change = (next: FilterValues) => {
+    setValues(next);
+    onChange?.(next);
+  };
+
+  const update = (name: string, value: string) => {
+    const next = { ...values, [name]: value };
+    for (const f of fields) if (f.dependsOn === name) next[f.name] = "";
+    change(next);
+  };
 
   const reset = () => {
-    setValues({});
-    onReset?.();
+    const next = resetValues ?? {};
+    change(next);
+    onReset?.(next);
   };
 
   return (
@@ -104,7 +147,8 @@ export default function FilterBar({ fields, initialValues, onApply, onReset, rig
           <label className="text-xs text-gray-500 mb-1">{f.label}</label>
           {f.type === "select" ? (
             <select
-              className="border rounded px-3 py-2 text-sm min-w-[140px]"
+              className="border rounded px-3 py-2 text-sm min-w-[140px] disabled:bg-gray-100 disabled:text-gray-400"
+              disabled={f.disabled}
               value={values[f.name] ?? ""}
               onChange={(e) => update(f.name, e.target.value)}
             >
@@ -117,12 +161,15 @@ export default function FilterBar({ fields, initialValues, onApply, onReset, rig
             <DateFilterInput
               value={values[f.name] ?? ""}
               placeholder={f.placeholder}
+              minDate={f.minField ? values[f.minField] : undefined}
+              maxDate={f.maxField ? values[f.maxField] : undefined}
               onChange={(v) => update(f.name, v)}
             />
           ) : (
             <input
               type="text"
               placeholder={f.placeholder}
+              disabled={f.disabled}
               className="border rounded px-3 py-2 text-sm min-w-[160px]"
               value={values[f.name] ?? ""}
               onChange={(e) => update(f.name, e.target.value)}

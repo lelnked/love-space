@@ -541,8 +541,8 @@
 **预期结果**: 命中 `module=ai-prompt`、`action=publish`、`target=<T.id>` 的记录
 **状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**: `test-evidence/ai-management/TC-ai-IT-034/`
-**最后更新**: 2026-10-24
+**执行存证**: `test-evidence/ai-generation-records/TC-ai-IT-034/`
+**最后更新**: 2026-10-25
 
 ### TC-ai-IT-035: 测试模板不产生留痕
 **关联需求**: ai/AI 管理写操作留痕#测试不留痕
@@ -558,8 +558,8 @@
 **预期结果**: 步骤 5 不存在 `action=test` 的记录，`ai-prompt` 记录数与基线一致
 **状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**: `test-evidence/ai-management/TC-ai-IT-035/`
-**最后更新**: 2026-10-24
+**执行存证**: `test-evidence/ai-generation-records/TC-ai-IT-035/`
+**最后更新**: 2026-10-25
 
 ### TC-ai-IT-036: MEMBER 角色可访问 AI 管理接口
 **关联需求**: ai/AI 管理权限与菜单#MEMBER 可访问 AI 管理
@@ -574,8 +574,8 @@
 **预期结果**: 步骤 3、4 均返回 200（不返回 403）
 **状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**: `test-evidence/ai-management/TC-ai-IT-036/`
-**最后更新**: 2026-10-24
+**执行存证**: `test-evidence/ai-generation-records/TC-ai-IT-036/`
+**最后更新**: 2026-10-25
 
 ### TC-ai-IT-037: 未登录访问 AI 管理接口返回 401
 **关联需求**: ai/AI 管理权限与菜单#未登录被拒绝
@@ -588,8 +588,8 @@
 **预期结果**: 两次均返回 401；场景 `no_auth` 未被创建
 **状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**: `test-evidence/ai-management/TC-ai-IT-037/`
-**最后更新**: 2026-10-24
+**执行存证**: `test-evidence/ai-generation-records/TC-ai-IT-037/`
+**最后更新**: 2026-10-25
 
 ### TC-ai-IT-038: POST /api/app/ai/generations 生成成功
 **关联需求**: ai/App 生成接口#生成成功
@@ -602,8 +602,8 @@
 **预期结果**: 返回 200，`status=SUCCESS`、`content` 为 mock 输出的 JSON、`requestId` 非空、`clientRequestId`/`sceneId` 与请求一致
 **状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**: `test-evidence/ai-management/TC-ai-IT-038/`
-**最后更新**: 2026-10-24
+**执行存证**: `test-evidence/ai-generation-records/TC-ai-IT-038/`
+**最后更新**: 2026-10-25
 
 ### TC-ai-IT-039: 生成成功写完整生成记录与调用明细
 **关联需求**: ai/生成记录与调用明细落库#成功生成写完整记录
@@ -618,8 +618,8 @@
 **预期结果**: 生成记录 1 条：`status=SUCCESS`、`attempt_count=1`、`completed_at` 非空、`template_id`/`template_seq` 为生效模板、`anonymous_user_id` 与请求头一致；调用明细 1 条 `seq=1`、`trigger_reason=INITIAL`
 **状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**: `test-evidence/ai-management/TC-ai-IT-039/`
-**最后更新**: 2026-10-24
+**执行存证**: `test-evidence/ai-generation-records/TC-ai-IT-039/`
+**最后更新**: 2026-10-25
 
 ### TC-ai-IT-040: 生成记录请求快照不含密钥与认证头
 **关联需求**: ai/AI 调用配置来自环境变量#请求快照不含密钥
@@ -989,3 +989,382 @@
 **执行方式**: api-test-runner
 **执行存证**: `test-evidence/ai-management/TC-ai-IT-064/`
 **最后更新**: 2026-10-24
+
+> **生成记录（ai-generation-records）造数口径**：
+> - 「psql 造数」= 直接向 `loves_ai_generation` / `loves_ai_generation_attempt` 插行（库 `localhost:25432/love_space`，iris/iris），参考：
+>   `INSERT INTO loves_ai_generation (id, client_request_id, anonymous_user_id, scene_id, template_id, template_seq, inputs, request_messages, request_params, status, final_model, attempt_count, latency_ms, created_at, completed_at) VALUES (gen_random_uuid(), 'gr-<后缀>-<n>', 'anon-gr-<后缀>', '<S>', '<T.id>', <T.seq>, '{"age":28}', '[]', '{}', 'SUCCESS', 'mock-ok', 1, 1200, now(), now());`
+>   评价列（027 迁移追加）：`rating`、`rating_tags`（jsonb，默认 `'[]'`）、`rating_remark`、`rated_by`、`rated_at`。需指定 `created_at`（默认 7 天、区间边界）与 `PROCESSING` 记录一律用 psql 造数；时间按北京时间书写，如 `'2026-10-20 00:00:05+08'`。
+> - 「app 生成造数」= 经 app `POST /api/app/ai/generations` 生成，app 进程指向假方舟 `node scripts/mock-ark.mjs`（模型 `mock-ok` 首次成功、`mock-flaky` 第 1 次非 JSON 第 2 次成功、`mock-format-error` 恒非 JSON 等）。
+> - 列表用例统一加 `anonymousUserId=anon-gr-<后缀>` 隔离本用例造的数据（默认 7 天用例除外的日期参数按步骤给出）。
+> - 场景 S、模板 T 为前置中已存在的场景与其模板（任一已发布模板即可）。
+
+### TC-ai-IT-065: GET /api/admin/ai/generations/page 不传日期默认最近 7 天
+**关联需求**: ai/生成记录列表查询#默认最近 7 天
+**关联契约**: api-spec.json#/paths/~1api~1admin~1ai~1generations~1page/get
+**来源**: ai-generation-records
+**优先级**: P0
+**测试步骤**:
+1. 前置：psql 造数 3 条（同一 `anon-gr-<后缀>`），`created_at` 分别为北京时间今天当前时刻、6 天前 00:00:01、8 天前 12:00
+2. POST /api/admin/auth/login 取 JWT token（后续 admin 请求均带）
+3. GET /api/admin/ai/generations/page?anonymousUserId=anon-gr-<后缀>&page=1&size=20（不传 startDate/endDate）
+**预期结果**: 返回 200，`totalElements=2`，`content` 为今天、6 天前两条（按 createdAt 倒序），不含 8 天前的记录
+**状态**: ✅ 通过
+**执行方式**: api-test-runner
+**执行存证**: `test-evidence/ai-generation-records/TC-ai-IT-065/`
+**最后更新**: 2026-10-25
+
+### TC-ai-IT-066: GET /api/admin/ai/generations/page 日期区间含两端整日（北京时间）
+**关联需求**: ai/生成记录列表查询#日期区间含两端整日
+**关联契约**: api-spec.json#/paths/~1api~1admin~1ai~1generations~1page/get
+**来源**: ai-generation-records
+**优先级**: P0
+**测试步骤**:
+1. 前置：psql 造数 4 条（同一 `anon-gr-<后缀>`），`created_at` 为 `2026-10-19 23:59:59+08`、`2026-10-20 00:00:05+08`、`2026-10-21 23:59:50+08`、`2026-10-22 00:00:00+08`
+2. 登录取 token
+3. GET /api/admin/ai/generations/page?startDate=2026-10-20&endDate=2026-10-21&anonymousUserId=anon-gr-<后缀>&page=1&size=20
+**预期结果**: 返回 200，`totalElements=2`，仅含 `10-20 00:00:05` 与 `10-21 23:59:50` 两条（区间外紧邻两条不返回），10-21 那条在前
+**状态**: ✅ 通过
+**执行方式**: api-test-runner
+**执行存证**: `test-evidence/ai-generation-records/TC-ai-IT-066/`
+**最后更新**: 2026-10-25
+
+### TC-ai-IT-067: GET /api/admin/ai/generations/page 只传一端按单边过滤
+**关联需求**: ai/生成记录列表查询#日期区间含两端整日
+**关联契约**: api-spec.json#/paths/~1api~1admin~1ai~1generations~1page/get
+**来源**: ai-generation-records
+**优先级**: P2
+**测试步骤**:
+1. 前置：同 TC-ai-IT-066 的 4 条造数（可复用）
+2. 登录取 token
+3. GET …/generations/page?startDate=2026-10-21&anonymousUserId=anon-gr-<后缀>&page=1&size=20
+4. GET …/generations/page?endDate=2026-10-20&anonymousUserId=anon-gr-<后缀>&page=1&size=20
+**预期结果**: 步骤 3 返回 `10-21 23:59:50`、`10-22 00:00:00` 两条（只传一端时不再套用默认 7 天）；步骤 4 返回 `10-19 23:59:59`、`10-20 00:00:05` 两条
+**状态**: ✅ 通过
+**执行方式**: api-test-runner
+**执行存证**: `test-evidence/ai-generation-records/TC-ai-IT-067/`
+**最后更新**: 2026-10-25
+
+### TC-ai-IT-068: GET /api/admin/ai/generations/page 开始晚于结束被拒绝
+**关联需求**: ai/生成记录列表查询#开始晚于结束被拒绝
+**关联契约**: api-spec.json#/paths/~1api~1admin~1ai~1generations~1page/get
+**来源**: ai-generation-records
+**优先级**: P1
+**测试步骤**:
+1. 前置：同 TC-ai-IT-066 的造数（10-20~10-22 间存在记录）
+2. 登录取 token
+3. GET …/generations/page?startDate=2026-10-22&endDate=2026-10-20&page=1&size=20
+**预期结果**: 返回 400，`message`=「开始日期不能晚于结束日期」，错误体含 status/error/message/path
+**状态**: ✅ 通过
+**执行方式**: api-test-runner
+**执行存证**: `test-evidence/ai-generation-records/TC-ai-IT-068/`
+**最后更新**: 2026-10-25
+
+### TC-ai-IT-069: GET /api/admin/ai/generations/page 按未评价筛选 rating=NONE
+**关联需求**: ai/生成记录列表查询#按未评价筛选
+**关联契约**: api-spec.json#/paths/~1api~1admin~1ai~1generations~1page/get
+**来源**: ai-generation-records
+**优先级**: P1
+**测试步骤**:
+1. 前置：psql 造数 2 条（今天、同一 `anon-gr-<后缀>`）：A `rating='USABLE'`、`rated_by='admin'`、`rated_at=now()`；B 未评价（rating 为 null）
+2. 登录取 token
+3. GET …/generations/page?rating=NONE&anonymousUserId=anon-gr-<后缀>&page=1&size=20
+4. GET …/generations/page?rating=USABLE&anonymousUserId=anon-gr-<后缀>&page=1&size=20
+**预期结果**: 步骤 3 仅返回 B，其 `rating=null`；步骤 4 仅返回 A，`rating=USABLE`
+**状态**: ✅ 通过
+**执行方式**: api-test-runner
+**执行存证**: `test-evidence/ai-generation-records/TC-ai-IT-069/`
+**最后更新**: 2026-10-25
+
+### TC-ai-IT-070: GET /api/admin/ai/generations/page 按问题标签筛选
+**关联需求**: ai/生成记录列表查询#按问题标签筛选
+**关联契约**: api-spec.json#/paths/~1api~1admin~1ai~1generations~1page/get
+**来源**: ai-generation-records
+**优先级**: P1
+**测试步骤**:
+1. 前置：psql 造数 2 条（今天、同一 `anon-gr-<后缀>`）：A `rating='NEEDS_IMPROVEMENT'`、`rating_tags='["BAD_TONE","VAGUE"]'`；B `rating='NEEDS_IMPROVEMENT'`、`rating_tags='["VAGUE"]'`
+2. 登录取 token
+3. GET …/generations/page?tag=BAD_TONE&anonymousUserId=anon-gr-<后缀>&page=1&size=20
+4. GET …/generations/page?tag=VAGUE&anonymousUserId=anon-gr-<后缀>&page=1&size=20
+**预期结果**: 步骤 3 仅返回 A；步骤 4 返回 A、B 两条
+**状态**: ✅ 通过
+**执行方式**: api-test-runner
+**执行存证**: `test-evidence/ai-generation-records/TC-ai-IT-070/`
+**最后更新**: 2026-10-25
+
+### TC-ai-IT-071: GET /api/admin/ai/generations/page 场景 + 状态组合筛选且按时间倒序
+**关联需求**: ai/生成记录列表查询#组合筛选与倒序
+**关联契约**: api-spec.json#/paths/~1api~1admin~1ai~1generations~1page/get
+**来源**: ai-generation-records
+**优先级**: P1
+**测试步骤**:
+1. 前置：psql 造数（同一 `anon-gr-<后缀>`）：场景 S 下 SUCCESS ×3（`created_at` 为 now()-3h、now()-1h、now()-2h）、FORMAT_ERROR ×1、PROCESSING ×1；另一场景 S2 下 SUCCESS ×1
+2. 登录取 token
+3. GET …/generations/page?sceneId=<S>&status=SUCCESS&anonymousUserId=anon-gr-<后缀>&page=1&size=20
+4. GET …/generations/page?status=PROCESSING&anonymousUserId=anon-gr-<后缀>&page=1&size=20
+**预期结果**: 步骤 3 返回 3 条，均 `sceneId=S`、`status=SUCCESS`，`createdAt` 依次为 -1h、-2h、-3h；步骤 4 返回 1 条 `status=PROCESSING`
+**状态**: ✅ 通过
+**执行方式**: api-test-runner
+**执行存证**: `test-evidence/ai-generation-records/TC-ai-IT-071/`
+**最后更新**: 2026-10-25
+
+### TC-ai-IT-072: GET /api/admin/ai/generations/page requestId / templateId / model 精确匹配
+**关联需求**: ai/生成记录列表查询#组合筛选与倒序
+**关联契约**: api-spec.json#/paths/~1api~1admin~1ai~1generations~1page/get
+**来源**: ai-generation-records
+**优先级**: P2
+**测试步骤**:
+1. 前置：psql 造数（今天、同一 `anon-gr-<后缀>`）：R1 模板 T1、`final_model='mock-ok'`；R2 模板 T2、`final_model='mock-flaky'`
+2. 登录取 token
+3. GET …/generations/page?requestId=<R1.id>&page=1&size=20
+4. GET …/generations/page?requestId=<另一随机 uuid>&page=1&size=20
+5. GET …/generations/page?templateId=<T2.id>&anonymousUserId=anon-gr-<后缀>&page=1&size=20
+6. GET …/generations/page?model=mock-ok&anonymousUserId=anon-gr-<后缀>&page=1&size=20
+7. GET …/generations/page?anonymousUserId=anon-gr-<后缀的前半段>&page=1&size=20
+**预期结果**: 步骤 3 仅 R1；步骤 4 空页；步骤 5 仅 R2；步骤 6 仅 R1；步骤 7 空页（匿名 ID 精确匹配）
+**状态**: ✅ 通过
+**执行方式**: api-test-runner
+**执行存证**: `test-evidence/ai-generation-records/TC-ai-IT-072/`
+**最后更新**: 2026-10-25
+
+### TC-ai-IT-073: GET /api/admin/ai/generations/page 非法日期与枚举返回 400
+**关联需求**: ai/生成记录列表查询#非法枚举被拒绝
+**关联契约**: api-spec.json#/paths/~1api~1admin~1ai~1generations~1page/get
+**来源**: ai-generation-records
+**优先级**: P1
+**测试步骤**:
+1. 登录取 token
+2. 分别 GET …/generations/page?…：`rating=GOOD`、`startDate=2026/10/20`、`endDate=2026-13-01`、`status=DONE`、`tag=X`
+**预期结果**: 5 次均返回 400，body 为 `{status,error,message,path}`（message 沿用现有英文 "Invalid value for parameter …" 口径，不断言中文）
+**状态**: ✅ 通过
+**执行方式**: api-test-runner
+**执行存证**: `test-evidence/ai-generation-records/TC-ai-IT-073/`
+**最后更新**: 2026-10-25
+
+### TC-ai-IT-074: GET /api/admin/ai/generations/page 列表条目仅十一个字段、不含正文
+**关联需求**: ai/生成记录列表查询#列表不含正文
+**关联契约**: api-spec.json#/paths/~1api~1admin~1ai~1generations~1page/get
+**来源**: ai-generation-records
+**优先级**: P1
+**测试步骤**:
+1. 前置：app 生成造数一条 SUCCESS（模型 `mock-ok`，`X-Anonymous-Id: anon-gr-<后缀>`），取 requestId
+2. 登录取 token
+3. GET …/generations/page?requestId=<requestId>&page=1&size=20
+**预期结果**: 返回 200，分页结构为 `{content,page,size,totalElements,totalPages}`、`page=1`；条目键集合恰为 `id, createdAt, anonymousUserId, sceneId, sceneName, templateId, templateSeq, finalModel, status, latencyMs, rating`，无 `inputs`/`requestMessages`/`rawOutput`/`content` 等；`sceneName` 为场景当前名称、`finalModel=mock-ok`、`rating=null`
+**状态**: ✅ 通过
+**执行方式**: api-test-runner
+**执行存证**: `test-evidence/ai-generation-records/TC-ai-IT-074/`
+**最后更新**: 2026-10-25
+
+### TC-ai-IT-075: GET /api/admin/ai/generations/{id} 详情含调用明细且查看不留痕
+**关联需求**: ai/生成记录详情#详情含调用明细
+**关联契约**: api-spec.json#/paths/~1api~1admin~1ai~1generations~1{id}/get
+**来源**: ai-generation-records
+**优先级**: P0
+**测试步骤**:
+1. 前置：场景 S 主模型配 `mock-flaky`（`AI_MAX_RETRIES≥1`）；app 生成造数一次，响应 `status=SUCCESS`，取 requestId
+2. 登录取 token；GET /api/admin/logs/page?module=ai-generation&page=1&size=200 记录 `totalElements` 基线
+3. GET /api/admin/ai/generations/{requestId}
+4. 等待 2s 后重复步骤 2 的日志查询
+**预期结果**: 步骤 3 返回 200：`status=SUCCESS`、`attemptCount=2`、`finalModel=mock-flaky`、`templateName` 为生效模板名称、`sceneName` 为场景名称，含 `clientRequestId, appVersion, inputs, requestMessages, requestParams, rawOutput, content, promptTokens, completionTokens, latencyMs, createdAt, completedAt`；`attempts` 2 条按 seq 升序：seq 1 `triggerReason=INITIAL`（含解析错误/校验错误）、seq 2 `triggerReason=RETRY` 成功，每条含 model、status、rawResponse、起止时间、latencyMs；步骤 4 `totalElements` 与基线一致
+**状态**: ✅ 通过
+**执行方式**: api-test-runner
+**执行存证**: `test-evidence/ai-generation-records/TC-ai-IT-075/`
+**最后更新**: 2026-10-25
+
+### TC-ai-IT-076: GET /api/admin/ai/generations/{id} 未评价记录评价字段为空
+**关联需求**: ai/生成记录详情#未评价记录的评价字段为空
+**关联契约**: api-spec.json#/paths/~1api~1admin~1ai~1generations~1{id}/get
+**来源**: ai-generation-records
+**优先级**: P1
+**测试步骤**:
+1. 前置：psql 造数一条未评价 SUCCESS 记录 R
+2. 登录取 token
+3. GET /api/admin/ai/generations/{R.id}
+**预期结果**: 返回 200，`rating=null`、`ratingRemark=null`、`ratedBy=null`、`ratedAt=null`，`ratingTags=[]`（空数组而非 null）
+**状态**: ✅ 通过
+**执行方式**: api-test-runner
+**执行存证**: `test-evidence/ai-generation-records/TC-ai-IT-076/`
+**最后更新**: 2026-10-25
+
+### TC-ai-IT-077: GET /api/admin/ai/generations/{id} 记录不存在返回 404
+**关联需求**: ai/生成记录详情#记录不存在
+**关联契约**: api-spec.json#/paths/~1api~1admin~1ai~1generations~1{id}/get
+**来源**: ai-generation-records
+**优先级**: P1
+**测试步骤**:
+1. 登录取 token
+2. GET /api/admin/ai/generations/<随机 uuid>
+**预期结果**: 返回 404，body 为 `{status,error,message,path}`
+**状态**: ✅ 通过
+**执行方式**: api-test-runner
+**执行存证**: `test-evidence/ai-generation-records/TC-ai-IT-077/`
+**最后更新**: 2026-10-25
+
+### TC-ai-IT-078: PUT /api/admin/ai/generations/{id}/rating 首次评价
+**关联需求**: ai/生成记录人工评价#首次评价
+**关联契约**: api-spec.json#/paths/~1api~1admin~1ai~1generations~1{id}~1rating/put
+**来源**: ai-generation-records
+**优先级**: P0
+**测试步骤**:
+1. 前置：psql 造数一条未评价 SUCCESS 记录 R
+2. 以 admin 登录取 token
+3. PUT /api/admin/ai/generations/{R.id}/rating，body `{"rating":"USABLE"}`
+4. GET /api/admin/ai/generations/{R.id}
+5. GET …/generations/page?requestId=<R.id>&page=1&size=20
+**预期结果**: 步骤 3 返回 204、无 body；步骤 4 `rating=USABLE`、`ratingTags=[]`、`ratingRemark=null`、`ratedBy=admin`、`ratedAt` 非空；步骤 5 条目 `rating=USABLE`
+**状态**: ✅ 通过
+**执行方式**: api-test-runner
+**执行存证**: `test-evidence/ai-generation-records/TC-ai-IT-078/`
+**最后更新**: 2026-10-25
+
+### TC-ai-IT-079: PUT /api/admin/ai/generations/{id}/rating remark 恰 500 字符与全部标签通过
+**关联需求**: ai/生成记录人工评价#评价参数非法
+**关联契约**: api-spec.json#/paths/~1api~1admin~1ai~1generations~1{id}~1rating/put
+**来源**: ai-generation-records
+**优先级**: P1
+**测试步骤**:
+1. 前置：psql 造数一条未评价 SUCCESS 记录 R
+2. 登录取 token
+3. PUT …/{R.id}/rating，body `{"rating":"NEEDS_IMPROVEMENT","tags":["IGNORED_INPUT","WEAK_CYCLE_LINK","BAD_TONE","VAGUE","INAPPLICABLE_ADVICE","OVER_MEDICALIZED","FORMAT_ERROR","OTHER"],"remark":"<恰 500 个中文字符>"}`
+4. GET 详情
+**预期结果**: 步骤 3 返回 204；步骤 4 `ratingTags` 为提交的 8 个标签、`ratingRemark` 长度为 500 且与提交一致
+**状态**: ✅ 通过
+**执行方式**: api-test-runner
+**执行存证**: `test-evidence/ai-generation-records/TC-ai-IT-079/`
+**最后更新**: 2026-10-25
+
+### TC-ai-IT-080: PUT /api/admin/ai/generations/{id}/rating 再次评价整体覆盖、不保留历史
+**关联需求**: ai/生成记录人工评价#再次评价覆盖原评价
+**关联契约**: api-spec.json#/paths/~1api~1admin~1ai~1generations~1{id}~1rating/put
+**来源**: ai-generation-records
+**优先级**: P0
+**测试步骤**:
+1. 前置：psql 造数一条 SUCCESS 记录 R；存在 MEMBER 账号 ops1（不存在则以 admin 创建并启用）
+2. 以 ops1 登录，PUT …/{R.id}/rating，body `{"rating":"NEEDS_IMPROVEMENT","tags":["BAD_TONE"],"remark":"语气生硬"}`；GET 详情记录 `ratedAt`=t1
+3. 以 admin 登录，PUT …/{R.id}/rating，body `{"rating":"UNUSABLE","tags":["VAGUE"]}`（不传 remark）
+4. GET 详情
+5. psql：`SELECT count(*) FROM loves_ai_generation WHERE id='<R.id>'`；`\dt loves_ai_generation*`
+**预期结果**: 步骤 2、3 均返回 204；步骤 4 `rating=UNUSABLE`、`ratingTags=["VAGUE"]`、`ratingRemark=null`、`ratedBy=admin`、`ratedAt` 晚于 t1；步骤 5 记录仍 1 条，评价相关只存在 `loves_ai_generation` 的列（无评价历史表/行）
+**状态**: ✅ 通过
+**执行方式**: api-test-runner
+**执行存证**: `test-evidence/ai-generation-records/TC-ai-IT-080/`
+**最后更新**: 2026-10-25
+
+### TC-ai-IT-081: PUT /api/admin/ai/generations/{id}/rating 已评价记录不能清除评价
+**关联需求**: ai/生成记录人工评价#评价参数非法
+**关联契约**: api-spec.json#/paths/~1api~1admin~1ai~1generations~1{id}~1rating/put
+**来源**: ai-generation-records
+**优先级**: P1
+**测试步骤**:
+1. 前置：psql 造数一条已评价记录 R（`rating='USABLE'`、`rated_by='admin'`、`rated_at=now()`）
+2. 登录取 token
+3. PUT …/{R.id}/rating，body `{"rating":null}`
+4. PUT …/{R.id}/rating，body `{}`
+5. PUT …/{R.id}/rating，body `{"rating":"NONE"}`
+6. GET 详情
+**预期结果**: 步骤 3~5 均返回 400；步骤 6 仍 `rating=USABLE`，`ratedBy`/`ratedAt` 未变
+**状态**: ✅ 通过
+**执行方式**: api-test-runner
+**执行存证**: `test-evidence/ai-generation-records/TC-ai-IT-081/`
+**最后更新**: 2026-10-25
+
+### TC-ai-IT-082: PUT /api/admin/ai/generations/{id}/rating 生成中记录返回 409
+**关联需求**: ai/生成记录人工评价#生成中的记录不能评价
+**关联契约**: api-spec.json#/paths/~1api~1admin~1ai~1generations~1{id}~1rating/put
+**来源**: ai-generation-records
+**优先级**: P1
+**测试步骤**:
+1. 前置：psql 造数一条 `status='PROCESSING'`、`created_at=now()`、`completed_at` 为 null 的记录 R
+2. 登录取 token
+3. PUT …/{R.id}/rating，body `{"rating":"USABLE"}`
+4. GET 详情；GET /api/admin/logs/page?module=ai-generation&page=1&size=200（等待 2s 后）
+**预期结果**: 步骤 3 返回 409，`message`「生成中的记录不能评价」；步骤 4 `rating=null`、`ratingTags=[]`、`ratedBy=null`，日志中无 `target=<R.id>` 的 `action=rate` 记录
+**状态**: ✅ 通过
+**执行方式**: api-test-runner
+**执行存证**: `test-evidence/ai-generation-records/TC-ai-IT-082/`
+**最后更新**: 2026-10-25
+
+### TC-ai-IT-083: PUT /api/admin/ai/generations/{id}/rating 失败记录可以评价
+**关联需求**: ai/生成记录人工评价#失败记录可以评价
+**关联契约**: api-spec.json#/paths/~1api~1admin~1ai~1generations~1{id}~1rating/put
+**来源**: ai-generation-records
+**优先级**: P1
+**测试步骤**:
+1. 前置：场景 S 主模型配 `mock-format-error`、无备用；app 生成造数一次，响应 `status=FORMAT_ERROR`，取 requestId（或 psql 造数 `status='FORMAT_ERROR'`、`content` 为 null）
+2. 登录取 token
+3. PUT …/{requestId}/rating，body `{"rating":"UNUSABLE","tags":["FORMAT_ERROR"]}`
+4. GET 详情
+**预期结果**: 步骤 3 返回 204；步骤 4 `status=FORMAT_ERROR`、`rating=UNUSABLE`、`ratingTags=["FORMAT_ERROR"]`
+**状态**: ✅ 通过
+**执行方式**: api-test-runner
+**执行存证**: `test-evidence/ai-generation-records/TC-ai-IT-083/`
+**最后更新**: 2026-10-25
+
+### TC-ai-IT-084: PUT /api/admin/ai/generations/{id}/rating 参数非法返回 400 且评价不变
+**关联需求**: ai/生成记录人工评价#评价参数非法
+**关联契约**: api-spec.json#/paths/~1api~1admin~1ai~1generations~1{id}~1rating/put
+**来源**: ai-generation-records
+**优先级**: P1
+**测试步骤**:
+1. 前置：psql 造数一条 SUCCESS 记录 R，已评价 `rating='NEEDS_IMPROVEMENT'`、`rating_tags='["OTHER"]'`、`rating_remark='原备注'`、`rated_by='admin'`
+2. 登录取 token
+3. 分别 PUT …/{R.id}/rating：
+   a. `{"tags":["VAGUE"]}`（缺 rating）
+   b. `{"rating":"GOOD"}`
+   c. `{"rating":"USABLE","tags":["BAD_TONE","BAD_TONE"]}`
+   d. `{"rating":"USABLE","tags":["X"]}`
+   e. `{"rating":"USABLE","remark":"<501 个字符>"}`
+4. GET 详情
+**预期结果**: a~e 均返回 400；步骤 4 评价仍为 `NEEDS_IMPROVEMENT` / `["OTHER"]` / 「原备注」/ `ratedBy=admin`，`ratedAt` 未变
+**状态**: ✅ 通过
+**执行方式**: api-test-runner
+**执行存证**: `test-evidence/ai-generation-records/TC-ai-IT-084/`
+**最后更新**: 2026-10-25
+
+### TC-ai-IT-085: PUT /api/admin/ai/generations/{id}/rating 记录不存在返回 404
+**关联需求**: ai/生成记录人工评价#评价参数非法
+**关联契约**: api-spec.json#/paths/~1api~1admin~1ai~1generations~1{id}~1rating/put
+**来源**: ai-generation-records
+**优先级**: P2
+**测试步骤**:
+1. 登录取 token
+2. PUT /api/admin/ai/generations/<随机 uuid>/rating，body `{"rating":"USABLE"}`
+**预期结果**: 返回 404，body 为 `{status,error,message,path}`
+**状态**: ✅ 通过
+**执行方式**: api-test-runner
+**执行存证**: `test-evidence/ai-generation-records/TC-ai-IT-085/`
+**最后更新**: 2026-10-25
+
+### TC-ai-IT-086: MEMBER 角色可评价生成记录，未登录返回 401
+**关联需求**: ai/AI 管理权限与菜单#MEMBER 可评价生成记录
+**关联契约**: api-spec.json#/paths/~1api~1admin~1ai~1generations~1{id}~1rating/put
+**来源**: ai-generation-records
+**优先级**: P1
+**测试步骤**:
+1. 前置：存在 MEMBER 角色的 Manager；psql 造数一条未评价 SUCCESS 记录 R
+2. 以 MEMBER 登录取 token
+3. GET /api/admin/ai/generations/page?requestId=<R.id>&page=1&size=20；GET /api/admin/ai/generations/{R.id}
+4. PUT /api/admin/ai/generations/{R.id}/rating，body `{"rating":"USABLE"}`
+5. 不带 Authorization 头 GET /api/admin/ai/generations/page 与 PUT …/{R.id}/rating
+**预期结果**: 步骤 3 均 200；步骤 4 返回 204（不返回 403），详情 `ratedBy` 为该 MEMBER 用户名；步骤 5 均返回 401
+**状态**: ✅ 通过
+**执行方式**: api-test-runner
+**执行存证**: `test-evidence/ai-generation-records/TC-ai-IT-086/`
+**最后更新**: 2026-10-25
+
+### TC-ai-IT-087: 评价生成记录产生 ai-generation:rate 留痕
+**关联需求**: ai/生成记录人工评价#评价留痕
+**关联契约**: api-spec.json#/paths/~1api~1admin~1logs~1page/get
+**来源**: ai-generation-records
+**优先级**: P1
+**测试步骤**:
+1. 前置：psql 造数一条 SUCCESS 记录 R
+2. 以 admin 登录取 token
+3. PUT …/{R.id}/rating，body `{"rating":"NEEDS_IMPROVEMENT","tags":["VAGUE"],"remark":"留痕"}`
+4. 轮询 GET /api/admin/logs/page?username=admin&module=ai-generation&page=1&size=20（最多 20 次、间隔 100ms）
+5. psql 查询该日志行 payload
+**预期结果**: 步骤 3 返回 204；步骤 4 命中 `module=ai-generation`、`action=rate`、`target=<R.id>` 的记录；步骤 5 payload 含本次 `rating`、`tags`、`remark`
+**状态**: ✅ 通过
+**执行方式**: api-test-runner
+**执行存证**: `test-evidence/ai-generation-records/TC-ai-IT-087/`
+**最后更新**: 2026-10-25

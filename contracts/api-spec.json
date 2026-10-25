@@ -3,7 +3,7 @@
   "info": {
     "title": "love-space API 契约（项目级 living 文件）",
     "description": "登记 OpenSpec change 触及的接口；operation 通过 x-requirement 反链到 openspec specs 的 {domain}/{Requirement 名}。存量未被 change 触及的接口暂不回溯登记。",
-    "version": "2026.10.24"
+    "version": "2026.10.25"
   },
   "servers": [
     {
@@ -1480,6 +1480,176 @@
         },
         "x-requirement": "ai/App 生成接口"
       }
+    },
+    "/api/admin/ai/generations/page": {
+      "get": {
+        "summary": "AI 生成记录分页（固定 createdAt 倒序；size 白名单 20/200）",
+        "description": "返回 PageResponse<GenerationItem>：{id, createdAt, anonymousUserId, sceneId, sceneName, templateId, templateSeq, finalModel, status, latencyMs, rating}，不含正文。startDate/endDate 都不传 = 最近 7 天（北京时间，含今天）；只传一端按该端单边过滤；日期格式错、startDate 晚于 endDate（「开始日期不能晚于结束日期」）、status/rating/tag 不在枚举内 400。",
+        "parameters": [
+          {
+            "name": "startDate",
+            "in": "query",
+            "description": "开始日期 yyyy-MM-dd（北京时间整日，含）",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "endDate",
+            "in": "query",
+            "description": "结束日期 yyyy-MM-dd（北京时间整日，含）",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "requestId",
+            "in": "query",
+            "description": "生成记录 ID，精确",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "anonymousUserId",
+            "in": "query",
+            "description": "匿名用户 ID，精确",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sceneId",
+            "in": "query",
+            "description": "场景业务编码，精确",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "templateId",
+            "in": "query",
+            "description": "模板 ID，精确",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "model",
+            "in": "query",
+            "description": "最终模型 finalModel，精确",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "description": "生成状态",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "PROCESSING",
+                "SUCCESS",
+                "REFUSED",
+                "EMPTY",
+                "FORMAT_ERROR",
+                "TIMEOUT",
+                "RATE_LIMITED",
+                "UPSTREAM_ERROR"
+              ]
+            }
+          },
+          {
+            "name": "rating",
+            "in": "query",
+            "description": "评价；NONE = 未评价",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "USABLE",
+                "NEEDS_IMPROVEMENT",
+                "UNUSABLE",
+                "NONE"
+              ]
+            }
+          },
+          {
+            "name": "tag",
+            "in": "query",
+            "description": "问题标签（评价标签包含该值）",
+            "schema": {
+              "$ref": "#/components/schemas/AiGenerationRatingTag"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "页码，1 基",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "description": "每页条数，20/200",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "x-requirement": "ai/生成记录列表查询"
+      }
+    },
+    "/api/admin/ai/generations/{id}": {
+      "get": {
+        "summary": "AI 生成记录详情（含调用明细与当前评价）",
+        "description": "返回 GenerationDetail：记录全部字段（clientRequestId, anonymousUserId, sceneId, templateId, templateSeq, appVersion, inputs, requestMessages, requestParams, status, errorCode, errorMessage, finalModel, attemptCount, rawOutput, content, promptTokens, completionTokens, latencyMs, createdAt, completedAt, rating, ratingTags, ratingRemark, ratedBy, ratedAt）+ sceneName + templateName + attempts[]（按 seq 升序：seq, triggerReason, model, status, errorCode, errorMessage, providerRequestId, rawResponse, parsedContent, validationError, promptTokens, completionTokens, usage, startedAt, finishedAt, latencyMs）；不存在 404。",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "x-requirement": "ai/生成记录详情"
+      }
+    },
+    "/api/admin/ai/generations/{id}/rating": {
+      "put": {
+        "summary": "保存 AI 生成记录评价（每条记录只有一个评价，再次保存即覆盖，不保留历史）",
+        "description": "204；rating/tags/remark 整体替换并更新 ratedBy/ratedAt；参数非法 400；不存在 404；记录为 PROCESSING 409「生成中的记录不能评价」。留痕 ai-generation:rate。",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AiGenerationRatingRequest"
+              }
+            }
+          }
+        },
+        "x-requirement": "ai/生成记录人工评价"
+      }
     }
   },
   "components": {
@@ -2206,6 +2376,51 @@
             "type": "object",
             "additionalProperties": true,
             "description": "{变量名: 值}；每个值 ≤500 字符、整体序列化后 ≤4KB，超限 400；值非字符串时按 JSON 文本代入"
+          }
+        }
+      },
+      "AiGenerationRatingTag": {
+        "type": "string",
+        "enum": [
+          "IGNORED_INPUT",
+          "WEAK_CYCLE_LINK",
+          "BAD_TONE",
+          "VAGUE",
+          "INAPPLICABLE_ADVICE",
+          "OVER_MEDICALIZED",
+          "FORMAT_ERROR",
+          "OTHER"
+        ],
+        "description": "问题标签：忽略输入 / 周期关联牵强 / 语气不合适 / 内容空泛 / 建议不适用 / 过度医疗化 / 格式错误 / 其他"
+      },
+      "AiGenerationRatingRequest": {
+        "type": "object",
+        "required": [
+          "rating"
+        ],
+        "properties": {
+          "rating": {
+            "type": "string",
+            "enum": [
+              "USABLE",
+              "NEEDS_IMPROVEMENT",
+              "UNUSABLE"
+            ],
+            "description": "评价，必填；不能清除"
+          },
+          "tags": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "$ref": "#/components/schemas/AiGenerationRatingTag"
+            },
+            "description": "问题标签，可空（视为空数组），不重复"
+          },
+          "remark": {
+            "type": "string",
+            "maxLength": 500,
+            "nullable": true,
+            "description": "备注，≤500；不传视为清空"
           }
         }
       }

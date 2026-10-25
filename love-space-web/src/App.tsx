@@ -37,6 +37,8 @@ import AiPromptSceneList from "./pages/AiPrompts/SceneList";
 import AiPromptTemplateList from "./pages/AiPrompts/TemplateList";
 import AiPromptTemplateEditor from "./pages/AiPrompts/TemplateEditor";
 import AiPromptCompare from "./pages/AiPrompts/Compare";
+import AiGenerationList from "./pages/AiGenerations/List";
+import AiGenerationDetail from "./pages/AiGenerations/Detail";
 
 export default function App() {
   return (
@@ -95,6 +97,8 @@ export default function App() {
             <Route path="/ai/prompts/:sceneId/templates/new" element={<AiPromptTemplateEditor />} />
             <Route path="/ai/prompts/:sceneId/compare" element={<AiPromptCompare />} />
             <Route path="/ai/prompt-templates/:id" element={<AiPromptTemplateEditor />} />
+            <Route path="/ai/generations" element={<AiGenerationList />} />
+            <Route path="/ai/generations/:id" element={<AiGenerationDetail />} />
           </Route>
 
           <Route path="/signup" element={<Navigate to="/signin" replace />} />

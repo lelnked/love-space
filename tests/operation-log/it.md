@@ -16,8 +16,8 @@
 **预期结果**: 步骤 2 返回 200；轮询在超时前命中，存在一条 `module=city`、`action=create`、`username=admin` 的记录，`createdAt` 非空
 **状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**: `test-evidence/ai-management/TC-operation-log-IT-001/`
-**最后更新**: 2026-10-24
+**执行存证**: `test-evidence/ai-generation-records/TC-operation-log-IT-001/`
+**最后更新**: 2026-10-25
 
 ### TC-operation-log-IT-002: 业务校验失败（400）时不产生留痕
 **关联需求**: operation-log/运营写操作留痕#业务方法失败时不留痕
@@ -32,8 +32,8 @@
 **预期结果**: 步骤 3 返回 400 且消息为「中文名不能为空」；步骤 4 的 `totalElements` 仍等于 T0，日志中不新增 `module=city`、`action=create` 记录
 **状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**: `test-evidence/ai-management/TC-operation-log-IT-002/`
-**最后更新**: 2026-10-24
+**执行存证**: `test-evidence/ai-generation-records/TC-operation-log-IT-002/`
+**最后更新**: 2026-10-25
 
 ### TC-operation-log-IT-003: 登录不产生 auth:login 日志
 **关联需求**: operation-log/运营写操作留痕#登录不产生日志
@@ -245,8 +245,8 @@
 **预期结果**: 步骤 2 返回 201；轮询在超时前命中，存在一条 `module=ai-scene`、`action=create`、`username=admin` 的记录
 **状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**: `test-evidence/ai-management/TC-operation-log-IT-015/`
-**最后更新**: 2026-10-24
+**执行存证**: `test-evidence/ai-generation-records/TC-operation-log-IT-015/`
+**最后更新**: 2026-10-25
 
 ### TC-operation-log-IT-016: AI 测试连接与模板测试不产生留痕
 **关联需求**: operation-log/运营写操作留痕#AI 测试类调用不留痕
@@ -263,5 +263,21 @@
 **预期结果**: 步骤 4、5 返回 200；步骤 6 两个模块的 `totalElements` 与基线一致，不新增 `ai-scene` / `ai-prompt` 记录
 **状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**: `test-evidence/ai-management/TC-operation-log-IT-016/`
-**最后更新**: 2026-10-24
+**执行存证**: `test-evidence/ai-generation-records/TC-operation-log-IT-016/`
+**最后更新**: 2026-10-25
+
+### TC-operation-log-IT-017: 评价 AI 生成记录后异步产生 ai-generation:rate 留痕
+**关联需求**: operation-log/运营写操作留痕#AI 生成记录评价留痕
+**关联契约**: api-spec.json#/paths/~1api~1admin~1logs~1page/get
+**来源**: ai-generation-records
+**优先级**: P1
+**测试步骤**:
+1. 前置：psql 向 `loves_ai_generation` 插入一条 `status='SUCCESS'` 的生成记录 R（库 `localhost:25432/love_space`，iris/iris；插入口径见 `tests/ai/it.md` 生成记录造数说明）
+2. POST /api/admin/auth/login，body `{"username":"admin","password":"8@y2eoRLyStM*UVU"}`，取 JWT token
+3. PUT /api/admin/ai/generations/{R.id}/rating，body `{"rating":"USABLE"}`
+4. 轮询 GET /api/admin/logs/page?username=admin&module=ai-generation&page=1&size=20（最多 20 次、间隔 100ms），直到出现 `action=rate` 的新记录
+**预期结果**: 步骤 3 返回 204；轮询在超时前命中，存在一条 `module=ai-generation`、`action=rate`、`username=admin`、`target=<R.id>` 的记录
+**状态**: ✅ 通过
+**执行方式**: api-test-runner
+**执行存证**: `test-evidence/ai-generation-records/TC-operation-log-IT-017/`
+**最后更新**: 2026-10-25

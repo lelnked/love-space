@@ -2,13 +2,13 @@
 
 ### TC-ai-WEB-001: 侧栏「AI 管理」菜单及子菜单顺序
 **关联需求**: ai/AI 管理权限与菜单#侧栏菜单
-**来源**: ai-management
+**来源**: ai-generation-records
 **优先级**: P1
 **前置条件**: 登录入口 http://100.93.172.18:5173/love-space/signin；存在 MEMBER 角色账号
 **测试步骤**:
 1. 以 MEMBER 登录后台
 2. 在侧栏展开「AI 管理」
-**预期结果**: 「AI 管理」一级菜单可见，子菜单依次为「业务配置」「模型配置」「提示词管理」，点击分别进入 /love-space/ai/scenes、/ai/models、/ai/prompts
+**预期结果**: 「AI 管理」一级菜单可见，依次显示「业务配置」「模型配置」「提示词管理」「生成记录」四个子菜单，点击分别进入 /love-space/ai/scenes、/ai/models、/ai/prompts、/ai/generations
 **状态**: ⬜ 未测试
 **执行方式**: web-test-runner（@playwright/mcp）
 **执行存证**: `test-evidence/regression/ai/TC-ai-WEB-001/`
@@ -279,4 +279,146 @@
 **状态**: ⬜ 未测试
 **执行方式**: web-test-runner（@playwright/mcp）
 **执行存证**: `test-evidence/regression/ai/TC-ai-WEB-020/`
+**最后更新**: -
+
+### TC-ai-WEB-021: 生成记录列表默认展示最近 7 天
+**关联需求**: ai/生成记录列表页面#默认展示最近 7 天
+**来源**: ai-generation-records
+**优先级**: P0
+**前置条件**: 登录入口 http://100.93.172.18:5173/love-space/signin；Manager 已登录；最近 7 天内存在至少 2 条生成记录（可 psql 造数，口径见 `tests/ai/it.md` 生成记录造数说明），另有 1 条 8 天前的记录
+**测试步骤**:
+1. 点击侧栏「AI 管理」→「生成记录」进入 /love-space/ai/generations
+**预期结果**: ①开始日期为 6 天前、结束日期为今天（北京时间）；列表列依次为时间、请求 ID（缩略）、匿名用户、场景名称、版本（V{seq}）、实际模型、状态（中文 + 成功/失败标识）、耗时（秒）、评价（未评价显示「—」）；行按时间倒序，不含 8 天前的记录；分页器默认 20 条/页
+**状态**: ⬜ 未测试
+**执行方式**: web-test-runner（@playwright/mcp）
+**执行存证**: `test-evidence/regression/ai/TC-ai-WEB-021/`
+**最后更新**: -
+
+### TC-ai-WEB-022: 时间范围开始/结束互相限制可选日期
+**关联需求**: ai/生成记录列表页面#时间范围互相限制
+**来源**: ai-generation-records
+**优先级**: P1
+**前置条件**: 登录入口 http://100.93.172.18:5173/love-space/signin；已进入 /love-space/ai/generations
+**测试步骤**:
+1. ①结束日期选 2026-10-20
+2. 打开①开始日期选择器
+3. 开始日期选 2026-10-15，再打开①结束日期选择器
+4. 点⑩重置
+**预期结果**: 步骤 2 中 2026-10-20 之后的日期不可选；步骤 3 中早于 2026-10-15 的日期不可选；步骤 4 后①回到最近 7 天，列表回到第 1 页
+**状态**: ⬜ 未测试
+**执行方式**: web-test-runner（@playwright/mcp）
+**执行存证**: `test-evidence/regression/ai/TC-ai-WEB-022/`
+**最后更新**: -
+
+### TC-ai-WEB-023: 模板版本下拉依赖场景
+**关联需求**: ai/生成记录列表页面#模板版本依赖场景
+**来源**: ai-generation-records
+**优先级**: P1
+**前置条件**: 登录入口 http://100.93.172.18:5173/love-space/signin；存在两个各有模板的场景 S1、S2；已进入 /love-space/ai/generations
+**测试步骤**:
+1. 确认④场景为「全部」，查看⑤模板版本
+2. ④选择 S1，展开⑤
+3. ⑤选一个版本后，④切换为 S2
+**预期结果**: 步骤 1 ⑤不可选；步骤 2 ⑤可选，选项为 S1 的模板，格式 `V{seq} {name}`；步骤 3 ⑤被清空回「全部」，选项变为 S2 的模板
+**状态**: ⬜ 未测试
+**执行方式**: web-test-runner（@playwright/mcp）
+**执行存证**: `test-evidence/regression/ai/TC-ai-WEB-023/`
+**最后更新**: -
+
+### TC-ai-WEB-024: 按未评价筛选并回到第 1 页
+**关联需求**: ai/生成记录列表页面#按未评价筛选
+**来源**: ai-generation-records
+**优先级**: P1
+**前置条件**: 登录入口 http://100.93.172.18:5173/love-space/signin；最近 7 天内生成记录超过 20 条，其中既有已评价也有未评价（psql 批量造数）
+**测试步骤**:
+1. 进入 /love-space/ai/generations，翻到第 2 页
+2. ⑧评价选「未评价」，点⑩查询
+**预期结果**: 分页器回到第 1 页；列表每行评价列均为「—」
+**状态**: ⬜ 未测试
+**执行方式**: web-test-runner（@playwright/mcp）
+**执行存证**: `test-evidence/regression/ai/TC-ai-WEB-024/`
+**最后更新**: -
+
+### TC-ai-WEB-025: 点击列表行进入详情页
+**关联需求**: ai/生成记录列表页面#点击行进入详情
+**来源**: ai-generation-records
+**优先级**: P1
+**前置条件**: 登录入口 http://100.93.172.18:5173/love-space/signin；列表中存在记录
+**测试步骤**:
+1. 悬停第一行请求 ID
+2. 点击第一行⑪
+**预期结果**: 步骤 1 显示完整 requestId；步骤 2 进入 /love-space/ai/generations/{该 requestId}，详情页显示「业务请求」「输入快照」「实际请求」「调用明细」「生成结果」「人工评价」各区
+**状态**: ⬜ 未测试
+**执行方式**: web-test-runner（@playwright/mcp）
+**执行存证**: `test-evidence/regression/ai/TC-ai-WEB-025/`
+**最后更新**: -
+
+### TC-ai-WEB-026: 未评价记录保存评价
+**关联需求**: ai/生成记录详情页面#未评价记录保存评价
+**来源**: ai-generation-records
+**优先级**: P0
+**前置条件**: 登录入口 http://100.93.172.18:5173/love-space/signin；以 admin 登录；存在一条未评价的 SUCCESS 记录 R
+**测试步骤**:
+1. 打开 /love-space/ai/generations/{R.id}
+2. 查看人工评价区
+3. ⑫选「可用」，⑬勾选「语气不合适」，点⑮
+**预期结果**: 步骤 2 ⑫未选中、⑬全未勾、⑭为空，⑮文案「保存评价」且不可用，⑰不显示；步骤 3 toast 成功，⑮文案变为「修改评价」，⑰显示「最后评价：admin · {时间}」，⑫⑬保持所选
+**状态**: ⬜ 未测试
+**执行方式**: web-test-runner（@playwright/mcp）
+**执行存证**: `test-evidence/regression/ai/TC-ai-WEB-026/`
+**最后更新**: -
+
+### TC-ai-WEB-027: 修改已有评价且不出现评价历史
+**关联需求**: ai/生成记录详情页面#修改已有评价
+**来源**: ai-generation-records
+**优先级**: P0
+**前置条件**: 登录入口 http://100.93.172.18:5173/love-space/signin；存在一条已被 ops1 评为「需优化」、标签「内容空泛」、备注「待改进」的记录 R（psql 造数：`rating='NEEDS_IMPROVEMENT'`、`rating_tags='["VAGUE"]'`、`rating_remark='待改进'`、`rated_by='ops1'`、`rated_at=now()`）；以 admin 登录
+**测试步骤**:
+1. 打开 /love-space/ai/generations/{R.id}，查看人工评价区
+2. ⑫改为「不可用」，点⑮
+**预期结果**: 步骤 1 ⑫回填「需优化」、⑬回填「内容空泛」、⑭回填「待改进」，⑮文案「修改评价」，⑰显示「最后评价：ops1 · …」；步骤 2 toast 成功，重新拉取后⑫为「不可用」、⑰显示 admin 与新时间；页面无任何评价历史列表
+**状态**: ⬜ 未测试
+**执行方式**: web-test-runner（@playwright/mcp）
+**执行存证**: `test-evidence/regression/ai/TC-ai-WEB-027/`
+**最后更新**: -
+
+### TC-ai-WEB-028: 生成中记录评价区置灰
+**关联需求**: ai/生成记录详情页面#生成中记录评价区置灰
+**来源**: ai-generation-records
+**优先级**: P1
+**前置条件**: 登录入口 http://100.93.172.18:5173/love-space/signin；psql 造数一条 `status='PROCESSING'` 的记录 R
+**测试步骤**:
+1. 打开 /love-space/ai/generations/{R.id}，查看人工评价区
+**预期结果**: ⑫~⑮均置灰不可操作，评价区显示「生成中的记录不能评价」；业务请求区状态显示「生成中」
+**状态**: ⬜ 未测试
+**执行方式**: web-test-runner（@playwright/mcp）
+**执行存证**: `test-evidence/regression/ai/TC-ai-WEB-028/`
+**最后更新**: -
+
+### TC-ai-WEB-029: 展开调用明细原始返回
+**关联需求**: ai/生成记录详情页面#展开调用原始返回
+**来源**: ai-generation-records
+**优先级**: P1
+**前置条件**: 登录入口 http://100.93.172.18:5173/love-space/signin；存在一条经 `mock-flaky` 两次调用后成功的记录 R（app 生成造数，见 TC-ai-IT-075 前置）
+**测试步骤**:
+1. 打开 /love-space/ai/generations/{R.id}，查看调用明细区
+2. 点击第 1 次调用行的⑯展开
+**预期结果**: 步骤 1 调用明细 2 行，触发列依次「首次」「重试」；步骤 2 展开显示第 1 次调用的原始返回（`not json` 类非 JSON 文本）与解析错误
+**状态**: ⬜ 未测试
+**执行方式**: web-test-runner（@playwright/mcp）
+**执行存证**: `test-evidence/regression/ai/TC-ai-WEB-029/`
+**最后更新**: -
+
+### TC-ai-WEB-030: 详情页模板链接跳转模板详情
+**关联需求**: ai/生成记录详情页面#未评价记录保存评价
+**来源**: ai-generation-records
+**优先级**: P2
+**前置条件**: 登录入口 http://100.93.172.18:5173/love-space/signin；存在一条生成记录 R，其模板为 T
+**测试步骤**:
+1. 打开 /love-space/ai/generations/{R.id}
+2. 点击业务请求区「模板 V{seq} {name}↗」
+**预期结果**: 跳转到 /love-space/ai/prompt-templates/{T.id}，显示模板 T 的内容
+**状态**: ⬜ 未测试
+**执行方式**: web-test-runner（@playwright/mcp）
+**执行存证**: `test-evidence/regression/ai/TC-ai-WEB-030/`
 **最后更新**: -
