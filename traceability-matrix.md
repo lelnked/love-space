@@ -212,39 +212,39 @@
 | TC-ai-IT-095 | 两项额度均为 -1 时不做额度检查 | ai/生成接口每日额度#-1 不限制 | api-spec.json#/paths/~1api~1app~1ai~1generations/post | ai-limit-config | IT | `test-evidence/ai-limit-config/TC-ai-IT-095/` | ✅ |
 | TC-ai-IT-096 | 后台修改额度后下一次请求即生效（无需重启 app） | ai/生成接口每日额度#修改即时生效 | api-spec.json#/paths/~1api~1app~1ai~1generations/post | ai-limit-config | IT | `test-evidence/ai-limit-config/TC-ai-IT-096/` | ✅ |
 | TC-ai-IT-097 | 配置行缺失时生成接口返回 500 且不写记录 | ai/生成接口每日额度#配置行缺失 | api-spec.json#/paths/~1api~1app~1ai~1generations/post | ai-limit-config | IT | `test-evidence/ai-limit-config/TC-ai-IT-097/` | ✅ |
-| TC-ai-WEB-001 | 侧栏「AI 管理」菜单及子菜单顺序 | ai/AI 管理权限与菜单#侧栏菜单 | - | ai-limit-config | WEB | `test-evidence/regression/ai/TC-ai-WEB-001/` | ⬜ |
-| TC-ai-WEB-002 | 业务配置页新增场景弹窗 | ai/业务配置页面#新增场景弹窗 | - | ai-management | WEB | `test-evidence/regression/ai/TC-ai-WEB-002/` | ⬜ |
-| TC-ai-WEB-003 | 编辑场景时 scene_id 只读 | ai/业务配置页面#编辑时 scene_id 只读 | - | ai-management | WEB | `test-evidence/regression/ai/TC-ai-WEB-003/` | ⬜ |
-| TC-ai-WEB-004 | 重复 scene_id 保存提示 | ai/业务配置页面#重复 scene_id 提示 | - | ai-management | WEB | `test-evidence/regression/ai/TC-ai-WEB-004/` | ⬜ |
-| TC-ai-WEB-005 | 禁用场景需二次确认 | ai/业务配置页面#禁用需确认 | - | ai-management | WEB | `test-evidence/regression/ai/TC-ai-WEB-005/` | ⬜ |
-| TC-ai-WEB-006 | 模型配置页未配置主模型提示 | ai/模型配置页面#未配置主模型提示 | - | ai-management | WEB | `test-evidence/regression/ai/TC-ai-WEB-006/` | ⬜ |
-| TC-ai-WEB-007 | 配置弹窗测试连接显示结果 | ai/模型配置页面#测试连接显示结果 | - | ai-management | WEB | `test-evidence/regression/ai/TC-ai-WEB-007/` | ⬜ |
-| TC-ai-WEB-008 | 保存模型配置（备用不使用）及主备相同提示 | ai/模型配置页面#保存模型配置 | - | ai-management | WEB | `test-evidence/regression/ai/TC-ai-WEB-008/` | ⬜ |
-| TC-ai-WEB-009 | 提示词场景列表显示未发布 | ai/提示词管理页面#场景列表显示未发布 | - | ai-management | WEB | `test-evidence/regression/ai/TC-ai-WEB-009/` | ⬜ |
-| TC-ai-WEB-010 | 模板列表对比按钮需勾选 2~3 个 | ai/提示词管理页面#对比按钮需勾选 2~3 个 | - | ai-management | WEB | `test-evidence/regression/ai/TC-ai-WEB-010/` | ⬜ |
-| TC-ai-WEB-011 | 未测试模板发布按钮置灰 | ai/提示词管理页面#未测试模板发布置灰 | - | ai-management | WEB | `test-evidence/regression/ai/TC-ai-WEB-011/` | ⬜ |
+| TC-ai-WEB-001 | 侧栏「AI 管理」菜单及子菜单顺序 | ai/AI 管理权限与菜单#侧栏菜单 | - | ai-limit-config | WEB | `test-evidence/regression/ai/TC-ai-WEB-001/` | ✅ |
+| TC-ai-WEB-002 | 业务配置页新增场景弹窗 | ai/业务配置页面#新增场景弹窗 | - | ai-management | WEB | `test-evidence/regression/ai/TC-ai-WEB-002/` | ✅ |
+| TC-ai-WEB-003 | 编辑场景时 scene_id 只读 | ai/业务配置页面#编辑时 scene_id 只读 | - | ai-management | WEB | `test-evidence/regression/ai/TC-ai-WEB-003/` | ✅ |
+| TC-ai-WEB-004 | 重复 scene_id 保存提示 | ai/业务配置页面#重复 scene_id 提示 | - | ai-management | WEB | `test-evidence/regression/ai/TC-ai-WEB-004/` | ✅ |
+| TC-ai-WEB-005 | 禁用场景需二次确认 | ai/业务配置页面#禁用需确认 | - | ai-management | WEB | `test-evidence/regression/ai/TC-ai-WEB-005/` | ✅ |
+| TC-ai-WEB-006 | 模型配置页未配置主模型提示 | ai/模型配置页面#未配置主模型提示 | - | ai-management | WEB | `test-evidence/regression/ai/TC-ai-WEB-006/` | ✅ |
+| TC-ai-WEB-007 | 配置弹窗测试连接显示结果 | ai/模型配置页面#测试连接显示结果 | - | ai-management | WEB | `test-evidence/regression/ai/TC-ai-WEB-007/` | ✅ |
+| TC-ai-WEB-008 | 保存模型配置（备用不使用）及主备相同提示 | ai/模型配置页面#保存模型配置 | - | ai-management | WEB | `test-evidence/regression/ai/TC-ai-WEB-008/` | ✅ |
+| TC-ai-WEB-009 | 提示词场景列表显示未发布 | ai/提示词管理页面#场景列表显示未发布 | - | ai-management | WEB | `test-evidence/regression/ai/TC-ai-WEB-009/` | ✅ |
+| TC-ai-WEB-010 | 模板列表对比按钮需勾选 2~3 个 | ai/提示词管理页面#对比按钮需勾选 2~3 个 | - | ai-management | WEB | `test-evidence/regression/ai/TC-ai-WEB-010/` | ✅ |
+| TC-ai-WEB-011 | 未测试模板发布按钮置灰 | ai/提示词管理页面#未测试模板发布置灰 | - | ai-management | WEB | `test-evidence/regression/ai/TC-ai-WEB-011/` | ✅ |
 | TC-ai-WEB-012 | 发布二次确认后切换生效 | ai/提示词管理页面#发布二次确认后切换生效 | - | ai-management | WEB | `test-evidence/regression/ai/TC-ai-WEB-012/` | ⬜ |
-| TC-ai-WEB-013 | 复制为新模板 | ai/提示词管理页面#复制为新模板 | - | ai-management | WEB | `test-evidence/regression/ai/TC-ai-WEB-013/` | ⬜ |
-| TC-ai-WEB-014 | 编辑页未声明变量实时提示 | ai/模板编辑与测试页面#未声明变量实时提示 | - | ai-management | WEB | `test-evidence/regression/ai/TC-ai-WEB-014/` | ⬜ |
-| TC-ai-WEB-015 | 运行测试前自动保存 | ai/模板编辑与测试页面#运行测试前自动保存 | - | ai-management | WEB | `test-evidence/regression/ai/TC-ai-WEB-015/` | ⬜ |
+| TC-ai-WEB-013 | 复制为新模板 | ai/提示词管理页面#复制为新模板 | - | ai-management | WEB | `test-evidence/regression/ai/TC-ai-WEB-013/` | ✅ |
+| TC-ai-WEB-014 | 编辑页未声明变量实时提示 | ai/模板编辑与测试页面#未声明变量实时提示 | - | ai-management | WEB | `test-evidence/regression/ai/TC-ai-WEB-014/` | ✅ |
+| TC-ai-WEB-015 | 运行测试前自动保存 | ai/模板编辑与测试页面#运行测试前自动保存 | - | ai-management | WEB | `test-evidence/regression/ai/TC-ai-WEB-015/` | ✅ |
 | TC-ai-WEB-016 | 生效中模板只读可测试 | ai/模板编辑与测试页面#生效中模板只读可测试 | - | ai-management | WEB | `test-evidence/regression/ai/TC-ai-WEB-016/` | ⬜ |
-| TC-ai-WEB-017 | 未测试时底部发布置灰 | ai/模板编辑与测试页面#未测试时发布置灰 | - | ai-management | WEB | `test-evidence/regression/ai/TC-ai-WEB-017/` | ⬜ |
+| TC-ai-WEB-017 | 未测试时底部发布置灰 | ai/模板编辑与测试页面#未测试时发布置灰 | - | ai-management | WEB | `test-evidence/regression/ai/TC-ai-WEB-017/` | ✅ |
 | TC-ai-WEB-018 | 并排对比两个模板 | ai/模板对比页面#并排对比 | - | ai-management | WEB | `test-evidence/regression/ai/TC-ai-WEB-018/` | ⬜ |
-| TC-ai-WEB-019 | 对比页 ids 数量非法 | ai/模板对比页面#ids 数量非法 | - | ai-management | WEB | `test-evidence/regression/ai/TC-ai-WEB-019/` | ⬜ |
-| TC-ai-WEB-020 | 保存版本冲突不覆盖本地编辑 | ai/模板编辑与测试页面#运行测试前自动保存 | - | ai-management | WEB | `test-evidence/regression/ai/TC-ai-WEB-020/` | ⬜ |
-| TC-ai-WEB-021 | 生成记录列表默认展示最近 7 天 | ai/生成记录列表页面#默认展示最近 7 天 | - | ai-generation-records | WEB | `test-evidence/regression/ai/TC-ai-WEB-021/` | ⬜ |
-| TC-ai-WEB-022 | 时间范围开始/结束互相限制可选日期 | ai/生成记录列表页面#时间范围互相限制 | - | ai-generation-records | WEB | `test-evidence/regression/ai/TC-ai-WEB-022/` | ⬜ |
-| TC-ai-WEB-023 | 模板版本下拉依赖场景 | ai/生成记录列表页面#模板版本依赖场景 | - | ai-generation-records | WEB | `test-evidence/regression/ai/TC-ai-WEB-023/` | ⬜ |
-| TC-ai-WEB-024 | 按未评价筛选并回到第 1 页 | ai/生成记录列表页面#按未评价筛选 | - | ai-generation-records | WEB | `test-evidence/regression/ai/TC-ai-WEB-024/` | ⬜ |
-| TC-ai-WEB-025 | 点击列表行进入详情页 | ai/生成记录列表页面#点击行进入详情 | - | ai-generation-records | WEB | `test-evidence/regression/ai/TC-ai-WEB-025/` | ⬜ |
-| TC-ai-WEB-026 | 未评价记录保存评价 | ai/生成记录详情页面#未评价记录保存评价 | - | ai-generation-records | WEB | `test-evidence/regression/ai/TC-ai-WEB-026/` | ⬜ |
-| TC-ai-WEB-027 | 修改已有评价且不出现评价历史 | ai/生成记录详情页面#修改已有评价 | - | ai-generation-records | WEB | `test-evidence/regression/ai/TC-ai-WEB-027/` | ⬜ |
-| TC-ai-WEB-028 | 生成中记录评价区置灰 | ai/生成记录详情页面#生成中记录评价区置灰 | - | ai-generation-records | WEB | `test-evidence/regression/ai/TC-ai-WEB-028/` | ⬜ |
-| TC-ai-WEB-029 | 展开调用明细原始返回 | ai/生成记录详情页面#展开调用原始返回 | - | ai-generation-records | WEB | `test-evidence/regression/ai/TC-ai-WEB-029/` | ⬜ |
-| TC-ai-WEB-030 | 详情页模板链接跳转模板详情 | ai/生成记录详情页面#未评价记录保存评价 | - | ai-generation-records | WEB | `test-evidence/regression/ai/TC-ai-WEB-030/` | ⬜ |
-| TC-ai-WEB-031 | 限流配置列表展示 | ai/限流配置页面#列表展示 | - | ai-limit-config | WEB | `test-evidence/regression/ai/TC-ai-WEB-031/` | ⬜ |
-| TC-ai-WEB-032 | 编辑限流配置并保存 | ai/限流配置页面#编辑保存 | - | ai-limit-config | WEB | `test-evidence/regression/ai/TC-ai-WEB-032/` | ⬜ |
-| TC-ai-WEB-033 | 非法输入禁止保存 | ai/限流配置页面#非法输入禁止保存 | - | ai-limit-config | WEB | `test-evidence/regression/ai/TC-ai-WEB-033/` | ⬜ |
+| TC-ai-WEB-019 | 对比页 ids 数量非法 | ai/模板对比页面#ids 数量非法 | - | ai-management | WEB | `test-evidence/regression/ai/TC-ai-WEB-019/` | ✅ |
+| TC-ai-WEB-020 | 保存版本冲突不覆盖本地编辑 | ai/模板编辑与测试页面#运行测试前自动保存 | - | ai-management | WEB | `test-evidence/regression/ai/TC-ai-WEB-020/` | ✅ |
+| TC-ai-WEB-021 | 生成记录列表默认展示最近 7 天 | ai/生成记录列表页面#默认展示最近 7 天 | - | ai-generation-records | WEB | `test-evidence/regression/ai/TC-ai-WEB-021/` | ✅ |
+| TC-ai-WEB-022 | 时间范围开始/结束互相限制可选日期 | ai/生成记录列表页面#时间范围互相限制 | - | ai-generation-records | WEB | `test-evidence/regression/ai/TC-ai-WEB-022/` | ✅ |
+| TC-ai-WEB-023 | 模板版本下拉依赖场景 | ai/生成记录列表页面#模板版本依赖场景 | - | ai-generation-records | WEB | `test-evidence/regression/ai/TC-ai-WEB-023/` | ✅ |
+| TC-ai-WEB-024 | 按未评价筛选并回到第 1 页 | ai/生成记录列表页面#按未评价筛选 | - | ai-generation-records | WEB | `test-evidence/regression/ai/TC-ai-WEB-024/` | ✅ |
+| TC-ai-WEB-025 | 点击列表行进入详情页 | ai/生成记录列表页面#点击行进入详情 | - | ai-generation-records | WEB | `test-evidence/regression/ai/TC-ai-WEB-025/` | ✅ |
+| TC-ai-WEB-026 | 未评价记录保存评价 | ai/生成记录详情页面#未评价记录保存评价 | - | ai-generation-records | WEB | `test-evidence/regression/ai/TC-ai-WEB-026/` | ✅ |
+| TC-ai-WEB-027 | 修改已有评价且不出现评价历史 | ai/生成记录详情页面#修改已有评价 | - | ai-generation-records | WEB | `test-evidence/regression/ai/TC-ai-WEB-027/` | ✅ |
+| TC-ai-WEB-028 | 生成中记录评价区置灰 | ai/生成记录详情页面#生成中记录评价区置灰 | - | ai-generation-records | WEB | `test-evidence/regression/ai/TC-ai-WEB-028/` | ✅ |
+| TC-ai-WEB-029 | 展开调用明细原始返回 | ai/生成记录详情页面#展开调用原始返回 | - | ai-generation-records | WEB | `test-evidence/regression/ai/TC-ai-WEB-029/` | ✅ |
+| TC-ai-WEB-030 | 详情页模板链接跳转模板详情 | ai/生成记录详情页面#未评价记录保存评价 | - | ai-generation-records | WEB | `test-evidence/regression/ai/TC-ai-WEB-030/` | ✅ |
+| TC-ai-WEB-031 | 限流配置列表展示 | ai/限流配置页面#列表展示 | - | ai-limit-config | WEB | `test-evidence/regression/ai/TC-ai-WEB-031/` | ✅ |
+| TC-ai-WEB-032 | 编辑限流配置并保存 | ai/限流配置页面#编辑保存 | - | ai-limit-config | WEB | `test-evidence/regression/ai/TC-ai-WEB-032/` | ✅ |
+| TC-ai-WEB-033 | 非法输入禁止保存 | ai/限流配置页面#非法输入禁止保存 | - | ai-limit-config | WEB | `test-evidence/regression/ai/TC-ai-WEB-033/` | ✅ |
 | TC-article-IT-001 | POST /api/admin/article-categories 创建栏目 | article/文章栏目管理#创建栏目 | api-spec.json#/paths/~1api~1admin~1article-categories/post | article-and-featured-feed | IT | `test-evidence/article-cover-title-intro-tags/TC-article-IT-001/` | ✅ |
 | TC-article-IT-002 | POST /api/admin/article-categories 缺必填被拒绝 | article/文章栏目管理#缺少必填项被拒绝 | api-spec.json#/paths/~1api~1admin~1article-categories/post | article-and-featured-feed | IT | `test-evidence/article-cover-title-intro-tags/TC-article-IT-002/` | ✅ |
 | TC-article-IT-003 | PUT /api/admin/article-categories/{id} 更新栏目 | article/文章栏目管理#创建栏目 | api-spec.json#/paths/~1api~1admin~1article-categories~1{id}/put | article-and-featured-feed | IT | `test-evidence/article-cover-title-intro-tags/TC-article-IT-003/` | ✅ |
@@ -551,10 +551,13 @@
 - ⚠ 未覆盖：operation-log/留痕字段取值与敏感信息脱敏#更新类操作记录目标 id 无 WEB/APP 用例且无 UT(@scenario) 覆盖
 - ⚠ 未覆盖：operation-log/留痕字段取值与敏感信息脱敏#嵌套资源的 target 取父级 id 无 WEB/APP 用例且无 UT(@scenario) 覆盖
 - ⚠ 未覆盖：operation-log/运营写操作留痕#登录不产生日志 无 WEB/APP 用例且无 UT(@scenario) 覆盖
+- ⚠ 状态存疑：TC-route-IT-020 标 ✅ 但存证目录不存在
+- ⚠ 状态存疑：TC-route-IT-021 标 ✅ 但存证目录不存在
+- ⚠ 状态存疑：TC-route-IT-022 标 ✅ 但存证目录不存在
 - ⚠ 状态存疑：TC-route-IT-023 标 ✅ 但存证目录不存在
 
 ## 测试统计
 - 总数：419
-- ✅ 通过：297 (70.9%)
+- ✅ 通过：327 (78.0%)
 - ❌ 失败：0
-- ⬜ 未测：122
+- ⬜ 未测：92
