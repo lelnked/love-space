@@ -136,4 +136,21 @@ class AiOperationLogTest extends AiTestSupport {
 
         assertThat(operationLogRepository.findAll()).noneMatch(l -> id.toString().equals(l.getTarget()));
     }
+
+    // @scenario: ai/AI 管理写操作留痕#修改限流配置留痕
+    // @scenario: operation-log/运营写操作留痕#AI 限流配置修改留痕
+    // @scenario: operation-log/留痕字段取值与敏感信息脱敏#字符串路径参数作为 target
+    @Test
+    void limitUpdateLogged() throws Exception {
+        try {
+            mockMvc.perform(put("/api/admin/ai/limits/GLOBAL_DAILY").header(HttpHeaders.AUTHORIZATION, adminToken())
+                            .contentType(MediaType.APPLICATION_JSON).content("{\"value\":4999}"))
+                    .andExpect(status().isOk());
+            assertThat(waitFor(l -> "ai-limit".equals(l.getModule()) && "update".equals(l.getAction())
+                    && "GLOBAL_DAILY".equals(l.getTarget()) && "admin".equals(l.getUsername()))).isNotEmpty();
+        } finally {
+            jdbcTemplate.update("update loves_ai_limit set limit_value = 5000, updated_by = null, updated_at = null"
+                    + " where limit_key = 'GLOBAL_DAILY'");
+        }
+    }
 }

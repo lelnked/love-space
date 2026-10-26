@@ -9,15 +9,16 @@ import com.loves.ai.prompt.PromptVariable;
 import com.space.app.common.exception.ConflictException;
 import com.space.app.common.exception.ResourceNotFoundException;
 import com.space.app.common.exception.TooManyRequestsException;
-import com.space.app.modules.ai.config.AiLimitProperties;
 import com.space.app.modules.ai.dto.AiGenerationCreateRequest;
 import com.space.app.modules.ai.dto.AiGenerationResponse;
 import com.space.app.modules.ai.entity.AiGeneration;
 import com.space.app.modules.ai.entity.AiGenerationAttempt;
+import com.space.app.modules.ai.entity.AiLimit;
 import com.space.app.modules.ai.entity.AiPromptTemplate;
 import com.space.app.modules.ai.entity.AiScene;
 import com.space.app.modules.ai.repository.AiGenerationAttemptRepository;
 import com.space.app.modules.ai.repository.AiGenerationRepository;
+import com.space.app.modules.ai.repository.AiLimitRepository;
 import com.space.app.modules.ai.repository.AiPromptTemplateRepository;
 import com.space.app.modules.ai.repository.AiSceneRepository;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -35,6 +36,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * App 生成：校验 → 去重 → 场景 → 渲染 → 额度 → 写 PROCESSING → 事务外调模型 → 回写记录与调用明细。
@@ -53,14 +55,14 @@ public class AiGenerationService {
     private final AiGenerationAttemptRepository attemptRepository;
     private final PromptRenderer renderer;
     private final AiGenerator generator;
-    private final AiLimitProperties limits;
+    private final AiLimitRepository limitRepository;
     private final Clock clock;
     private final ObjectMapper objectMapper;
     private final TransactionTemplate transactionTemplate;
 
     public AiGenerationService(AiSceneRepository sceneRepository, AiPromptTemplateRepository templateRepository,
                                AiGenerationRepository generationRepository, AiGenerationAttemptRepository attemptRepository,
-                               PromptRenderer renderer, AiGenerator generator, AiLimitProperties limits, Clock clock,
+                               PromptRenderer renderer, AiGenerator generator, AiLimitRepository limitRepository, Clock clock,
                                ObjectMapper objectMapper, TransactionTemplate transactionTemplate) {
         this.sceneRepository = sceneRepository;
         this.templateRepository = templateRepository;
@@ -68,7 +70,7 @@ public class AiGenerationService {
         this.attemptRepository = attemptRepository;
         this.renderer = renderer;
         this.generator = generator;
-        this.limits = limits;
+        this.limitRepository = limitRepository;
         this.clock = clock;
         this.objectMapper = objectMapper;
         this.transactionTemplate = transactionTemplate;
@@ -143,15 +145,29 @@ public class AiGenerationService {
     }
 
     // ponytail: 先计数再插入，并发下可能超出上限几次；需要精确时改数据库行锁计数
+    // 额度每次实时读表（后台修改即时生效）；缺行是部署错误，抛 IllegalStateException → 500，不放行
     private void checkQuota(String anonymousUserId) {
+        Map<String, Integer> limits = limitRepository.findAll().stream()
+                .collect(Collectors.toMap(AiLimit::getKey, AiLimit::getValue));
+        int perAnonDaily = requiredLimit(limits, AiLimit.PER_ANON_DAILY);
+        int globalDaily = requiredLimit(limits, AiLimit.GLOBAL_DAILY);
         OffsetDateTime startOfToday = LocalDate.now(clock).atStartOfDay(clock.getZone()).toOffsetDateTime();
-        if (generationRepository.countByAnonymousUserIdAndCreatedAtGreaterThanEqual(anonymousUserId, startOfToday)
-                >= limits.perAnonDaily()) {
+        if (perAnonDaily != AiLimit.UNLIMITED && generationRepository
+                .countByAnonymousUserIdAndCreatedAtGreaterThanEqual(anonymousUserId, startOfToday) >= perAnonDaily) {
             throw new TooManyRequestsException("今日生成次数已达上限");
         }
-        if (generationRepository.countByCreatedAtGreaterThanEqual(startOfToday) >= limits.globalDaily()) {
+        if (globalDaily != AiLimit.UNLIMITED
+                && generationRepository.countByCreatedAtGreaterThanEqual(startOfToday) >= globalDaily) {
             throw new TooManyRequestsException("服务繁忙，请稍后再试");
         }
+    }
+
+    private static int requiredLimit(Map<String, Integer> limits, String key) {
+        Integer value = limits.get(key);
+        if (value == null) {
+            throw new IllegalStateException("loves_ai_limit 缺少配置行：" + key);
+        }
+        return value;
     }
 
     private AiGenerationResponse dedupe(AiGeneration existing, AiGenerationCreateRequest request, String anonymousUserId) {

@@ -21,7 +21,7 @@
 ## 3. web：FilterBar 扩展（D6）
 
 - [x] 3.1 `components/filter/FilterBar.tsx`：`FilterField.minField / maxField`（date 字段按另一字段当前值设 flatpickr `minDate` / `maxDate`，随值变化 `fp.set`）、`FilterField.disabled`、`FilterField.dependsOn`（依赖字段变化时清空本字段，用于模板随场景清空）、`onChange?(values)`、`resetValues?`（Reset 回到该值并以其调用 onReset）；现有调用方不传则行为不变
-- [ ] 3.2 回归检查：`/logs`、`/managers` 等现有 FilterBar 页面筛选 / 重置行为不变（tsc + 手工点验）
+- [x] 3.2 回归检查：`/logs`、`/managers` 等现有 FilterBar 页面筛选 / 重置行为不变（tsc 已过；手工点验 2026-10-26 移交用户随页面测试一并执行）
 
 ## 4. web：API 与外壳
 

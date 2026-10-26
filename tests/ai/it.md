@@ -574,8 +574,8 @@
 **预期结果**: 步骤 3、4 均返回 200（不返回 403）
 **状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**: `test-evidence/ai-generation-records/TC-ai-IT-036/`
-**最后更新**: 2026-10-25
+**执行存证**: `test-evidence/ai-limit-config/TC-ai-IT-036/`
+**最后更新**: 2026-10-26
 
 ### TC-ai-IT-037: 未登录访问 AI 管理接口返回 401
 **关联需求**: ai/AI 管理权限与菜单#未登录被拒绝
@@ -602,8 +602,8 @@
 **预期结果**: 返回 200，`status=SUCCESS`、`content` 为 mock 输出的 JSON、`requestId` 非空、`clientRequestId`/`sceneId` 与请求一致
 **状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**: `test-evidence/ai-generation-records/TC-ai-IT-038/`
-**最后更新**: 2026-10-25
+**执行存证**: `test-evidence/ai-limit-config/TC-ai-IT-038/`
+**最后更新**: 2026-10-26
 
 ### TC-ai-IT-039: 生成成功写完整生成记录与调用明细
 **关联需求**: ai/生成记录与调用明细落库#成功生成写完整记录
@@ -781,8 +781,8 @@
 **预期结果**: 返回 200，`requestId`、`content`、`status` 与首次相同；记录仍 1 条，mock 调用次数未增加
 **状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**: `test-evidence/ai-management/TC-ai-IT-050/`
-**最后更新**: 2026-10-24
+**执行存证**: `test-evidence/ai-limit-config/TC-ai-IT-050/`
+**最后更新**: 2026-10-26
 
 ### TC-ai-IT-051: 生成中重复提交返回 409
 **关联需求**: ai/生成请求去重#生成中重复提交
@@ -846,60 +846,64 @@
 ### TC-ai-IT-055: 匿名 ID 超出每日次数返回 429
 **关联需求**: ai/生成接口每日额度#匿名 ID 超出每日次数
 **关联契约**: api-spec.json#/paths/~1api~1app~1ai~1generations/post
-**来源**: ai-management
+**来源**: ai-limit-config
 **优先级**: P1
 **测试步骤**:
-1. 前置：app 进程 `AI_LIMIT_PER_ANON_DAILY=2`；admin/app 进程配置指向本地假方舟服务（ARK_BASE_URL 指向 mock）或真实测试 Key；`anon-<后缀>` 今日已有 2 条记录（连续生成 2 次）
+1. 前置：以 admin 登录 admin 后端，PUT /api/admin/ai/limits/PER_ANON_DAILY body `{"value":2}`（返回 200）；admin/app 进程配置指向本地假方舟服务（ARK_BASE_URL 指向 mock）或真实测试 Key；`anon-<后缀>` 今日已有 2 条记录（连续生成 2 次）
 2. `anon-<后缀>` 以新 clientRequestId 提交
 3. psql 统计该匿名 ID 今日记录数
-**预期结果**: 返回 429「今日生成次数已达上限」；记录数仍为 2
+4. 收尾：PUT /api/admin/ai/limits/PER_ANON_DAILY body `{"value":50}` 恢复
+**预期结果**: 步骤 2 返回 429「今日生成次数已达上限」；记录数仍为 2
 **状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**: `test-evidence/ai-management/TC-ai-IT-055/`
-**最后更新**: 2026-10-24
+**执行存证**: `test-evidence/ai-limit-config/TC-ai-IT-055/`
+**最后更新**: 2026-10-26
 
 ### TC-ai-IT-056: 全站超出每日总量返回 429
 **关联需求**: ai/生成接口每日额度#全站超出每日总量
 **关联契约**: api-spec.json#/paths/~1api~1app~1ai~1generations/post
-**来源**: ai-management
+**来源**: ai-limit-config
 **优先级**: P1
 **测试步骤**:
-1. 前置：app 进程 `AI_LIMIT_GLOBAL_DAILY=3`（`AI_LIMIT_PER_ANON_DAILY` 保持默认）；今日（北京时间）全站已有 ≥3 条记录（不足则用不同匿名 ID 生成补齐）
+1. 前置：以 admin 登录 admin 后端，PUT /api/admin/ai/limits/GLOBAL_DAILY body `{"value":3}`（`PER_ANON_DAILY` 保持 50）；今日（北京时间）全站已有 ≥3 条记录（不足则用不同匿名 ID 生成补齐）
 2. 以全新匿名 ID、新 clientRequestId 提交
-**预期结果**: 返回 429「服务繁忙，请稍后再试」；不写记录
+3. 收尾：PUT /api/admin/ai/limits/GLOBAL_DAILY body `{"value":5000}` 恢复
+**预期结果**: 步骤 2 返回 429「服务繁忙，请稍后再试」；不写记录
 **状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**: `test-evidence/ai-management/TC-ai-IT-056/`
-**最后更新**: 2026-10-24
+**执行存证**: `test-evidence/ai-limit-config/TC-ai-IT-056/`
+**最后更新**: 2026-10-26
 
 ### TC-ai-IT-057: 北京时间昨日记录不计入今日额度
 **关联需求**: ai/生成接口每日额度#昨日记录不计入
 **关联契约**: api-spec.json#/paths/~1api~1app~1ai~1generations/post
-**来源**: ai-management
+**来源**: ai-limit-config
 **优先级**: P2
 **测试步骤**:
-1. 前置：app 进程 `AI_LIMIT_PER_ANON_DAILY=2`；admin/app 进程配置指向本地假方舟服务（ARK_BASE_URL 指向 mock）或真实测试 Key；psql 为 `anon-y-<后缀>` 直插 2 条 `created_at` 为北京时间昨日 23:30 的记录，今日 0 条
+1. 前置：以 admin 登录 admin 后端，PUT /api/admin/ai/limits/PER_ANON_DAILY body `{"value":2}`；admin/app 进程配置指向本地假方舟服务（ARK_BASE_URL 指向 mock）或真实测试 Key；psql 为 `anon-y-<后缀>` 直插 2 条 `created_at` 为北京时间昨日 23:30 的记录，今日 0 条
 2. `anon-y-<后缀>` 以新 clientRequestId 提交
-**预期结果**: 返回 200（正常生成，不返回 429）
+3. 收尾：PUT /api/admin/ai/limits/PER_ANON_DAILY body `{"value":50}` 恢复
+**预期结果**: 步骤 2 返回 200（正常生成，不返回 429）
 **状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**: `test-evidence/ai-management/TC-ai-IT-057/`
-**最后更新**: 2026-10-24
+**执行存证**: `test-evidence/ai-limit-config/TC-ai-IT-057/`
+**最后更新**: 2026-10-26
 
 ### TC-ai-IT-058: 去重命中不占用额度
 **关联需求**: ai/生成接口每日额度#去重不占额度
 **关联契约**: api-spec.json#/paths/~1api~1app~1ai~1generations/post
-**来源**: ai-management
+**来源**: ai-limit-config
 **优先级**: P1
 **测试步骤**:
-1. 前置：app 进程 `AI_LIMIT_PER_ANON_DAILY=1`；admin/app 进程配置指向本地假方舟服务（ARK_BASE_URL 指向 mock）或真实测试 Key；`anon-d-<后缀>` 今日已有 1 条 SUCCESS 记录 `c-1-<后缀>`
+1. 前置：以 admin 登录 admin 后端，PUT /api/admin/ai/limits/PER_ANON_DAILY body `{"value":1}`；admin/app 进程配置指向本地假方舟服务（ARK_BASE_URL 指向 mock）或真实测试 Key；`anon-d-<后缀>` 今日已有 1 条 SUCCESS 记录 `c-1-<后缀>`
 2. `anon-d-<后缀>` 重复提交 `c-1-<后缀>`
 3. `anon-d-<后缀>` 以新 clientRequestId 提交
+4. 收尾：PUT /api/admin/ai/limits/PER_ANON_DAILY body `{"value":50}` 恢复
 **预期结果**: 步骤 2 返回 200 与原结果；步骤 3 返回 429「今日生成次数已达上限」
 **状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**: `test-evidence/ai-management/TC-ai-IT-058/`
-**最后更新**: 2026-10-24
+**执行存证**: `test-evidence/ai-limit-config/TC-ai-IT-058/`
+**最后更新**: 2026-10-26
 
 ### TC-ai-IT-059: 单个变量 501 字符返回 400
 **关联需求**: ai/生成接口输入长度限制#单个变量超长
@@ -1368,3 +1372,171 @@
 **执行方式**: api-test-runner
 **执行存证**: `test-evidence/ai-generation-records/TC-ai-IT-087/`
 **最后更新**: 2026-10-25
+
+> **限流配置（ai-limit-config）口径**：
+> - 额度只来自表 `loves_ai_limit`（`PER_ANON_DAILY` 初始 50、`GLOBAL_DAILY` 初始 5000，`-1` 不限制），不再读 `AI_LIMIT_*` 环境变量；用例通过 admin 后端 `PUT /api/admin/ai/limits/{key}` 设置额度，结束后恢复 50 / 5000。
+> - 需要「从未修改过」状态或删除行的步骤直接 psql 操作 `loves_ai_limit`（库 `localhost:25432/love_space`，iris/iris），结束后恢复初始数据：
+>   `UPDATE loves_ai_limit SET limit_value = CASE limit_key WHEN 'PER_ANON_DAILY' THEN 50 ELSE 5000 END, updated_by = NULL, updated_at = NULL;`
+
+### TC-ai-IT-088: GET /api/admin/ai/limits 初始数据
+**关联需求**: ai/生成额度配置#初始数据
+**关联契约**: api-spec.json#/paths/~1api~1admin~1ai~1limits/get
+**来源**: ai-limit-config
+**优先级**: P0
+**测试步骤**:
+1. 前置：新建库刚执行完迁移；非新库则 psql 执行上方恢复语句，把两行恢复为初始值且 `updated_by`/`updated_at` 置 NULL
+2. 以 admin 登录取 token
+3. GET /api/admin/ai/limits
+**预期结果**: 返回 200，数组共 2 项且按 key 升序：`[0]` `key=GLOBAL_DAILY`、`name=全站每日上限`、`value=5000`；`[1]` `key=PER_ANON_DAILY`、`name=单个匿名 ID 每日上限`、`value=50`；两项 `updatedBy`、`updatedAt` 均为 null
+**状态**: ✅ 通过
+**执行方式**: api-test-runner
+**执行存证**: `test-evidence/ai-limit-config/TC-ai-IT-088/`
+**最后更新**: 2026-10-26
+
+### TC-ai-IT-089: PUT /api/admin/ai/limits/{key} 修改单项只记录该项修改人
+**关联需求**: ai/生成额度配置#修改单项只记录该项修改人
+**关联契约**: api-spec.json#/paths/~1api~1admin~1ai~1limits~1{key}/put
+**来源**: ai-limit-config
+**优先级**: P0
+**测试步骤**:
+1. 前置：psql 执行恢复语句，两项均未修改过
+2. 以 admin 登录取 token
+3. PUT /api/admin/ai/limits/PER_ANON_DAILY，body `{"value":-1}`
+4. GET /api/admin/ai/limits
+5. 收尾：PUT /api/admin/ai/limits/PER_ANON_DAILY body `{"value":50}`、PUT /api/admin/ai/limits/GLOBAL_DAILY body `{"value":5000}` 恢复，再 psql 执行恢复语句清空修改人
+**预期结果**: 步骤 3 返回 200，body `key=PER_ANON_DAILY`、`value=-1`、`updatedBy=admin`、`updatedAt` 非空；步骤 4 中 `PER_ANON_DAILY` 同上，`GLOBAL_DAILY` 仍为 `value=5000`、`updatedBy`/`updatedAt` 为 null
+**状态**: ✅ 通过
+**执行方式**: api-test-runner
+**执行存证**: `test-evidence/ai-limit-config/TC-ai-IT-089/`
+**最后更新**: 2026-10-26
+
+### TC-ai-IT-090: PUT /api/admin/ai/limits/{key} 非法取值返回 400 且数据不变
+**关联需求**: ai/生成额度配置#非法取值被拒绝
+**关联契约**: api-spec.json#/paths/~1api~1admin~1ai~1limits~1{key}/put
+**来源**: ai-limit-config
+**优先级**: P1
+**测试步骤**:
+1. 以 admin 登录取 token；GET /api/admin/ai/limits 记录 `GLOBAL_DAILY` 当前 value/updatedBy/updatedAt 基线
+2. PUT /api/admin/ai/limits/GLOBAL_DAILY 依次以 body `{"value":0}`、`{"value":-2}`、`{}`、`{"value":1.5}` 请求
+3. GET /api/admin/ai/limits
+**预期结果**: 步骤 2 四次均返回 400，body 为 `{status,error,message,path}` 且 `message` 含「取值须为 -1 或正整数」；步骤 3 `GLOBAL_DAILY` 的 value/updatedBy/updatedAt 与基线一致
+**状态**: ✅ 通过
+**执行方式**: api-test-runner
+**执行存证**: `test-evidence/ai-limit-config/TC-ai-IT-090/`
+**最后更新**: 2026-10-26
+
+### TC-ai-IT-091: PUT /api/admin/ai/limits/{key} 取值边界 1 与 2147483647 通过
+**关联需求**: ai/生成额度配置#修改单项只记录该项修改人
+**关联契约**: api-spec.json#/paths/~1api~1admin~1ai~1limits~1{key}/put
+**来源**: ai-limit-config
+**优先级**: P2
+**测试步骤**:
+1. 以 admin 登录取 token
+2. PUT /api/admin/ai/limits/GLOBAL_DAILY，body `{"value":1}`
+3. PUT /api/admin/ai/limits/GLOBAL_DAILY，body `{"value":2147483647}`
+4. 收尾：PUT /api/admin/ai/limits/PER_ANON_DAILY body `{"value":50}`、PUT /api/admin/ai/limits/GLOBAL_DAILY body `{"value":5000}` 恢复
+**预期结果**: 步骤 2 返回 200 且 `value=1`；步骤 3 返回 200 且 `value=2147483647`
+**状态**: ✅ 通过
+**执行方式**: api-test-runner
+**执行存证**: `test-evidence/ai-limit-config/TC-ai-IT-091/`
+**最后更新**: 2026-10-26
+
+### TC-ai-IT-092: PUT /api/admin/ai/limits/{key} 不存在的限制返回 404
+**关联需求**: ai/生成额度配置#不存在的限制
+**关联契约**: api-spec.json#/paths/~1api~1admin~1ai~1limits~1{key}/put
+**来源**: ai-limit-config
+**优先级**: P1
+**测试步骤**:
+1. 以 admin 登录取 token
+2. PUT /api/admin/ai/limits/NOT_EXIST，body `{"value":10}`
+3. GET /api/admin/ai/limits
+**预期结果**: 步骤 2 返回 404（`{status,error,message,path}`）；步骤 3 仍只有 `GLOBAL_DAILY`、`PER_ANON_DAILY` 两项，未新增行
+**状态**: ✅ 通过
+**执行方式**: api-test-runner
+**执行存证**: `test-evidence/ai-limit-config/TC-ai-IT-092/`
+**最后更新**: 2026-10-26
+
+### TC-ai-IT-093: MEMBER 角色可查看与修改限流配置，未登录返回 401
+**关联需求**: ai/AI 管理权限与菜单#MEMBER 可修改限流配置
+**关联契约**: api-spec.json#/paths/~1api~1admin~1ai~1limits~1{key}/put
+**来源**: ai-limit-config
+**优先级**: P1
+**测试步骤**:
+1. 前置：存在 MEMBER 角色的 Manager
+2. 以 MEMBER 登录取 token
+3. GET /api/admin/ai/limits
+4. PUT /api/admin/ai/limits/GLOBAL_DAILY，body `{"value":5000}`
+5. 不带 Authorization 头 GET /api/admin/ai/limits 与 PUT /api/admin/ai/limits/GLOBAL_DAILY body `{"value":1}`
+**预期结果**: 步骤 3 返回 200；步骤 4 返回 200（不返回 403），`updatedBy` 为该 MEMBER 用户名；步骤 5 均返回 401，`GLOBAL_DAILY` 仍为 5000
+**状态**: ✅ 通过
+**执行方式**: api-test-runner
+**执行存证**: `test-evidence/ai-limit-config/TC-ai-IT-093/`
+**最后更新**: 2026-10-26
+
+### TC-ai-IT-094: 修改限流配置产生 ai-limit:update 留痕
+**关联需求**: ai/AI 管理写操作留痕#修改限流配置留痕
+**关联契约**: api-spec.json#/paths/~1api~1admin~1logs~1page/get
+**来源**: ai-limit-config
+**优先级**: P1
+**测试步骤**:
+1. 以 admin 登录取 token
+2. PUT /api/admin/ai/limits/GLOBAL_DAILY，body `{"value":4000}`
+3. 轮询 GET /api/admin/logs/page?username=admin&module=ai-limit&page=1&size=20（最多 20 次、间隔 100ms）
+4. GET /api/admin/ai/limits（查看）后等待 2s，再查一次步骤 3 记录总数
+5. 收尾：PUT /api/admin/ai/limits/PER_ANON_DAILY body `{"value":50}`、PUT /api/admin/ai/limits/GLOBAL_DAILY body `{"value":5000}` 恢复
+**预期结果**: 步骤 2 返回 200；步骤 3 命中 `module=ai-limit`、`action=update`、`target=GLOBAL_DAILY` 的记录；步骤 4 记录总数不增加（查看不留痕）
+**状态**: ✅ 通过
+**执行方式**: api-test-runner
+**执行存证**: `test-evidence/ai-limit-config/TC-ai-IT-094/`
+**最后更新**: 2026-10-26
+
+### TC-ai-IT-095: 两项额度均为 -1 时不做额度检查
+**关联需求**: ai/生成接口每日额度#-1 不限制
+**关联契约**: api-spec.json#/paths/~1api~1app~1ai~1generations/post
+**来源**: ai-limit-config
+**优先级**: P1
+**测试步骤**:
+1. 前置：admin/app 进程配置指向本地假方舟服务（ARK_BASE_URL 指向 mock）或真实测试 Key；场景 S 启用、已发布模板、已配主模型；以 admin 登录 admin 后端，PUT /api/admin/ai/limits/PER_ANON_DAILY 与 GLOBAL_DAILY body 均为 `{"value":-1}`
+2. psql 为 `anon-u-<后缀>` 直插今日（北京时间）100 条记录（`generate_series` 批量插，口径见上方生成记录造数说明）
+3. `anon-u-<后缀>` 以新 clientRequestId 提交
+4. psql 统计该匿名 ID 今日记录数
+5. 收尾：PUT /api/admin/ai/limits/PER_ANON_DAILY body `{"value":50}`、PUT /api/admin/ai/limits/GLOBAL_DAILY body `{"value":5000}` 恢复
+**预期结果**: 步骤 3 返回 200（正常生成，不返回 429）；步骤 4 记录数为 101
+**状态**: ✅ 通过
+**执行方式**: api-test-runner
+**执行存证**: `test-evidence/ai-limit-config/TC-ai-IT-095/`
+**最后更新**: 2026-10-26
+
+### TC-ai-IT-096: 后台修改额度后下一次请求即生效（无需重启 app）
+**关联需求**: ai/生成接口每日额度#修改即时生效
+**关联契约**: api-spec.json#/paths/~1api~1app~1ai~1generations/post
+**来源**: ai-limit-config
+**优先级**: P1
+**测试步骤**:
+1. 前置：admin/app 进程配置指向本地假方舟服务（ARK_BASE_URL 指向 mock）或真实测试 Key；场景 S 启用、已发布模板、已配主模型；以 admin 登录 admin 后端，PUT /api/admin/ai/limits/PER_ANON_DAILY body `{"value":2}`
+2. `anon-i-<后缀>` 连续生成 2 次（新 clientRequestId）
+3. `anon-i-<后缀>` 以新 clientRequestId 再提交
+4. PUT /api/admin/ai/limits/PER_ANON_DAILY body `{"value":3}`（不重启 app）
+5. `anon-i-<后缀>` 以另一新 clientRequestId 提交
+6. 收尾：PUT /api/admin/ai/limits/PER_ANON_DAILY body `{"value":50}`、PUT /api/admin/ai/limits/GLOBAL_DAILY body `{"value":5000}` 恢复
+**预期结果**: 步骤 2 均 200；步骤 3 返回 429「今日生成次数已达上限」；步骤 4 返回 200；步骤 5 返回 200 正常生成
+**状态**: ✅ 通过
+**执行方式**: api-test-runner
+**执行存证**: `test-evidence/ai-limit-config/TC-ai-IT-096/`
+**最后更新**: 2026-10-26
+
+### TC-ai-IT-097: 配置行缺失时生成接口返回 500 且不写记录
+**关联需求**: ai/生成接口每日额度#配置行缺失
+**关联契约**: api-spec.json#/paths/~1api~1app~1ai~1generations/post
+**来源**: ai-limit-config
+**优先级**: P2
+**测试步骤**:
+1. 前置：admin/app 进程配置指向本地假方舟服务（ARK_BASE_URL 指向 mock）或真实测试 Key；场景 S 启用、已发布模板、已配主模型；本用例需直接改库：psql `DELETE FROM loves_ai_limit WHERE limit_key='GLOBAL_DAILY';`
+2. 以全新匿名 ID `anon-m-<后缀>`、新 clientRequestId 提交
+3. psql 统计该匿名 ID 记录数
+4. 收尾（必须执行）：psql `INSERT INTO loves_ai_limit (limit_key, name, limit_value) VALUES ('GLOBAL_DAILY', '全站每日上限', 5000);`
+**预期结果**: 步骤 2 返回 500（不放行、不返回 200/429）；步骤 3 记录数为 0；收尾后 GET /api/admin/ai/limits 恢复为两项
+**状态**: ✅ 通过
+**执行方式**: api-test-runner
+**执行存证**: `test-evidence/ai-limit-config/TC-ai-IT-097/`
+**最后更新**: 2026-10-26

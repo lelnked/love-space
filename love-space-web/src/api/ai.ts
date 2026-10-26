@@ -236,3 +236,22 @@ export async function findAiSceneBySceneId(sceneId: string): Promise<AiScene | n
   const page = await listAiScenes({ keyword: sceneId, size: 200 });
   return page.content.find((s) => s.sceneId === sceneId) ?? null;
 }
+
+/** 生成接口每日额度的一项限制；value 为 -1 表示不限制。 */
+export interface AiLimit {
+  key: string;
+  name: string;
+  value: number;
+  updatedBy: string | null;
+  updatedAt: string | null;
+}
+
+export async function listAiLimits(): Promise<AiLimit[]> {
+  const { data } = await apiClient.get<AiLimit[]>("/api/admin/ai/limits");
+  return data;
+}
+
+export async function updateAiLimit(key: string, value: number): Promise<AiLimit> {
+  const { data } = await apiClient.put<AiLimit>(`/api/admin/ai/limits/${key}`, { value });
+  return data;
+}

@@ -62,10 +62,10 @@
 3. 轮询等待（20×100ms）留痕落库：GET /api/admin/logs/page?module=manager&page=1&size=20 出现 `action=create` 新记录
 4. 直连测试库执行 `SELECT payload FROM loves_operation_log WHERE module='manager' AND action='create' ORDER BY created_at DESC LIMIT 1`
 **预期结果**: 步骤 2 返回 201；步骤 4 取到的 payload JSON 中 `password` 字段值恰为 `[REDACTED]`，全文不含明文 `P@ssw0rd123`；`username` 字段值保持明文
-**状态**: ⬜ 未测试
+**状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**:
-**最后更新**: 2026-08-21
+**执行存证**: `test-evidence/ai-limit-config/TC-operation-log-IT-004/`
+**最后更新**: 2026-10-26
 
 ### TC-operation-log-IT-005: 创建类操作的 target 为 null
 **关联需求**: operation-log/留痕字段取值与敏感信息脱敏#创建类操作的 target 为空
@@ -77,10 +77,10 @@
 2. POST /api/admin/cities 创建一个城市（字段同 TC-001）
 3. 轮询（20×100ms）GET /api/admin/logs/page?username=admin&module=city&page=1&size=20 直到出现新的 `action=create` 记录
 **预期结果**: 该条记录的 `target` 为 `null`（创建类操作无 UUID 入参，属现行为）
-**状态**: ⬜ 未测试
+**状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**:
-**最后更新**: 2026-08-21
+**执行存证**: `test-evidence/ai-limit-config/TC-operation-log-IT-005/`
+**最后更新**: 2026-10-26
 
 ### TC-operation-log-IT-006: 更新类操作的 target 为目标城市 id
 **关联需求**: operation-log/留痕字段取值与敏感信息脱敏#更新类操作记录目标 id
@@ -93,10 +93,10 @@
 3. PUT /api/admin/cities/C，body 为完整合法更新体（改 `chineseName`）
 4. 轮询（20×100ms）GET /api/admin/logs/page?username=admin&module=city&page=1&size=20 直到出现 `action=update` 记录
 **预期结果**: 步骤 3 返回 200；日志中最新一条 `module=city`、`action=update` 记录的 `target` 等于城市 id C（字符串形式）
-**状态**: ⬜ 未测试
+**状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**:
-**最后更新**: 2026-08-21
+**执行存证**: `test-evidence/ai-limit-config/TC-operation-log-IT-006/`
+**最后更新**: 2026-10-26
 
 ### TC-operation-log-IT-007: 嵌套资源（商户评价）的 target 取父级商户 id
 **关联需求**: operation-log/留痕字段取值与敏感信息脱敏#嵌套资源的 target 取父级 id
@@ -110,10 +110,10 @@
 3. PUT /api/admin/merchants/M/reviews/R，body 同上但 `title` 改为「更好」
 4. 轮询（20×100ms）GET /api/admin/logs/page?module=merchant-review&page=1&size=20 直到出现 `action=update` 记录
 **预期结果**: 步骤 3 返回 200；该 `module=merchant-review`、`action=update` 记录的 `target` 等于**商户** id M，而非评价 id R（现行为：取第一个 UUID 入参）
-**状态**: ⬜ 未测试
+**状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**:
-**最后更新**: 2026-08-21
+**执行存证**: `test-evidence/ai-limit-config/TC-operation-log-IT-007/`
+**最后更新**: 2026-10-26
 
 ### TC-operation-log-IT-008: 按操作人与模块组合过滤
 **关联需求**: operation-log/操作日志查询#按操作人与模块组合过滤
@@ -281,3 +281,36 @@
 **执行方式**: api-test-runner
 **执行存证**: `test-evidence/ai-generation-records/TC-operation-log-IT-017/`
 **最后更新**: 2026-10-25
+
+### TC-operation-log-IT-018: 修改 AI 限流配置后异步产生 ai-limit:update 留痕
+**关联需求**: operation-log/运营写操作留痕#AI 限流配置修改留痕
+**关联契约**: api-spec.json#/paths/~1api~1admin~1logs~1page/get
+**来源**: ai-limit-config
+**优先级**: P1
+**测试步骤**:
+1. POST /api/admin/auth/login，body `{"username":"admin","password":"8@y2eoRLyStM*UVU"}`，取 JWT token
+2. PUT /api/admin/ai/limits/PER_ANON_DAILY，body `{"value":60}`
+3. 轮询 GET /api/admin/logs/page?username=admin&module=ai-limit&page=1&size=20（最多 20 次、间隔 100ms），直到出现 `action=update` 的新记录
+4. 收尾：PUT /api/admin/ai/limits/PER_ANON_DAILY body `{"value":50}` 恢复
+**预期结果**: 步骤 2 返回 200；轮询在超时前命中，存在一条 `module=ai-limit`、`action=update`、`username=admin` 的记录
+**状态**: ✅ 通过
+**执行方式**: api-test-runner
+**执行存证**: `test-evidence/ai-limit-config/TC-operation-log-IT-018/`
+**最后更新**: 2026-10-26
+
+### TC-operation-log-IT-019: 字符串路径参数作为 target（AI 限流配置 key）
+**关联需求**: operation-log/留痕字段取值与敏感信息脱敏#字符串路径参数作为 target
+**关联契约**: api-spec.json#/paths/~1api~1admin~1logs~1page/get
+**来源**: ai-limit-config
+**优先级**: P1
+**测试步骤**:
+1. 登录取 token
+2. PUT /api/admin/ai/limits/GLOBAL_DAILY，body `{"value":4500}`
+3. 轮询（20×100ms）GET /api/admin/logs/page?username=admin&module=ai-limit&page=1&size=20 直到出现新的 `action=update` 记录
+4. psql 查询该日志行 payload
+5. 收尾：PUT /api/admin/ai/limits/GLOBAL_DAILY body `{"value":5000}` 恢复
+**预期结果**: 步骤 2 返回 200；该记录 `target` 为字符串 `GLOBAL_DAILY`（无 UUID 入参时取第一个字符串参数）；payload 含 `value=4500`
+**状态**: ✅ 通过
+**执行方式**: api-test-runner
+**执行存证**: `test-evidence/ai-limit-config/TC-operation-log-IT-019/`
+**最后更新**: 2026-10-26

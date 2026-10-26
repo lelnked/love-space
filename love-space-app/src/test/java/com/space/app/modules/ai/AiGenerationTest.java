@@ -3,9 +3,10 @@ package com.space.app.modules.ai;
 import com.loves.ai.generation.AiStatus;
 import com.space.app.modules.ai.entity.AiGeneration;
 import com.space.app.modules.ai.entity.AiGenerationAttempt;
+import com.space.app.modules.ai.entity.AiLimit;
 import com.space.app.modules.ai.entity.AiScene;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.test.context.TestPropertySource;
 import tools.jackson.databind.JsonNode;
 
 import java.time.OffsetDateTime;
@@ -26,8 +27,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /** 生成接口：主流程、场景校验、去重、落库、长度限制、匿名 ID 每日额度。 */
-@TestPropertySource(properties = {"love-space.ai-limit.per-anon-daily=2", "love-space.ai-limit.global-daily=100000"})
 class AiGenerationTest extends AiGenerationTestSupport {
+
+    @BeforeEach
+    void defaultLimits() {
+        setLimits(2, 100000);
+    }
 
     // @scenario: ai/App 生成接口#生成成功
     // @scenario: ai/生成记录与调用明细落库#成功生成写完整记录
@@ -303,5 +308,45 @@ class AiGenerationTest extends AiGenerationTestSupport {
         insertRecord(anon, scene.getSceneId(), unique("c-"), "SUCCESS", OffsetDateTime.now());
 
         submit(anon, scene.getSceneId(), cid, Map.of("age", 1)).andExpect(status().isOk());
+    }
+
+    // @scenario: ai/生成接口每日额度#-1 不限制
+    @Test
+    void unlimitedSkipsQuota() throws Exception {
+        setLimits(-1, -1);
+        AiScene scene = readyScene();
+        String anon = unique("anon-");
+        for (int i = 0; i < 3; i++) {
+            insertRecord(anon, scene.getSceneId(), unique("c-"), "SUCCESS", OffsetDateTime.now());
+        }
+        when(aiGenerator.generate(anyList(), any(), any())).thenReturn(success("{\"a\":1}", 1));
+
+        submit(anon, scene.getSceneId(), unique("c-"), Map.of("age", 1)).andExpect(status().isOk());
+    }
+
+    // @scenario: ai/生成接口每日额度#修改即时生效
+    @Test
+    void limitChangeTakesEffectImmediately() throws Exception {
+        AiScene scene = readyScene();
+        String anon = unique("anon-");
+        insertRecord(anon, scene.getSceneId(), unique("c-"), "SUCCESS", OffsetDateTime.now());
+        insertRecord(anon, scene.getSceneId(), unique("c-"), "SUCCESS", OffsetDateTime.now());
+        submit(anon, scene.getSceneId(), unique("c-"), Map.of("age", 1)).andExpect(status().isTooManyRequests());
+
+        setLimits(3, 100000);
+        when(aiGenerator.generate(anyList(), any(), any())).thenReturn(success("{\"a\":1}", 1));
+        submit(anon, scene.getSceneId(), unique("c-"), Map.of("age", 1)).andExpect(status().isOk());
+    }
+
+    // @scenario: ai/生成接口每日额度#配置行缺失
+    @Test
+    void missingLimitRowFails() throws Exception {
+        limitRepository.deleteById(AiLimit.GLOBAL_DAILY);
+        AiScene scene = readyScene();
+        long before = generationRepository.count();
+
+        submit(unique("anon-"), scene.getSceneId(), unique("c-"), Map.of("age", 1))
+                .andExpect(status().isInternalServerError());
+        assertThat(generationRepository.count()).isEqualTo(before);
     }
 }

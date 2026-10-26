@@ -2,13 +2,13 @@
 
 ### TC-ai-WEB-001: 侧栏「AI 管理」菜单及子菜单顺序
 **关联需求**: ai/AI 管理权限与菜单#侧栏菜单
-**来源**: ai-generation-records
+**来源**: ai-limit-config
 **优先级**: P1
 **前置条件**: 登录入口 http://100.93.172.18:5173/love-space/signin；存在 MEMBER 角色账号
 **测试步骤**:
 1. 以 MEMBER 登录后台
 2. 在侧栏展开「AI 管理」
-**预期结果**: 「AI 管理」一级菜单可见，依次显示「业务配置」「模型配置」「提示词管理」「生成记录」四个子菜单，点击分别进入 /love-space/ai/scenes、/ai/models、/ai/prompts、/ai/generations
+**预期结果**: 「AI 管理」一级菜单可见，依次显示「业务配置」「模型配置」「提示词管理」「生成记录」「限流配置」五个子菜单，点击分别进入 /love-space/ai/scenes、/ai/models、/ai/prompts、/ai/generations、/ai/limits
 **状态**: ⬜ 未测试
 **执行方式**: web-test-runner（@playwright/mcp）
 **执行存证**: `test-evidence/regression/ai/TC-ai-WEB-001/`
@@ -421,4 +421,49 @@
 **状态**: ⬜ 未测试
 **执行方式**: web-test-runner（@playwright/mcp）
 **执行存证**: `test-evidence/regression/ai/TC-ai-WEB-030/`
+**最后更新**: -
+
+### TC-ai-WEB-031: 限流配置列表展示
+**关联需求**: ai/限流配置页面#列表展示
+**来源**: ai-limit-config
+**优先级**: P1
+**前置条件**: 登录入口 http://100.93.172.18:5173/love-space/signin；admin 已登录；前置数据：psql 恢复两行初始数据（口径见 `tests/ai/it.md` 限流配置口径）后，psql 将 `PER_ANON_DAILY` 置 `limit_value=-1`（updated_by/updated_at 保持 NULL），再经 API 以 admin `PUT /api/admin/ai/limits/GLOBAL_DAILY` body `{"value":5000}`；用例结束后恢复初始数据
+**测试步骤**:
+1. 进入 /love-space/ai/limits
+**预期结果**: 列表列依次为名称、上限、最后修改人、修改时间、操作；「单个匿名 ID 每日上限」行上限列显示「不限制」，修改人与修改时间显示「—」；「全站每日上限」行显示「5000 次」、修改人 admin、修改时间非空；表下方显示提示「-1 表示不限制，保存后立即生效」
+**状态**: ⬜ 未测试
+**执行方式**: web-test-runner（@playwright/mcp）
+**执行存证**: `test-evidence/regression/ai/TC-ai-WEB-031/`
+**最后更新**: -
+
+### TC-ai-WEB-032: 编辑限流配置并保存
+**关联需求**: ai/限流配置页面#编辑保存
+**来源**: ai-limit-config
+**优先级**: P0
+**前置条件**: 登录入口 http://100.93.172.18:5173/love-space/signin；admin 已登录；用例结束后经 API 将 `GLOBAL_DAILY` 恢复为 5000
+**测试步骤**:
+1. 进入 /love-space/ai/limits
+2. 点「全站每日上限」行的①「编辑」
+3. 确认弹窗③回填当前值，清空后输入 3000
+4. 点④保存
+**预期结果**: 步骤 3 弹窗标题为「编辑：全站每日上限」且回填当前值；步骤 4 后弹窗关闭，提示「已保存，立即生效」，列表刷新后该行显示「3000 次」，修改人为当前登录账号 admin、修改时间更新
+**状态**: ⬜ 未测试
+**执行方式**: web-test-runner（@playwright/mcp）
+**执行存证**: `test-evidence/regression/ai/TC-ai-WEB-032/`
+**最后更新**: -
+
+### TC-ai-WEB-033: 非法输入禁止保存
+**关联需求**: ai/限流配置页面#非法输入禁止保存
+**来源**: ai-limit-config
+**优先级**: P1
+**前置条件**: 登录入口 http://100.93.172.18:5173/love-space/signin；admin 已登录
+**测试步骤**:
+1. 进入 /love-space/ai/limits，点任一行「编辑」打开弹窗
+2. ③输入 0
+3. ③改为 -2
+4. ③改为 -1
+**预期结果**: 步骤 2、3 输入框下显示「取值须为 -1 或正整数」，④保存按钮置灰不可点击，且未发出 PUT 请求；步骤 4 提示消失、保存按钮可点击
+**状态**: ⬜ 未测试
+**执行方式**: web-test-runner（@playwright/mcp）
+**执行存证**: `test-evidence/regression/ai/TC-ai-WEB-033/`
 **最后更新**: -

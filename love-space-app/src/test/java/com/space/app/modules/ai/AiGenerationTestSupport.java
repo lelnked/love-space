@@ -6,10 +6,12 @@ import com.loves.ai.generation.AiResult;
 import com.loves.ai.generation.AiStatus;
 import com.loves.ai.generation.TriggerReason;
 import com.space.app.modules.ai.entity.AiGeneration;
+import com.space.app.modules.ai.entity.AiLimit;
 import com.space.app.modules.ai.entity.AiPromptTemplate;
 import com.space.app.modules.ai.entity.AiScene;
 import com.space.app.modules.ai.repository.AiGenerationAttemptRepository;
 import com.space.app.modules.ai.repository.AiGenerationRepository;
+import com.space.app.modules.ai.repository.AiLimitRepository;
 import com.space.app.modules.ai.repository.AiPromptTemplateRepository;
 import com.space.app.modules.ai.repository.AiSceneRepository;
 import com.space.app.support.AbstractPostgresIntegrationTest;
@@ -54,6 +56,8 @@ public abstract class AiGenerationTestSupport extends AbstractPostgresIntegratio
     protected AiGenerationRepository generationRepository;
     @Autowired
     protected AiGenerationAttemptRepository attemptRepository;
+    @Autowired
+    protected AiLimitRepository limitRepository;
 
     @BeforeEach
     void stubParams() {
@@ -65,6 +69,21 @@ public abstract class AiGenerationTestSupport extends AbstractPostgresIntegratio
             params.put("maxRetries", 1);
             return params;
         });
+    }
+
+    /** 写入两行额度配置（测试库 create-drop，无 changelog 种子数据）；-1 表示不限制。 */
+    protected void setLimits(int perAnonDaily, int globalDaily) {
+        limitRepository.deleteAll();
+        limitRepository.save(limit(AiLimit.PER_ANON_DAILY, perAnonDaily));
+        limitRepository.save(limit(AiLimit.GLOBAL_DAILY, globalDaily));
+    }
+
+    private static AiLimit limit(String key, int value) {
+        AiLimit limit = new AiLimit();
+        limit.setKey(key);
+        limit.setName(key);
+        limit.setValue(value);
+        return limit;
     }
 
     protected static String unique(String prefix) {

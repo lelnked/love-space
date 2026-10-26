@@ -311,6 +311,8 @@ AI 管理的写接口 SHALL 通过现有操作日志留痕：
 | `POST /api/admin/ai/prompt-templates` | `ai-prompt:create` |
 | `PUT /api/admin/ai/prompt-templates/{id}` | `ai-prompt:update` |
 | `POST /api/admin/ai/prompt-templates/{id}/publish` | `ai-prompt:publish` |
+| `PUT /api/admin/ai/generations/{id}/rating` | `ai-generation:rate` |
+| `PUT /api/admin/ai/limits/{key}` | `ai-limit:update` |
 
 `POST /prompt-templates/{id}/test` 与 `POST /models/test-connection` SHALL NOT 留痕。
 
@@ -324,8 +326,13 @@ AI 管理的写接口 SHALL 通过现有操作日志留痕：
 - **WHEN** 测试一个模板，随后查询操作日志
 - **THEN** 不存在 `module=ai-prompt`、`action=test` 的记录
 
+#### Scenario: 修改限流配置留痕
+- **GIVEN** 以 admin 登录
+- **WHEN** 修改 `GLOBAL_DAILY`，随后查询操作日志
+- **THEN** 存在 `module=ai-limit`、`action=update`、`target` 为 `GLOBAL_DAILY` 的记录
+
 ### Requirement: AI 管理权限与菜单
-`/api/admin/ai/**` SHALL 对所有已登录 Manager（ADMIN、MEMBER）开放，未登录返回 401。web 端侧栏 SHALL 新增一级菜单「AI 管理」，对所有角色可见，子菜单依次为「业务配置」(`/ai/scenes`)、「模型配置」(`/ai/models`)、「提示词管理」(`/ai/prompts`)。
+`/api/admin/ai/**` SHALL 对所有已登录 Manager（ADMIN、MEMBER）开放，未登录返回 401。web 端侧栏 SHALL 新增一级菜单「AI 管理」，对所有角色可见，子菜单依次为「业务配置」(`/ai/scenes`)、「模型配置」(`/ai/models`)、「提示词管理」(`/ai/prompts`)、「生成记录」(`/ai/generations`)、「限流配置」(`/ai/limits`)。
 
 #### Scenario: MEMBER 可访问 AI 管理
 - **GIVEN** 以 MEMBER 角色登录
@@ -340,7 +347,17 @@ AI 管理的写接口 SHALL 通过现有操作日志留痕：
 #### Scenario: 侧栏菜单
 - **GIVEN** 以 MEMBER 登录后台
 - **WHEN** 展开侧栏「AI 管理」
-- **THEN** 依次显示「业务配置」「模型配置」「提示词管理」三个子菜单
+- **THEN** 依次显示「业务配置」「模型配置」「提示词管理」「生成记录」「限流配置」五个子菜单
+
+#### Scenario: MEMBER 可评价生成记录
+- **GIVEN** 以 MEMBER 角色登录，存在一条成功的生成记录
+- **WHEN** 请求 `PUT /api/admin/ai/generations/{id}/rating`
+- **THEN** 返回 204（不返回 403）
+
+#### Scenario: MEMBER 可修改限流配置
+- **GIVEN** 以 MEMBER 角色登录
+- **WHEN** 请求 `PUT /api/admin/ai/limits/GLOBAL_DAILY`，body `{"value":5000}`
+- **THEN** 返回 200（不返回 403）
 
 ### Requirement: 业务配置页面
 web 端 SHALL 在 `/ai/scenes` 提供业务配置页：
@@ -577,32 +594,50 @@ app 端 SHALL 提供 `POST /api/app/ai/generations`：
 - **THEN** 生成记录 `inputs` 中 `user_input` 为 null
 
 ### Requirement: 生成接口每日额度
-app 端 SHALL 在写生成记录前检查每日额度，"每天"按北京时间（Asia/Shanghai）自然日计算，计数取 `loves_ai_generation` 当日 `created_at` 记录数（所有状态都计入）：
+app 端 SHALL 在写生成记录前检查每日额度，"每天"按北京时间（Asia/Shanghai）自然日计算，计数取 `loves_ai_generation` 当日 `created_at` 记录数（所有状态都计入）。额度 SHALL 在每次检查时从 `loves_ai_limit` 实时读取（不缓存、不读环境变量），后台修改后下一次请求即生效：
 
-- 当前匿名 ID 当日记录数 ≥ `AI_LIMIT_PER_ANON_DAILY`（默认 50）→ 429「今日生成次数已达上限」；
-- 全站当日记录数 ≥ `AI_LIMIT_GLOBAL_DAILY`（默认 5000）→ 429「服务繁忙，请稍后再试」。
+- `PER_ANON_DAILY` 不为 -1 且当前匿名 ID 当日记录数 ≥ 该值 → 429「今日生成次数已达上限」；
+- `GLOBAL_DAILY` 不为 -1 且全站当日记录数 ≥ 该值 → 429「服务繁忙，请稍后再试」；
+- 某项为 -1 → 跳过该项检查。
+
+`loves_ai_limit` 中缺少上述任一行 SHALL 视为部署错误，生成接口返回 500，不放行。
 
 超额被拒的请求 SHALL NOT 写记录；去重命中的重复提交 SHALL NOT 占用额度。并发下可能超出上限少量次数（已知上限，可接受）。
 
 #### Scenario: 匿名 ID 超出每日次数
-- **GIVEN** `AI_LIMIT_PER_ANON_DAILY=2`，匿名 ID `anon-A` 今日已有 2 条记录
+- **GIVEN** `PER_ANON_DAILY=2`，匿名 ID `anon-A` 今日已有 2 条记录
 - **WHEN** `anon-A` 以新的 clientRequestId 提交
 - **THEN** 返回 429「今日生成次数已达上限」，记录数不变
 
 #### Scenario: 全站超出每日总量
-- **GIVEN** `AI_LIMIT_GLOBAL_DAILY=3`，今日全站已有 3 条记录
+- **GIVEN** `GLOBAL_DAILY=3`，今日全站已有 3 条记录
 - **WHEN** 任意匿名 ID 以新的 clientRequestId 提交
 - **THEN** 返回 429「服务繁忙，请稍后再试」
 
 #### Scenario: 昨日记录不计入
-- **GIVEN** `AI_LIMIT_PER_ANON_DAILY=2`，`anon-A` 昨日（北京时间）有 2 条、今日 0 条
+- **GIVEN** `PER_ANON_DAILY=2`，`anon-A` 昨日（北京时间）有 2 条、今日 0 条
 - **WHEN** `anon-A` 提交
 - **THEN** 正常生成
 
 #### Scenario: 去重不占额度
-- **GIVEN** `AI_LIMIT_PER_ANON_DAILY=1`，`anon-A` 今日已有 1 条 SUCCESS 记录 `c-1`
+- **GIVEN** `PER_ANON_DAILY=1`，`anon-A` 今日已有 1 条 SUCCESS 记录 `c-1`
 - **WHEN** `anon-A` 重复提交 `c-1`
 - **THEN** 返回 200 与原结果（不返回 429）
+
+#### Scenario: -1 不限制
+- **GIVEN** `PER_ANON_DAILY=-1`、`GLOBAL_DAILY=-1`，`anon-A` 今日已有 100 条记录
+- **WHEN** `anon-A` 以新的 clientRequestId 提交
+- **THEN** 正常生成，不返回 429
+
+#### Scenario: 修改即时生效
+- **GIVEN** `PER_ANON_DAILY=2`，`anon-A` 今日已有 2 条记录，提交被 429 拒绝
+- **WHEN** 后台把 `PER_ANON_DAILY` 改为 3，`anon-A` 再以新的 clientRequestId 提交
+- **THEN** 正常生成（无需重启 app）
+
+#### Scenario: 配置行缺失
+- **GIVEN** `loves_ai_limit` 中不存在 `GLOBAL_DAILY` 行
+- **WHEN** 任意匿名 ID 以新的 clientRequestId 提交
+- **THEN** 返回 500，不写生成记录
 
 ### Requirement: 生成接口输入长度限制
 app 端 SHALL 校验 `inputs`：每个值（字符串原值或非字符串的 JSON 文本）≤ 500 字符，整体 JSON 序列化后 ≤ 4KB（4096 字节）；超出返回 400 并指出超长的变量名（整体超长时提示整体超限）。限制值为代码常量。
@@ -634,4 +669,258 @@ app 端 SHALL 校验 `inputs`：每个值（字符串原值或非字符串的 JS
 - **GIVEN** 同上
 - **WHEN** 同一 IP 在 1 秒内连续请求 `/love-space/app/api/app/cities` 15 次
 - **THEN** 均不因该限流返回 429
+
+### Requirement: 生成记录列表查询
+admin 端 SHALL 提供 `GET /api/admin/ai/generations/page` 分页查询生成记录，固定按 `createdAt` 倒序，分页遵循项目统一口径（page 1 基，size 仅 20/200）。
+
+过滤参数（均可空、可组合）：
+
+- `startDate` / `endDate`（`yyyy-MM-dd`）：按北京时间（Asia/Shanghai）整日、含两端；**都不传时默认最近 7 天（含今天）**；只传一端时按该端单边过滤；`startDate` 晚于 `endDate` 时 SHALL 返回 400「开始日期不能晚于结束日期」。
+- `requestId`、`anonymousUserId`：精确匹配。
+- `sceneId`、`templateId`：精确匹配。
+- `model`：精确匹配最终模型 `finalModel`。
+- `status`：`PROCESSING` 或 AI 基础库状态枚举之一。
+- `rating`：`USABLE` / `NEEDS_IMPROVEMENT` / `UNUSABLE`，或 `NONE`（未评价）。
+- `tag`：问题标签枚举之一，匹配评价标签中包含该标签的记录。
+
+日期格式错误、`status` / `rating` / `tag` 不在枚举内 SHALL 返回 400（错误信息沿用项目现有参数类型错误口径）。
+
+列表条目 SHALL 为 `{id, createdAt, anonymousUserId, sceneId, sceneName, templateId, templateSeq, finalModel, status, latencyMs, rating}`，不含输入、输出、messages 等正文。`sceneName` 取场景当前名称。
+
+#### Scenario: 默认最近 7 天
+- **GIVEN** 存在今天、6 天前、8 天前（北京时间）各一条生成记录
+- **WHEN** 不传日期查询
+- **THEN** 返回今天与 6 天前两条，不含 8 天前的记录
+
+#### Scenario: 日期区间含两端整日
+- **GIVEN** 存在北京时间 2026-10-20 00:00:05 与 2026-10-21 23:59:50 的两条记录
+- **WHEN** 以 `startDate=2026-10-20&endDate=2026-10-21` 查询
+- **THEN** 两条都返回
+
+#### Scenario: 开始晚于结束被拒绝
+- **GIVEN** 已登录 Manager
+- **WHEN** 以 `startDate=2026-10-22&endDate=2026-10-20` 查询
+- **THEN** 返回 400，message 为「开始日期不能晚于结束日期」
+
+#### Scenario: 按未评价筛选
+- **GIVEN** 区间内有一条已评价、一条未评价的记录
+- **WHEN** 以 `rating=NONE` 查询
+- **THEN** 仅返回未评价的记录
+
+#### Scenario: 按问题标签筛选
+- **GIVEN** 记录 A 的评价标签含 `BAD_TONE`，记录 B 的标签为 `VAGUE`
+- **WHEN** 以 `tag=BAD_TONE` 查询
+- **THEN** 仅返回记录 A
+
+#### Scenario: 组合筛选与倒序
+- **GIVEN** 同一场景下多条不同状态的记录
+- **WHEN** 以 `sceneId` 与 `status=SUCCESS` 查询
+- **THEN** 仅返回该场景的成功记录，按 `createdAt` 从新到旧排列
+
+#### Scenario: 非法枚举被拒绝
+- **GIVEN** 已登录 Manager
+- **WHEN** 以 `rating=GOOD` 或 `startDate=2026/10/20` 查询
+- **THEN** 返回 400
+
+#### Scenario: 列表不含正文
+- **GIVEN** 存在一条成功记录
+- **WHEN** 查询列表
+- **THEN** 条目仅含 id、createdAt、anonymousUserId、sceneId、sceneName、templateId、templateSeq、finalModel、status、latencyMs、rating 十一个字段
+
+### Requirement: 生成记录详情
+admin 端 SHALL 提供 `GET /api/admin/ai/generations/{id}` 返回生成记录详情：记录全部字段（clientRequestId、匿名用户 ID、sceneId、templateId、templateSeq、appVersion、inputs、requestMessages、requestParams、status、errorCode、errorMessage、finalModel、attemptCount、rawOutput、content、promptTokens、completionTokens、latencyMs、createdAt、completedAt，以及评价字段 `rating`、`ratingTags`、`ratingRemark`、`ratedBy`、`ratedAt`）+ `sceneName` + `templateName` + `attempts[]`（调用明细，按 seq 升序，含每次调用的触发原因、模型、状态、错误码与信息、供应商请求 ID、原始返回、解析出的 JSON、校验错误、tokens、usage、起止时间、耗时）。记录不存在 SHALL 返回 404。查看 SHALL NOT 留痕。
+
+#### Scenario: 详情含调用明细
+- **GIVEN** 一条经过 INITIAL、RETRY 两次调用后成功的记录
+- **WHEN** 请求详情
+- **THEN** 返回 200，`attempts` 两条且 seq 为 1、2，触发原因为 INITIAL、RETRY，`templateName` 为该模板名称
+
+#### Scenario: 未评价记录的评价字段为空
+- **GIVEN** 一条未评价的记录
+- **WHEN** 请求详情
+- **THEN** `rating`、`ratedBy`、`ratedAt` 为 null，`ratingTags` 为空数组
+
+#### Scenario: 记录不存在
+- **GIVEN** 已登录 Manager
+- **WHEN** 请求不存在的 id
+- **THEN** 返回 404
+
+### Requirement: 生成记录人工评价
+admin 端 SHALL 提供 `PUT /api/admin/ai/generations/{id}/rating` body `{rating, tags?, remark?}`，成功返回 204：
+
+- **每条生成记录只有一个评价**：首次保存即创建评价，之后再保存 SHALL 覆盖原评价——`rating`、`tags`、`remark` 整体替换（未传的 tags 视为空数组、未传的 remark 视为清空），并更新 `ratedBy`（当前 Manager 用户名）与 `ratedAt`。SHALL NOT 保留评价历史。
+- `rating` 必填，取 `USABLE` / `NEEDS_IMPROVEMENT` / `UNUSABLE` 之一；`tags` 元素须为问题标签枚举（`IGNORED_INPUT`、`WEAK_CYCLE_LINK`、`BAD_TONE`、`VAGUE`、`INAPPLICABLE_ADVICE`、`OVER_MEDICALIZED`、`FORMAT_ERROR`、`OTHER`）且不重复；`remark` ≤500 字符。不满足 SHALL 返回 400。
+- 评价 SHALL NOT 能被清除：接口不接受空 `rating`，已评价的记录不能回到未评价。
+- 记录状态为 `PROCESSING`（生成中）时 SHALL 返回 409「生成中的记录不能评价」，评价不变。
+- 记录不存在 SHALL 返回 404。
+- 每次成功保存 SHALL 写操作日志 `ai-generation:rate`（target 为记录 id，payload 含本次评价内容）。
+
+#### Scenario: 首次评价
+- **GIVEN** 一条状态为 SUCCESS、未评价的记录
+- **WHEN** 提交 `{rating: "USABLE"}`
+- **THEN** 返回 204，详情 `rating=USABLE`、`ratingTags=[]`、`ratedBy` 为当前用户名、`ratedAt` 非空
+
+#### Scenario: 再次评价覆盖原评价
+- **GIVEN** 记录已被 ops1 评为 `NEEDS_IMPROVEMENT`，标签 `[BAD_TONE]`，备注「语气生硬」
+- **WHEN** admin 提交 `{rating: "UNUSABLE", tags: ["VAGUE"]}`
+- **THEN** 返回 204，详情 `rating=UNUSABLE`、`ratingTags=["VAGUE"]`、`ratingRemark` 为 null、`ratedBy=admin`；不存在其他评价记录
+
+#### Scenario: 生成中的记录不能评价
+- **GIVEN** 一条状态为 PROCESSING 的记录
+- **WHEN** 提交评价
+- **THEN** 返回 409「生成中的记录不能评价」，详情评价字段不变
+
+#### Scenario: 失败记录可以评价
+- **GIVEN** 一条状态为 FORMAT_ERROR 的记录
+- **WHEN** 提交 `{rating: "UNUSABLE", tags: ["FORMAT_ERROR"]}`
+- **THEN** 返回 204
+
+#### Scenario: 评价参数非法
+- **GIVEN** 一条成功记录
+- **WHEN** 分别提交缺少 rating、`rating: "GOOD"`、`tags: ["BAD_TONE","BAD_TONE"]`、`tags: ["X"]`、501 字符的 remark
+- **THEN** 均返回 400，评价不变
+
+#### Scenario: 评价留痕
+- **GIVEN** 以 admin 登录
+- **WHEN** 评价一条记录，随后查询操作日志
+- **THEN** 存在 `module=ai-generation`、`action=rate`、`target` 为该记录 id 的记录
+
+### Requirement: 生成记录列表页面
+web 端 SHALL 在 `/ai/generations` 提供生成记录列表页：
+
+- 筛选区：①时间范围（开始、结束两个日期，进入页面默认填最近 7 天）；②请求 ID、③匿名用户 ID（文本，精确）；④场景（选项来自场景下拉接口）、⑤模板版本（选了场景才可选，选项为该场景模板 `V{seq} {name}`，切换场景时清空）、⑥模型（选项来自可选模型接口）、⑦状态、⑧评价（全部 / 可用 / 需优化 / 不可用 / 未评价）、⑨问题标签；⑩查询 / 重置（重置回到默认最近 7 天），查询与重置都回到第 1 页。
+- ①时间范围 SHALL 做输入限制，不允许出现开始晚于结束：开始日期的可选上限为已选结束日期，结束日期的可选下限为已选开始日期。
+- 列表列：时间、请求 ID（缩略显示，悬停显示全文）、匿名用户、场景名称、版本（V{seq}）、实际模型、状态（中文 + 成功 / 失败标识）、耗时（秒）、评价（中文，未评价显示「—」）；⑪点击行进入详情页。分页器默认 20 条/页、可切 200。
+- 列表为空显示空态；加载失败 toast 后端信息。
+
+#### Scenario: 默认展示最近 7 天
+- **GIVEN** 已登录并进入 `/ai/generations`
+- **WHEN** 页面加载完成
+- **THEN** ①开始日期为 6 天前、结束日期为今天，列表按时间倒序展示
+
+#### Scenario: 时间范围互相限制
+- **GIVEN** ①结束日期已选 2026-10-20
+- **WHEN** 打开开始日期选择器
+- **THEN** 2026-10-20 之后的日期不可选；同理先选开始日期后，结束日期选择器中早于开始日期的日期不可选
+
+#### Scenario: 模板版本依赖场景
+- **GIVEN** ④场景为「全部」
+- **WHEN** 查看⑤模板版本
+- **THEN** ⑤不可选；选择一个场景后⑤可选并列出该场景的模板版本
+
+#### Scenario: 按未评价筛选
+- **GIVEN** 列表中有已评价与未评价的记录
+- **WHEN** ⑧选择「未评价」并点⑩查询
+- **THEN** 列表仅展示评价列为「—」的记录，分页回到第 1 页
+
+#### Scenario: 点击行进入详情
+- **GIVEN** 列表中存在记录
+- **WHEN** 点击某一行⑪
+- **THEN** 进入 `/ai/generations/{id}` 详情页
+
+### Requirement: 生成记录详情页面
+web 端 SHALL 在 `/ai/generations/:id` 提供生成记录详情页：
+
+- **业务请求**区：requestId、clientRequestId、匿名用户、场景（名称 + sceneId）、模板（`V{seq} {name}`，可点击跳转 `/ai/prompt-templates/:id`）、App 版本、状态、实际模型、尝试次数、创建 / 完成时间、耗时、tokens。
+- **输入快照**区：inputs JSON；**实际请求**区：messages 与参数快照 JSON。
+- **调用明细**区：每次调用一行（#、触发原因中文、模型、状态、错误码、供应商请求 ID、开始时间、耗时、tokens），⑯每行可展开查看原始返回与解析错误。
+- **生成结果**区：最终交付 content（格式化 JSON，失败显示「—」）与最终模型原始输出。
+- **人工评价**区：⑫评价单选（可用 / 需优化 / 不可用）、⑬问题标签多选（8 个）、⑭备注（≤500）、⑮保存按钮——未评价时文案「保存评价」，已评价时「修改评价」；⑫⑬⑭回填当前评价；⑰已评价时显示「最后评价：{ratedBy} · {ratedAt}」，未评价时不显示。未选评价时⑮不可用。保存成功 toast 并重新拉取详情。
+- 记录状态为生成中时，⑫~⑮置灰不可操作，并提示「生成中的记录不能评价」。
+- 记录不存在或加载失败 toast 后端信息并返回列表页。
+
+#### Scenario: 未评价记录保存评价
+- **GIVEN** 打开一条未评价的成功记录
+- **WHEN** ⑫选「可用」、⑬勾选「语气不合适」后点⑮「保存评价」
+- **THEN** toast 成功，⑮文案变为「修改评价」，⑰显示当前用户与时间
+
+#### Scenario: 修改已有评价
+- **GIVEN** 打开一条已被评为「需优化」的记录
+- **WHEN** 查看人工评价区
+- **THEN** ⑫回填「需优化」、⑬回填原标签、⑭回填原备注，⑮文案为「修改评价」；改为「不可用」保存后详情显示新评价，页面不出现评价历史
+
+#### Scenario: 生成中记录评价区置灰
+- **GIVEN** 打开一条状态为生成中的记录
+- **WHEN** 查看人工评价区
+- **THEN** ⑫~⑮均不可操作，并显示「生成中的记录不能评价」
+
+#### Scenario: 展开调用原始返回
+- **GIVEN** 一条有两次调用的记录
+- **WHEN** 点击第 1 次调用行的⑯展开
+- **THEN** 显示该次调用的原始返回与解析错误
+
+### Requirement: 生成额度配置
+生成接口的每日额度 SHALL 存于表 `loves_ai_limit`，一种限制一行：`limit_key`（主键）、`name`、`limit_value`、`updated_by`、`updated_at`。建表 changelog SHALL 同时写入两行初始数据：
+
+| limit_key | name | limit_value |
+|---|---|---|
+| `PER_ANON_DAILY` | 单个匿名 ID 每日上限 | 50 |
+| `GLOBAL_DAILY` | 全站每日上限 | 5000 |
+
+初始行的 `updated_by` / `updated_at` 为空。本期 SHALL NOT 提供新增或删除限制的接口。
+
+`limit_value` SHALL 只取 `-1` 或正整数，`-1` 表示不限制。
+
+admin 端 SHALL 提供：
+- `GET /api/admin/ai/limits`：返回全部限制 `[{key, name, value, updatedBy, updatedAt}]`，按 `key` 升序，不分页；
+- `PUT /api/admin/ai/limits/{key}`，body `{value}`：只更新该行的 `limit_value`，并把该行 `updated_by` 置为当前 Manager username、`updated_at` 置为当前时间，返回更新后的该行；其他行 SHALL NOT 变化。`key` 不存在 → 404；`value` 缺失、为 0、小于 -1 或非整数 → 400「取值须为 -1 或正整数」。
+
+#### Scenario: 初始数据
+- **GIVEN** 新建库刚执行完迁移
+- **WHEN** 已登录 Manager 请求 `GET /api/admin/ai/limits`
+- **THEN** 返回 200 与两项：`GLOBAL_DAILY` value=5000、`PER_ANON_DAILY` value=50，两项 `updatedBy`、`updatedAt` 均为 null
+
+#### Scenario: 修改单项只记录该项修改人
+- **GIVEN** 以 admin 登录，两项都未修改过
+- **WHEN** 请求 `PUT /api/admin/ai/limits/PER_ANON_DAILY`，body `{"value":-1}`，随后 `GET /api/admin/ai/limits`
+- **THEN** PUT 返回 200 且 `value=-1`、`updatedBy=admin`、`updatedAt` 非空；`GLOBAL_DAILY` 的 `updatedBy`、`updatedAt` 仍为 null
+
+#### Scenario: 非法取值被拒绝
+- **GIVEN** 以 admin 登录
+- **WHEN** 分别以 `{"value":0}`、`{"value":-2}`、`{}` 请求 `PUT /api/admin/ai/limits/GLOBAL_DAILY`
+- **THEN** 均返回 400「取值须为 -1 或正整数」，该行数据不变
+
+#### Scenario: 不存在的限制
+- **GIVEN** 以 admin 登录
+- **WHEN** 请求 `PUT /api/admin/ai/limits/NOT_EXIST`，body `{"value":10}`
+- **THEN** 返回 404
+
+### Requirement: 限流配置页面
+web 端 SHALL 提供页面 `/ai/limits`（侧栏「AI 管理 › 限流配置」）：
+
+```
+┌ AI 管理 › 限流配置 ──────────────────────────────────────────────────────┐
+│ 名称                    上限            最后修改人   修改时间      操作   │
+│ 全站每日上限            5000 次         admin        10-26 14:30   编辑① │
+│ 单个匿名 ID 每日上限    不限制 ②        —            —             编辑   │
+│ 提示：-1 表示不限制，保存后立即生效                                      │
+└──────────────────────────────────────────────────────────────────────────┘
+
+┌ 编辑：单个匿名 ID 每日上限（弹窗）──────┐
+│ 上限 *  [    50 ] 次 ③                  │
+│         -1 表示不限制                   │
+│                    [取消] [保存]④       │
+└─────────────────────────────────────────┘
+```
+
+- 进入页面 SHALL 调 `GET /api/admin/ai/limits` 渲染列表；
+- ② 值为 -1 SHALL 显示「不限制」，否则显示「N 次」；从未修改过的行，修改人与修改时间 SHALL 显示「—」；
+- ① SHALL 打开编辑弹窗并回填当前值；
+- ③ 只接受 `-1` 或正整数，不合法时 SHALL 在输入框下提示且 ④ 置灰；
+- ④ SHALL 调 `PUT /api/admin/ai/limits/{key}`，成功后关闭弹窗、提示「已保存，立即生效」并刷新列表。
+
+#### Scenario: 列表展示
+- **GIVEN** `PER_ANON_DAILY` 为 -1 且从未修改，`GLOBAL_DAILY` 为 5000 且由 admin 修改过
+- **WHEN** 打开 `/ai/limits`
+- **THEN** 列表区「单个匿名 ID 每日上限」行上限列显示「不限制」、修改人与时间显示「—」；「全站每日上限」行显示「5000 次」与修改人 admin
+
+#### Scenario: 编辑保存
+- **GIVEN** 已打开 `/ai/limits`
+- **WHEN** 点「全站每日上限」行的「编辑」，输入 3000 并保存
+- **THEN** 弹窗关闭、提示「已保存，立即生效」，该行显示「3000 次」，修改人为当前登录账号
+
+#### Scenario: 非法输入禁止保存
+- **GIVEN** 已打开编辑弹窗
+- **WHEN** 输入 0
+- **THEN** 输入框下显示「取值须为 -1 或正整数」，保存按钮不可点击
 

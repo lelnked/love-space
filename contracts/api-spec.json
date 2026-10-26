@@ -1650,6 +1650,70 @@
         },
         "x-requirement": "ai/生成记录人工评价"
       }
+    },
+    "/api/admin/ai/limits": {
+      "get": {
+        "summary": "AI 限流配置列表（生成接口每日额度）",
+        "description": "全部限制，按 key 升序，不分页；初始两行 GLOBAL_DAILY=5000、PER_ANON_DAILY=50。所有已登录 Manager 可用。",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AiLimit"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-requirement": "ai/生成额度配置"
+      }
+    },
+    "/api/admin/ai/limits/{key}": {
+      "put": {
+        "summary": "修改一项 AI 限流配置",
+        "description": "只更新该行 value 与 updatedBy/updatedAt，其他行不变；保存后 app 下一次生成即生效。key 不存在 404；value 缺失、为 0、小于 -1 → 400「取值须为 -1 或正整数」。留痕 ai-limit:update（target = key）。",
+        "parameters": [
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "GLOBAL_DAILY",
+                "PER_ANON_DAILY"
+              ]
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AiLimitUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AiLimit"
+                }
+              }
+            }
+          }
+        },
+        "x-requirement": "ai/生成额度配置"
+      }
     }
   },
   "components": {
@@ -2421,6 +2485,54 @@
             "maxLength": 500,
             "nullable": true,
             "description": "备注，≤500；不传视为清空"
+          }
+        }
+      },
+      "AiLimit": {
+        "type": "object",
+        "required": [
+          "key",
+          "name",
+          "value"
+        ],
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "限制编码：PER_ANON_DAILY 单个匿名 ID 每日上限 / GLOBAL_DAILY 全站每日上限"
+          },
+          "name": {
+            "type": "string",
+            "description": "显示名称"
+          },
+          "value": {
+            "type": "integer",
+            "format": "int32",
+            "description": "上限，-1 表示不限制，其余为正整数"
+          },
+          "updatedBy": {
+            "type": "string",
+            "nullable": true,
+            "description": "该行最后修改人 username，从未修改为 null"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true,
+            "description": "该行最后修改时间，从未修改为 null"
+          }
+        }
+      },
+      "AiLimitUpdateRequest": {
+        "type": "object",
+        "required": [
+          "value"
+        ],
+        "properties": {
+          "value": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": -1,
+            "description": "上限，必填；-1 表示不限制，其余须为正整数（0 不合法）"
           }
         }
       }

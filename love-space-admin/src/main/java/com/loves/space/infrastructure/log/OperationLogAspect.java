@@ -91,7 +91,7 @@ public class OperationLogAspect {
         return result;
     }
 
-    /** 取方法参数中第一个 {@link UUID} 类型参数的字符串形式作为 target。 */
+    /** 取方法参数中第一个 {@link UUID} 类型参数作为 target；没有时取第一个 String 参数（如限流配置的 key）。 */
     private String extractTarget(Object[] args) {
         if (args == null) {
             return null;
@@ -99,6 +99,11 @@ public class OperationLogAspect {
         for (Object arg : args) {
             if (arg instanceof UUID id) {
                 return id.toString();
+            }
+        }
+        for (Object arg : args) {
+            if (arg instanceof String text) {
+                return text;
             }
         }
         return null;

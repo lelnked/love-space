@@ -4,7 +4,7 @@
 运营操作审计：@OperationLog 横切留痕（覆盖 18 个模块共 67 个写接口）、切面取值与敏感字段脱敏、异步落库与失败隔离，以及日志分页查询。
 ## Requirements
 ### Requirement: 运营写操作留痕
-admin 端 SHALL 通过 `@OperationLog("<module>:<action>")` 方法注解对运营写操作留痕，覆盖全部 18 个业务模块共 67 个写接口（城市、分类、标签、商户、商户评价、Banner、推荐清单、大使、路线、活动、文章栏目、文章、精选推荐、周期推荐、账号管理、上传凭证、AI 场景 `ai-scene`、AI 提示词 `ai-prompt`，以及登出）。
+admin 端 SHALL 通过 `@OperationLog("<module>:<action>")` 方法注解对运营写操作留痕，覆盖全部 20 个业务模块共 69 个写接口（城市、分类、标签、商户、商户评价、Banner、推荐清单、大使、路线、活动、文章栏目、文章、精选推荐、周期推荐、账号管理、上传凭证、AI 场景 `ai-scene`、AI 提示词 `ai-prompt`、AI 生成记录 `ai-generation`、AI 限流配置 `ai-limit`，以及登出）。
 
 以下写接口 SHALL NOT 留痕：
 - `POST /api/admin/auth/login`——登录成功时安全上下文尚未填充，切面取不到操作人；
@@ -39,12 +39,22 @@ admin 端 SHALL 通过 `@OperationLog("<module>:<action>")` 方法注解对运�
 - **WHEN** 调用模型测试连接与模板测试，随后查询操作日志
 - **THEN** 操作日志中不新增 `ai-scene` / `ai-prompt` 模块的记录
 
+#### Scenario: AI 生成记录评价留痕
+- **GIVEN** 以 admin 身份登录
+- **WHEN** 评价一条 AI 生成记录，随后查询操作日志
+- **THEN** 存在一条 `module=ai-generation`、`action=rate`、`username=admin` 的记录
+
+#### Scenario: AI 限流配置修改留痕
+- **GIVEN** 以 admin 身份登录
+- **WHEN** 修改一项 AI 限流配置，随后查询操作日志
+- **THEN** 存在一条 `module=ai-limit`、`action=update`、`username=admin` 的记录
+
 ### Requirement: 留痕字段取值与敏感信息脱敏
 留痕切面 SHALL 按以下规则取值：
 
 - **module / action**：由注解值按第一个冒号拆分；无冒号时 module 取整串、action 为空串。
 - **操作人**：从安全上下文取当前 Manager 的 id 与用户名，两者一并落库（用户名冗余存储，使账号删除后日志仍可读）。
-- **target**：取方法入参中**第一个 UUID 类型参数**的字符串值；无 UUID 入参时为 null。
+- **target**：取方法入参中**第一个 UUID 类型参数**的字符串值；无 UUID 入参时取**第一个字符串类型参数**（如 AI 限流配置的 `{key}`）；两者都没有时为 null。
 - **payload**：取方法入参中第一个非 null、非 UUID、非字符串/数字/布尔的参数，序列化为 JSON。
 
 payload SHALL 递归脱敏：键名匹配 `password` / `secret` / `token`（不区分大小写）的字段，其值整体替换为 `[REDACTED]`，无论原值是标量、对象还是数组。
@@ -70,6 +80,11 @@ payload SHALL 递归脱敏：键名匹配 `password` / `secret` / `token`（不�
 - **GIVEN** 一个商户及其下的一条评价
 - **WHEN** 更新该条评价
 - **THEN** 对应日志记录的 `target` 为**商户** id，而非评价 id
+
+#### Scenario: 字符串路径参数作为 target
+- **GIVEN** 以 admin 身份登录
+- **WHEN** 请求 `PUT /api/admin/ai/limits/GLOBAL_DAILY`
+- **THEN** 对应日志记录的 `target` 为 `GLOBAL_DAILY`
 
 ### Requirement: 操作日志查询
 admin 端 SHALL 提供 `GET /api/admin/logs/page` 分页查询操作日志。该接口**不限 ADMIN 角色**，任何已登录账号均可访问。该域仅此一个接口，无详情、无导出、无删除。
