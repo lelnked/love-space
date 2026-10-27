@@ -112,8 +112,10 @@ export default function AiPromptTemplateList() {
     {
       key: "remark",
       header: "修改说明",
+      // table 是 width:auto，td max-w-0 让本列只吃剩余宽度，内容按列宽截断，不再挤压操作列
+      className: "max-w-0",
       render: (it) => (
-        <span className="block max-w-[16rem] truncate" title={it.remark ?? ""}>
+        <span className="block truncate" title={it.remark ?? ""}>
           {it.remark || "—"}
         </span>
       ),
@@ -145,7 +147,7 @@ export default function AiPromptTemplateList() {
       header: "操作",
       width: "14rem",
       render: (it) => (
-        <div className="flex gap-2">
+        <div className="flex gap-2 whitespace-nowrap">
           <Button size="sm" variant="outline" type="button" onClick={() => navigate(`/ai/prompt-templates/${it.id}`)}>
             {it.active ? "查看" : "编辑"}
           </Button>
@@ -173,17 +175,22 @@ export default function AiPromptTemplateList() {
     <>
       <PageMeta title="提示词模板 | Love Space Admin" description="场景下的提示词模板" />
       <div className="flex items-center justify-between mb-6">
-        <span title={canCompare ? "" : "请勾选 2~3 个模板"}>
-          <Button
-            size="sm"
-            variant="outline"
-            type="button"
-            disabled={!canCompare}
-            onClick={() => navigate(`/ai/prompts/${sceneId}/compare?ids=${selected.join(",")}`)}
-          >
-            对比所选({selected.length})
+        <div className="flex items-center gap-3">
+          <Button size="sm" variant="outline" type="button" onClick={() => navigate("/ai/prompts")}>
+            返回
           </Button>
-        </span>
+          <span title={canCompare ? "" : "请勾选 2~3 个模板"}>
+            <Button
+              size="sm"
+              variant="outline"
+              type="button"
+              disabled={!canCompare}
+              onClick={() => navigate(`/ai/prompts/${sceneId}/compare?ids=${selected.join(",")}`)}
+            >
+              对比所选({selected.length})
+            </Button>
+          </span>
+        </div>
         <Link
           to={`/ai/prompts/${sceneId}/templates/new`}
           className="px-4 py-2 text-sm rounded-lg bg-brand-500 text-white hover:bg-brand-600"

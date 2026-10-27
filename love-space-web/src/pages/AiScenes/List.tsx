@@ -38,7 +38,7 @@ export default function AiSceneList() {
   const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editing, setEditing] = useState<AiScene | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -67,12 +67,12 @@ export default function AiSceneList() {
   const closeModal = useCallback(() => setModalOpen(false), []);
 
   const openCreate = () => {
-    setEditingId(null);
+    setEditing(null);
     setModalOpen(true);
   };
 
   const openEdit = (it: AiScene) => {
-    setEditingId(it.id);
+    setEditing(it);
     setModalOpen(true);
   };
 
@@ -100,8 +100,10 @@ export default function AiSceneList() {
     {
       key: "description",
       header: "说明",
+      // table 是 width:auto，table-fixed 不生效；td max-w-0 让本列只吃剩余宽度，内容按列宽截断
+      className: "max-w-0",
       render: (it) => (
-        <span className="block max-w-[24rem] truncate" title={it.description ?? ""}>
+        <span className="block truncate" title={it.description ?? ""}>
           {it.description || "—"}
         </span>
       ),
@@ -122,7 +124,7 @@ export default function AiSceneList() {
       header: "操作",
       width: "10rem",
       render: (it) => (
-        <div className="flex gap-2">
+        <div className="flex gap-2 whitespace-nowrap">
           <Button size="sm" variant="outline" type="button" onClick={() => openEdit(it)}>
             编辑
           </Button>
@@ -173,15 +175,17 @@ export default function AiSceneList() {
           />
         </ComponentCard>
       </div>
-      <SceneFormModal
-        open={modalOpen}
-        editingId={editingId}
-        onClose={closeModal}
-        onSaved={() => {
-          setModalOpen(false);
-          void load();
-        }}
-      />
+      {/* 打开时才挂载，表单状态由 scene 直接初始化 */}
+      {modalOpen && (
+        <SceneFormModal
+          scene={editing}
+          onClose={closeModal}
+          onSaved={() => {
+            setModalOpen(false);
+            void load();
+          }}
+        />
+      )}
     </>
   );
 }

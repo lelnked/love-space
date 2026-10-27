@@ -6,6 +6,10 @@ import Select from "../form/Select";
 
 export type FilterFieldType = "text" | "select" | "date";
 
+/** 文本 / 日期输入框样式，与 Select 触发器保持一致 */
+const INPUT_CLASS =
+  "h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-brand-800";
+
 /**
  * 日期筛选项：用 flatpickr 提供日历弹窗，输出 "YYYY-MM-DD" 字符串。
  * 受外部 value 控制，value 被清空（Reset）时同步清空日历；minDate / maxDate 限制可选范围。
@@ -65,9 +69,9 @@ function DateFilterInput({
       <input
         ref={inputRef}
         placeholder={placeholder}
-        className="border rounded px-3 py-2 pr-9 text-sm min-w-[160px]"
+        className={`${INPUT_CLASS} pr-11`}
       />
-      <span className="absolute text-gray-400 -translate-y-1/2 pointer-events-none right-2 top-1/2">
+      <span className="absolute text-gray-400 -translate-y-1/2 pointer-events-none right-4 top-1/2">
         <CalenderIcon className="size-5" />
       </span>
     </div>
@@ -92,6 +96,8 @@ export interface FilterField {
   /** 该字段值变化时清空本字段（如模板版本依赖场景） */
   dependsOn?: string;
   disabled?: boolean;
+  /** 容器宽度类，默认 w-40；内容较长的字段（如模型名）可加宽 */
+  width?: string;
 }
 
 export type FilterValues = Record<string, string>;
@@ -144,7 +150,7 @@ export default function FilterBar({
   return (
     <div className="flex flex-wrap items-end gap-3 mb-4">
       {fields.map((f) => (
-        <div key={f.name} className="flex flex-col w-40">
+        <div key={f.name} className={`flex flex-col ${f.width ?? "w-40"}`}>
           <label className="text-xs text-gray-500 mb-1">{f.label}</label>
           {f.type === "select" ? (
             <Select
@@ -167,7 +173,7 @@ export default function FilterBar({
               type="text"
               placeholder={f.placeholder}
               disabled={f.disabled}
-              className="border rounded px-3 py-2 text-sm min-w-[160px]"
+              className={`${INPUT_CLASS} disabled:opacity-50`}
               value={values[f.name] ?? ""}
               onChange={(e) => update(f.name, e.target.value)}
             />

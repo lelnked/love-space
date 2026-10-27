@@ -17,7 +17,7 @@ import {
   STATUS_LABEL,
 } from "../../api/aiGenerations";
 import { formatDateTime } from "../AiPrompts/promptVariables";
-import { renderStatus, formatLatency, shortId } from "./format";
+import { renderStatus, formatLatency } from "./format";
 
 function ymd(d: Date): string {
   const pad = (n: number) => String(n).padStart(2, "0");
@@ -110,8 +110,6 @@ export default function AiGenerationList() {
   const fields: FilterField[] = [
     { name: "startDate", label: "开始日期", type: "date", maxField: "endDate" },
     { name: "endDate", label: "结束日期", type: "date", minField: "startDate" },
-    { name: "requestId", label: "请求 ID", type: "text", placeholder: "完整 ID，精确匹配" },
-    { name: "anonymousUserId", label: "匿名用户 ID", type: "text", placeholder: "完整 ID，精确匹配" },
     {
       name: "sceneId",
       label: "场景",
@@ -126,7 +124,13 @@ export default function AiGenerationList() {
       dependsOn: "sceneId",
       disabled: !selectedScene,
     },
-    { name: "model", label: "模型", type: "select", options: models.map((m) => ({ value: m, label: m })) },
+    {
+      name: "model",
+      label: "模型",
+      type: "select",
+      options: models.map((m) => ({ value: m, label: m })),
+      width: "w-64",
+    },
     { name: "status", label: "状态", type: "select", options: toOptions(STATUS_LABEL) },
     {
       name: "rating",
@@ -139,24 +143,22 @@ export default function AiGenerationList() {
 
   const columns: Column<AiGenerationItem>[] = [
     { key: "createdAt", header: "时间", width: "11rem", render: (it) => formatDateTime(it.createdAt) },
-    {
-      key: "id",
-      header: "请求 ID",
-      width: "7rem",
-      render: (it) => <span title={it.id}>{shortId(it.id)}</span>,
-    },
-    {
-      key: "anonymousUserId",
-      header: "匿名用户",
-      width: "7rem",
-      render: (it) => <span title={it.anonymousUserId}>{shortId(it.anonymousUserId)}</span>,
-    },
-    { key: "sceneName", header: "场景", render: (it) => it.sceneName ?? it.sceneId },
+    { key: "sceneName", header: "场景", width: "10rem", render: (it) => it.sceneName ?? it.sceneId },
     { key: "templateSeq", header: "版本", width: "5rem", render: (it) => `V${it.templateSeq}` },
-    { key: "finalModel", header: "实际模型", render: (it) => it.finalModel ?? "—" },
+    {
+      key: "finalModel",
+      header: "实际模型",
+      // td max-w-0 让本列只吃剩余宽度，长模型名截断，不再把评价列挤出表格
+      className: "max-w-0",
+      render: (it) => (
+        <span className="block truncate" title={it.finalModel ?? ""}>
+          {it.finalModel ?? "—"}
+        </span>
+      ),
+    },
     { key: "status", header: "状态", width: "7rem", render: (it) => renderStatus(it.status) },
     { key: "latencyMs", header: "耗时", width: "5rem", render: (it) => formatLatency(it.latencyMs) },
-    { key: "rating", header: "评价", width: "5rem", render: (it) => (it.rating ? RATING_LABEL[it.rating] : "—") },
+    { key: "rating", header: "评价", width: "6.5rem", className: "whitespace-nowrap", render: (it) => (it.rating ? RATING_LABEL[it.rating] : "—") },
   ];
 
   return (

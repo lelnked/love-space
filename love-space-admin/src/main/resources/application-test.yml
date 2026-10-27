@@ -36,3 +36,14 @@ app:
 logging:
   level:
     com.loves.space: DEBUG
+
+
+love-space:
+  ai:
+    api-key: ${ARK_API_KEY:}
+    base-url: ${ARK_BASE_URL:https://ark.cn-beijing.volces.com/api/v3}
+    temperature: ${AI_TEMPERATURE:}
+    top-p: ${AI_TOP_P:}
+    max-tokens: ${AI_MAX_TOKENS:}
+    timeout-seconds: ${AI_TIMEOUT_SECONDS:30}
+    max-retries: ${AI_MAX_RETRIES:1}

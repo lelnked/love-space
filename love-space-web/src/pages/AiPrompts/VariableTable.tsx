@@ -1,4 +1,5 @@
 import type { AiPromptVariable } from "../../api/ai";
+import Switch from "../../components/form/switch/Switch";
 
 const inputClass =
   "border border-gray-300 dark:border-gray-700 rounded px-2 py-1.5 text-sm w-full bg-transparent dark:text-white/90 disabled:bg-gray-100 dark:disabled:bg-gray-800";
@@ -10,7 +11,7 @@ interface Props {
   onChange: (variables: AiPromptVariable[]) => void;
 }
 
-/** 模板变量表：变量名 / 必填 / 说明 / 删除。 */
+/** 模板变量表：变量名 / 说明 / 必填 / 删除。 */
 export default function VariableTable({ variables, errors, readOnly, onChange }: Props) {
   const update = (index: number, patch: Partial<AiPromptVariable>) =>
     onChange(variables.map((v, i) => (i === index ? { ...v, ...patch } : v)));
@@ -36,8 +37,8 @@ export default function VariableTable({ variables, errors, readOnly, onChange }:
           <thead>
             <tr className="text-left text-xs text-gray-500">
               <th className="py-1 font-normal">变量名</th>
-              <th className="py-1 font-normal w-12 text-center">必填</th>
               <th className="py-1 font-normal">说明</th>
+              <th className="py-1 font-normal w-16 text-center">必填</th>
               {!readOnly && <th className="py-1 font-normal w-10 text-center">删除</th>}
             </tr>
           </thead>
@@ -54,15 +55,6 @@ export default function VariableTable({ variables, errors, readOnly, onChange }:
                   />
                   {errors[i] && <div className="text-error-500 text-xs mt-1">{errors[i]}</div>}
                 </td>
-                <td className="py-1 text-center">
-                  <input
-                    type="checkbox"
-                    checked={v.required}
-                    disabled={readOnly}
-                    aria-label={`必填 ${i + 1}`}
-                    onChange={(e) => update(i, { required: e.target.checked })}
-                  />
-                </td>
                 <td className="py-1 pr-2">
                   <input
                     className={inputClass}
@@ -72,11 +64,22 @@ export default function VariableTable({ variables, errors, readOnly, onChange }:
                     onChange={(e) => update(i, { description: e.target.value })}
                   />
                 </td>
+                <td className="py-1">
+                  {/* 高度对齐左侧输入框，开关垂直居中 */}
+                  <div className="flex h-[34px] items-center justify-center">
+                    <Switch
+                      label=""
+                      checked={v.required}
+                      disabled={readOnly}
+                      onChange={(checked) => update(i, { required: checked })}
+                    />
+                  </div>
+                </td>
                 {!readOnly && (
-                  <td className="py-1 text-center">
+                  <td className="py-1">
                     <button
                       type="button"
-                      className="text-gray-400 hover:text-error-500"
+                      className="flex h-[34px] w-full items-center justify-center text-xl leading-none text-gray-400 hover:text-error-500"
                       aria-label={`删除变量 ${i + 1}`}
                       onClick={() => onChange(variables.filter((_, j) => j !== i))}
                     >
