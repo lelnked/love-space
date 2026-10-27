@@ -5,9 +5,7 @@ import Label from "../../components/form/Label";
 import Button from "../../components/ui/button/Button";
 import { useToast } from "../../context/ToastContext";
 import { AiConnectionTestResult, AiScene, listAiModels, setAiSceneModels, testAiModelConnection } from "../../api/ai";
-
-const selectClass =
-  "border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm w-full h-11 bg-transparent dark:bg-gray-900 dark:text-white/90";
+import Select from "../../components/form/Select";
 
 type TestState = { status: "idle" } | { status: "loading" } | { status: "done"; result: AiConnectionTestResult };
 
@@ -106,28 +104,24 @@ export default function ModelConfigModal({ scene, onClose, onSaved }: Props) {
               主模型 <span className="text-error-500">*</span>
             </Label>
             <div className="flex items-center gap-3">
-              <select className={selectClass} value={primary} onChange={(e) => setPrimary(e.target.value)}>
-                <option value="">请选择</option>
-                {models.map((m) => (
-                  <option key={m} value={m}>
-                    {m}
-                  </option>
-                ))}
-              </select>
+              <Select
+                placeholder="请选择"
+                value={primary}
+                onChange={setPrimary}
+                options={models.map((m) => ({ value: m, label: m }))}
+              />
               <ConnectionTest model={primary} />
             </div>
           </div>
           <div>
             <Label>备用模型</Label>
             <div className="flex items-center gap-3">
-              <select className={selectClass} value={backup} onChange={(e) => setBackup(e.target.value)}>
-                <option value="">不使用</option>
-                {models.map((m) => (
-                  <option key={m} value={m}>
-                    {m}
-                  </option>
-                ))}
-              </select>
+              <Select
+                placeholder="不使用"
+                value={backup}
+                onChange={setBackup}
+                options={models.map((m) => ({ value: m, label: m }))}
+              />
               <ConnectionTest model={backup} />
             </div>
             {sameModel && <div className="text-error-500 text-xs mt-1">备用模型不能与主模型相同</div>}

@@ -4,6 +4,7 @@ import { AxiosError } from "axios";
 import Button from "../../components/ui/button/Button";
 import PageMeta from "../../components/common/PageMeta";
 import Label from "../../components/form/Label";
+import Select from "../../components/form/Select";
 import ImageUploader from "../../components/form/ImageUploader";
 import { useToast } from "../../context/ToastContext";
 import { PERIOD_LABEL, PERIOD_VALUES, type Period } from "../../api/types";
@@ -186,8 +187,6 @@ export default function FeaturedCycleItemForm() {
     "border border-gray-200 dark:border-gray-800 rounded-lg p-4 bg-white dark:bg-gray-900";
   const sectionTitleClass =
     "text-sm font-semibold text-gray-800 dark:text-white/90 mb-3";
-  const selectClass =
-    "border rounded px-3 py-2 text-sm w-full h-11 disabled:bg-gray-100 disabled:text-gray-500";
   const textareaClass = "border rounded px-3 py-2 text-sm w-full min-h-[80px]";
   const inputClass = "border rounded px-3 py-2 text-sm w-full h-11";
 
@@ -236,18 +235,15 @@ export default function FeaturedCycleItemForm() {
                 <Label>
                   内容类型 <span className="text-error-500">*</span>
                 </Label>
-                <select
-                  className={selectClass}
+                <Select
                   value={type}
                   disabled={editing}
-                  onChange={(e) => handleTypeChange(e.target.value as FeaturedCycleItemType)}
-                >
-                  {CYCLE_ITEM_TYPES.map((t) => (
-                    <option key={t} value={t}>
-                      {CYCLE_ITEM_TYPE_LABELS[t]}
-                    </option>
-                  ))}
-                </select>
+                  onChange={(v) => handleTypeChange(v as FeaturedCycleItemType)}
+                  options={CYCLE_ITEM_TYPES.map((t) => ({
+                    value: t,
+                    label: CYCLE_ITEM_TYPE_LABELS[t],
+                  }))}
+                />
               </div>
               <div>
                 <Label>排序号</Label>
@@ -289,19 +285,15 @@ export default function FeaturedCycleItemForm() {
                   <Label>
                     关联活动 <span className="text-error-500">*</span>
                   </Label>
-                  <select
-                    className={selectClass}
+                  <Select
+                    placeholder="请选择"
                     value={targetId}
-                    onChange={(e) => setTargetId(e.target.value)}
-                  >
-                    <option value="">请选择</option>
-                    {activities.map((a) => (
-                      <option key={a.id} value={a.id}>
-                        {a.title}
-                        {a.online ? "" : "（已下线）"}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={setTargetId}
+                    options={activities.map((a) => ({
+                      value: a.id,
+                      label: `${a.title}${a.online ? "" : "（已下线）"}`,
+                    }))}
+                  />
                   {error("targetId")}
                 </div>
                 <div>
@@ -333,18 +325,12 @@ export default function FeaturedCycleItemForm() {
                   <Label>
                     关联路线 <span className="text-error-500">*</span>
                   </Label>
-                  <select
-                    className={selectClass}
+                  <Select
+                    placeholder="请选择"
                     value={targetId}
-                    onChange={(e) => setTargetId(e.target.value)}
-                  >
-                    <option value="">请选择</option>
-                    {routes.map((r) => (
-                      <option key={r.id} value={r.id}>
-                        {r.title}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={setTargetId}
+                    options={routes.map((r) => ({ value: r.id, label: r.title }))}
+                  />
                   {error("targetId")}
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -391,19 +377,15 @@ export default function FeaturedCycleItemForm() {
                   <Label>
                     关联文章 <span className="text-error-500">*</span>
                   </Label>
-                  <select
-                    className={selectClass}
+                  <Select
+                    placeholder="请选择"
                     value={targetId}
-                    onChange={(e) => handleArticleChange(e.target.value)}
-                  >
-                    <option value="">请选择</option>
-                    {articles.map((a) => (
-                      <option key={a.id} value={a.id}>
-                        {a.title}
-                        {a.online ? "" : "（已下线）"}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={handleArticleChange}
+                    options={articles.map((a) => ({
+                      value: a.id,
+                      label: `${a.title}${a.online ? "" : "（已下线）"}`,
+                    }))}
+                  />
                   {error("targetId")}
                 </div>
                 <div>

@@ -2,6 +2,7 @@ import { FormEvent, useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { AxiosError } from "axios";
 import Label from "../../components/form/Label";
+import Select from "../../components/form/Select";
 import Input from "../../components/form/input/InputField";
 import Button from "../../components/ui/button/Button";
 import {
@@ -226,19 +227,15 @@ export default function RecommendListForm() {
             <Label>
               所属地图 <span className="text-error-500">*</span>
             </Label>
-            <select
-              className="border rounded px-3 py-2 text-sm w-full h-11 disabled:bg-gray-100 disabled:text-gray-500"
+            <Select
+              placeholder="请选择"
               value={cityId}
-              onChange={(e) => setCityId(e.target.value)}
-            >
-              <option value="">请选择</option>
-              {cities.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.chineseName}
-                  {c.online ? "" : "（已下架）"}
-                </option>
-              ))}
-            </select>
+              onChange={setCityId}
+              options={cities.map((c) => ({
+                value: c.id,
+                label: `${c.chineseName}${c.online ? "" : "（已下架）"}`,
+              }))}
+            />
             {editing && (
               <div className="text-xs text-gray-400 mt-1">修改地图时，请确保清单内现有商户均属于新地图，否则保存会失败</div>
             )}

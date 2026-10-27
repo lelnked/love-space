@@ -7,6 +7,7 @@ import ComponentCard from "../../components/common/ComponentCard";
 import Button from "../../components/ui/button/Button";
 import { Modal } from "../../components/ui/modal";
 import Label from "../../components/form/Label";
+import Select from "../../components/form/Select";
 import ImageUploader from "../../components/form/ImageUploader";
 import Switch from "../../components/form/switch/Switch";
 import { useToast } from "../../context/ToastContext";
@@ -296,20 +297,16 @@ export default function FeaturedItemList() {
             <Label>
               关联地图 <span className="text-error-500">*</span>
             </Label>
-            <select
-              className="border rounded px-3 py-2 text-sm w-full h-11 disabled:bg-gray-100 disabled:text-gray-500"
-              value={cityId}
-              onChange={(e) => setCityId(e.target.value)}
+            <Select
+              placeholder="请选择"
               disabled={Boolean(editingId)}
-            >
-              <option value="">请选择</option>
-              {cities.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.chineseName}
-                  {c.online ? "" : "（已下架）"}
-                </option>
-              ))}
-            </select>
+              value={cityId}
+              onChange={setCityId}
+              options={cities.map((c) => ({
+                value: c.id,
+                label: `${c.chineseName}${c.online ? "" : "（已下架）"}`,
+              }))}
+            />
             {editingId && (
               <div className="text-xs text-gray-400 mt-1">精选推荐创建后关联地图不可修改</div>
             )}

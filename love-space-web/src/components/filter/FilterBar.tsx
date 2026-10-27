@@ -2,6 +2,7 @@ import { ReactNode, useEffect, useRef, useState } from "react";
 import flatpickr from "flatpickr";
 import "flatpickr/dist/flatpickr.css";
 import { CalenderIcon } from "../../icons";
+import Select from "../form/Select";
 
 export type FilterFieldType = "text" | "select" | "date";
 
@@ -143,20 +144,16 @@ export default function FilterBar({
   return (
     <div className="flex flex-wrap items-end gap-3 mb-4">
       {fields.map((f) => (
-        <div key={f.name} className="flex flex-col">
+        <div key={f.name} className="flex flex-col w-40">
           <label className="text-xs text-gray-500 mb-1">{f.label}</label>
           {f.type === "select" ? (
-            <select
-              className="border rounded px-3 py-2 text-sm min-w-[140px] disabled:bg-gray-100 disabled:text-gray-400"
+            <Select
               disabled={f.disabled}
+              placeholder="全部"
               value={values[f.name] ?? ""}
-              onChange={(e) => update(f.name, e.target.value)}
-            >
-              <option value="">全部</option>
-              {f.options?.map((o) => (
-                <option key={o.value} value={o.value}>{o.label}</option>
-              ))}
-            </select>
+              onChange={(v) => update(f.name, v)}
+              options={f.options ?? []}
+            />
           ) : f.type === "date" ? (
             <DateFilterInput
               value={values[f.name] ?? ""}

@@ -2,6 +2,7 @@ import { FormEvent, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { AxiosError } from "axios";
 import Label from "../../components/form/Label";
+import Select from "../../components/form/Select";
 import Input from "../../components/form/input/InputField";
 import Button from "../../components/ui/button/Button";
 import ImageUploader from "../../components/form/ImageUploader";
@@ -343,37 +344,27 @@ export default function MerchantForm() {
                 <Label>
                   城市 <span className="text-error-500">*</span>
                 </Label>
-                <select
-                  className="border rounded px-3 py-2 text-sm w-full h-11"
+                <Select
+                  placeholder="请选择"
                   value={cityId}
-                  onChange={(e) => setCityId(e.target.value)}
-                >
-                  <option value="">请选择</option>
-                  {cities.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.chineseName}
-                      {c.online ? "" : "（已下架）"}
-                    </option>
-                  ))}
-                </select>
+                  onChange={setCityId}
+                  options={cities.map((c) => ({
+                    value: c.id,
+                    label: `${c.chineseName}${c.online ? "" : "（已下架）"}`,
+                  }))}
+                />
                 {fieldErrors.cityId && (
                   <div className="text-error-500 text-xs mt-1">{fieldErrors.cityId}</div>
                 )}
               </div>
               <div>
                 <Label>分类</Label>
-                <select
-                  className="border rounded px-3 py-2 text-sm w-full h-11"
+                <Select
+                  placeholder="未分类"
                   value={categoryId}
-                  onChange={(e) => setCategoryId(e.target.value)}
-                >
-                  <option value="">未分类</option>
-                  {categories.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
+                  onChange={setCategoryId}
+                  options={categories.map((c) => ({ value: c.id, label: c.name }))}
+                />
               </div>
             </div>
           </fieldset>

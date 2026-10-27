@@ -2,6 +2,7 @@ import { FormEvent, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { AxiosError } from "axios";
 import Label from "../../components/form/Label";
+import Select from "../../components/form/Select";
 import Input from "../../components/form/input/InputField";
 import Button from "../../components/ui/button/Button";
 import ImageUploader from "../../components/form/ImageUploader";
@@ -203,19 +204,15 @@ export default function RouteForm() {
                 <Label>
                   关联大使 <span className="text-error-500">*</span>
                 </Label>
-                <select
-                  className="border rounded px-3 py-2 text-sm w-full h-11"
+                <Select
+                  placeholder="请选择"
                   value={ambassadorId}
-                  onChange={(e) => setAmbassadorId(e.target.value)}
-                >
-                  <option value="">请选择</option>
-                  {ambassadors.map((a) => (
-                    <option key={a.id} value={a.id}>
-                      {a.name}
-                      {a.online ? "" : "（已下线）"}
-                    </option>
-                  ))}
-                </select>
+                  onChange={setAmbassadorId}
+                  options={ambassadors.map((a) => ({
+                    value: a.id,
+                    label: `${a.name}${a.online ? "" : "（已下线）"}`,
+                  }))}
+                />
                 {fieldErrors.ambassadorId && (
                   <div className="text-error-500 text-xs mt-1">{fieldErrors.ambassadorId}</div>
                 )}

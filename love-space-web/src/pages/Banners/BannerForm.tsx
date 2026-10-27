@@ -2,6 +2,7 @@ import { FormEvent, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { AxiosError } from "axios";
 import Label from "../../components/form/Label";
+import Select from "../../components/form/Select";
 import Input from "../../components/form/input/InputField";
 import Button from "../../components/ui/button/Button";
 import ImageUploaderList, {
@@ -158,15 +159,11 @@ export default function BannerForm() {
             <Label>
               类型 <span className="text-error-500">*</span>
             </Label>
-            <select
+            <Select
               value={type}
-              onChange={(e) => setType(e.target.value as BannerType)}
-              className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 bg-white dark:bg-gray-900 dark:border-gray-700"
-            >
-              {TYPE_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
-              ))}
-            </select>
+              onChange={(v) => setType(v as BannerType)}
+              options={TYPE_OPTIONS}
+            />
           </div>
 
           <div>

@@ -147,9 +147,10 @@ toast.error(ax.response?.data?.detail ?? "加载失败");
 const sectionClass = "border border-gray-200 dark:border-gray-800 rounded-lg p-4 bg-white dark:bg-gray-900";
 const sectionTitleClass = "text-sm font-semibold text-gray-800 dark:text-white/90 mb-3";
 const inputClass = "border rounded px-3 py-2 text-sm w-full h-11";
-const selectClass = "border rounded px-3 py-2 text-sm w-full h-11 disabled:bg-gray-100 disabled:text-gray-500";
 const textareaClass = "border rounded px-3 py-2 text-sm w-full min-h-[80px]";
 ```
+
+下拉框一律用 `components/form/Select`（`options` / 受控 `value` / `onChange` / `placeholder` 占位项 / `disabled`），不要再手写 `<select>` 和本地 `selectClass`——统一外观、自定义箭头、暗色与禁用态都已在组件里。
 
 - 必填标记：`<Label>名称 <span className="text-error-500">*</span></Label>`。
 - 字段级错误：`<div className="text-error-500 text-xs mt-1">`，紧跟控件；辅助说明用 `text-xs text-gray-400 mt-1`。
