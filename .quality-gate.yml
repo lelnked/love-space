@@ -4,18 +4,24 @@
 # 命令均来自各子项目的真实 scripts/插件；无现成脚本的项标 TODO，不臆造。
 version: '1.0'
 
+# 按端触发：每节 paths 为触发路径前缀；改动文件 = git diff --name-only main...HEAD ∪ 工作区未提交改动。
+# 命中才跑该节，未命中标「跳过（未改动）」。没有 paths 的节恒跑。
+
 frontend:            # love-space-web（React 19 + Vite 6 + TS）
+  paths: [love-space-web/]
   lint:        { command: "cd love-space-web && npm run lint", required: true }
   build:       { command: "cd love-space-web && npm run build", required: true }   # tsc -b && vite build（含类型检查）
   unit-test:   { command: "TODO: web 侧暂无单测框架，引入 vitest 后补", required: false }
 
 backend-admin:       # love-space-admin（Spring Boot 4 + Java 25，Maven）
+  paths: [love-space-admin/]
   unit-test:   { command: "cd love-space-admin && ./mvnw test", pass_rate: 100, required: true }
   it-test:     { command: "cd love-space-admin && ./mvnw -Dtest='*IT' test", pass_rate: 100, required: true }  # 无 failsafe，*IT 需显式指定
   build:       { command: "cd love-space-admin && ./mvnw -DskipTests package", required: true }
   coverage:    { command: "TODO: 未接 JaCoCo，接入后补覆盖率阈值", required: false }
 
 backend-app:         # love-space-app（Spring Boot 4 + Java 25，Maven）
+  paths: [love-space-app/]
   unit-test:   { command: "cd love-space-app && ./mvnw test", pass_rate: 100, required: true }
   it-test:     { command: "cd love-space-app && ./mvnw -Dtest='*IT' test", pass_rate: 100, required: true }
   build:       { command: "cd love-space-app && ./mvnw -DskipTests package", required: true }
@@ -29,5 +35,5 @@ integration-test:    # IT：api-test-runner 直驱 HTTP，后端启动即可跑
   note: "执行后回写 tests/{domain}/it.md；WEB 由 /run-web-test 回写 tests/{domain}/web.md"
 
 security:
-  npm-audit-frontend: { command: "cd love-space-web && npm audit --audit-level=high", required: true }
+  npm-audit-frontend: { command: "cd love-space-web && npm audit --audit-level=high", paths: [love-space-web/], required: true }
   backend-deps:       { command: "TODO: 未接 dependency-check/oss-index，需要时再加", required: false }

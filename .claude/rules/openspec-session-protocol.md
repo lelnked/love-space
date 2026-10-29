@@ -33,7 +33,7 @@
 1. `/run-api-test --change <id>`（IT，恒有）
 2. `tests/modules.md` 已启用的端：`/run-web-test --change <id>` / `/run-app-test --change <id>`
 3. `node scripts/generate-traceability-matrix.js --change <id>`
-4. `.quality-gate.yml` 逐项
+4. `.quality-gate.yml` 按端逐项：只跑 `paths` 命中改动文件的节（判定方式见该文件头注释），汇总里列出跳过的节
 5. `/opsx:verify`
 6. 全绿 → **停，向用户要 archive 确认**（硬门禁）
 7. 确认后 `/opsx:archive` → 提示跑 `/regression-test --priority P0,P1`
