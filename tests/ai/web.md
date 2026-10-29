@@ -478,3 +478,20 @@
 **执行方式**: web-test-runner（@playwright/mcp）
 **执行存证**: `test-evidence/regression/ai/TC-ai-WEB-033/`
 **最后更新**: 2026-10-26
+
+### TC-ai-WEB-034: 配置弹窗开启深度思考并保存回显
+**关联需求**: ai/模型配置页面#配置深度思考
+**来源**: ai-scene-thinking-toggle
+**优先级**: P0
+**前置条件**: 登录入口 http://100.93.172.18:5173/love-space/signin；Manager 已登录；存在一个 `thinkingEnabled=false` 的场景 S（如新建场景）
+**测试步骤**:
+1. 进入 /love-space/ai/models，①搜索 S，点该行②配置
+2. 观察⑦深度思考开关及旁注
+3. ③主模型选任一模型，打开⑦深度思考开关，点⑥保存
+4. 再次点该行②配置
+5. 关闭⑦开关点⑥保存，再次打开②配置
+**预期结果**: 步骤 2 ⑦开关为关闭状态，旁注显示「开启后响应更慢、token 消耗更高」；步骤 3 弹窗关闭，PUT /api/admin/ai/scenes/{id}/models 请求体含 `thinkingEnabled: true`；步骤 4 弹窗⑦开关为开启状态；步骤 5 再打开时⑦为关闭状态
+**状态**: ⬜ 未测试
+**执行方式**: web-test-runner（@playwright/mcp）
+**执行存证**: `test-evidence/ai-scene-thinking-toggle/TC-ai-WEB-034/`
+**最后更新**: -

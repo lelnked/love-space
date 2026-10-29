@@ -39,8 +39,9 @@ public class ArkClient {
      * 调用一次 chat/completions。
      *
      * @param maxTokens 覆盖 AI_MAX_TOKENS，可空（为空时用配置值）
+     * @param thinking  深度思考开关，可空（为空时不传，用模型默认）
      */
-    public ArkResponse chat(String model, List<ChatMessage> messages, Integer maxTokens) {
+    public ArkResponse chat(String model, List<ChatMessage> messages, Integer maxTokens, Boolean thinking) {
         if (!properties.hasApiKey()) {
             return new ArkResponse(AiStatus.UPSTREAM_ERROR, "NO_API_KEY", "未配置 ARK_API_KEY",
                     null, null, null, null, null);
@@ -51,6 +52,9 @@ public class ArkClient {
         putIfNotNull(body, "temperature", properties.temperature());
         putIfNotNull(body, "top_p", properties.topP());
         putIfNotNull(body, "max_tokens", maxTokens != null ? maxTokens : properties.maxTokens());
+        if (thinking != null) {
+            body.put("thinking", Map.of("type", thinking ? "enabled" : "disabled"));
+        }
         try {
             return restClient.post()
                     .uri("/chat/completions")

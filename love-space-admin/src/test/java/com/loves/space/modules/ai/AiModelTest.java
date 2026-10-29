@@ -34,7 +34,7 @@ class AiModelTest extends AiTestSupport {
     @Test
     void setPrimaryAndBackup() {
         AiSceneResponse scene = newScene();
-        modelService.setModels(scene.id(), new AiSceneModelsRequest("model-a", "model-b"));
+        modelService.setModels(scene.id(), new AiSceneModelsRequest("model-a", "model-b", null));
         AiSceneResponse detail = sceneService.detail(scene.id());
         assertThat(detail.primaryModel()).isEqualTo("model-a");
         assertThat(detail.backupModel()).isEqualTo("model-b");
@@ -44,7 +44,7 @@ class AiModelTest extends AiTestSupport {
     @Test
     void modelNotAllowed() {
         AiSceneResponse scene = newScene();
-        assertThatThrownBy(() -> modelService.setModels(scene.id(), new AiSceneModelsRequest("model-x", null)))
+        assertThatThrownBy(() -> modelService.setModels(scene.id(), new AiSceneModelsRequest("model-x", null, null)))
                 .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("model-x");
         assertThat(sceneService.detail(scene.id()).primaryModel()).isNull();
     }
@@ -53,7 +53,7 @@ class AiModelTest extends AiTestSupport {
     @Test
     void sameModelsRejected() {
         AiSceneResponse scene = newScene();
-        assertThatThrownBy(() -> modelService.setModels(scene.id(), new AiSceneModelsRequest("model-a", "model-a")))
+        assertThatThrownBy(() -> modelService.setModels(scene.id(), new AiSceneModelsRequest("model-a", "model-a", null)))
                 .isInstanceOf(IllegalArgumentException.class);
         assertThat(sceneService.detail(scene.id()).primaryModel()).isNull();
     }
@@ -62,9 +62,27 @@ class AiModelTest extends AiTestSupport {
     @Test
     void clearBackup() {
         AiSceneResponse scene = newScene();
-        modelService.setModels(scene.id(), new AiSceneModelsRequest("model-a", "model-b"));
-        modelService.setModels(scene.id(), new AiSceneModelsRequest("model-a", null));
+        modelService.setModels(scene.id(), new AiSceneModelsRequest("model-a", "model-b", null));
+        modelService.setModels(scene.id(), new AiSceneModelsRequest("model-a", null, null));
         assertThat(sceneService.detail(scene.id()).backupModel()).isNull();
+    }
+
+    // @scenario: ai/场景模型配置#开启深度思考
+    @Test
+    void enableThinking() {
+        AiSceneResponse scene = newScene();
+        assertThat(scene.thinkingEnabled()).isFalse();
+        modelService.setModels(scene.id(), new AiSceneModelsRequest("model-a", null, true));
+        assertThat(sceneService.detail(scene.id()).thinkingEnabled()).isTrue();
+    }
+
+    // @scenario: ai/场景模型配置#未传深度思考视为关闭
+    @Test
+    void thinkingOmittedMeansOff() {
+        AiSceneResponse scene = newScene();
+        modelService.setModels(scene.id(), new AiSceneModelsRequest("model-a", null, true));
+        modelService.setModels(scene.id(), new AiSceneModelsRequest("model-a", null, null));
+        assertThat(sceneService.detail(scene.id()).thinkingEnabled()).isFalse();
     }
 
     // @scenario: ai/生成重试、切备用与结果判定#连接测试

@@ -106,7 +106,7 @@ public class AiGenerationService {
         generation.setAppVersion(request.appVersion());
         generation.setInputs(objectMapper.writeValueAsString(inputsSnapshot(request.inputs(), variables)));
         generation.setRequestMessages(objectMapper.writeValueAsString(messages));
-        generation.setRequestParams(objectMapper.writeValueAsString(generator.params(scene.getPrimaryModel(), scene.getBackupModel())));
+        generation.setRequestParams(objectMapper.writeValueAsString(generator.params(scene.getPrimaryModel(), scene.getBackupModel(), scene.isThinkingEnabled())));
         generation.setStatus(AiGeneration.PROCESSING);
         generation.setCreatedAt(OffsetDateTime.now(clock));
         try {
@@ -117,7 +117,7 @@ public class AiGenerationService {
             return dedupe(other, request, anonymousUserId);
         }
 
-        AiResult result = generator.generate(messages, scene.getPrimaryModel(), scene.getBackupModel());
+        AiResult result = generator.generate(messages, scene.getPrimaryModel(), scene.getBackupModel(), scene.isThinkingEnabled());
 
         AiGeneration saved = generation;
         transactionTemplate.executeWithoutResult(status -> complete(saved, result));

@@ -31,7 +31,7 @@ public class AiModelService {
         return catalog.models();
     }
 
-    /** 保存即生效：主模型必填且在白名单；备用可空，非空时须在白名单且不同于主模型。 */
+    /** 保存即生效：主模型必填且在白名单；备用可空，非空时须在白名单且不同于主模型；深度思考未传视为关闭。 */
     @Transactional
     public void setModels(UUID sceneId, AiSceneModelsRequest request) {
         String primary = request.primaryModel().strip();
@@ -46,6 +46,7 @@ public class AiModelService {
         AiScene scene = sceneService.find(sceneId);
         scene.setPrimaryModel(primary);
         scene.setBackupModel(backup);
+        scene.setThinkingEnabled(Boolean.TRUE.equals(request.thinkingEnabled()));
     }
 
     /** 发一条极短请求验证可达，不代表生成质量。 */

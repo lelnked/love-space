@@ -7,6 +7,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -47,6 +48,7 @@ class FakeArk implements AutoCloseable {
     final AtomicInteger calls = new AtomicInteger();
     volatile String lastAuthorization;
     volatile String lastBody;
+    final List<String> bodies = new java.util.concurrent.CopyOnWriteArrayList<>();
 
     FakeArk() throws IOException {
         server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
@@ -68,6 +70,7 @@ class FakeArk implements AutoCloseable {
         calls.incrementAndGet();
         lastAuthorization = exchange.getRequestHeaders().getFirst("Authorization");
         lastBody = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
+        bodies.add(lastBody);
         String model = new ObjectMapper().readTree(lastBody).path("model").asString();
         Deque<Reply> queue = replies.get(model);
         Reply reply = queue == null ? Reply.http(404) : (queue.size() > 1 ? queue.poll() : queue.peek());

@@ -30,6 +30,7 @@ class AiSceneTest extends AiTestSupport {
                 .andExpect(jsonPath("$.sceneId").value(sceneId))
                 .andExpect(jsonPath("$.enabled").value(true))
                 .andExpect(jsonPath("$.primaryModel").doesNotExist())
+                .andExpect(jsonPath("$.thinkingEnabled").value(false))
                 .andExpect(jsonPath("$.activeTemplate").doesNotExist());
     }
 

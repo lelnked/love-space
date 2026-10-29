@@ -7,9 +7,11 @@ import jakarta.validation.constraints.NotBlank;
  *
  * @param primaryModel 主模型（必填，须在 AI_MODELS 内）
  * @param backupModel  备用模型（可空 / 空串 = 不使用；须在 AI_MODELS 内且不同于主模型）
+ * @param thinkingEnabled 是否开启深度思考（可空 = 关闭）
  */
 public record AiSceneModelsRequest(
         @NotBlank(message = "主模型不能为空") String primaryModel,
-        String backupModel
+        String backupModel,
+        Boolean thinkingEnabled
 ) {
 }

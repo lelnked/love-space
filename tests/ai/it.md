@@ -23,17 +23,17 @@
 ### TC-ai-IT-002: POST /api/admin/ai/scenes 创建场景成功
 **关联需求**: ai/业务场景管理#创建场景
 **关联契约**: api-spec.json#/paths/~1api~1admin~1ai~1scenes/post
-**来源**: ai-management
+**来源**: ai-scene-thinking-toggle
 **优先级**: P0
 **测试步骤**:
 1. POST /api/admin/auth/login 取 JWT token（后续 admin 请求均带）
 2. POST /api/admin/ai/scenes，body `{"sceneId":"cycle_advice_<随机后缀>","name":"周期建议","description":"按周期给建议"}`
 3. GET /api/admin/ai/scenes/{id}
-**预期结果**: 创建返回 201，SceneDetail 中 `enabled=true`、`primaryModel=null`、`backupModel=null`、`activeTemplate=null`、`createdAt` 非空；详情字段与提交一致
+**预期结果**: 创建返回 201，SceneDetail 中 `enabled=true`、`primaryModel=null`、`backupModel=null`、`thinkingEnabled=false`、`activeTemplate=null`、`createdAt` 非空；详情字段与提交一致
 **状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**: `test-evidence/ai-management/TC-ai-IT-002/`
-**最后更新**: 2026-10-24
+**执行存证**: `test-evidence/ai-scene-thinking-toggle/TC-ai-IT-002/`
+**最后更新**: 2026-10-29
 
 ### TC-ai-IT-003: POST /api/admin/ai/scenes sceneId 重复返回 409
 **关联需求**: ai/业务场景管理#sceneId 重复被拒绝
@@ -148,8 +148,8 @@
 **预期结果**: 步骤 3 返回 204；详情 `primaryModel=model-a`、`backupModel=model-b`
 **状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**: `test-evidence/ai-management/TC-ai-IT-009/`
-**最后更新**: 2026-10-24
+**执行存证**: `test-evidence/ai-scene-thinking-toggle/TC-ai-IT-009/`
+**最后更新**: 2026-10-29
 
 ### TC-ai-IT-010: PUT /api/admin/ai/scenes/{id}/models 模型不在白名单返回 400
 **关联需求**: ai/场景模型配置#模型不在白名单
@@ -166,8 +166,8 @@
 **预期结果**: 步骤 3/4/5 均返回 400 且 `message` 为中文；步骤 6 场景仍为 `primaryModel=model-a`，模型未变
 **状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**: `test-evidence/ai-management/TC-ai-IT-010/`
-**最后更新**: 2026-10-24
+**执行存证**: `test-evidence/ai-scene-thinking-toggle/TC-ai-IT-010/`
+**最后更新**: 2026-10-29
 
 ### TC-ai-IT-011: PUT /api/admin/ai/scenes/{id}/models 主备相同返回 400
 **关联需求**: ai/场景模型配置#主备模型相同
@@ -182,8 +182,8 @@
 **预期结果**: 步骤 3 返回 400 中文信息；步骤 4 模型配置与前置一致
 **状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**: `test-evidence/ai-management/TC-ai-IT-011/`
-**最后更新**: 2026-10-24
+**执行存证**: `test-evidence/ai-scene-thinking-toggle/TC-ai-IT-011/`
+**最后更新**: 2026-10-29
 
 ### TC-ai-IT-012: PUT /api/admin/ai/scenes/{id}/models 清除备用模型
 **关联需求**: ai/场景模型配置#清除备用模型
@@ -200,8 +200,8 @@
 **预期结果**: 步骤 3、5 返回 204；步骤 4、6 详情 `backupModel=null`
 **状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**: `test-evidence/ai-management/TC-ai-IT-012/`
-**最后更新**: 2026-10-24
+**执行存证**: `test-evidence/ai-scene-thinking-toggle/TC-ai-IT-012/`
+**最后更新**: 2026-10-29
 
 ### TC-ai-IT-013: POST /api/admin/ai/models/test-connection 连接测试
 **关联需求**: ai/生成重试、切备用与结果判定#连接测试
@@ -216,8 +216,8 @@
 **预期结果**: 步骤 3 返回 200 `{ok:true, latencyMs:<正整数>, message}`；步骤 4 返回 200 `ok=false` 且 `message` 含失败原因
 **状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**: `test-evidence/ai-management/TC-ai-IT-013/`
-**最后更新**: 2026-10-24
+**执行存证**: `test-evidence/ai-scene-thinking-toggle/TC-ai-IT-013/`
+**最后更新**: 2026-10-29
 
 ### TC-ai-IT-014: POST /api/admin/ai/models/test-connection 模型不在白名单返回 400
 **关联需求**: ai/场景模型配置#模型不在白名单
@@ -366,8 +366,8 @@
 **预期结果**: 步骤 3 返回 200，`success=true`、`model` 非空、`content` 为 JSON、`latencyMs`/`testedAt` 非空；步骤 4 `tested=true`、`lastTestInputs={"age":28}`、`lastTestBy=admin`、`lastTestSuccess=true`、`version` 与内容不变
 **状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**: `test-evidence/ai-management/TC-ai-IT-023/`
-**最后更新**: 2026-10-24
+**执行存证**: `test-evidence/ai-scene-thinking-toggle/TC-ai-IT-023/`
+**最后更新**: 2026-10-29
 
 ### TC-ai-IT-024: POST /api/admin/ai/prompt-templates/{id}/test 模型返回非 JSON 测试失败
 **关联需求**: ai/提示词模板测试#测试失败保留未测试
@@ -602,8 +602,8 @@
 **预期结果**: 返回 200，`status=SUCCESS`、`content` 为 mock 输出的 JSON、`requestId` 非空、`clientRequestId`/`sceneId` 与请求一致
 **状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**: `test-evidence/ai-limit-config/TC-ai-IT-038/`
-**最后更新**: 2026-10-26
+**执行存证**: `test-evidence/ai-scene-thinking-toggle/TC-ai-IT-038/`
+**最后更新**: 2026-10-29
 
 ### TC-ai-IT-039: 生成成功写完整生成记录与调用明细
 **关联需求**: ai/生成记录与调用明细落库#成功生成写完整记录
@@ -618,23 +618,23 @@
 **预期结果**: 生成记录 1 条：`status=SUCCESS`、`attempt_count=1`、`completed_at` 非空、`template_id`/`template_seq` 为生效模板、`anonymous_user_id` 与请求头一致；调用明细 1 条 `seq=1`、`trigger_reason=INITIAL`
 **状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**: `test-evidence/ai-generation-records/TC-ai-IT-039/`
-**最后更新**: 2026-10-25
+**执行存证**: `test-evidence/ai-scene-thinking-toggle/TC-ai-IT-039/`
+**最后更新**: 2026-10-29
 
 ### TC-ai-IT-040: 生成记录请求快照不含密钥与认证头
 **关联需求**: ai/AI 调用配置来自环境变量#请求快照不含密钥
 **关联契约**: api-spec.json#/paths/~1api~1app~1ai~1generations/post
-**来源**: ai-management
+**来源**: ai-scene-thinking-toggle
 **优先级**: P0
 **测试步骤**:
 1. 前置：同 TC-ai-IT-038
 2. 执行一次生成，取 `requestId`
 3. psql 查询该记录 `request_messages`、`request_params` 文本
-**预期结果**: `request_messages` 为 `[{role:system},{role:user}]`；`request_params` 含 `primaryModel, backupModel, temperature, topP, maxTokens, timeoutSeconds, maxRetries`；两者文本均不含 `ARK_API_KEY` 的值与 `Authorization`
+**预期结果**: `request_messages` 为 `[{role:system},{role:user}]`；`request_params` 含 `primaryModel, backupModel, thinkingEnabled, temperature, topP, maxTokens, timeoutSeconds, maxRetries`；两者文本均不含 `ARK_API_KEY` 的值与 `Authorization`
 **状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**: `test-evidence/ai-management/TC-ai-IT-040/`
-**最后更新**: 2026-10-24
+**执行存证**: `test-evidence/ai-scene-thinking-toggle/TC-ai-IT-040/`
+**最后更新**: 2026-10-29
 
 ### TC-ai-IT-041: POST /api/app/ai/generations 已处理的失败返回 200
 **关联需求**: ai/App 生成接口#已处理的失败返回 200
@@ -751,8 +751,8 @@
 **预期结果**: 响应 200 `status=SUCCESS`；明细 3 条，seq 1/2/3，`trigger_reason` 依次 INITIAL/RETRY/FALLBACK，第 3 条 model 为备用模型；记录 `attempt_count=3`、`final_model` 为备用模型、tokens 为各次合计
 **状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**: `test-evidence/ai-management/TC-ai-IT-048/`
-**最后更新**: 2026-10-24
+**执行存证**: `test-evidence/ai-scene-thinking-toggle/TC-ai-IT-048/`
+**最后更新**: 2026-10-29
 
 ### TC-ai-IT-049: 选填变量未传时生成记录 inputs 记 null
 **关联需求**: ai/生成记录与调用明细落库#选填变量未传记 null
@@ -1172,8 +1172,8 @@
 **预期结果**: 步骤 3 返回 200：`status=SUCCESS`、`attemptCount=2`、`finalModel=mock-flaky`、`templateName` 为生效模板名称、`sceneName` 为场景名称，含 `clientRequestId, appVersion, inputs, requestMessages, requestParams, rawOutput, content, promptTokens, completionTokens, latencyMs, createdAt, completedAt`；`attempts` 2 条按 seq 升序：seq 1 `triggerReason=INITIAL`（含解析错误/校验错误）、seq 2 `triggerReason=RETRY` 成功，每条含 model、status、rawResponse、起止时间、latencyMs；步骤 4 `totalElements` 与基线一致
 **状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**: `test-evidence/ai-generation-records/TC-ai-IT-075/`
-**最后更新**: 2026-10-25
+**执行存证**: `test-evidence/ai-scene-thinking-toggle/TC-ai-IT-075/`
+**最后更新**: 2026-10-29
 
 ### TC-ai-IT-076: GET /api/admin/ai/generations/{id} 未评价记录评价字段为空
 **关联需求**: ai/生成记录详情#未评价记录的评价字段为空
@@ -1540,3 +1540,84 @@
 **执行方式**: api-test-runner
 **执行存证**: `test-evidence/ai-limit-config/TC-ai-IT-097/`
 **最后更新**: 2026-10-26
+
+### TC-ai-IT-098: PUT /api/admin/ai/scenes/{id}/models 开启深度思考
+**关联需求**: ai/场景模型配置#开启深度思考
+**关联契约**: api-spec.json#/paths/~1api~1admin~1ai~1scenes~1{id}~1models/put
+**来源**: ai-scene-thinking-toggle
+**优先级**: P0
+**测试步骤**:
+1. 前置：admin 进程 `AI_MODELS=model-a,model-b`；新建一个场景 S（`thinkingEnabled=false`）
+2. POST /api/admin/auth/login 取 JWT token（后续 admin 请求均带）
+3. PUT /api/admin/ai/scenes/{id}/models，body `{"primaryModel":"model-a","thinkingEnabled":true}`
+4. GET /api/admin/ai/scenes/{id}
+5. GET /api/admin/ai/scenes/page?keyword=<S>&page=1&size=20
+6. PUT …/models，body `{"primaryModel":"model-a","thinkingEnabled":false}`，再 GET 详情
+**预期结果**: 步骤 3、6 返回 204；步骤 4 详情 `thinkingEnabled=true`、`primaryModel=model-a`；步骤 5 该场景 SceneItem 含 `thinkingEnabled=true`；步骤 6 详情 `thinkingEnabled=false`
+**状态**: ✅ 通过
+**执行方式**: api-test-runner
+**执行存证**: `test-evidence/ai-scene-thinking-toggle/TC-ai-IT-098/`
+**最后更新**: 2026-10-29
+
+### TC-ai-IT-099: PUT /api/admin/ai/scenes/{id}/models 未传或 null 的 thinkingEnabled 视为关闭
+**关联需求**: ai/场景模型配置#未传深度思考视为关闭
+**关联契约**: api-spec.json#/paths/~1api~1admin~1ai~1scenes~1{id}~1models/put
+**来源**: ai-scene-thinking-toggle
+**优先级**: P1
+**测试步骤**:
+1. 前置：`AI_MODELS=model-a,model-b`；场景已配 `primaryModel=model-a`、`thinkingEnabled=true`
+2. POST /api/admin/auth/login 取 JWT token（后续 admin 请求均带）
+3. PUT …/models，body `{"primaryModel":"model-a"}`（不含 thinkingEnabled），GET 详情
+4. 再 PUT …/models，body `{"primaryModel":"model-a","thinkingEnabled":true}` 恢复开启
+5. PUT …/models，body `{"primaryModel":"model-a","thinkingEnabled":null}`，GET 详情
+6. 恢复开启后 PUT …/models，body `{"primaryModel":"model-x","thinkingEnabled":false}`，GET 详情
+**预期结果**: 步骤 3、5 返回 204 且详情 `thinkingEnabled=false`；步骤 6 返回 400 中文信息，详情 `thinkingEnabled=true`、`primaryModel=model-a` 不变（校验失败不落任何字段）
+**状态**: ✅ 通过
+**执行方式**: api-test-runner
+**执行存证**: `test-evidence/ai-scene-thinking-toggle/TC-ai-IT-099/`
+**最后更新**: 2026-10-29
+
+### TC-ai-IT-100: 场景关闭深度思考时生成参数快照 thinkingEnabled=false
+**关联需求**: ai/生成调用深度思考参数#关闭时显式传 disabled
+**关联契约**: api-spec.json#/paths/~1api~1admin~1ai~1generations~1{id}/get
+**来源**: ai-scene-thinking-toggle
+**优先级**: P0
+**测试步骤**:
+1. 前置：app 进程指向假方舟 `node scripts/mock-ark.mjs`；场景 S 启用、已发布模板（必填 `age`）、主模型 `mock-ok`、`thinkingEnabled=false`（PUT …/models 不传 thinkingEnabled）
+2. app 生成造数：POST http://localhost:8081/api/app/ai/generations，body `{"sceneId":"<S>","clientRequestId":"c-<uuid>","appVersion":"1.0.0","inputs":{"age":28}}`，取 requestId
+3. admin 登录取 token；GET /api/admin/ai/generations/{requestId}
+**预期结果**: 步骤 2 返回 200 `status=SUCCESS`；步骤 3 返回 200，`requestParams.thinkingEnabled=false`（键存在且为布尔 false，非缺失/null）。方舟请求 body 含 `"thinking":{"type":"disabled"}` 由 love-space-ai UT 覆盖（IT 黑盒不可观测）
+**状态**: ✅ 通过
+**执行方式**: api-test-runner
+**执行存证**: `test-evidence/ai-scene-thinking-toggle/TC-ai-IT-100/`
+**最后更新**: 2026-10-29
+
+### TC-ai-IT-101: 场景开启深度思考且切备用时参数快照 thinkingEnabled=true
+**关联需求**: ai/生成调用深度思考参数#开启时传 enabled 且切备用沿用
+**关联契约**: api-spec.json#/paths/~1api~1admin~1ai~1generations~1{id}/get
+**来源**: ai-scene-thinking-toggle
+**优先级**: P1
+**测试步骤**:
+1. 前置：app 进程指向假方舟（`AI_MAX_RETRIES=1`）；场景 S 已发布模板，admin PUT …/models body `{"primaryModel":"mock-500","backupModel":"mock-ok","thinkingEnabled":true}`
+2. app 生成造数一次，取 requestId
+3. admin 登录取 token；GET /api/admin/ai/generations/{requestId}
+**预期结果**: 步骤 2 返回 200 `status=SUCCESS`；步骤 3 `requestParams.thinkingEnabled=true`、`finalModel=mock-ok`，`attempts` 依次 INITIAL/RETRY/FALLBACK，FALLBACK 条 model 为 `mock-ok`。每次方舟请求（含 FALLBACK）body 均含 `"thinking":{"type":"enabled"}` 由 love-space-ai UT 覆盖
+**状态**: ✅ 通过
+**执行方式**: api-test-runner
+**执行存证**: `test-evidence/ai-scene-thinking-toggle/TC-ai-IT-101/`
+**最后更新**: 2026-10-29
+
+### TC-ai-IT-102: POST /api/admin/ai/models/test-connection 场景开启深度思考时连接测试行为不变
+**关联需求**: ai/生成调用深度思考参数#连接测试不传 thinking
+**关联契约**: api-spec.json#/paths/~1api~1admin~1ai~1models~1test-connection/post
+**来源**: ai-scene-thinking-toggle
+**优先级**: P2
+**测试步骤**:
+1. 前置：admin 进程指向假方舟；`mock-ok` 在 `AI_MODELS` 内；任一场景已 PUT …/models `{"primaryModel":"mock-ok","thinkingEnabled":true}`
+2. POST /api/admin/auth/login 取 JWT token
+3. POST /api/admin/ai/models/test-connection，body `{"model":"mock-ok"}`
+**预期结果**: 返回 200 `{ok:true, latencyMs:<正整数>, message}`，响应结构与 TC-ai-IT-013 一致（请求体无 thinking 相关字段）。方舟请求 body 不含 `thinking` 字段由 love-space-ai UT 覆盖
+**状态**: ✅ 通过
+**执行方式**: api-test-runner
+**执行存证**: `test-evidence/ai-scene-thinking-toggle/TC-ai-IT-102/`
+**最后更新**: 2026-10-29

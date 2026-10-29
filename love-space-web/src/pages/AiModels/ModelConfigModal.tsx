@@ -6,6 +6,7 @@ import Button from "../../components/ui/button/Button";
 import { useToast } from "../../context/ToastContext";
 import { AiConnectionTestResult, AiScene, listAiModels, setAiSceneModels, testAiModelConnection } from "../../api/ai";
 import Select from "../../components/form/Select";
+import Switch from "../../components/form/switch/Switch";
 
 type TestState = { status: "idle" } | { status: "loading" } | { status: "done"; result: AiConnectionTestResult };
 
@@ -49,18 +50,20 @@ interface Props {
   onSaved: () => void;
 }
 
-/** 模型配置弹窗：主模型 / 备用模型（2 个字段）。 */
+/** 模型配置弹窗：主模型 / 备用模型 / 深度思考。 */
 export default function ModelConfigModal({ scene, onClose, onSaved }: Props) {
   const toast = useToast();
   const [models, setModels] = useState<string[]>([]);
   const [primary, setPrimary] = useState("");
   const [backup, setBackup] = useState("");
+  const [thinking, setThinking] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (!scene) return;
     setPrimary(scene.primaryModel ?? "");
     setBackup(scene.backupModel ?? "");
+    setThinking(scene.thinkingEnabled ?? false);
     listAiModels()
       .then(setModels)
       .catch((err) => {
@@ -76,7 +79,7 @@ export default function ModelConfigModal({ scene, onClose, onSaved }: Props) {
     if (!scene || submitting || !primary || sameModel) return;
     setSubmitting(true);
     try {
-      await setAiSceneModels(scene.id, { primaryModel: primary, backupModel: backup || null });
+      await setAiSceneModels(scene.id, { primaryModel: primary, backupModel: backup || null, thinkingEnabled: thinking });
       toast.success("已保存");
       onSaved();
     } catch (err) {
@@ -125,6 +128,13 @@ export default function ModelConfigModal({ scene, onClose, onSaved }: Props) {
               <ConnectionTest model={backup} />
             </div>
             {sameModel && <div className="text-error-500 text-xs mt-1">备用模型不能与主模型相同</div>}
+          </div>
+          <div>
+            <Label>深度思考</Label>
+            <div className="flex items-center gap-3">
+              <Switch label={thinking ? "开启" : "关闭"} checked={thinking} disabled={submitting} onChange={setThinking} />
+              <span className="text-xs text-gray-400">开启后响应更慢、token 消耗更高</span>
+            </div>
           </div>
           <div className="text-xs text-gray-400">提示：连接成功只代表服务可达，不代表生成质量</div>
           <div className="flex justify-end gap-3 pt-2">

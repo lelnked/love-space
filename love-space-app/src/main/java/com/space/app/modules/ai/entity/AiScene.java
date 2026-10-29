@@ -31,6 +31,9 @@ public class AiScene extends BaseAuditEntity {
     @Column(name = "backup_model")
     private String backupModel;
 
+    @Column(name = "thinking_enabled", nullable = false)
+    private boolean thinkingEnabled;
+
     @Column(name = "active_template_id")
     private UUID activeTemplateId;
 }

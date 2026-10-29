@@ -70,7 +70,7 @@ class AiOperationLogTest extends AiTestSupport {
     void publishLogged() throws Exception {
         AiSceneResponse scene = newSceneWithModel();
         AiPromptTemplateDetailResponse t = templateIn(scene);
-        when(aiGenerator.generate(anyList(), eq("model-a"), isNull()))
+        when(aiGenerator.generate(anyList(), eq("model-a"), isNull(), eq(false)))
                 .thenReturn(result(AiStatus.SUCCESS, "{}", objectMapper.readTree("{}")));
         mockMvc.perform(post("/api/admin/ai/prompt-templates/" + t.id() + "/test").header(HttpHeaders.AUTHORIZATION, adminToken())
                         .contentType(MediaType.APPLICATION_JSON).content("{\"inputs\":{\"age\":1}}"))
@@ -90,7 +90,7 @@ class AiOperationLogTest extends AiTestSupport {
     void testCallsNotLogged() throws Exception {
         AiSceneResponse scene = newSceneWithModel();
         AiPromptTemplateDetailResponse t = templateIn(scene);
-        when(aiGenerator.generate(anyList(), eq("model-a"), isNull()))
+        when(aiGenerator.generate(anyList(), eq("model-a"), isNull(), eq(false)))
                 .thenReturn(result(AiStatus.SUCCESS, "{}", objectMapper.readTree("{}")));
         when(aiGenerator.ping("model-a")).thenReturn(new PingResult(true, 1, "可达"));
 

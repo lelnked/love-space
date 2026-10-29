@@ -119,7 +119,7 @@ public abstract class AiTestSupport extends AbstractPostgresIntegrationTest {
 
     protected AiSceneResponse newSceneWithModel() {
         AiSceneResponse scene = newScene();
-        modelService.setModels(scene.id(), new AiSceneModelsRequest("model-a", null));
+        modelService.setModels(scene.id(), new AiSceneModelsRequest("model-a", null, null));
         return scene;
     }
 

@@ -19,6 +19,7 @@ export interface AiScene {
   enabled: boolean;
   primaryModel: string | null;
   backupModel: string | null;
+  thinkingEnabled: boolean;
   activeTemplate: AiActiveTemplate | null;
   createdAt: string;
   updatedAt: string | null;
@@ -52,6 +53,7 @@ export interface AiSceneUpdateRequest {
 export interface AiSceneModelsRequest {
   primaryModel: string;
   backupModel?: string | null;
+  thinkingEnabled?: boolean;
 }
 
 export interface AiConnectionTestResult {

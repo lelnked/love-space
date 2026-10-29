@@ -42,13 +42,14 @@ public class AiGenerator {
      * @param messages     渲染后的消息
      * @param primaryModel 主模型
      * @param backupModel  备用模型，可空
+     * @param thinking     是否开启深度思考（每次调用显式传给方舟）
      */
-    public AiResult generate(List<ChatMessage> messages, String primaryModel, String backupModel) {
+    public AiResult generate(List<ChatMessage> messages, String primaryModel, String backupModel, boolean thinking) {
         Instant start = Instant.now();
         List<AiAttempt> attempts = new ArrayList<>();
-        boolean done = runModel(messages, primaryModel, TriggerReason.INITIAL, attempts);
+        boolean done = runModel(messages, primaryModel, thinking, TriggerReason.INITIAL, attempts);
         if (!done && backupModel != null && !backupModel.isBlank()) {
-            runModel(messages, backupModel, TriggerReason.FALLBACK, attempts);
+            runModel(messages, backupModel, thinking, TriggerReason.FALLBACK, attempts);
         }
         AiAttempt last = attempts.getLast();
         boolean success = last.status() == AiStatus.SUCCESS;
@@ -62,14 +63,14 @@ public class AiGenerator {
                 Duration.between(start, Instant.now()).toMillis(),
                 success ? null : last.status().name(),
                 success ? null : failureMessage(last),
-                params(primaryModel, backupModel),
+                params(primaryModel, backupModel, thinking),
                 List.copyOf(attempts));
     }
 
     /** 连接测试：发一条极短请求，方舟正常返回即可达，不校验 JSON。 */
     public PingResult ping(String model) {
         Instant start = Instant.now();
-        ArkResponse response = arkClient.chat(model, List.of(new ChatMessage("user", "ping")), 1);
+        ArkResponse response = arkClient.chat(model, List.of(new ChatMessage("user", "ping")), 1, null);
         long latency = Duration.between(start, Instant.now()).toMillis();
         return response.failure() == null
                 ? new PingResult(true, latency, "可达")
@@ -77,10 +78,11 @@ public class AiGenerator {
     }
 
     /** 参数快照（不含密钥）。 */
-    public Map<String, Object> params(String primaryModel, String backupModel) {
+    public Map<String, Object> params(String primaryModel, String backupModel, boolean thinking) {
         Map<String, Object> params = new LinkedHashMap<>();
         params.put("primaryModel", primaryModel);
         params.put("backupModel", backupModel == null || backupModel.isBlank() ? null : backupModel);
+        params.put("thinkingEnabled", thinking);
         params.put("temperature", properties.temperature());
         params.put("topP", properties.topP());
         params.put("maxTokens", properties.maxTokens());
@@ -91,9 +93,9 @@ public class AiGenerator {
 
     /** 一个模型：首次 + maxRetries 次重试。返回是否已成功。 */
     // ponytail: 立即重试无退避；RATE_LIMITED 多发时再加固定退避
-    private boolean runModel(List<ChatMessage> messages, String model, TriggerReason first, List<AiAttempt> attempts) {
+    private boolean runModel(List<ChatMessage> messages, String model, boolean thinking, TriggerReason first, List<AiAttempt> attempts) {
         for (int i = 0; i <= properties.maxRetries(); i++) {
-            AiAttempt attempt = call(messages, model, i == 0 ? first : TriggerReason.RETRY, attempts.size() + 1);
+            AiAttempt attempt = call(messages, model, thinking, i == 0 ? first : TriggerReason.RETRY, attempts.size() + 1);
             attempts.add(attempt);
             if (attempt.status() == AiStatus.SUCCESS) {
                 return true;
@@ -102,9 +104,9 @@ public class AiGenerator {
         return false;
     }
 
-    private AiAttempt call(List<ChatMessage> messages, String model, TriggerReason reason, int seq) {
+    private AiAttempt call(List<ChatMessage> messages, String model, boolean thinking, TriggerReason reason, int seq) {
         Instant startedAt = Instant.now();
-        ArkResponse r = arkClient.chat(model, messages, null);
+        ArkResponse r = arkClient.chat(model, messages, null, thinking);
         Instant finishedAt = Instant.now();
         AiStatus status = r.failure();
         String errorCode = r.errorCode();

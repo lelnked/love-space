@@ -42,6 +42,10 @@ public class AiScene extends BaseAuditEntity {
     @Column(name = "backup_model")
     private String backupModel;
 
+    /** 是否开启深度思考，默认关闭。 */
+    @Column(name = "thinking_enabled", nullable = false)
+    private boolean thinkingEnabled;
+
     /** 当前生效模板 ID，可空（未发布不可生成）。 */
     @Column(name = "active_template_id")
     private UUID activeTemplateId;

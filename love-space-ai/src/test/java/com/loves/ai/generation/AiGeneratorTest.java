@@ -42,7 +42,7 @@ class AiGeneratorTest {
     void primarySucceedsFirstTime() {
         ark.on("p", Reply.content("{\"a\":1}"));
 
-        AiResult result = generator(1).generate(MESSAGES, "p", "b");
+        AiResult result = generator(1).generate(MESSAGES, "p", "b", false);
 
         assertThat(result.status()).isEqualTo(AiStatus.SUCCESS);
         assertThat(result.content().get("a").asInt()).isEqualTo(1);
@@ -58,7 +58,7 @@ class AiGeneratorTest {
     void retrySucceeds() {
         ark.on("p", Reply.content("not json"), Reply.content("{\"a\":2}"));
 
-        AiResult result = generator(1).generate(MESSAGES, "p", null);
+        AiResult result = generator(1).generate(MESSAGES, "p", null, false);
 
         assertThat(result.status()).isEqualTo(AiStatus.SUCCESS);
         assertThat(result.attempts()).extracting(AiAttempt::triggerReason, AiAttempt::status).containsExactly(
@@ -73,7 +73,7 @@ class AiGeneratorTest {
     void fallsBackAfterPrimaryExhausted() {
         ark.on("p", Reply.hang(2500)).on("b", Reply.content("[1]"));
 
-        AiResult result = generator(1).generate(MESSAGES, "p", "b");
+        AiResult result = generator(1).generate(MESSAGES, "p", "b", false);
 
         assertThat(result.status()).isEqualTo(AiStatus.SUCCESS);
         assertThat(result.finalModel()).isEqualTo("b");
@@ -88,7 +88,7 @@ class AiGeneratorTest {
     void allFailWithoutBackup() {
         ark.on("p", Reply.http(429));
 
-        AiResult result = generator(1).generate(MESSAGES, "p", null);
+        AiResult result = generator(1).generate(MESSAGES, "p", null, false);
 
         assertThat(result.status()).isEqualTo(AiStatus.RATE_LIMITED);
         assertThat(result.attempts()).hasSize(2);
@@ -108,12 +108,12 @@ class AiGeneratorTest {
                 .on("err", Reply.http(500));
         AiGenerator generator = generator(0);
 
-        assertThat(generator.generate(MESSAGES, "refused", null).status()).isEqualTo(AiStatus.REFUSED);
-        assertThat(generator.generate(MESSAGES, "empty", null).status()).isEqualTo(AiStatus.EMPTY);
-        assertThat(generator.generate(MESSAGES, "text", null).status()).isEqualTo(AiStatus.FORMAT_ERROR);
-        assertThat(generator.generate(MESSAGES, "scalar", null).status()).isEqualTo(AiStatus.FORMAT_ERROR);
-        assertThat(generator.generate(MESSAGES, "trailing", null).status()).isEqualTo(AiStatus.FORMAT_ERROR);
-        assertThat(generator.generate(MESSAGES, "err", null).status()).isEqualTo(AiStatus.UPSTREAM_ERROR);
+        assertThat(generator.generate(MESSAGES, "refused", null, false).status()).isEqualTo(AiStatus.REFUSED);
+        assertThat(generator.generate(MESSAGES, "empty", null, false).status()).isEqualTo(AiStatus.EMPTY);
+        assertThat(generator.generate(MESSAGES, "text", null, false).status()).isEqualTo(AiStatus.FORMAT_ERROR);
+        assertThat(generator.generate(MESSAGES, "scalar", null, false).status()).isEqualTo(AiStatus.FORMAT_ERROR);
+        assertThat(generator.generate(MESSAGES, "trailing", null, false).status()).isEqualTo(AiStatus.FORMAT_ERROR);
+        assertThat(generator.generate(MESSAGES, "err", null, false).status()).isEqualTo(AiStatus.UPSTREAM_ERROR);
     }
 
     // @scenario: ai/生成重试、切备用与结果判定#代码块包裹的 JSON 视为成功
@@ -122,7 +122,7 @@ class AiGeneratorTest {
         String fenced = "```json\n{\"a\":1}\n```";
         ark.on("p", Reply.content(fenced));
 
-        AiResult result = generator(0).generate(MESSAGES, "p", null);
+        AiResult result = generator(0).generate(MESSAGES, "p", null, false);
 
         assertThat(result.status()).isEqualTo(AiStatus.SUCCESS);
         assertThat(result.content().toString()).isEqualTo("{\"a\":1}");
@@ -131,13 +131,14 @@ class AiGeneratorTest {
 
     @Test
     void missingApiKeyFailsWithoutCalling() {
-        AiResult result = generator(1, "").generate(MESSAGES, "p", null);
+        AiResult result = generator(1, "").generate(MESSAGES, "p", null, false);
 
         assertThat(result.status()).isEqualTo(AiStatus.UPSTREAM_ERROR);
         assertThat(result.errorMessage()).contains("ARK_API_KEY");
         assertThat(ark.calls.get()).isZero();
     }
 
+    // @scenario: ai/生成调用深度思考参数#连接测试不传 thinking
     @Test
     void pingReportsReachability() {
         ark.on("p", Reply.content("x")).on("down", Reply.http(500));
@@ -147,14 +148,37 @@ class AiGeneratorTest {
         PingResult fail = generator.ping("down");
 
         assertThat(ok.ok()).isTrue();
-        assertThat(ark.lastBody).contains("\"max_tokens\":1");
+        assertThat(ark.lastBody).contains("\"max_tokens\":1").doesNotContain("thinking");
         assertThat(fail.ok()).isFalse();
         assertThat(fail.message()).contains("500");
     }
 
     @Test
     void paramsSnapshotHasNoKey() {
-        assertThat(generator(1).params("p", "").toString()).doesNotContain("test-key")
+        assertThat(generator(1).params("p", "", false).toString()).doesNotContain("test-key")
                 .contains("primaryModel=p").contains("backupModel=null");
+    }
+
+    // @scenario: ai/生成调用深度思考参数#关闭时显式传 disabled
+    @Test
+    void thinkingOffSendsDisabled() {
+        ark.on("p", Reply.content("{\"a\":1}"));
+
+        generator(0).generate(MESSAGES, "p", null, false);
+
+        assertThat(ark.lastBody).contains("\"thinking\":{\"type\":\"disabled\"}");
+        assertThat(generator(0).params("p", null, false)).containsEntry("thinkingEnabled", false);
+    }
+
+    // @scenario: ai/生成调用深度思考参数#开启时传 enabled 且切备用沿用
+    @Test
+    void thinkingOnAppliesToEveryAttempt() {
+        ark.on("p", Reply.http(500)).on("b", Reply.content("[1]"));
+
+        AiResult result = generator(1).generate(MESSAGES, "p", "b", true);
+
+        assertThat(result.finalModel()).isEqualTo("b");
+        assertThat(ark.bodies).hasSize(3).allMatch(b -> b.contains("\"thinking\":{\"type\":\"enabled\"}"));
+        assertThat(result.params()).containsEntry("thinkingEnabled", true);
     }
 }

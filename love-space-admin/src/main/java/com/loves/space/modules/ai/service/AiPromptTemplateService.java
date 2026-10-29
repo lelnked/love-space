@@ -137,7 +137,7 @@ public class AiPromptTemplateService {
         }
         List<ChatMessage> messages = renderer.render(t.getSystemPrompt(), t.getUserPromptTemplate(), variables, inputs);
 
-        AiResult result = generator.generate(messages, scene.getPrimaryModel(), scene.getBackupModel());
+        AiResult result = generator.generate(messages, scene.getPrimaryModel(), scene.getBackupModel(), scene.isThinkingEnabled());
 
         OffsetDateTime testedAt = OffsetDateTime.now();
         templateRepository.writeTestResult(t.getId(), t.getVersion(),

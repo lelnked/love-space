@@ -8,6 +8,7 @@ import com.loves.space.modules.ai.dto.AiPromptTemplateItemResponse;
 import com.loves.space.modules.ai.dto.AiPromptTemplateTestResponse;
 import com.loves.space.modules.ai.dto.AiPromptTemplateUpdateRequest;
 import com.loves.space.modules.ai.dto.AiPromptVariable;
+import com.loves.space.modules.ai.dto.AiSceneModelsRequest;
 import com.loves.space.modules.ai.dto.AiSceneResponse;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,6 +23,7 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
@@ -50,7 +52,7 @@ class AiPromptTemplateTest extends AiTestSupport {
 
     private AiPromptTemplateDetailResponse testedTemplate(AiSceneResponse scene) {
         AiPromptTemplateDetailResponse t = newTemplate(scene.sceneId(), "年龄{{age}}", AGE);
-        when(aiGenerator.generate(anyList(), eq("model-a"), isNull()))
+        when(aiGenerator.generate(anyList(), eq("model-a"), isNull(), eq(false)))
                 .thenReturn(result(AiStatus.SUCCESS, "{\"a\":1}", objectMapper.readTree("{\"a\":1}")));
         templateService.test(t.id(), Map.of("age", 28));
         return templateService.detail(t.id());
@@ -58,6 +60,20 @@ class AiPromptTemplateTest extends AiTestSupport {
 
     private AiPromptTemplateUpdateRequest edit(AiPromptTemplateDetailResponse t, String systemPrompt) {
         return new AiPromptTemplateUpdateRequest(t.name(), systemPrompt, t.userPromptTemplate(), t.variables(), "改", t.version());
+    }
+
+    // @scenario: ai/生成调用深度思考参数#开启时传 enabled 且切备用沿用
+    @Test
+    void testUsesSceneThinking() {
+        AiSceneResponse scene = newScene();
+        modelService.setModels(scene.id(), new AiSceneModelsRequest("model-a", null, true));
+        AiPromptTemplateDetailResponse t = newTemplate(scene.sceneId(), "年龄{{age}}", AGE);
+        when(aiGenerator.generate(anyList(), eq("model-a"), isNull(), eq(true)))
+                .thenReturn(result(AiStatus.SUCCESS, "{\"a\":1}", objectMapper.readTree("{\"a\":1}")));
+
+        templateService.test(t.id(), Map.of("age", 28));
+
+        verify(aiGenerator).generate(anyList(), eq("model-a"), isNull(), eq(true));
     }
 
     // @scenario: ai/提示词模板维护#新建模板自动分配 seq
@@ -154,7 +170,7 @@ class AiPromptTemplateTest extends AiTestSupport {
     void testFailureKeepsUntested() {
         AiSceneResponse scene = newSceneWithModel();
         AiPromptTemplateDetailResponse t = newTemplate(scene.sceneId(), "{{age}}", AGE);
-        when(aiGenerator.generate(anyList(), eq("model-a"), isNull())).thenReturn(result(AiStatus.FORMAT_ERROR, "not json", null));
+        when(aiGenerator.generate(anyList(), eq("model-a"), isNull(), eq(false))).thenReturn(result(AiStatus.FORMAT_ERROR, "not json", null));
 
         AiPromptTemplateTestResponse response = templateService.test(t.id(), Map.of("age", 1));
         AiPromptTemplateDetailResponse after = templateService.detail(t.id());
@@ -172,7 +188,7 @@ class AiPromptTemplateTest extends AiTestSupport {
         AiPromptTemplateDetailResponse t = newTemplate(newSceneWithModel().sceneId(), "{{mood}}");
         assertThatThrownBy(() -> templateService.test(t.id(), Map.of()))
                 .isInstanceOf(PromptValidationException.class).hasMessageContaining("mood").hasMessageContaining("输入模板");
-        verify(aiGenerator, never()).generate(anyList(), any(), any());
+        verify(aiGenerator, never()).generate(anyList(), any(), any(), anyBoolean());
     }
 
     // @scenario: ai/提示词模板测试#必填变量缺失拒绝测试
@@ -204,7 +220,7 @@ class AiPromptTemplateTest extends AiTestSupport {
     void concurrentEditDuringTestIsNotWrittenBack() {
         AiSceneResponse scene = newSceneWithModel();
         AiPromptTemplateDetailResponse t = newTemplate(scene.sceneId(), "{{age}}", AGE);
-        when(aiGenerator.generate(anyList(), eq("model-a"), isNull())).thenAnswer(inv -> {
+        when(aiGenerator.generate(anyList(), eq("model-a"), isNull(), eq(false))).thenAnswer(inv -> {
             templateService.update(t.id(), edit(t, "测试期间被改"));
             return result(AiStatus.SUCCESS, "{}", objectMapper.readTree("{}"));
         });

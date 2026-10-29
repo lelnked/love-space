@@ -16,6 +16,7 @@ import java.util.UUID;
  * @param enabled        是否启用
  * @param primaryModel   主模型，可空
  * @param backupModel    备用模型，可空
+ * @param thinkingEnabled 是否开启深度思考
  * @param activeTemplate 当前生效模板摘要，可空
  * @param createdAt      创建时间
  * @param updatedAt      更新时间
@@ -28,6 +29,7 @@ public record AiSceneResponse(
         boolean enabled,
         String primaryModel,
         String backupModel,
+        boolean thinkingEnabled,
         AiActiveTemplateResponse activeTemplate,
         OffsetDateTime createdAt,
         OffsetDateTime updatedAt
@@ -35,7 +37,7 @@ public record AiSceneResponse(
 
     public static AiSceneResponse from(AiScene s, AiPromptTemplate activeTemplate) {
         return new AiSceneResponse(s.getId(), s.getSceneId(), s.getName(), s.getDescription(), s.isEnabled(),
-                s.getPrimaryModel(), s.getBackupModel(), AiActiveTemplateResponse.from(activeTemplate),
+                s.getPrimaryModel(), s.getBackupModel(), s.isThinkingEnabled(), AiActiveTemplateResponse.from(activeTemplate),
                 s.getCreatedAt(), s.getUpdatedAt());
     }
 }

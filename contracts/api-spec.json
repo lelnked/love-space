@@ -1121,7 +1121,7 @@
     "/api/admin/ai/scenes/page": {
       "get": {
         "summary": "AI 业务场景分页（keyword 匹配 sceneId/名称，enabled 可选；size 白名单 20/200）",
-        "description": "返回 PageResponse<SceneItem>，SceneItem 含场景基本信息、主/备模型与 activeTemplate（当前生效模板，可空）。",
+        "description": "返回 PageResponse<SceneItem>，SceneItem 含场景基本信息、主/备模型、thinkingEnabled 与 activeTemplate（当前生效模板，可空）。",
         "parameters": [
           {
             "name": "keyword",
@@ -1166,7 +1166,7 @@
     "/api/admin/ai/scenes/{id}": {
       "get": {
         "summary": "AI 业务场景详情",
-        "description": "返回 SceneDetail：{id, sceneId, name, description, enabled, primaryModel, backupModel, activeTemplate, createdAt, updatedAt}；不存在 404。",
+        "description": "返回 SceneDetail：{id, sceneId, name, description, enabled, primaryModel, backupModel, thinkingEnabled, activeTemplate, createdAt, updatedAt}；不存在 404。",
         "parameters": [
           {
             "name": "id",
@@ -1209,7 +1209,7 @@
     "/api/admin/ai/scenes": {
       "post": {
         "summary": "创建 AI 业务场景",
-        "description": "201 返回 SceneDetail：{id, sceneId, name, description, enabled, primaryModel, backupModel, activeTemplate, createdAt, updatedAt}；校验失败 400；sceneId 重复 409「scene_id 已存在」。",
+        "description": "201 返回 SceneDetail：{id, sceneId, name, description, enabled, primaryModel, backupModel, thinkingEnabled, activeTemplate, createdAt, updatedAt}；校验失败 400；sceneId 重复 409「scene_id 已存在」。",
         "requestBody": {
           "content": {
             "application/json": {
@@ -2279,6 +2279,11 @@
             "type": "string",
             "nullable": true,
             "description": "备用模型 ID，可空；须在 AI_MODELS 内且不能与主模型相同"
+          },
+          "thinkingEnabled": {
+            "type": "boolean",
+            "nullable": true,
+            "description": "是否开启深度思考；未传或 null 视为 false"
           }
         }
       },

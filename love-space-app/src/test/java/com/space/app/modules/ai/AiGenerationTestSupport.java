@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -61,10 +62,11 @@ public abstract class AiGenerationTestSupport extends AbstractPostgresIntegratio
 
     @BeforeEach
     void stubParams() {
-        when(aiGenerator.params(any(), any())).thenAnswer(inv -> {
+        when(aiGenerator.params(any(), any(), anyBoolean())).thenAnswer(inv -> {
             Map<String, Object> params = new HashMap<>();
             params.put("primaryModel", inv.getArgument(0));
             params.put("backupModel", inv.getArgument(1));
+            params.put("thinkingEnabled", inv.getArgument(2));
             params.put("timeoutSeconds", 30);
             params.put("maxRetries", 1);
             return params;

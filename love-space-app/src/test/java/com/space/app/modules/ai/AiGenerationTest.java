@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
@@ -39,7 +40,7 @@ class AiGenerationTest extends AiGenerationTestSupport {
     @Test
     void generateSuccess() throws Exception {
         AiScene scene = readyScene();
-        when(aiGenerator.generate(anyList(), eq("model-a"), isNull())).thenReturn(success("{\"title\":\"hi\"}", 1));
+        when(aiGenerator.generate(anyList(), eq("model-a"), isNull(), eq(false))).thenReturn(success("{\"title\":\"hi\"}", 1));
 
         String body = submit(unique("anon-"), scene.getSceneId(), unique("c-"), Map.of("age", 28))
                 .andExpect(status().isOk())
@@ -56,11 +57,28 @@ class AiGenerationTest extends AiGenerationTestSupport {
                 .extracting(AiGenerationAttempt::getTriggerReason).containsExactly("INITIAL");
     }
 
+    // @scenario: ai/生成调用深度思考参数#开启时传 enabled 且切备用沿用
+    @Test
+    void generateUsesSceneThinking() throws Exception {
+        AiScene scene = readyScene();
+        scene.setThinkingEnabled(true);
+        sceneRepository.save(scene);
+        when(aiGenerator.generate(anyList(), eq("model-a"), isNull(), eq(true))).thenReturn(success("{\"a\":1}", 1));
+
+        String body = submit(unique("anon-"), scene.getSceneId(), unique("c-"), Map.of("age", 28))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("SUCCESS"))
+                .andReturn().getResponse().getContentAsString();
+
+        AiGeneration g = generationRepository.findById(java.util.UUID.fromString(objectMapper.readTree(body).get("requestId").asString())).orElseThrow();
+        assertThat(objectMapper.readTree(g.getRequestParams()).get("thinkingEnabled").asBoolean()).isTrue();
+    }
+
     // @scenario: ai/App 生成接口#已处理的失败返回 200
     @Test
     void handledFailureReturns200() throws Exception {
         AiScene scene = readyScene();
-        when(aiGenerator.generate(anyList(), any(), any())).thenReturn(failure(AiStatus.FORMAT_ERROR));
+        when(aiGenerator.generate(anyList(), any(), any(), anyBoolean())).thenReturn(failure(AiStatus.FORMAT_ERROR));
 
         submit(unique("anon-"), scene.getSceneId(), unique("c-"), Map.of("age", 1))
                 .andExpect(status().isOk())
@@ -125,7 +143,7 @@ class AiGenerationTest extends AiGenerationTestSupport {
     @Test
     void responseHasNoDetails() throws Exception {
         AiScene scene = readyScene();
-        when(aiGenerator.generate(anyList(), any(), any())).thenReturn(success("{\"a\":1}", 2));
+        when(aiGenerator.generate(anyList(), any(), any(), anyBoolean())).thenReturn(success("{\"a\":1}", 2));
 
         String body = submit(unique("anon-"), scene.getSceneId(), unique("c-"), Map.of("age", 1))
                 .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
@@ -140,7 +158,7 @@ class AiGenerationTest extends AiGenerationTestSupport {
         AiScene scene = readyScene();
         String anon = unique("anon-");
         String cid = unique("c-");
-        when(aiGenerator.generate(anyList(), any(), any())).thenReturn(success("{\"a\":1}", 1));
+        when(aiGenerator.generate(anyList(), any(), any(), anyBoolean())).thenReturn(success("{\"a\":1}", 1));
 
         String first = submit(anon, scene.getSceneId(), cid, Map.of("age", 1)).andReturn().getResponse().getContentAsString();
         long count = generationRepository.count();
@@ -149,7 +167,7 @@ class AiGenerationTest extends AiGenerationTestSupport {
 
         assertThat(objectMapper.readTree(second)).isEqualTo(objectMapper.readTree(first));
         assertThat(generationRepository.count()).isEqualTo(count);
-        verify(aiGenerator, times(1)).generate(anyList(), any(), any());
+        verify(aiGenerator, times(1)).generate(anyList(), any(), any(), anyBoolean());
     }
 
     // @scenario: ai/生成请求去重#生成中重复提交
@@ -213,7 +231,7 @@ class AiGenerationTest extends AiGenerationTestSupport {
     @Test
     void attemptsRecordedInOrder() throws Exception {
         AiScene scene = readyScene();
-        when(aiGenerator.generate(anyList(), any(), any())).thenReturn(success("{\"a\":1}", 3));
+        when(aiGenerator.generate(anyList(), any(), any(), anyBoolean())).thenReturn(success("{\"a\":1}", 3));
 
         String body = submit(unique("anon-"), scene.getSceneId(), unique("c-"), Map.of("age", 1))
                 .andReturn().getResponse().getContentAsString();
@@ -230,7 +248,7 @@ class AiGenerationTest extends AiGenerationTestSupport {
     @Test
     void optionalVariableSnapshotNull() throws Exception {
         AiScene scene = readyScene();
-        when(aiGenerator.generate(anyList(), any(), any())).thenReturn(success("{\"a\":1}", 1));
+        when(aiGenerator.generate(anyList(), any(), any(), anyBoolean())).thenReturn(success("{\"a\":1}", 1));
 
         String body = submit(unique("anon-"), scene.getSceneId(), unique("c-"), Map.of("age", 1))
                 .andReturn().getResponse().getContentAsString();
@@ -248,14 +266,14 @@ class AiGenerationTest extends AiGenerationTestSupport {
         submit(unique("anon-"), readyScene().getSceneId(), unique("c-"), Map.of("age", 1, "user_input", "x".repeat(501)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("user_input")));
-        verify(aiGenerator, never()).generate(anyList(), any(), any());
+        verify(aiGenerator, never()).generate(anyList(), any(), any(), anyBoolean());
     }
 
     // @scenario: ai/生成接口输入长度限制#边界值通过
     @Test
     void valueAtLimitPasses() throws Exception {
         AiScene scene = readyScene();
-        when(aiGenerator.generate(anyList(), any(), any())).thenReturn(success("{\"a\":1}", 1));
+        when(aiGenerator.generate(anyList(), any(), any(), anyBoolean())).thenReturn(success("{\"a\":1}", 1));
         submit(unique("anon-"), scene.getSceneId(), unique("c-"), Map.of("age", 1, "user_input", "x".repeat(500)))
                 .andExpect(status().isOk());
     }
@@ -293,7 +311,7 @@ class AiGenerationTest extends AiGenerationTestSupport {
         OffsetDateTime yesterday = OffsetDateTime.now().minusDays(1);
         insertRecord(anon, scene.getSceneId(), unique("c-"), "SUCCESS", yesterday);
         insertRecord(anon, scene.getSceneId(), unique("c-"), "SUCCESS", yesterday);
-        when(aiGenerator.generate(anyList(), any(), any())).thenReturn(success("{\"a\":1}", 1));
+        when(aiGenerator.generate(anyList(), any(), any(), anyBoolean())).thenReturn(success("{\"a\":1}", 1));
 
         submit(anon, scene.getSceneId(), unique("c-"), Map.of("age", 1)).andExpect(status().isOk());
     }
@@ -319,7 +337,7 @@ class AiGenerationTest extends AiGenerationTestSupport {
         for (int i = 0; i < 3; i++) {
             insertRecord(anon, scene.getSceneId(), unique("c-"), "SUCCESS", OffsetDateTime.now());
         }
-        when(aiGenerator.generate(anyList(), any(), any())).thenReturn(success("{\"a\":1}", 1));
+        when(aiGenerator.generate(anyList(), any(), any(), anyBoolean())).thenReturn(success("{\"a\":1}", 1));
 
         submit(anon, scene.getSceneId(), unique("c-"), Map.of("age", 1)).andExpect(status().isOk());
     }
@@ -334,7 +352,7 @@ class AiGenerationTest extends AiGenerationTestSupport {
         submit(anon, scene.getSceneId(), unique("c-"), Map.of("age", 1)).andExpect(status().isTooManyRequests());
 
         setLimits(3, 100000);
-        when(aiGenerator.generate(anyList(), any(), any())).thenReturn(success("{\"a\":1}", 1));
+        when(aiGenerator.generate(anyList(), any(), any(), anyBoolean())).thenReturn(success("{\"a\":1}", 1));
         submit(anon, scene.getSceneId(), unique("c-"), Map.of("age", 1)).andExpect(status().isOk());
     }
 

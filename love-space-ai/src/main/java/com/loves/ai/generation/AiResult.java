@@ -17,7 +17,7 @@ import tools.jackson.databind.JsonNode;
  * @param latencyMs        总耗时
  * @param errorCode        最终失败码（失败状态名），成功为 null；供应商错误码见 attempts
  * @param errorMessage     最终失败原因，成功为 null
- * @param params           参数快照 {primaryModel, backupModel, temperature, topP, maxTokens, timeoutSeconds, maxRetries}
+ * @param params           参数快照 {primaryModel, backupModel, thinkingEnabled, temperature, topP, maxTokens, timeoutSeconds, maxRetries}
  * @param attempts         每次调用明细
  */
 public record AiResult(
