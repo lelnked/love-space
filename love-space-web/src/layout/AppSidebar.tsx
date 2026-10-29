@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation } from "react-router";
 
 // Assume these icons are imported from an icon library
@@ -23,15 +23,16 @@ import {
 import { useSidebar } from "../context/SidebarContext";
 import { useAuth } from "../hooks/useAuth";
 import { asset } from "../lib/asset";
+import { NavSubItem, findOpenSubmenu, isNavPathActive, isSubNavActive } from "./navMatch";
 
 type NavItem = {
   name: string;
   icon: React.ReactNode;
   path?: string;
-  subItems?: { name: string; path: string; pro?: boolean; new?: boolean }[];
+  subItems?: NavSubItem[];
 };
 
-const navItems: NavItem[] = [
+export const navItems: NavItem[] = [
   {
     icon: <UserCircleIcon />,
     name: "管理员管理",
@@ -108,7 +109,7 @@ const navItems: NavItem[] = [
     subItems: [
       { name: "业务配置", path: "/ai/scenes" },
       { name: "模型配置", path: "/ai/models" },
-      { name: "提示词管理", path: "/ai/prompts" },
+      { name: "提示词管理", path: "/ai/prompts", matchPaths: ["/ai/prompt-templates"] },
       // 暂时隐藏：生成记录、限流配置
       // { name: "生成记录", path: "/ai/generations" },
       // { name: "限流配置", path: "/ai/limits" },
@@ -139,29 +140,14 @@ const AppSidebar: React.FC = () => {
   );
   const subMenuRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
-  // const isActive = (path: string) => location.pathname === path;
-  const isActive = useCallback(
-    (path: string) => location.pathname === path,
-    [location.pathname]
-  );
+  // 菜单锚定只看 pathname：精确匹配或子路径匹配，详情页（/xxx/:id）也挂在父级菜单上
+  const pathname = location.pathname;
 
   useEffect(() => {
-    let submenuMatched = false;
-    visibleNavItems.forEach((nav, index) => {
-      if (nav.subItems) {
-        nav.subItems.forEach((subItem) => {
-          if (isActive(subItem.path)) {
-            setOpenSubmenu({ type: "main", index });
-            submenuMatched = true;
-          }
-        });
-      }
-    });
-
-    if (!submenuMatched) {
-      setOpenSubmenu(null);
-    }
-  }, [location, isActive, visibleNavItems]);
+    // 无命中就把父级菜单收起；命中（含详情页子路径）则保持展开并锚定
+    const matched = findOpenSubmenu(visibleNavItems, pathname);
+    setOpenSubmenu(matched ? { type: "main", index: matched.index } : null);
+  }, [pathname, visibleNavItems]);
 
   useEffect(() => {
     if (openSubmenu !== null) {
@@ -233,12 +219,14 @@ const AppSidebar: React.FC = () => {
               <Link
                 to={nav.path}
                 className={`menu-item group ${
-                  isActive(nav.path) ? "menu-item-active" : "menu-item-inactive"
+                  isNavPathActive(pathname, nav.path)
+                    ? "menu-item-active"
+                    : "menu-item-inactive"
                 }`}
               >
                 <span
                   className={`menu-item-icon-size ${
-                    isActive(nav.path)
+                    isNavPathActive(pathname, nav.path)
                       ? "menu-item-icon-active"
                       : "menu-item-icon-inactive"
                   }`}
@@ -270,7 +258,7 @@ const AppSidebar: React.FC = () => {
                     <Link
                       to={subItem.path}
                       className={`menu-dropdown-item ${
-                        isActive(subItem.path)
+                        isSubNavActive(pathname, subItem)
                           ? "menu-dropdown-item-active"
                           : "menu-dropdown-item-inactive"
                       }`}
@@ -280,7 +268,7 @@ const AppSidebar: React.FC = () => {
                         {subItem.new && (
                           <span
                             className={`ml-auto ${
-                              isActive(subItem.path)
+                              isSubNavActive(pathname, subItem)
                                 ? "menu-dropdown-badge-active"
                                 : "menu-dropdown-badge-inactive"
                             } menu-dropdown-badge`}
@@ -291,7 +279,7 @@ const AppSidebar: React.FC = () => {
                         {subItem.pro && (
                           <span
                             className={`ml-auto ${
-                              isActive(subItem.path)
+                              isSubNavActive(pathname, subItem)
                                 ? "menu-dropdown-badge-active"
                                 : "menu-dropdown-badge-inactive"
                             } menu-dropdown-badge`}
