@@ -119,13 +119,13 @@ admin 端 SHALL 提供业务场景（scene）管理：
 - `GET /api/admin/ai/scenes/page` 分页，过滤 `keyword`（模糊匹配 sceneId 或名称）、`enabled`；按创建时间倒序；分页遵循项目统一口径（page 1 基，size 仅 20/200）。
 - `GET /api/admin/ai/scenes/options` 返回全量 `[{id, sceneId, name, enabled}]`。
 - `GET /api/admin/ai/scenes/{id}` 返回详情；不存在返回 404。
-- SceneItem / SceneDetail 结构 SHALL 为 `{id, sceneId, name, description, enabled, primaryModel, backupModel, activeTemplate: {id, seq, name, publishedAt, publishedBy} | null, createdAt, updatedAt}`。
+- SceneItem / SceneDetail 结构 SHALL 为 `{id, sceneId, name, description, enabled, primaryModel, backupModel, thinkingEnabled, activeTemplate: {id, seq, name, publishedAt, publishedBy} | null, createdAt, updatedAt}`。
 - 场景不可删除。
 
 #### Scenario: 创建场景
 - **GIVEN** 已登录 Manager
 - **WHEN** 提交 `{sceneId: "cycle_advice", name: "周期建议"}`
-- **THEN** 返回 201，`enabled=true`、`primaryModel=null`、`activeTemplate=null`
+- **THEN** 返回 201，`enabled=true`、`primaryModel=null`、`thinkingEnabled=false`、`activeTemplate=null`
 
 #### Scenario: sceneId 重复被拒绝
 - **GIVEN** 已存在 sceneId `cycle_advice`
@@ -153,9 +153,9 @@ admin 端 SHALL 提供业务场景（scene）管理：
 - **THEN** 返回 204，详情 `enabled=false`
 
 ### Requirement: 场景模型配置
-admin 端 SHALL 支持为场景配置主模型与备用模型：`PUT /api/admin/ai/scenes/{id}/models` body `{primaryModel, backupModel?}`，成功返回 204，保存即对之后的新请求生效（不做版本/发布）。
+admin 端 SHALL 支持为场景配置主模型、备用模型与深度思考开关：`PUT /api/admin/ai/scenes/{id}/models` body `{primaryModel, backupModel?, thinkingEnabled?}`，成功返回 204，保存即对之后的新请求生效（不做版本/发布）。
 
-校验：`primaryModel` 必填；`primaryModel` 与非空 `backupModel` 都 SHALL 在 `AI_MODELS` 内；`backupModel` 不得与 `primaryModel` 相同；任一不满足返回 400 及中文信息。`backupModel` 为 null 或空串表示不使用备用模型。
+校验：`primaryModel` 必填；`primaryModel` 与非空 `backupModel` 都 SHALL 在 `AI_MODELS` 内；`backupModel` 不得与 `primaryModel` 相同；任一不满足返回 400 及中文信息。`backupModel` 为 null 或空串表示不使用备用模型。`thinkingEnabled` 未传或为 null 视为 `false`；场景默认 `thinkingEnabled=false`（关闭深度思考）。
 
 `POST /api/admin/ai/models/test-connection` 的 `model` 不在 `AI_MODELS` 内时返回 400。
 
@@ -178,6 +178,16 @@ admin 端 SHALL 支持为场景配置主模型与备用模型：`PUT /api/admin/
 - **GIVEN** 场景已配置备用模型 `model-b`
 - **WHEN** 提交 `{primaryModel: "model-a", backupModel: null}`
 - **THEN** 返回 204，详情 `backupModel=null`
+
+#### Scenario: 开启深度思考
+- **GIVEN** `AI_MODELS=model-a,model-b`，一个 `thinkingEnabled=false` 的场景
+- **WHEN** 提交 `{primaryModel: "model-a", thinkingEnabled: true}`
+- **THEN** 返回 204，详情 `thinkingEnabled=true`
+
+#### Scenario: 未传深度思考视为关闭
+- **GIVEN** 场景当前 `thinkingEnabled=true`
+- **WHEN** 提交 `{primaryModel: "model-a"}`（不含 thinkingEnabled）
+- **THEN** 返回 204，详情 `thinkingEnabled=false`
 
 ### Requirement: 提示词模板维护
 admin 端 SHALL 提供提示词模板的新建、修改与查询：
@@ -392,7 +402,7 @@ web 端 SHALL 在 `/ai/scenes` 提供业务配置页：
 web 端 SHALL 在 `/ai/models` 提供模型配置页：
 
 - ①关键字搜索；列表列 scene_id、名称、主模型、备用模型、操作（②配置）。主模型为空时显示「未配置（⚠ 不可生成）」，备用模型为空显示「—」。
-- ②配置打开弹窗：③主模型下拉、⑤备用模型下拉（含「不使用」），选项来自 `GET /api/admin/ai/models`；④每个下拉旁「测试连接」按钮，显示可达与耗时或失败原因；弹窗内固定提示「连接成功只代表服务可达，不代表生成质量」；⑥保存。
+- ②配置打开弹窗：③主模型下拉、⑤备用模型下拉（含「不使用」），选项来自 `GET /api/admin/ai/models`；④每个下拉旁「测试连接」按钮，显示可达与耗时或失败原因；⑦「深度思考」开关（初值取场景 `thinkingEnabled`，默认关，旁注「开启后响应更慢、token 消耗更高」）；弹窗内固定提示「连接成功只代表服务可达，不代表生成质量」；⑥保存。
 - 主备选择相同模型时前端即时提示，后端 400 信息原样展示。
 
 #### Scenario: 未配置主模型提示
@@ -409,6 +419,11 @@ web 端 SHALL 在 `/ai/models` 提供模型配置页：
 - **GIVEN** 在配置弹窗选好主模型、备用模型「不使用」
 - **WHEN** 点击⑥保存
 - **THEN** 弹窗关闭，该行主模型列显示所选模型、备用模型列显示「—」
+
+#### Scenario: 配置深度思考
+- **GIVEN** 场景 `thinkingEnabled=false`，打开配置弹窗
+- **WHEN** 打开⑦深度思考开关并点击⑥保存
+- **THEN** 弹窗关闭；再次打开该场景配置弹窗，⑦开关为开启状态
 
 ### Requirement: 提示词管理页面
 web 端 SHALL 提供：
@@ -572,7 +587,7 @@ app 端 SHALL 提供 `POST /api/app/ai/generations`：
 - **THEN** 返回 200 与原结果（不返回 409 场景不可用）
 
 ### Requirement: 生成记录与调用明细落库
-每次通过额度检查的生成请求 SHALL 在调用模型前写入一条 `loves_ai_generation` 记录（`status=PROCESSING`），包含 clientRequestId、匿名 ID、sceneId、模板 id 与 seq、appVersion、inputs 快照（未传的声明变量记 null）、实际 messages、参数快照 `{primaryModel, backupModel, temperature, topP, maxTokens, timeoutSeconds, maxRetries}`。
+每次通过额度检查的生成请求 SHALL 在调用模型前写入一条 `loves_ai_generation` 记录（`status=PROCESSING`），包含 clientRequestId、匿名 ID、sceneId、模板 id 与 seq、appVersion、inputs 快照（未传的声明变量记 null）、实际 messages、参数快照 `{primaryModel, backupModel, thinkingEnabled, temperature, topP, maxTokens, timeoutSeconds, maxRetries}`。
 
 调用结束后 SHALL 回写同一条记录：最终状态、errorCode、errorMessage、finalModel、attemptCount、rawOutput、content、tokens 合计、latencyMs、completedAt；并把每次模型调用逐条写入 `loves_ai_generation_attempt`（seq、触发原因、模型、状态、错误码与信息、供应商请求 ID、原始返回、解析出的 JSON、校验错误、tokens、usage 原样、起止时间、耗时）。
 
@@ -924,3 +939,19 @@ web 端 SHALL 提供页面 `/ai/limits`（侧栏「AI 管理 › 限流配置」
 - **WHEN** 输入 0
 - **THEN** 输入框下显示「取值须为 -1 或正整数」，保存按钮不可点击
 
+### Requirement: 生成调用深度思考参数
+AI 基础模块的生成调用 SHALL 按场景 `thinkingEnabled` 在每次方舟请求 body 中显式传 `thinking`：开启为 `{"type": "enabled"}`，关闭为 `{"type": "disabled"}`。同一次生成的主模型、重试、备用模型调用 SHALL 使用同一取值。admin 提示词模板测试与 app 生成接口均 SHALL 读取场景当前 `thinkingEnabled`。连接测试 SHALL NOT 传 `thinking`。
+
+#### Scenario: 关闭时显式传 disabled
+- **GIVEN** 场景 `thinkingEnabled=false`
+- **WHEN** 发起一次生成
+- **THEN** 方舟请求 body 含 `"thinking": {"type": "disabled"}`，参数快照 `thinkingEnabled=false`
+
+#### Scenario: 开启时传 enabled 且切备用沿用
+- **GIVEN** 场景 `thinkingEnabled=true`，主模型失败后切备用模型
+- **WHEN** 发起一次生成
+- **THEN** 每次方舟请求（含 FALLBACK）body 均含 `"thinking": {"type": "enabled"}`
+
+#### Scenario: 连接测试不传 thinking
+- **WHEN** 调用 `POST /api/admin/ai/models/test-connection`
+- **THEN** 方舟请求 body 不含 `thinking` 字段
