@@ -183,8 +183,14 @@ export async function setAiSceneModels(id: string, req: AiSceneModelsRequest): P
   await apiClient.put(`/api/admin/ai/scenes/${id}/models`, req);
 }
 
+const AI_TEST_TIMEOUT_MS = 180_000;
+
 export async function testAiModelConnection(model: string): Promise<AiConnectionTestResult> {
-  const { data } = await apiClient.post<AiConnectionTestResult>("/api/admin/ai/models/test-connection", { model });
+  const { data } = await apiClient.post<AiConnectionTestResult>(
+    "/api/admin/ai/models/test-connection",
+    { model },
+    { timeout: AI_TEST_TIMEOUT_MS },
+  );
   return data;
 }
 
@@ -221,9 +227,11 @@ export async function testAiPromptTemplate(
   id: string,
   inputs: Record<string, unknown>,
 ): Promise<AiPromptTemplateTestResult> {
-  const { data } = await apiClient.post<AiPromptTemplateTestResult>(`/api/admin/ai/prompt-templates/${id}/test`, {
-    inputs,
-  });
+  const { data } = await apiClient.post<AiPromptTemplateTestResult>(
+    `/api/admin/ai/prompt-templates/${id}/test`,
+    { inputs },
+    { timeout: AI_TEST_TIMEOUT_MS },
+  );
   return data;
 }
 

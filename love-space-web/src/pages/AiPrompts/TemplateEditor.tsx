@@ -201,7 +201,12 @@ export default function AiPromptTemplateEditor() {
       else toast.error(`测试失败：${result.errorMessage ?? result.errorCode ?? ""}`);
     } catch (err) {
       const ax = err as AxiosError<{ detail?: string }>;
-      toast.error(ax.response?.data?.detail ?? "测试失败");
+      if (ax.code === "ECONNABORTED") {
+        toast.error("请求超时，模型可能仍在生成中，请稍后刷新查看结果");
+      } else {
+        toast.error(ax.response?.data?.detail ?? "测试失败");
+      }
+      getAiPromptTemplate(target.id).then(setDetail).catch(() => {});
     } finally {
       setTesting(false);
     }
