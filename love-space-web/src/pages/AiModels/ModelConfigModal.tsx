@@ -22,7 +22,14 @@ function ConnectionTest({ model }: { model: string }) {
       setState({ status: "done", result: await testAiModelConnection(model) });
     } catch (err) {
       const ax = err as AxiosError<{ detail?: string }>;
-      toast.error(ax.response?.data?.detail ?? "测试失败");
+      const status = ax.response?.status;
+      if (ax.code === "ECONNABORTED" || status === 504 || status === 408) {
+        toast.error("连接测试超时");
+      } else if (!ax.response) {
+        toast.error("网络连接中断，请检查网络或服务状态");
+      } else {
+        toast.error(ax.response.data?.detail ?? `测试失败（HTTP ${status ?? "未知"}）`);
+      }
       setState({ status: "idle" });
     }
   };

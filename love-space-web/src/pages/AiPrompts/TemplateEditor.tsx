@@ -18,7 +18,12 @@ import {
   testAiPromptTemplate,
   updateAiPromptTemplate,
 } from "../../api/ai";
-import { findUndeclaredVariables, variableErrors } from "./promptVariables";
+import {
+  findUndeclaredVariables,
+  formatTestFailureToast,
+  formatTestRequestError,
+  variableErrors,
+} from "./promptVariables";
 import VariableTable from "./VariableTable";
 import TestPanel from "./TestPanel";
 
@@ -74,6 +79,7 @@ export default function AiPromptTemplateEditor() {
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
   const [lastResult, setLastResult] = useState<AiPromptTemplateTestResult | null>(null);
+  const [testError, setTestError] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const sceneId = detail?.sceneId ?? routeSceneId ?? "";
@@ -163,6 +169,7 @@ export default function AiPromptTemplateEditor() {
       setDetail(saved);
       setDirty(false);
       setLastResult(null);
+      setTestError(null);
       if (!detail) navigate(`/ai/prompt-templates/${saved.id}`, { replace: true });
       return saved;
     } catch (err) {
@@ -188,6 +195,22 @@ export default function AiPromptTemplateEditor() {
       if (!target) return;
     }
     setTesting(true);
+    setLastResult(null);
+    setTestError(null);
+    setDetail((prev) =>
+      prev
+        ? {
+            ...prev,
+            lastTestOutput: null,
+            lastTestContent: null,
+            lastTestModel: null,
+            lastTestSuccess: null,
+            lastTestError: null,
+            lastTestLatencyMs: null,
+            lastTestAt: null,
+          }
+        : prev,
+    );
     try {
       const values: Record<string, unknown> = {};
       form.variables.forEach((v) => {
@@ -198,15 +221,12 @@ export default function AiPromptTemplateEditor() {
       setLastResult(result);
       setDetail(await getAiPromptTemplate(target.id));
       if (result.success) toast.success("测试成功");
-      else toast.error(`测试失败：${result.errorMessage ?? result.errorCode ?? ""}`);
+      else toast.error(formatTestFailureToast(result.errorCode, result.errorMessage));
     } catch (err) {
       const ax = err as AxiosError<{ detail?: string }>;
-      if (ax.code === "ECONNABORTED") {
-        toast.error("请求超时，模型可能仍在生成中，请稍后刷新查看结果");
-      } else {
-        toast.error(ax.response?.data?.detail ?? "测试失败");
-      }
-      getAiPromptTemplate(target.id).then(setDetail).catch(() => {});
+      const msg = formatTestRequestError(ax);
+      setTestError(msg);
+      toast.error(msg);
     } finally {
       setTesting(false);
     }
@@ -330,6 +350,7 @@ export default function AiPromptTemplateEditor() {
                 onRun={() => void runTest()}
                 detail={detail}
                 lastResult={lastResult}
+                testError={testError}
               />
             </fieldset>
           </div>

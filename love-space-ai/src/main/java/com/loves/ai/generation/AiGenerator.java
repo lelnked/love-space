@@ -150,7 +150,9 @@ public class AiGenerator {
     }
 
     private static String failureMessage(AiAttempt a) {
-        return a.errorCode() == null ? a.errorMessage() : a.errorMessage() + "（" + a.errorCode() + "）";
+        return a.errorCode() == null || a.errorCode().equals(a.status().name())
+                ? a.errorMessage()
+                : a.errorMessage() + "（" + a.errorCode() + "）";
     }
 
     private static Integer intOrNull(JsonNode usage, String field) {

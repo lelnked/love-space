@@ -19,7 +19,7 @@ import tools.jackson.databind.ObjectMapper;
 /** 测试用假方舟：按模型名排队预设响应，队列取完后重复最后一个。 */
 class FakeArk implements AutoCloseable {
 
-    record Reply(int status, String body, long delayMs) {
+    record Reply(int status, String body, long delayMs, boolean closeWithoutResponse) {
         static Reply content(String content) {
             return finish(content, "stop");
         }
@@ -31,15 +31,19 @@ class FakeArk implements AutoCloseable {
                             "message", Map.of("role", "assistant", "content", content),
                             "finish_reason", finishReason)),
                     "usage", Map.of("prompt_tokens", 10, "completion_tokens", 5)));
-            return new Reply(200, json, 0);
+            return new Reply(200, json, 0, false);
         }
 
         static Reply http(int status) {
-            return new Reply(status, "{\"error\":{\"code\":\"x\"}}", 0);
+            return new Reply(status, "{\"error\":{\"code\":\"x\"}}", 0, false);
         }
 
         static Reply hang(long delayMs) {
-            return new Reply(200, "{}", delayMs);
+            return new Reply(200, "{}", delayMs, false);
+        }
+
+        static Reply dropAfter(long delayMs) {
+            return new Reply(200, "", delayMs, true);
         }
     }
 
@@ -77,6 +81,10 @@ class FakeArk implements AutoCloseable {
         try {
             if (reply.delayMs() > 0) {
                 Thread.sleep(reply.delayMs());
+            }
+            if (reply.closeWithoutResponse()) {
+                exchange.close();
+                return;
             }
             byte[] bytes = reply.body().getBytes(StandardCharsets.UTF_8);
             exchange.getResponseHeaders().add("Content-Type", "application/json");

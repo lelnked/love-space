@@ -185,13 +185,16 @@ export async function setAiSceneModels(id: string, req: AiSceneModelsRequest): P
   await apiClient.put(`/api/admin/ai/scenes/${id}/models`, req);
 }
 
-const AI_TEST_TIMEOUT_MS = 180_000;
+// 后端单次生成最多跑 (1 + AI_MAX_RETRIES) × 主备 2 个模型 × AI_TIMEOUT_SECONDS（测试/生产可达 4 × 120s = 480s），
+// 前端超时必须大于后端最大总耗时，避免后端仍在重试时前端先断开报错。
+const AI_TEST_TIMEOUT_MS = 540_000;
+const AI_PING_TIMEOUT_MS = 60_000;
 
 export async function testAiModelConnection(model: string): Promise<AiConnectionTestResult> {
   const { data } = await apiClient.post<AiConnectionTestResult>(
     "/api/admin/ai/models/test-connection",
     { model },
-    { timeout: AI_TEST_TIMEOUT_MS },
+    { timeout: AI_PING_TIMEOUT_MS },
   );
   return data;
 }

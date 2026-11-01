@@ -60,3 +60,68 @@ export function prettyJson(value: unknown): string {
   if (typeof value === "string") return value;
   return JSON.stringify(value, null, 2);
 }
+
+/** 模板测试失败码对应的中文分类说明。 */
+export const TEST_ERROR_LABEL: Record<string, string> = {
+  FORMAT_ERROR: "输出格式非 JSON",
+  EMPTY: "模型返回为空",
+  REFUSED: "模型安全拒答",
+  TIMEOUT: "模型响应超时",
+  RATE_LIMITED: "上游接口限流",
+  UPSTREAM_ERROR: "模型服务调用异常",
+};
+
+/** 解析后端存储的 lastTestError（格式："{errorCode}：{errorMessage}"）。 */
+export function parseLastTestError(raw: string | null | undefined): {
+  code: string | null;
+  label: string | null;
+  message: string;
+} | null {
+  if (!raw) return null;
+  const idx = raw.indexOf("：");
+  if (idx <= 0) {
+    return { code: null, label: null, message: raw };
+  }
+  const code = raw.slice(0, idx).trim();
+  let message = raw.slice(idx + 1).trim();
+  const redundantSuffix = `（${code}）`;
+  if (message.endsWith(redundantSuffix)) {
+    message = message.slice(0, -redundantSuffix.length);
+  }
+  return {
+    code,
+    label: TEST_ERROR_LABEL[code] ?? null,
+    message,
+  };
+}
+
+/** 组装测试返回 200 但 success=false 时的弹窗提示。 */
+export function formatTestFailureToast(
+  errorCode: string | null | undefined,
+  errorMessage: string | null | undefined,
+): string {
+  const label = errorCode ? TEST_ERROR_LABEL[errorCode] : null;
+  let detail = errorMessage ?? errorCode ?? "";
+  if (errorCode && detail.endsWith(`（${errorCode}）`)) {
+    detail = detail.slice(0, -`（${errorCode}）`.length);
+  }
+  return `测试失败${label ? `（${label}）` : ""}${detail ? `：${detail}` : ""}`;
+}
+
+/** 组装测试 HTTP 请求异常（超前断开、网关 504、400/409 校验等）时的提示。 */
+export function formatTestRequestError(ax: {
+  code?: string;
+  response?: { status?: number; data?: { detail?: string } };
+}): string {
+  const status = ax.response?.status;
+  if (ax.code === "ECONNABORTED" || status === 504 || status === 408) {
+    return "请求超时，模型可能仍在生成中，请稍后刷新页面查看结果";
+  }
+  if (status === 502 || status === 503) {
+    return `网关连接异常（HTTP ${status}），后端可能仍在处理中，请稍后刷新查看结果`;
+  }
+  if (!ax.response) {
+    return "网络连接中断（可能因等待模型响应耗时过长被断开），请稍后刷新页面查看结果";
+  }
+  return ax.response.data?.detail ?? `测试请求失败（HTTP ${status ?? "未知"}）`;
+}

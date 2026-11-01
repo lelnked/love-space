@@ -1,5 +1,5 @@
 import type { AiPromptTemplateDetail, AiPromptTemplateTestResult, AiPromptVariable, AiScene } from "../../api/ai";
-import { formatDateTime, prettyJson } from "./promptVariables";
+import { formatDateTime, parseLastTestError, prettyJson } from "./promptVariables";
 
 const inputClass =
   "border border-gray-300 dark:border-gray-700 rounded px-3 py-2 text-sm w-full bg-transparent dark:text-white/90";
@@ -16,6 +16,8 @@ interface Props {
   detail: AiPromptTemplateDetail | null;
   /** 本次会话内最后一次测试响应（含 tokens）。 */
   lastResult: AiPromptTemplateTestResult | null;
+  /** 本次测试请求级异常（如超时、断连、400/409）。 */
+  testError?: string | null;
 }
 
 /** 模板编辑页右栏：使用模型 → 填变量 → 运行测试 → 最后一次结果。 */
@@ -29,12 +31,14 @@ export default function TestPanel({
   onRun,
   detail,
   lastResult,
+  testError,
 }: Props) {
   const named = variables.filter((v) => v.name.trim());
   const tokens =
     lastResult && lastResult.promptTokens !== null
       ? ` · ${lastResult.promptTokens}/${lastResult.completionTokens ?? 0} tokens`
       : "";
+  const parsedError = parseLastTestError(detail?.lastTestError);
 
   return (
     <div className="space-y-5">
@@ -89,7 +93,14 @@ export default function TestPanel({
 
       <div>
         <div className="text-sm font-semibold text-gray-800 dark:text-white/90 mb-2">3. 测试结果（最后一次）</div>
-        {!detail?.lastTestAt ? (
+        {running ? (
+          <div className="text-xs text-gray-400">正在调用模型测试中，请稍候...</div>
+        ) : testError ? (
+          <div className="space-y-2 text-sm">
+            <div className="text-error-500">✗ 测试请求异常</div>
+            <div className="text-error-500 text-xs break-all">{testError}</div>
+          </div>
+        ) : !detail?.lastTestAt ? (
           <div className="text-xs text-gray-400">尚未测试</div>
         ) : (
           <div className="space-y-2 text-sm">
@@ -98,15 +109,27 @@ export default function TestPanel({
               {detail.lastTestSuccess ? (
                 <span className="text-success-600">✓ 成功</span>
               ) : (
-                <span className="text-error-500">✗ 失败</span>
+                <span className="text-error-500">
+                  ✗ 失败{parsedError?.label ? `（${parsedError.label}）` : ""}
+                </span>
               )}
             </div>
             <div className="text-gray-600 dark:text-gray-400">
               {((detail.lastTestLatencyMs ?? 0) / 1000).toFixed(1)}s · {detail.lastTestModel ?? "—"}
               {tokens}
             </div>
-            {!detail.lastTestSuccess && detail.lastTestError && (
-              <div className="text-error-500 text-xs break-all">{detail.lastTestError}</div>
+            {!detail.lastTestSuccess && parsedError && (
+              <div className="space-y-1">
+                <div className="text-error-500 text-xs break-all">
+                  {parsedError.code ? `${parsedError.code}：${parsedError.message}` : parsedError.message}
+                </div>
+                {parsedError.code === "FORMAT_ERROR" && (
+                  <div className="text-warning-600 text-xs">
+                    提示：系统要求模型输出合法 JSON 对象或数组，请检查提示词是否声明 JSON 输出格式，以及变量占位符是否使用{" "}
+                    {"{{变量名}}"}。
+                  </div>
+                )}
+              </div>
             )}
             <pre className="max-h-80 overflow-auto rounded bg-gray-50 dark:bg-gray-800 p-3 text-xs whitespace-pre-wrap break-all">
               {detail.lastTestContent != null ? prettyJson(detail.lastTestContent) : detail.lastTestOutput ?? ""}

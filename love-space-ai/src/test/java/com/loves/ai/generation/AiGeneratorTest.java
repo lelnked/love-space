@@ -105,7 +105,10 @@ class AiGeneratorTest {
                 .on("text", Reply.content("hello"))
                 .on("scalar", Reply.content("\"hello\""))
                 .on("trailing", Reply.content("{\"a\":1} tail"))
-                .on("err", Reply.http(500));
+                .on("err", Reply.http(500))
+                .on("gwTimeout", Reply.http(504))
+                .on("dropSlow", Reply.dropAfter(600))
+                .on("hangTimeout", Reply.hang(1500));
         AiGenerator generator = generator(0);
 
         assertThat(generator.generate(MESSAGES, "refused", null, false).status()).isEqualTo(AiStatus.REFUSED);
@@ -114,6 +117,18 @@ class AiGeneratorTest {
         assertThat(generator.generate(MESSAGES, "scalar", null, false).status()).isEqualTo(AiStatus.FORMAT_ERROR);
         assertThat(generator.generate(MESSAGES, "trailing", null, false).status()).isEqualTo(AiStatus.FORMAT_ERROR);
         assertThat(generator.generate(MESSAGES, "err", null, false).status()).isEqualTo(AiStatus.UPSTREAM_ERROR);
+
+        AiResult gwTimeout = generator.generate(MESSAGES, "gwTimeout", null, false);
+        assertThat(gwTimeout.status()).isEqualTo(AiStatus.TIMEOUT);
+        assertThat(gwTimeout.errorMessage()).contains("调用超时").contains("504");
+
+        AiResult dropSlow = generator.generate(MESSAGES, "dropSlow", null, false);
+        assertThat(dropSlow.status()).isEqualTo(AiStatus.TIMEOUT);
+        assertThat(dropSlow.errorMessage()).contains("调用超时").doesNotContain("（TIMEOUT）");
+
+        AiResult hangTimeout = generator.generate(MESSAGES, "hangTimeout", null, false);
+        assertThat(hangTimeout.status()).isEqualTo(AiStatus.TIMEOUT);
+        assertThat(hangTimeout.errorMessage()).isEqualTo("调用超时（1 秒）");
     }
 
     // @scenario: ai/生成重试、切备用与结果判定#代码块包裹的 JSON 视为成功
