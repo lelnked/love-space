@@ -110,9 +110,8 @@ export const navItems: NavItem[] = [
       { name: "业务配置", path: "/ai/scenes" },
       { name: "模型配置", path: "/ai/models" },
       { name: "提示词管理", path: "/ai/prompts", matchPaths: ["/ai/prompt-templates"] },
-      // 暂时隐藏：生成记录、限流配置
-      // { name: "生成记录", path: "/ai/generations" },
-      // { name: "限流配置", path: "/ai/limits" },
+      { name: "生成记录", path: "/ai/generations" },
+      { name: "限流配置", path: "/ai/limits" },
     ],
   },
   {
