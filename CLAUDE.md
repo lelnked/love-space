@@ -39,7 +39,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | 测试域注册表与用例 | `tests/modules.md`、`tests/{domain}/` |
 | 原始产品需求 | `需求文档.pdf`、`二期需求开发文档.md` |
 | 部署正式环境 | `docs/部署正式环境.md`（构建 → 上传 → 跑脚本） |
-| 部署测试环境 | `docs/部署测试环境.md`（目标 `lo_test` → 47.109.27.132） |
+| 部署测试环境 | `docs/部署测试环境.md`（目标 `lo_test` → 162.14.80.132） |
 | 服务器首次初始化 | `docs/部署服务器初始化.md`（PostgreSQL / nginx / SSL / OSS） |
 | 部署脚本本身 | `deploy/`（`DEPLOY_ENV=prod\|test` 选环境，差异全在 `deploy/.env.<环境>`） |
 
