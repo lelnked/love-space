@@ -12,18 +12,18 @@
 - **ai/App 生成接口**: 生成成功 / 已处理的失败返回 200 / 场景不存在 / 场景不可用 / 必填变量缺失 / 缺少匿名 ID / API Key 无效 / 响应不含调用明细
 - **ai/业务场景管理**: 创建场景 / sceneId 重复被拒绝 / sceneId 格式非法 / 更新不改 sceneId / 按关键字与状态筛选 / 禁用场景
 - **ai/业务配置页面**: 新增场景弹窗 / 编辑时 scene_id 只读 / 重复 scene_id 提示 / 禁用需确认
-- **ai/场景模型配置**: 配置主备模型 / 模型不在白名单 / 主备模型相同 / 清除备用模型
+- **ai/场景模型配置**: 配置主备模型 / 模型不在白名单 / 主备模型相同 / 清除备用模型 / 开启深度思考 / 未传深度思考视为关闭
 - **ai/提示词变量校验与渲染**: 未声明变量被指出位置 / 必填变量缺失渲染失败 / 选填变量缺失替换为空串 / 非字符串值按 JSON 文本代入 / 变量名非法或重复为声明错误
 - **ai/提示词模板发布**: 发布切换生效模板 / 发布旧版本即回退 / 未测试不能发布 / 禁用场景也可发布
 - **ai/提示词模板测试**: 测试成功置已测试 / 测试失败保留未测试 / 存在未声明变量拒绝测试 / 必填变量缺失拒绝测试 / 场景未配主模型拒绝测试 / 测试不写生成记录
 - **ai/提示词模板维护**: 新建模板自动分配 seq / 引用未声明变量也可保存 / 变量名非法被拒绝 / 修改已测试模板重置测试标记 / 生效中模板不能修改 / 版本冲突 / 模板列表按 seq 倒序
 - **ai/提示词管理页面**: 场景列表显示未发布 / 对比按钮需勾选 2~3 个 / 未测试模板发布置灰 / 发布二次确认后切换生效 / 复制为新模板
-- **ai/模型配置页面**: 未配置主模型提示 / 测试连接显示结果 / 保存模型配置
+- **ai/模型配置页面**: 未配置主模型提示 / 测试连接显示结果 / 保存模型配置 / 配置深度思考
 - **ai/模板对比页面**: 并排对比 / ids 数量非法
 - **ai/模板编辑与测试页面**: 未声明变量实时提示 / 运行测试前自动保存 / 生效中模板只读可测试 / 未测试时发布置灰
 - **ai/生成接口 IP 限流**: 同一 IP 突发超限 / 非生成接口不受影响
 - **ai/生成接口每日额度**: 匿名 ID 超出每日次数 / 全站超出每日总量 / 昨日记录不计入 / 去重不占额度 / -1 不限制 / 修改即时生效 / 配置行缺失
-- **ai/生成接口输入长度限制**: 单个变量超长 / 边界值通过 / 整体超长
+- **ai/生成接口输入长度限制**: 单个变量超长 / 边界值通过 / 整体超长 / 中文按字符计
 - **ai/生成记录与调用明细落库**: 成功生成写完整记录 / 重试与切备用逐条记明细 / 选填变量未传记 null
 - **ai/生成记录人工评价**: 首次评价 / 再次评价覆盖原评价 / 生成中的记录不能评价 / 失败记录可以评价 / 评价参数非法 / 评价留痕
 - **ai/生成记录列表查询**: 默认最近 7 天 / 日期区间含两端整日 / 开始晚于结束被拒绝 / 按未评价筛选 / 按问题标签筛选 / 组合筛选与倒序 / 非法枚举被拒绝 / 列表不含正文
@@ -31,6 +31,7 @@
 - **ai/生成记录详情**: 详情含调用明细 / 未评价记录的评价字段为空 / 记录不存在
 - **ai/生成记录详情页面**: 未评价记录保存评价 / 修改已有评价 / 生成中记录评价区置灰 / 展开调用原始返回
 - **ai/生成请求去重**: 重复提交返回原结果 / 生成中重复提交 / PROCESSING 超时就地失败 / clientRequestId 冲突 / 重复提交不受场景状态影响
+- **ai/生成调用深度思考参数**: 关闭时显式传 disabled / 开启时传 enabled 且切备用沿用 / 连接测试不传 thinking
 - **ai/生成重试、切备用与结果判定**: 主模型首次成功 / 主模型失败后重试成功 / 主模型耗尽后切备用 / 无备用模型时全部失败 / 代码块包裹的 JSON 视为成功 / 各失败状态判定 / 连接测试
 - **ai/生成额度配置**: 初始数据 / 修改单项只记录该项修改人 / 非法取值被拒绝 / 不存在的限制
 - **ai/限流配置页面**: 列表展示 / 编辑保存 / 非法输入禁止保存
@@ -116,18 +117,18 @@
 | TC-activity-WEB-007 | 富文本粘贴小表情（≤ 3 KB gif）内联为 data URL，不发起上传 | file/图片上传的界面交互#富文本粘贴小表情内联 | - | rich-text-gif-and-inline-sticker | WEB | `test-evidence/regression/activity/TC-activity-WEB-007/` | ⬜ |
 | TC-activity-WEB-008 | 富文本粘贴非白名单类型（svg）被拦并提示 | file/图片上传的界面交互#富文本粘贴非白名单类型被拦 | - | rich-text-gif-and-inline-sticker | WEB | `test-evidence/regression/activity/TC-activity-WEB-008/` | ⬜ |
 | TC-ai-IT-001 | GET /api/admin/ai/models 返回环境变量配置的模型列表 | ai/AI 调用配置来自环境变量#模型下拉来自环境变量 | api-spec.json#/paths/~1api~1admin~1ai~1models/get | ai-management | IT | `test-evidence/ai-management/TC-ai-IT-001/` | ✅ |
-| TC-ai-IT-002 | POST /api/admin/ai/scenes 创建场景成功 | ai/业务场景管理#创建场景 | api-spec.json#/paths/~1api~1admin~1ai~1scenes/post | ai-management | IT | `test-evidence/ai-management/TC-ai-IT-002/` | ✅ |
+| TC-ai-IT-002 | POST /api/admin/ai/scenes 创建场景成功 | ai/业务场景管理#创建场景 | api-spec.json#/paths/~1api~1admin~1ai~1scenes/post | ai-scene-thinking-toggle | IT | `test-evidence/ai-scene-thinking-toggle/TC-ai-IT-002/` | ✅ |
 | TC-ai-IT-003 | POST /api/admin/ai/scenes sceneId 重复返回 409 | ai/业务场景管理#sceneId 重复被拒绝 | api-spec.json#/paths/~1api~1admin~1ai~1scenes/post | ai-management | IT | `test-evidence/ai-management/TC-ai-IT-003/` | ✅ |
 | TC-ai-IT-004 | POST /api/admin/ai/scenes sceneId 格式与长度边界校验 | ai/业务场景管理#sceneId 格式非法 | api-spec.json#/paths/~1api~1admin~1ai~1scenes/post | ai-management | IT | `test-evidence/ai-management/TC-ai-IT-004/` | ✅ |
 | TC-ai-IT-005 | PUT /api/admin/ai/scenes/{id} 更新名称且忽略 body 中 sceneId | ai/业务场景管理#更新不改 sceneId | api-spec.json#/paths/~1api~1admin~1ai~1scenes~1{id}/put | ai-management | IT | `test-evidence/ai-management/TC-ai-IT-005/` | ✅ |
 | TC-ai-IT-006 | GET /api/admin/ai/scenes/page 按关键字与状态筛选 | ai/业务场景管理#按关键字与状态筛选 | api-spec.json#/paths/~1api~1admin~1ai~1scenes~1page/get | ai-management | IT | `test-evidence/ai-management/TC-ai-IT-006/` | ✅ |
 | TC-ai-IT-007 | GET /api/admin/ai/scenes/options 全量下拉与详情 404 | ai/业务场景管理#创建场景 | api-spec.json#/paths/~1api~1admin~1ai~1scenes~1options/get | ai-management | IT | `test-evidence/ai-management/TC-ai-IT-007/` | ✅ |
 | TC-ai-IT-008 | PUT /api/admin/ai/scenes/{id}/enabled 禁用场景 | ai/业务场景管理#禁用场景 | api-spec.json#/paths/~1api~1admin~1ai~1scenes~1{id}~1enabled/put | ai-management | IT | `test-evidence/ai-management/TC-ai-IT-008/` | ✅ |
-| TC-ai-IT-009 | PUT /api/admin/ai/scenes/{id}/models 配置主备模型 | ai/场景模型配置#配置主备模型 | api-spec.json#/paths/~1api~1admin~1ai~1scenes~1{id}~1models/put | ai-management | IT | `test-evidence/ai-management/TC-ai-IT-009/` | ✅ |
-| TC-ai-IT-010 | PUT /api/admin/ai/scenes/{id}/models 模型不在白名单返回 400 | ai/场景模型配置#模型不在白名单 | api-spec.json#/paths/~1api~1admin~1ai~1scenes~1{id}~1models/put | ai-management | IT | `test-evidence/ai-management/TC-ai-IT-010/` | ✅ |
-| TC-ai-IT-011 | PUT /api/admin/ai/scenes/{id}/models 主备相同返回 400 | ai/场景模型配置#主备模型相同 | api-spec.json#/paths/~1api~1admin~1ai~1scenes~1{id}~1models/put | ai-management | IT | `test-evidence/ai-management/TC-ai-IT-011/` | ✅ |
-| TC-ai-IT-012 | PUT /api/admin/ai/scenes/{id}/models 清除备用模型 | ai/场景模型配置#清除备用模型 | api-spec.json#/paths/~1api~1admin~1ai~1scenes~1{id}~1models/put | ai-management | IT | `test-evidence/ai-management/TC-ai-IT-012/` | ✅ |
-| TC-ai-IT-013 | POST /api/admin/ai/models/test-connection 连接测试 | ai/生成重试、切备用与结果判定#连接测试 | api-spec.json#/paths/~1api~1admin~1ai~1models~1test-connection/post | ai-management | IT | `test-evidence/ai-management/TC-ai-IT-013/` | ✅ |
+| TC-ai-IT-009 | PUT /api/admin/ai/scenes/{id}/models 配置主备模型 | ai/场景模型配置#配置主备模型 | api-spec.json#/paths/~1api~1admin~1ai~1scenes~1{id}~1models/put | ai-management | IT | `test-evidence/ai-scene-thinking-toggle/TC-ai-IT-009/` | ✅ |
+| TC-ai-IT-010 | PUT /api/admin/ai/scenes/{id}/models 模型不在白名单返回 400 | ai/场景模型配置#模型不在白名单 | api-spec.json#/paths/~1api~1admin~1ai~1scenes~1{id}~1models/put | ai-management | IT | `test-evidence/ai-scene-thinking-toggle/TC-ai-IT-010/` | ✅ |
+| TC-ai-IT-011 | PUT /api/admin/ai/scenes/{id}/models 主备相同返回 400 | ai/场景模型配置#主备模型相同 | api-spec.json#/paths/~1api~1admin~1ai~1scenes~1{id}~1models/put | ai-management | IT | `test-evidence/ai-scene-thinking-toggle/TC-ai-IT-011/` | ✅ |
+| TC-ai-IT-012 | PUT /api/admin/ai/scenes/{id}/models 清除备用模型 | ai/场景模型配置#清除备用模型 | api-spec.json#/paths/~1api~1admin~1ai~1scenes~1{id}~1models/put | ai-management | IT | `test-evidence/ai-scene-thinking-toggle/TC-ai-IT-012/` | ✅ |
+| TC-ai-IT-013 | POST /api/admin/ai/models/test-connection 连接测试 | ai/生成重试、切备用与结果判定#连接测试 | api-spec.json#/paths/~1api~1admin~1ai~1models~1test-connection/post | ai-management | IT | `test-evidence/ai-scene-thinking-toggle/TC-ai-IT-013/` | ✅ |
 | TC-ai-IT-014 | POST /api/admin/ai/models/test-connection 模型不在白名单返回 400 | ai/场景模型配置#模型不在白名单 | api-spec.json#/paths/~1api~1admin~1ai~1models~1test-connection/post | ai-management | IT | `test-evidence/ai-management/TC-ai-IT-014/` | ✅ |
 | TC-ai-IT-015 | POST /api/admin/ai/prompt-templates 新建模板自动分配 seq | ai/提示词模板维护#新建模板自动分配 seq | api-spec.json#/paths/~1api~1admin~1ai~1prompt-templates/post | ai-management | IT | `test-evidence/ai-management/TC-ai-IT-015/` | ✅ |
 | TC-ai-IT-016 | POST /api/admin/ai/prompt-templates 引用未声明变量也可保存 | ai/提示词模板维护#引用未声明变量也可保存 | api-spec.json#/paths/~1api~1admin~1ai~1prompt-templates/post | ai-management | IT | `test-evidence/ai-management/TC-ai-IT-016/` | ✅ |
@@ -137,7 +138,7 @@
 | TC-ai-IT-020 | PUT /api/admin/ai/prompt-templates/{id} 生效中模板不能修改 | ai/提示词模板维护#生效中模板不能修改 | api-spec.json#/paths/~1api~1admin~1ai~1prompt-templates~1{id}/put | ai-management | IT | `test-evidence/ai-management/TC-ai-IT-020/` | ✅ |
 | TC-ai-IT-021 | PUT /api/admin/ai/prompt-templates/{id} 版本冲突返回 409 | ai/提示词模板维护#版本冲突 | api-spec.json#/paths/~1api~1admin~1ai~1prompt-templates~1{id}/put | ai-management | IT | `test-evidence/ai-management/TC-ai-IT-021/` | ✅ |
 | TC-ai-IT-022 | GET /api/admin/ai/prompt-templates/page 按 seq 倒序且仅生效项 active | ai/提示词模板维护#模板列表按 seq 倒序 | api-spec.json#/paths/~1api~1admin~1ai~1prompt-templates~1page/get | ai-management | IT | `test-evidence/ai-management/TC-ai-IT-022/` | ✅ |
-| TC-ai-IT-023 | POST /api/admin/ai/prompt-templates/{id}/test 测试成功置已测试 | ai/提示词模板测试#测试成功置已测试 | api-spec.json#/paths/~1api~1admin~1ai~1prompt-templates~1{id}~1test/post | ai-management | IT | `test-evidence/ai-management/TC-ai-IT-023/` | ✅ |
+| TC-ai-IT-023 | POST /api/admin/ai/prompt-templates/{id}/test 测试成功置已测试 | ai/提示词模板测试#测试成功置已测试 | api-spec.json#/paths/~1api~1admin~1ai~1prompt-templates~1{id}~1test/post | ai-management | IT | `test-evidence/ai-scene-thinking-toggle/TC-ai-IT-023/` | ✅ |
 | TC-ai-IT-024 | POST /api/admin/ai/prompt-templates/{id}/test 模型返回非 JSON 测试失败 | ai/提示词模板测试#测试失败保留未测试 | api-spec.json#/paths/~1api~1admin~1ai~1prompt-templates~1{id}~1test/post | ai-management | IT | `test-evidence/ai-management/TC-ai-IT-024/` | ✅ |
 | TC-ai-IT-025 | POST /api/admin/ai/prompt-templates/{id}/test 存在未声明变量返回 400 | ai/提示词模板测试#存在未声明变量拒绝测试 | api-spec.json#/paths/~1api~1admin~1ai~1prompt-templates~1{id}~1test/post | ai-management | IT | `test-evidence/ai-management/TC-ai-IT-025/` | ✅ |
 | TC-ai-IT-026 | POST /api/admin/ai/prompt-templates/{id}/test 必填变量缺失返回 400 | ai/提示词模板测试#必填变量缺失拒绝测试 | api-spec.json#/paths/~1api~1admin~1ai~1prompt-templates~1{id}~1test/post | ai-management | IT | `test-evidence/ai-management/TC-ai-IT-026/` | ✅ |
@@ -152,9 +153,9 @@
 | TC-ai-IT-035 | 测试模板不产生留痕 | ai/AI 管理写操作留痕#测试不留痕 | api-spec.json#/paths/~1api~1admin~1logs~1page/get | ai-management | IT | `test-evidence/ai-generation-records/TC-ai-IT-035/` | ✅ |
 | TC-ai-IT-036 | MEMBER 角色可访问 AI 管理接口 | ai/AI 管理权限与菜单#MEMBER 可访问 AI 管理 | api-spec.json#/paths/~1api~1admin~1ai~1scenes~1page/get | ai-management | IT | `test-evidence/ai-limit-config/TC-ai-IT-036/` | ✅ |
 | TC-ai-IT-037 | 未登录访问 AI 管理接口返回 401 | ai/AI 管理权限与菜单#未登录被拒绝 | api-spec.json#/paths/~1api~1admin~1ai~1scenes~1page/get | ai-management | IT | `test-evidence/ai-generation-records/TC-ai-IT-037/` | ✅ |
-| TC-ai-IT-038 | POST /api/app/ai/generations 生成成功 | ai/App 生成接口#生成成功 | api-spec.json#/paths/~1api~1app~1ai~1generations/post | ai-management | IT | `test-evidence/ai-limit-config/TC-ai-IT-038/` | ✅ |
-| TC-ai-IT-039 | 生成成功写完整生成记录与调用明细 | ai/生成记录与调用明细落库#成功生成写完整记录 | api-spec.json#/paths/~1api~1app~1ai~1generations/post | ai-management | IT | `test-evidence/ai-generation-records/TC-ai-IT-039/` | ✅ |
-| TC-ai-IT-040 | 生成记录请求快照不含密钥与认证头 | ai/AI 调用配置来自环境变量#请求快照不含密钥 | api-spec.json#/paths/~1api~1app~1ai~1generations/post | ai-management | IT | `test-evidence/ai-management/TC-ai-IT-040/` | ✅ |
+| TC-ai-IT-038 | POST /api/app/ai/generations 生成成功 | ai/App 生成接口#生成成功 | api-spec.json#/paths/~1api~1app~1ai~1generations/post | ai-management | IT | `test-evidence/ai-scene-thinking-toggle/TC-ai-IT-038/` | ✅ |
+| TC-ai-IT-039 | 生成成功写完整生成记录与调用明细 | ai/生成记录与调用明细落库#成功生成写完整记录 | api-spec.json#/paths/~1api~1app~1ai~1generations/post | ai-management | IT | `test-evidence/ai-scene-thinking-toggle/TC-ai-IT-039/` | ✅ |
+| TC-ai-IT-040 | 生成记录请求快照不含密钥与认证头 | ai/AI 调用配置来自环境变量#请求快照不含密钥 | api-spec.json#/paths/~1api~1app~1ai~1generations/post | ai-scene-thinking-toggle | IT | `test-evidence/ai-scene-thinking-toggle/TC-ai-IT-040/` | ✅ |
 | TC-ai-IT-041 | POST /api/app/ai/generations 已处理的失败返回 200 | ai/App 生成接口#已处理的失败返回 200 | api-spec.json#/paths/~1api~1app~1ai~1generations/post | ai-management | IT | `test-evidence/ai-management/TC-ai-IT-041/` | ✅ |
 | TC-ai-IT-042 | POST /api/app/ai/generations 场景不存在返回 404 | ai/App 生成接口#场景不存在 | api-spec.json#/paths/~1api~1app~1ai~1generations/post | ai-management | IT | `test-evidence/ai-management/TC-ai-IT-042/` | ✅ |
 | TC-ai-IT-043 | POST /api/app/ai/generations 场景不可用返回 409 且不写记录 | ai/App 生成接口#场景不可用 | api-spec.json#/paths/~1api~1app~1ai~1generations/post | ai-management | IT | `test-evidence/ai-management/TC-ai-IT-043/` | ✅ |
@@ -162,7 +163,7 @@
 | TC-ai-IT-045 | POST /api/app/ai/generations 请求头与 body 参数校验 | ai/App 生成接口#缺少匿名 ID | api-spec.json#/paths/~1api~1app~1ai~1generations/post | ai-management | IT | `test-evidence/ai-management/TC-ai-IT-045/` | ✅ |
 | TC-ai-IT-046 | POST /api/app/ai/generations API Key 无效返回 401 | ai/App 生成接口#API Key 无效 | api-spec.json#/paths/~1api~1app~1ai~1generations/post | ai-management | IT | `test-evidence/ai-management/TC-ai-IT-046/` | ✅ |
 | TC-ai-IT-047 | POST /api/app/ai/generations 响应不含调用明细 | ai/App 生成接口#响应不含调用明细 | api-spec.json#/paths/~1api~1app~1ai~1generations/post | ai-management | IT | `test-evidence/ai-management/TC-ai-IT-047/` | ✅ |
-| TC-ai-IT-048 | 重试与切备用逐条写调用明细 | ai/生成记录与调用明细落库#重试与切备用逐条记明细 | api-spec.json#/paths/~1api~1app~1ai~1generations/post | ai-management | IT | `test-evidence/ai-management/TC-ai-IT-048/` | ✅ |
+| TC-ai-IT-048 | 重试与切备用逐条写调用明细 | ai/生成记录与调用明细落库#重试与切备用逐条记明细 | api-spec.json#/paths/~1api~1app~1ai~1generations/post | ai-management | IT | `test-evidence/ai-scene-thinking-toggle/TC-ai-IT-048/` | ✅ |
 | TC-ai-IT-049 | 选填变量未传时生成记录 inputs 记 null | ai/生成记录与调用明细落库#选填变量未传记 null | api-spec.json#/paths/~1api~1app~1ai~1generations/post | ai-management | IT | `test-evidence/ai-management/TC-ai-IT-049/` | ✅ |
 | TC-ai-IT-050 | 重复提交返回原结果且不再调用模型 | ai/生成请求去重#重复提交返回原结果 | api-spec.json#/paths/~1api~1app~1ai~1generations/post | ai-management | IT | `test-evidence/ai-limit-config/TC-ai-IT-050/` | ✅ |
 | TC-ai-IT-051 | 生成中重复提交返回 409 | ai/生成请求去重#生成中重复提交 | api-spec.json#/paths/~1api~1app~1ai~1generations/post | ai-management | IT | `test-evidence/ai-management/TC-ai-IT-051/` | ✅ |
@@ -173,9 +174,10 @@
 | TC-ai-IT-056 | 全站超出每日总量返回 429 | ai/生成接口每日额度#全站超出每日总量 | api-spec.json#/paths/~1api~1app~1ai~1generations/post | ai-limit-config | IT | `test-evidence/ai-limit-config/TC-ai-IT-056/` | ✅ |
 | TC-ai-IT-057 | 北京时间昨日记录不计入今日额度 | ai/生成接口每日额度#昨日记录不计入 | api-spec.json#/paths/~1api~1app~1ai~1generations/post | ai-limit-config | IT | `test-evidence/ai-limit-config/TC-ai-IT-057/` | ✅ |
 | TC-ai-IT-058 | 去重命中不占用额度 | ai/生成接口每日额度#去重不占额度 | api-spec.json#/paths/~1api~1app~1ai~1generations/post | ai-limit-config | IT | `test-evidence/ai-limit-config/TC-ai-IT-058/` | ✅ |
-| TC-ai-IT-059 | 单个变量 501 字符返回 400 | ai/生成接口输入长度限制#单个变量超长 | api-spec.json#/paths/~1api~1app~1ai~1generations/post | ai-management | IT | `test-evidence/ai-management/TC-ai-IT-059/` | ✅ |
-| TC-ai-IT-060 | 单个变量恰 500 字符通过长度校验 | ai/生成接口输入长度限制#边界值通过 | api-spec.json#/paths/~1api~1app~1ai~1generations/post | ai-management | IT | `test-evidence/ai-management/TC-ai-IT-060/` | ✅ |
-| TC-ai-IT-061 | inputs 整体超过 4KB 返回 400 | ai/生成接口输入长度限制#整体超长 | api-spec.json#/paths/~1api~1app~1ai~1generations/post | ai-management | IT | `test-evidence/ai-management/TC-ai-IT-061/` | ✅ |
+| TC-ai-IT-059 | 单个变量 2001 字符返回 400 | ai/生成接口输入长度限制#单个变量超长 | api-spec.json#/paths/~1api~1app~1ai~1generations/post | ai-generation-input-limits | IT | `test-evidence/ai-generation-input-limits/TC-ai-IT-059/` | ✅ |
+| TC-ai-IT-060 | 单个变量恰 2000 字符通过长度校验 | ai/生成接口输入长度限制#边界值通过 | api-spec.json#/paths/~1api~1app~1ai~1generations/post | ai-generation-input-limits | IT | `test-evidence/ai-generation-input-limits/TC-ai-IT-060/` | ✅ |
+| TC-ai-IT-061 | inputs 整体超过 20000 字符返回 400 | ai/生成接口输入长度限制#整体超长 | api-spec.json#/paths/~1api~1app~1ai~1generations/post | ai-generation-input-limits | IT | `test-evidence/ai-generation-input-limits/TC-ai-IT-061/` | ✅ |
+| TC-ai-IT-103 | 2000 个中文字符通过长度校验 | ai/生成接口输入长度限制#中文按字符计 | api-spec.json#/paths/~1api~1app~1ai~1generations/post | ai-generation-input-limits | IT | `test-evidence/ai-generation-input-limits/TC-ai-IT-103/` | ✅ |
 | TC-ai-IT-062 | nginx 同一 IP 突发超限返回 429 | ai/生成接口 IP 限流#同一 IP 突发超限 | api-spec.json#/paths/~1api~1app~1ai~1generations/post | ai-management | IT | - | ⬜ |
 | TC-ai-IT-063 | nginx 限流不影响非生成接口 | ai/生成接口 IP 限流#非生成接口不受影响 | api-spec.json#/paths/~1api~1app~1cities/get | ai-management | IT | - | ⬜ |
 | TC-ai-IT-064 | 测试期间模板被他人修改则结果不写回 | ai/提示词模板测试#测试成功置已测试 | api-spec.json#/paths/~1api~1admin~1ai~1prompt-templates~1{id}~1test/post | ai-management | IT | `test-evidence/ai-management/TC-ai-IT-064/` | ✅ |
@@ -189,7 +191,7 @@
 | TC-ai-IT-072 | GET /api/admin/ai/generations/page requestId / templateId / model 精确匹配 | ai/生成记录列表查询#组合筛选与倒序 | api-spec.json#/paths/~1api~1admin~1ai~1generations~1page/get | ai-generation-records | IT | `test-evidence/ai-generation-records/TC-ai-IT-072/` | ✅ |
 | TC-ai-IT-073 | GET /api/admin/ai/generations/page 非法日期与枚举返回 400 | ai/生成记录列表查询#非法枚举被拒绝 | api-spec.json#/paths/~1api~1admin~1ai~1generations~1page/get | ai-generation-records | IT | `test-evidence/ai-generation-records/TC-ai-IT-073/` | ✅ |
 | TC-ai-IT-074 | GET /api/admin/ai/generations/page 列表条目仅十一个字段、不含正文 | ai/生成记录列表查询#列表不含正文 | api-spec.json#/paths/~1api~1admin~1ai~1generations~1page/get | ai-generation-records | IT | `test-evidence/ai-generation-records/TC-ai-IT-074/` | ✅ |
-| TC-ai-IT-075 | GET /api/admin/ai/generations/{id} 详情含调用明细且查看不留痕 | ai/生成记录详情#详情含调用明细 | api-spec.json#/paths/~1api~1admin~1ai~1generations~1{id}/get | ai-generation-records | IT | `test-evidence/ai-generation-records/TC-ai-IT-075/` | ✅ |
+| TC-ai-IT-075 | GET /api/admin/ai/generations/{id} 详情含调用明细且查看不留痕 | ai/生成记录详情#详情含调用明细 | api-spec.json#/paths/~1api~1admin~1ai~1generations~1{id}/get | ai-generation-records | IT | `test-evidence/ai-scene-thinking-toggle/TC-ai-IT-075/` | ✅ |
 | TC-ai-IT-076 | GET /api/admin/ai/generations/{id} 未评价记录评价字段为空 | ai/生成记录详情#未评价记录的评价字段为空 | api-spec.json#/paths/~1api~1admin~1ai~1generations~1{id}/get | ai-generation-records | IT | `test-evidence/ai-generation-records/TC-ai-IT-076/` | ✅ |
 | TC-ai-IT-077 | GET /api/admin/ai/generations/{id} 记录不存在返回 404 | ai/生成记录详情#记录不存在 | api-spec.json#/paths/~1api~1admin~1ai~1generations~1{id}/get | ai-generation-records | IT | `test-evidence/ai-generation-records/TC-ai-IT-077/` | ✅ |
 | TC-ai-IT-078 | PUT /api/admin/ai/generations/{id}/rating 首次评价 | ai/生成记录人工评价#首次评价 | api-spec.json#/paths/~1api~1admin~1ai~1generations~1{id}~1rating/put | ai-generation-records | IT | `test-evidence/ai-generation-records/TC-ai-IT-078/` | ✅ |
@@ -212,6 +214,11 @@
 | TC-ai-IT-095 | 两项额度均为 -1 时不做额度检查 | ai/生成接口每日额度#-1 不限制 | api-spec.json#/paths/~1api~1app~1ai~1generations/post | ai-limit-config | IT | `test-evidence/ai-limit-config/TC-ai-IT-095/` | ✅ |
 | TC-ai-IT-096 | 后台修改额度后下一次请求即生效（无需重启 app） | ai/生成接口每日额度#修改即时生效 | api-spec.json#/paths/~1api~1app~1ai~1generations/post | ai-limit-config | IT | `test-evidence/ai-limit-config/TC-ai-IT-096/` | ✅ |
 | TC-ai-IT-097 | 配置行缺失时生成接口返回 500 且不写记录 | ai/生成接口每日额度#配置行缺失 | api-spec.json#/paths/~1api~1app~1ai~1generations/post | ai-limit-config | IT | `test-evidence/ai-limit-config/TC-ai-IT-097/` | ✅ |
+| TC-ai-IT-098 | PUT /api/admin/ai/scenes/{id}/models 开启深度思考 | ai/场景模型配置#开启深度思考 | api-spec.json#/paths/~1api~1admin~1ai~1scenes~1{id}~1models/put | ai-scene-thinking-toggle | IT | `test-evidence/ai-scene-thinking-toggle/TC-ai-IT-098/` | ✅ |
+| TC-ai-IT-099 | PUT /api/admin/ai/scenes/{id}/models 未传或 null 的 thinkingEnabled 视为关闭 | ai/场景模型配置#未传深度思考视为关闭 | api-spec.json#/paths/~1api~1admin~1ai~1scenes~1{id}~1models/put | ai-scene-thinking-toggle | IT | `test-evidence/ai-scene-thinking-toggle/TC-ai-IT-099/` | ✅ |
+| TC-ai-IT-100 | 场景关闭深度思考时生成参数快照 thinkingEnabled=false | ai/生成调用深度思考参数#关闭时显式传 disabled | api-spec.json#/paths/~1api~1admin~1ai~1generations~1{id}/get | ai-scene-thinking-toggle | IT | `test-evidence/ai-scene-thinking-toggle/TC-ai-IT-100/` | ✅ |
+| TC-ai-IT-101 | 场景开启深度思考且切备用时参数快照 thinkingEnabled=true | ai/生成调用深度思考参数#开启时传 enabled 且切备用沿用 | api-spec.json#/paths/~1api~1admin~1ai~1generations~1{id}/get | ai-scene-thinking-toggle | IT | `test-evidence/ai-scene-thinking-toggle/TC-ai-IT-101/` | ✅ |
+| TC-ai-IT-102 | POST /api/admin/ai/models/test-connection 场景开启深度思考时连接测试行为不变 | ai/生成调用深度思考参数#连接测试不传 thinking | api-spec.json#/paths/~1api~1admin~1ai~1models~1test-connection/post | ai-scene-thinking-toggle | IT | `test-evidence/ai-scene-thinking-toggle/TC-ai-IT-102/` | ✅ |
 | TC-ai-WEB-001 | 侧栏「AI 管理」菜单及子菜单顺序 | ai/AI 管理权限与菜单#侧栏菜单 | - | ai-limit-config | WEB | `test-evidence/regression/ai/TC-ai-WEB-001/` | ✅ |
 | TC-ai-WEB-002 | 业务配置页新增场景弹窗 | ai/业务配置页面#新增场景弹窗 | - | ai-management | WEB | `test-evidence/regression/ai/TC-ai-WEB-002/` | ✅ |
 | TC-ai-WEB-003 | 编辑场景时 scene_id 只读 | ai/业务配置页面#编辑时 scene_id 只读 | - | ai-management | WEB | `test-evidence/regression/ai/TC-ai-WEB-003/` | ✅ |
@@ -245,6 +252,7 @@
 | TC-ai-WEB-031 | 限流配置列表展示 | ai/限流配置页面#列表展示 | - | ai-limit-config | WEB | `test-evidence/regression/ai/TC-ai-WEB-031/` | ✅ |
 | TC-ai-WEB-032 | 编辑限流配置并保存 | ai/限流配置页面#编辑保存 | - | ai-limit-config | WEB | `test-evidence/regression/ai/TC-ai-WEB-032/` | ✅ |
 | TC-ai-WEB-033 | 非法输入禁止保存 | ai/限流配置页面#非法输入禁止保存 | - | ai-limit-config | WEB | `test-evidence/regression/ai/TC-ai-WEB-033/` | ✅ |
+| TC-ai-WEB-034 | 配置弹窗开启深度思考并保存回显 | ai/模型配置页面#配置深度思考 | - | ai-scene-thinking-toggle | WEB | `test-evidence/ai-scene-thinking-toggle/TC-ai-WEB-034/` | ⬜ |
 | TC-article-IT-001 | POST /api/admin/article-categories 创建栏目 | article/文章栏目管理#创建栏目 | api-spec.json#/paths/~1api~1admin~1article-categories/post | article-and-featured-feed | IT | `test-evidence/article-cover-title-intro-tags/TC-article-IT-001/` | ✅ |
 | TC-article-IT-002 | POST /api/admin/article-categories 缺必填被拒绝 | article/文章栏目管理#缺少必填项被拒绝 | api-spec.json#/paths/~1api~1admin~1article-categories/post | article-and-featured-feed | IT | `test-evidence/article-cover-title-intro-tags/TC-article-IT-002/` | ✅ |
 | TC-article-IT-003 | PUT /api/admin/article-categories/{id} 更新栏目 | article/文章栏目管理#创建栏目 | api-spec.json#/paths/~1api~1admin~1article-categories~1{id}/put | article-and-featured-feed | IT | `test-evidence/article-cover-title-intro-tags/TC-article-IT-003/` | ✅ |
@@ -551,13 +559,9 @@
 - ⚠ 未覆盖：operation-log/留痕字段取值与敏感信息脱敏#更新类操作记录目标 id 无 WEB/APP 用例且无 UT(@scenario) 覆盖
 - ⚠ 未覆盖：operation-log/留痕字段取值与敏感信息脱敏#嵌套资源的 target 取父级 id 无 WEB/APP 用例且无 UT(@scenario) 覆盖
 - ⚠ 未覆盖：operation-log/运营写操作留痕#登录不产生日志 无 WEB/APP 用例且无 UT(@scenario) 覆盖
-- ⚠ 状态存疑：TC-route-IT-020 标 ✅ 但存证目录不存在
-- ⚠ 状态存疑：TC-route-IT-021 标 ✅ 但存证目录不存在
-- ⚠ 状态存疑：TC-route-IT-022 标 ✅ 但存证目录不存在
-- ⚠ 状态存疑：TC-route-IT-023 标 ✅ 但存证目录不存在
 
 ## 测试统计
-- 总数：419
-- ✅ 通过：327 (78.0%)
+- 总数：426
+- ✅ 通过：333 (78.2%)
 - ❌ 失败：0
-- ⬜ 未测：92
+- ⬜ 未测：93

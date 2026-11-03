@@ -263,7 +263,7 @@ class AiGenerationTest extends AiGenerationTestSupport {
     // @scenario: ai/生成接口输入长度限制#单个变量超长
     @Test
     void valueTooLong() throws Exception {
-        submit(unique("anon-"), readyScene().getSceneId(), unique("c-"), Map.of("age", 1, "user_input", "x".repeat(501)))
+        submit(unique("anon-"), readyScene().getSceneId(), unique("c-"), Map.of("age", 1, "user_input", "x".repeat(2001)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("user_input")));
         verify(aiGenerator, never()).generate(anyList(), any(), any(), anyBoolean());
@@ -274,7 +274,16 @@ class AiGenerationTest extends AiGenerationTestSupport {
     void valueAtLimitPasses() throws Exception {
         AiScene scene = readyScene();
         when(aiGenerator.generate(anyList(), any(), any(), anyBoolean())).thenReturn(success("{\"a\":1}", 1));
-        submit(unique("anon-"), scene.getSceneId(), unique("c-"), Map.of("age", 1, "user_input", "x".repeat(500)))
+        submit(unique("anon-"), scene.getSceneId(), unique("c-"), Map.of("age", 1, "user_input", "x".repeat(2000)))
+                .andExpect(status().isOk());
+    }
+
+    // @scenario: ai/生成接口输入长度限制#中文按字符计
+    @Test
+    void chineseCountedByChars() throws Exception {
+        AiScene scene = readyScene();
+        when(aiGenerator.generate(anyList(), any(), any(), anyBoolean())).thenReturn(success("{\"a\":1}", 1));
+        submit(unique("anon-"), scene.getSceneId(), unique("c-"), Map.of("age", 1, "user_input", "中".repeat(2000)))
                 .andExpect(status().isOk());
     }
 
@@ -282,10 +291,13 @@ class AiGenerationTest extends AiGenerationTestSupport {
     @Test
     void inputsTooLarge() throws Exception {
         Map<String, Object> inputs = new java.util.HashMap<>();
-        for (int i = 0; i < 10; i++) {
-            inputs.put("v" + i, "x".repeat(450));
+        for (int i = 0; i < 11; i++) {
+            inputs.put("v" + i, "x".repeat(1900));
         }
-        submit(unique("anon-"), readyScene().getSceneId(), unique("c-"), inputs).andExpect(status().isBadRequest());
+        submit(unique("anon-"), readyScene().getSceneId(), unique("c-"), inputs)
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("整体")));
+        verify(aiGenerator, never()).generate(anyList(), any(), any(), anyBoolean());
     }
 
     // @scenario: ai/生成接口每日额度#匿名 ID 超出每日次数

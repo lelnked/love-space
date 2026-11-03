@@ -2329,7 +2329,7 @@
             "type": "object",
             "additionalProperties": true,
             "nullable": true,
-            "description": "变量取值 {变量名: 值}（可空）；每个值 ≤500 字符，整体序列化后 ≤4KB；非字符串按 JSON 文本代入"
+            "description": "变量取值 {变量名: 值}（可空）；每个值 ≤2000 字符，整体序列化后 ≤20000 字符；非字符串按 JSON 文本代入"
           }
         }
       },

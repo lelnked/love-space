@@ -27,7 +27,6 @@ import org.springframework.transaction.support.TransactionTemplate;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
-import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
@@ -46,8 +45,8 @@ import java.util.stream.Collectors;
 public class AiGenerationService {
 
     static final int MAX_ANONYMOUS_ID_CHARS = 128;
-    static final int MAX_INPUT_VALUE_CHARS = 500;
-    static final int MAX_INPUTS_BYTES = 4096;
+    static final int MAX_INPUT_VALUE_CHARS = 2000;
+    static final int MAX_INPUTS_CHARS = 20000;
 
     private final AiSceneRepository sceneRepository;
     private final AiPromptTemplateRepository templateRepository;
@@ -139,8 +138,8 @@ public class AiGenerationService {
                 throw new IllegalArgumentException("变量 " + entry.getKey() + " 超过 " + MAX_INPUT_VALUE_CHARS + " 字符");
             }
         }
-        if (objectMapper.writeValueAsString(inputs).getBytes(StandardCharsets.UTF_8).length > MAX_INPUTS_BYTES) {
-            throw new IllegalArgumentException("inputs 整体超过 4KB");
+        if (objectMapper.writeValueAsString(inputs).length() > MAX_INPUTS_CHARS) {
+            throw new IllegalArgumentException("inputs 整体超过 " + MAX_INPUTS_CHARS + " 字符");
         }
     }
 

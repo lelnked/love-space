@@ -905,48 +905,63 @@
 **执行存证**: `test-evidence/ai-limit-config/TC-ai-IT-058/`
 **最后更新**: 2026-10-26
 
-### TC-ai-IT-059: 单个变量 501 字符返回 400
+### TC-ai-IT-059: 单个变量 2001 字符返回 400
 **关联需求**: ai/生成接口输入长度限制#单个变量超长
 **关联契约**: api-spec.json#/paths/~1api~1app~1ai~1generations/post
-**来源**: ai-management
+**来源**: ai-generation-input-limits
 **优先级**: P1
 **测试步骤**:
 1. 前置：可用场景
-2. 提交 inputs `{"user_input":"<501 个字符>"}`
+2. 提交 inputs `{"user_input":"<2001 个字符>"}`
 3. psql 查询该 clientRequestId 记录
 **预期结果**: 返回 400，`message` 含 `user_input`；无记录
 **状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**: `test-evidence/ai-management/TC-ai-IT-059/`
-**最后更新**: 2026-10-24
+**执行存证**: `test-evidence/ai-generation-input-limits/TC-ai-IT-059/`
+**最后更新**: 2026-11-03
 
-### TC-ai-IT-060: 单个变量恰 500 字符通过长度校验
+### TC-ai-IT-060: 单个变量恰 2000 字符通过长度校验
 **关联需求**: ai/生成接口输入长度限制#边界值通过
 **关联契约**: api-spec.json#/paths/~1api~1app~1ai~1generations/post
-**来源**: ai-management
+**来源**: ai-generation-input-limits
 **优先级**: P1
 **测试步骤**:
 1. 前置：admin/app 进程配置指向本地假方舟服务（ARK_BASE_URL 指向 mock）或真实测试 Key；可用场景，生效模板声明选填 `user_input`
-2. 提交 inputs `{"user_input":"<500 个字符>"}`（整体 ≤ 4KB）
+2. 提交 inputs `{"user_input":"<2000 个字符>"}`（整体 ≤ 20000 字符）
 **预期结果**: 不返回 400（返回 200，status 为生成结果）
 **状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**: `test-evidence/ai-management/TC-ai-IT-060/`
-**最后更新**: 2026-10-24
+**执行存证**: `test-evidence/ai-generation-input-limits/TC-ai-IT-060/`
+**最后更新**: 2026-11-03
 
-### TC-ai-IT-061: inputs 整体超过 4KB 返回 400
+### TC-ai-IT-061: inputs 整体超过 20000 字符返回 400
 **关联需求**: ai/生成接口输入长度限制#整体超长
 **关联契约**: api-spec.json#/paths/~1api~1app~1ai~1generations/post
-**来源**: ai-management
+**来源**: ai-generation-input-limits
 **优先级**: P1
 **测试步骤**:
 1. 前置：可用场景
-2. 提交 inputs 含 `v1`…`v10` 共 10 个变量，各 450 个 ASCII 字符（整体序列化 > 4096 字节）
+2. 提交 inputs 含 `v1`…`v11` 共 11 个变量，各 1900 个 ASCII 字符（整体序列化 > 20000 字符）
+3. psql 查询该 clientRequestId 记录
 **预期结果**: 返回 400，`message` 提示整体超限；无记录
 **状态**: ✅ 通过
 **执行方式**: api-test-runner
-**执行存证**: `test-evidence/ai-management/TC-ai-IT-061/`
-**最后更新**: 2026-10-24
+**执行存证**: `test-evidence/ai-generation-input-limits/TC-ai-IT-061/`
+**最后更新**: 2026-11-03
+
+### TC-ai-IT-103: 2000 个中文字符通过长度校验
+**关联需求**: ai/生成接口输入长度限制#中文按字符计
+**关联契约**: api-spec.json#/paths/~1api~1app~1ai~1generations/post
+**来源**: ai-generation-input-limits
+**优先级**: P1
+**测试步骤**:
+1. 前置：admin/app 进程配置指向本地假方舟服务（ARK_BASE_URL 指向 mock）或真实测试 Key；可用场景，生效模板声明选填 `user_input`
+2. 提交 inputs `{"user_input":"<2000 个中文字符>"}`（UTF-8 约 6000 字节，整体字符数 ≤ 20000）
+**预期结果**: 不返回 400（返回 200，status 为生成结果）
+**状态**: ✅ 通过
+**执行方式**: api-test-runner
+**执行存证**: `test-evidence/ai-generation-input-limits/TC-ai-IT-103/`
+**最后更新**: 2026-11-03
 
 ### TC-ai-IT-062: nginx 同一 IP 突发超限返回 429
 **关联需求**: ai/生成接口 IP 限流#同一 IP 突发超限

@@ -2444,7 +2444,7 @@
           "inputs": {
             "type": "object",
             "additionalProperties": true,
-            "description": "{变量名: 值}；每个值 ≤500 字符、整体序列化后 ≤4KB，超限 400；值非字符串时按 JSON 文本代入"
+            "description": "{变量名: 值}；每个值 ≤2000 字符、整体序列化后 ≤20000 字符，超限 400；值非字符串时按 JSON 文本代入"
           }
         }
       },
