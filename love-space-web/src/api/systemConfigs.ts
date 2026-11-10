@@ -1,7 +1,7 @@
 import { apiClient } from "./client";
 import type { Page } from "./types";
 
-/** 系统配置（value 为任意 JSON 原值）。 */
+/** 系统配置（key 由系统预置，value 结构由 key 决定）。 */
 export interface SystemConfigItem {
   id: string;
   key: string;
@@ -12,17 +12,15 @@ export interface SystemConfigItem {
   updatedAt: string | null;
 }
 
+/** ios_llm_popup 配置项的 value 结构。 */
+export interface IosLlmPopupConfigValue {
+  enabled: boolean;
+}
+
 export interface SystemConfigQuery {
   keyword?: string;
   page?: number;
   size?: number;
-}
-
-export interface SystemConfigCreateRequest {
-  key: string;
-  name: string;
-  value: unknown;
-  description?: string | null;
 }
 
 export interface SystemConfigUpdateRequest {
@@ -45,16 +43,7 @@ export async function getSystemConfig(id: string): Promise<SystemConfigItem> {
   return data;
 }
 
-export async function createSystemConfig(body: SystemConfigCreateRequest): Promise<SystemConfigItem> {
-  const { data } = await apiClient.post<SystemConfigItem>("/api/admin/system-configs", body);
-  return data;
-}
-
 export async function updateSystemConfig(id: string, body: SystemConfigUpdateRequest): Promise<SystemConfigItem> {
   const { data } = await apiClient.put<SystemConfigItem>(`/api/admin/system-configs/${id}`, body);
   return data;
-}
-
-export async function deleteSystemConfig(id: string): Promise<void> {
-  await apiClient.delete(`/api/admin/system-configs/${id}`);
 }

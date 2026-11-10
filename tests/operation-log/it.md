@@ -315,19 +315,18 @@
 **执行存证**: `test-evidence/ai-limit-config/TC-operation-log-IT-019/`
 **最后更新**: 2026-10-26
 
-### TC-operation-log-IT-020: 系统配置新增、编辑、删除后异步产生 system-config 三条留痕
-**关联需求**: operation-log/运营写操作留痕#系统配置增改删留痕
+### TC-operation-log-IT-020: 修改系统配置后异步产生 system-config:update 留痕
+**关联需求**: operation-log/运营写操作留痕#系统配置修改留痕
 **关联契约**: api-spec.json#/paths/~1api~1admin~1logs~1page/get
 **来源**: add-system-config
 **优先级**: P1
 **测试步骤**:
 1. POST /api/admin/auth/login，body `{"username":"admin","password":"8@y2eoRLyStM*UVU"}`，取 JWT token
-2. POST /api/admin/system-configs，body `{"key":"log.k_<s>","name":"留痕测试","value":1}`，记录 id C
-3. PUT /api/admin/system-configs/{C}，body `{"name":"留痕测试-改","value":2}`
-4. DELETE /api/admin/system-configs/{C}
-5. 轮询 GET /api/admin/logs/page?username=admin&module=system-config&page=1&size=20（最多 20 次、间隔 100ms），直到 `create`、`update`、`delete` 三条新记录均出现
-**预期结果**: 步骤 2/3/4 依次返回 201 / 200 / 204；轮询在超时前命中，存在 `module=system-config`、`username=admin` 的三条记录：`action=create` 的 `target` 为 null，`action=update` 与 `action=delete` 的 `target` 均为 C（字符串形式）
-**状态**: ✅ 通过
+2. GET /api/admin/system-configs/page?keyword=ios_llm_popup&page=1&size=20，记录 id C
+3. PUT /api/admin/system-configs/{C}，body `{"name":"iOS LLM 弹窗开关","value":{"enabled":true},"description":"控制 iOS 系统调用 LLM 时是否需要弹窗"}`
+4. 轮询 GET /api/admin/logs/page?username=admin&module=system-config&page=1&size=20（最多 20 次、间隔 100ms），直到 `update` 新记录出现
+**预期结果**: 步骤 3 返回 200；轮询在超时前命中，存在 `module=system-config`、`action=update`、`username=admin`、`target` 为 C（字符串形式）的记录
+**状态**: ⬜ 未测试
 **执行方式**: api-test-runner
 **执行存证**: `test-evidence/add-system-config/TC-operation-log-IT-020/`
-**最后更新**: 2026-11-10
+**最后更新**: -

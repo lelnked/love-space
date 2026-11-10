@@ -29,7 +29,7 @@ class SystemConfigReadIT extends AbstractPostgresIntegrationTest {
     @BeforeEach
     void setUp() {
         repository.deleteAll();
-        save("home.notice", "{\"text\":\"hi\"}");
+        save("ios_llm_popup", "{\"enabled\":true}");
         save("a.one", "1");
         save("b.two", "[1,2]");
     }
@@ -46,10 +46,10 @@ class SystemConfigReadIT extends AbstractPostgresIntegrationTest {
     // @scenario: system-config/App 查询系统配置#单个 key 查询
     @Test
     void getByKey() throws Exception {
-        mockMvc.perform(get("/api/app/system-configs/home.notice").header("X-API-Key", TEST_API_KEY))
+        mockMvc.perform(get("/api/app/system-configs/ios_llm_popup").header("X-API-Key", TEST_API_KEY))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.key").value("home.notice"))
-                .andExpect(jsonPath("$.value.text").value("hi"))
+                .andExpect(jsonPath("$.key").value("ios_llm_popup"))
+                .andExpect(jsonPath("$.value.enabled").value(true))
                 .andExpect(jsonPath("$.name").doesNotExist())
                 .andExpect(jsonPath("$.description").doesNotExist());
     }
@@ -57,14 +57,14 @@ class SystemConfigReadIT extends AbstractPostgresIntegrationTest {
     // @scenario: system-config/后台编辑系统配置#编辑 value 后 App 立即读到新值
     @Test
     void readsLatestValueWithoutCache() throws Exception {
-        mockMvc.perform(get("/api/app/system-configs/home.notice").header("X-API-Key", TEST_API_KEY))
-                .andExpect(jsonPath("$.value.text").value("hi"));
-        SystemConfig c = repository.findByKey("home.notice").orElseThrow();
-        c.setValue("{\"text\":\"新\"}");
+        mockMvc.perform(get("/api/app/system-configs/ios_llm_popup").header("X-API-Key", TEST_API_KEY))
+                .andExpect(jsonPath("$.value.enabled").value(true));
+        SystemConfig c = repository.findByKey("ios_llm_popup").orElseThrow();
+        c.setValue("{\"enabled\":false}");
         repository.save(c);
-        mockMvc.perform(get("/api/app/system-configs/home.notice").header("X-API-Key", TEST_API_KEY))
+        mockMvc.perform(get("/api/app/system-configs/ios_llm_popup").header("X-API-Key", TEST_API_KEY))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.value.text").value("新"));
+                .andExpect(jsonPath("$.value.enabled").value(false));
     }
 
     // @scenario: system-config/App 查询系统配置#单个 key 不存在返回 404
@@ -105,6 +105,6 @@ class SystemConfigReadIT extends AbstractPostgresIntegrationTest {
     // @scenario: system-config/App 查询系统配置#缺少 API-key 返回 401
     @Test
     void missingApiKeyRejected() throws Exception {
-        mockMvc.perform(get("/api/app/system-configs/home.notice")).andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/app/system-configs/ios_llm_popup")).andExpect(status().isUnauthorized());
     }
 }

@@ -1,11 +1,9 @@
 package com.loves.space.modules.systemconfig.service;
 
-import com.loves.space.common.exception.ConflictException;
 import com.loves.space.common.exception.ResourceNotFoundException;
 import com.loves.space.common.page.PageQuery;
 import com.loves.space.common.page.PageResponseMapper;
 import com.loves.space.common.page.PageResponseMapper.PageResponse;
-import com.loves.space.modules.systemconfig.dto.SystemConfigCreateRequest;
 import com.loves.space.modules.systemconfig.dto.SystemConfigItemResponse;
 import com.loves.space.modules.systemconfig.dto.SystemConfigUpdateRequest;
 import com.loves.space.modules.systemconfig.entity.SystemConfig;
@@ -20,13 +18,14 @@ import tools.jackson.databind.JsonNode;
 
 import java.util.UUID;
 
-/** 系统配置管理。 */
+/** 系统配置管理（预置 key，仅提供查询与按 key 结构校验的编辑更新）。 */
 @Service
 @Transactional
 public class SystemConfigService {
 
     /** value 序列化后的最大长度。 */
     static final int MAX_VALUE_LENGTH = 65535;
+    static final String KEY_IOS_LLM_POPUP = "ios_llm_popup";
 
     private final SystemConfigRepository repository;
 
@@ -59,46 +58,35 @@ public class SystemConfigService {
         return SystemConfigItemResponse.from(find(id));
     }
 
-    public SystemConfigItemResponse create(SystemConfigCreateRequest request) {
-        String value = toJsonText(request.value());
-        // ponytail: 预检 + 唯一约束兜底；并发同 key 新增会撞约束返回 500，低并发后台可接受，需要时捕获 DataIntegrityViolationException 转 409
-        if (repository.existsByKey(request.key())) {
-            throw new ConflictException("配置 key 已存在");
-        }
-        SystemConfig config = new SystemConfig();
-        config.setKey(request.key());
-        config.setName(request.name().strip());
-        config.setValue(value);
-        config.setDescription(request.description());
-        return SystemConfigItemResponse.from(repository.saveAndFlush(config));
-    }
-
-    /** 只改名称、值与说明，key 不可改。 */
+    /** 只改名称、值与说明，key 不可改，并按 key 校验 value 结构。 */
     public SystemConfigItemResponse update(UUID id, SystemConfigUpdateRequest request) {
-        String value = toJsonText(request.value());
         SystemConfig config = find(id);
+        String value = validateAndNormalizeValue(config.getKey(), request.value());
         config.setName(request.name().strip());
         config.setValue(value);
         config.setDescription(request.description());
         return SystemConfigItemResponse.from(repository.saveAndFlush(config));
-    }
-
-    public void delete(UUID id) {
-        repository.delete(find(id));
     }
 
     private SystemConfig find(UUID id) {
         return repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("配置不存在"));
     }
 
-    /** 缺失与 JSON null 都视为未填；返回紧凑 JSON 文本。 */
-    private static String toJsonText(JsonNode value) {
+    /** 缺失与 JSON null 都视为未填；按预置 key 校验字段结构并返回紧凑 JSON 文本。 */
+    private static String validateAndNormalizeValue(String key, JsonNode value) {
         if (value == null || value.isNull() || value.isMissingNode()) {
             throw new IllegalArgumentException("value 不能为空");
         }
         String text = value.toString();
         if (text.length() > MAX_VALUE_LENGTH) {
             throw new IllegalArgumentException("value 过长");
+        }
+        if (KEY_IOS_LLM_POPUP.equals(key)) {
+            JsonNode enabledNode = value.isObject() ? value.get("enabled") : null;
+            if (enabledNode == null || !enabledNode.isBoolean()) {
+                throw new IllegalArgumentException("ios_llm_popup 的 enabled 必须为布尔值");
+            }
+            return "{\"enabled\":" + enabledNode.booleanValue() + "}";
         }
         return text;
     }

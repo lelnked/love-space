@@ -1,7 +1,7 @@
 ## MODIFIED Requirements
 
 ### Requirement: 运营写操作留痕
-admin 端 SHALL 通过 `@OperationLog("<module>:<action>")` 方法注解对运营写操作留痕，覆盖全部 21 个业务模块共 72 个写接口（城市、分类、标签、商户、商户评价、Banner、推荐清单、大使、路线、活动、文章栏目、文章、精选推荐、周期推荐、账号管理、上传凭证、AI 场景 `ai-scene`、AI 提示词 `ai-prompt`、AI 生成记录 `ai-generation`、AI 限流配置 `ai-limit`、系统配置 `system-config`，以及登出）。
+admin 端 SHALL 通过 `@OperationLog("<module>:<action>")` 方法注解对运营写操作留痕，覆盖全部 21 个业务模块共 70 个写接口（城市、分类、标签、商户、商户评价、Banner、推荐清单、大使、路线、活动、文章栏目、文章、精选推荐、周期推荐、账号管理、上传凭证、AI 场景 `ai-scene`、AI 提示词 `ai-prompt`、AI 生成记录 `ai-generation`、AI 限流配置 `ai-limit`、系统配置 `system-config`，以及登出）。
 
 以下写接口 SHALL NOT 留痕：
 - `POST /api/admin/auth/login`——登录成功时安全上下文尚未填充，切面取不到操作人；
@@ -46,7 +46,7 @@ admin 端 SHALL 通过 `@OperationLog("<module>:<action>")` 方法注解对运�
 - **WHEN** 修改一项 AI 限流配置，随后查询操作日志
 - **THEN** 存在一条 `module=ai-limit`、`action=update`、`username=admin` 的记录
 
-#### Scenario: 系统配置增改删留痕
-- **GIVEN** 以 admin 身份登录
-- **WHEN** 依次新增、编辑、删除同一个系统配置，随后查询操作日志
-- **THEN** 存在 `module=system-config` 且 `action` 分别为 `create`、`update`、`delete` 的三条记录，`target` 分别为空、该配置 id、该配置 id
+#### Scenario: 系统配置修改留痕
+- **GIVEN** 以 admin 身份登录且存在预置配置 `ios_llm_popup`
+- **WHEN** 修改该系统配置，随后查询操作日志
+- **THEN** 存在一条 `module=system-config`、`action=update`、`username=admin`、`target` 为该配置 id 的记录

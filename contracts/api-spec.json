@@ -1746,22 +1746,6 @@
         "x-requirement": "system-config/后台系统配置分页查询"
       }
     },
-    "/api/admin/system-configs": {
-      "post": {
-        "summary": "新增系统配置",
-        "description": "201 返回 SystemConfigItem：{id, key, name, value, description, createdAt, updatedAt}，value 为 JSON 原值；key 重复 409「配置 key 已存在」；key 格式不符、name 缺失/超长、description 超长 400；value 缺失或为 null 400「value 不能为空」；value 序列化后超 65535 字符 400「value 过长」。",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SystemConfigCreateRequest"
-              }
-            }
-          }
-        },
-        "x-requirement": "system-config/后台新增系统配置"
-      }
-    },
     "/api/admin/system-configs/{id}": {
       "get": {
         "summary": "系统配置详情",
@@ -1780,8 +1764,8 @@
         "x-requirement": "system-config/后台系统配置分页查询"
       },
       "put": {
-        "summary": "编辑系统配置（name/value/description，key 创建后不可改，请求体中的 key 被忽略）",
-        "description": "返回 SystemConfigItem；校验规则同新增；不存在 404「配置不存在」。",
+        "summary": "编辑系统配置（name/value/description，key 预置后不可改，请求体中的 key 被忽略）",
+        "description": "返回 SystemConfigItem；name 缺失/超长、description 超长 400；value 缺失或为 null 400「value 不能为空」；value 超 65535 字符 400「value 过长」；key=ios_llm_popup 时要求 value 为含布尔字段 enabled 的 JSON 对象，否则 400「ios_llm_popup 的 enabled 必须为布尔值」；不存在 404「配置不存在」。",
         "parameters": [
           {
             "name": "id",
@@ -1803,22 +1787,6 @@
           }
         },
         "x-requirement": "system-config/后台编辑系统配置"
-      },
-      "delete": {
-        "summary": "删除系统配置（物理删除）",
-        "description": "204；不存在 404「配置不存在」。删除后 App 查询该 key 返回 404。",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "x-requirement": "system-config/后台删除系统配置"
       }
     },
     "/api/app/system-configs/{key}": {
@@ -2682,35 +2650,6 @@
           }
         }
       },
-      "SystemConfigCreateRequest": {
-        "type": "object",
-        "required": [
-          "key",
-          "name",
-          "value"
-        ],
-        "properties": {
-          "key": {
-            "type": "string",
-            "pattern": "^[a-z][a-z0-9_.]{1,63}$",
-            "description": "配置 key，全局唯一，创建后不可改"
-          },
-          "name": {
-            "type": "string",
-            "maxLength": 64,
-            "description": "配置名称"
-          },
-          "value": {
-            "description": "配置值：任意合法 JSON（对象、数组、字符串、数字、布尔），不可为 null；序列化后 ≤65535 字符"
-          },
-          "description": {
-            "type": "string",
-            "maxLength": 500,
-            "nullable": true,
-            "description": "说明"
-          }
-        }
-      },
       "SystemConfigUpdateRequest": {
         "type": "object",
         "required": [
@@ -2724,7 +2663,7 @@
             "description": "配置名称"
           },
           "value": {
-            "description": "配置值：任意合法 JSON（对象、数组、字符串、数字、布尔），不可为 null；序列化后 ≤65535 字符"
+            "description": "配置值：结构由配置 key 决定，不可为 null；序列化后 ≤65535 字符（如 ios_llm_popup 为 {\"enabled\": boolean}）"
           },
           "description": {
             "type": "string",

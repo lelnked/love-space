@@ -59,3 +59,5 @@ databaseChangeLog:
       file: db/changelog/changes/029-add-ai-scene-thinking.sql
   - include:
       file: db/changelog/changes/030-create-system-config.sql
+  - include:
+      file: db/changelog/changes/031-seed-ios-llm-popup-config.sql

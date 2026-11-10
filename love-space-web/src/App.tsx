@@ -41,6 +41,7 @@ import AiGenerationList from "./pages/AiGenerations/List";
 import AiGenerationDetail from "./pages/AiGenerations/Detail";
 import AiLimitList from "./pages/AiLimits/List";
 import SystemConfigList from "./pages/SystemConfigs/List";
+import SystemConfigForm from "./pages/SystemConfigs/Form";
 
 export default function App() {
   return (
@@ -103,6 +104,7 @@ export default function App() {
             <Route path="/ai/generations/:id" element={<AiGenerationDetail />} />
             <Route path="/ai/limits" element={<AiLimitList />} />
             <Route path="/system-configs" element={<SystemConfigList />} />
+            <Route path="/system-configs/:id/edit" element={<SystemConfigForm />} />
           </Route>
 
           <Route path="/signup" element={<Navigate to="/signin" replace />} />
