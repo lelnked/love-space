@@ -1,39 +1,36 @@
 # TC-system-config-IT-007 请求/响应存证
 
-> POST value 序列化长度边界 65535 / 65536
-> 环境: admin `http://localhost:21423`(test profile) / app `http://localhost:8081`，两后端共库
+> PUT /{id} ios_llm_popup 的 enabled 非布尔值返回 400
+> 环境: admin `http://localhost:21423`(test profile) / app `http://localhost:8081`
 > 执行时间: 2026-11-10　执行器: api-test-runner（change add-system-config）
-> 认证: admin 走 `POST /api/admin/auth/login`（fixture: admin / 8@y2eoRLyStM*UVU），JWT 记为 `$TOKEN`（MEMBER 账号 JWT 记为 `$MEMBER_TOKEN`）；app 端 `X-API-Key: $APP_API_KEY`（脱敏）。shell 中 `export TOKEN=... APP_API_KEY=...` 后下列 curl 可原样执行。
+> 认证: admin 走 `POST /api/admin/auth/login`（fixture: admin / 8@y2eoRLyStM*UVU），JWT 记为 `$TOKEN`；app 端 `X-API-Key: $APP_API_KEY`（脱敏）。shell 中 `export TOKEN=... APP_API_KEY=...` 后下列 curl 可原样执行。
 
-## step 1 value 序列化 65535 字符
+## step 1 POST 登录取 token
 
 ```bash
-curl -s -i -X POST http://localhost:21423/api/admin/system-configs \
-  -H "Authorization: Bearer $TOKEN" \
+curl -s -i -X POST http://localhost:21423/api/admin/auth/login \
   -H 'Content-Type: application/json' \
-  --data-binary "$(python3 -c 'import json;print(json.dumps({"key":"v.max_vg4gyl","name":"x","value":"x"*65533}))')"
+  -d '{"username": "admin", "password": "8@y2eoRLyStM*UVU"}'
 ```
 
-HTTP 201（Content-Type: application/json）
+HTTP 200（Content-Type: application/json）
 
 ```json
 {
- "id": "01a1c3d8-d4e8-712b-9f3a-ab54869fb1ea",
- "key": "v.max_vg4gyl",
- "name": "x",
- "value": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-... <截断，原长 65728 字符> ...
-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
- "description": null,
- "createdAt": "2026-11-10T05:05:29.83201923Z",
- "updatedAt": "2026-11-10T05:05:29.83201923Z"
+ "token": "$TOKEN",
+ "manager": {
+  "id": "019794b6-b400-7000-8000-000000000001",
+  "username": "admin",
+  "nickname": "管理员",
+  "role": "ADMIN"
+ }
 }
 ```
 
-## step 2 GET 详情
+## step 2 GET page 查 ios_llm_popup
 
 ```bash
-curl -s -i -X GET http://localhost:21423/api/admin/system-configs/01a1c3d8-d4e8-712b-9f3a-ab54869fb1ea \
+curl -s -i -X GET 'http://localhost:21423/api/admin/system-configs/page?keyword=ios_llm_popup&page=1&size=20' \
   -H "Authorization: Bearer $TOKEN"
 ```
 
@@ -41,25 +38,33 @@ HTTP 200（Content-Type: application/json）
 
 ```json
 {
- "id": "01a1c3d8-d4e8-712b-9f3a-ab54869fb1ea",
- "key": "v.max_vg4gyl",
- "name": "x",
- "value": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-... <截断，原长 65724 字符> ...
-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
- "description": null,
- "createdAt": "2026-11-10T05:05:29.832019Z",
- "updatedAt": "2026-11-10T05:05:29.832019Z"
+ "content": [
+  {
+   "id": "019794b6-b400-7000-8000-000000000031",
+   "key": "ios_llm_popup",
+   "name": "iOS LLM 弹窗开关",
+   "value": {
+    "enabled": true
+   },
+   "description": "控制 iOS 系统调用 LLM 时是否需要弹窗",
+   "createdAt": "2026-11-10T15:56:56.951563Z",
+   "updatedAt": "2026-11-10T16:00:14.868605Z"
+  }
+ ],
+ "page": 1,
+ "size": 20,
+ "totalElements": 1,
+ "totalPages": 1
 }
 ```
 
-## step 3 value 序列化 65536 字符
+## step 3 PUT value={}
 
 ```bash
-curl -s -i -X POST http://localhost:21423/api/admin/system-configs \
+curl -s -i -X PUT http://localhost:21423/api/admin/system-configs/019794b6-b400-7000-8000-000000000031 \
   -H "Authorization: Bearer $TOKEN" \
   -H 'Content-Type: application/json' \
-  --data-binary "$(python3 -c 'import json;print(json.dumps({"key":"v.over_vg4gyl","name":"x","value":"x"*65534}))')"
+  -d '{"name":"iOS LLM 弹窗开关","value":{}}'
 ```
 
 HTTP 400（Content-Type: application/json）
@@ -68,15 +73,55 @@ HTTP 400（Content-Type: application/json）
 {
  "status": 400,
  "error": "Bad Request",
- "message": "value 过长",
- "path": "/api/admin/system-configs"
+ "message": "ios_llm_popup 的 enabled 必须为布尔值",
+ "path": "/api/admin/system-configs/019794b6-b400-7000-8000-000000000031"
 }
 ```
 
-## step 4 核对 v.over 未创建
+## step 4 PUT enabled="yes"
 
 ```bash
-curl -s -i -X GET 'http://localhost:21423/api/admin/system-configs/page?keyword=v.over_vg4gyl&page=1&size=20' \
+curl -s -i -X PUT http://localhost:21423/api/admin/system-configs/019794b6-b400-7000-8000-000000000031 \
+  -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"name":"iOS LLM 弹窗开关","value":{"enabled":"yes"}}'
+```
+
+HTTP 400（Content-Type: application/json）
+
+```json
+{
+ "status": 400,
+ "error": "Bad Request",
+ "message": "ios_llm_popup 的 enabled 必须为布尔值",
+ "path": "/api/admin/system-configs/019794b6-b400-7000-8000-000000000031"
+}
+```
+
+## step 5 PUT value=true
+
+```bash
+curl -s -i -X PUT http://localhost:21423/api/admin/system-configs/019794b6-b400-7000-8000-000000000031 \
+  -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"name":"iOS LLM 弹窗开关","value":true}'
+```
+
+HTTP 400（Content-Type: application/json）
+
+```json
+{
+ "status": 400,
+ "error": "Bad Request",
+ "message": "ios_llm_popup 的 enabled 必须为布尔值",
+ "path": "/api/admin/system-configs/019794b6-b400-7000-8000-000000000031"
+}
+```
+
+## step 6 核对未被修改
+
+```bash
+curl -s -i -X GET http://localhost:21423/api/admin/system-configs/019794b6-b400-7000-8000-000000000031 \
   -H "Authorization: Bearer $TOKEN"
 ```
 
@@ -84,23 +129,14 @@ HTTP 200（Content-Type: application/json）
 
 ```json
 {
- "content": [],
- "page": 1,
- "size": 20,
- "totalElements": 0,
- "totalPages": 0
+ "id": "019794b6-b400-7000-8000-000000000031",
+ "key": "ios_llm_popup",
+ "name": "iOS LLM 弹窗开关",
+ "value": {
+  "enabled": true
+ },
+ "description": "控制 iOS 系统调用 LLM 时是否需要弹窗",
+ "createdAt": "2026-11-10T15:56:56.951563Z",
+ "updatedAt": "2026-11-10T16:00:14.868605Z"
 }
-```
-
-## step 5 收尾 DELETE
-
-```bash
-curl -s -i -X DELETE http://localhost:21423/api/admin/system-configs/01a1c3d8-d4e8-712b-9f3a-ab54869fb1ea \
-  -H "Authorization: Bearer $TOKEN"
-```
-
-HTTP 204（Content-Type: -）
-
-```json
-(empty body)
 ```

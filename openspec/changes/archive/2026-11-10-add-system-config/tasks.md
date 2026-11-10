@@ -37,5 +37,5 @@
 
 ## 5. 收尾
 
-- [ ] 5.1 admin 与 app 全量 UT + 本 change IT 跑绿（两后端 IT 不并行）：本地 admin 测试环境 OSS `app.storage` 属性绑定失败 + 测试库端口不可达，待环境修复后重跑
+- [x] 5.1 admin 与 app 全量 UT + 本 change IT 跑绿（两后端 IT 不并行）：admin UT 224 + IT 11、app UT+IT 135 全绿
 - [x] 5.2 核对 `contracts/api-spec.json` 与实现一致（移除 POST/DELETE 及 `SystemConfigCreateRequest`，更新 PUT 描述）

@@ -39,3 +39,11 @@
 ## 需重测用例
 
 （无）
+
+## 执行汇总（2026-11-10 交付轮）
+
+- IT：14/14 ✅（TC-system-config-IT-001~013、TC-operation-log-IT-020），admin `:21423` + app `:8081`，存证 `test-evidence/add-system-config/`
+- UT：admin 224 + IT 11、app 135 全绿
+- WEB：3 条未执行——playwright-company MCP 连接失败（ECONNREFUSED）
+- 质量门禁：web lint ✅、tsc + `vite build --mode test` ✅（默认 build 因本机缺 `.env.production` 被守卫拦截，环境原因）；admin/app package ✅；覆盖率节为 TODO 跳过
+- `openspec validate add-system-config` ✅

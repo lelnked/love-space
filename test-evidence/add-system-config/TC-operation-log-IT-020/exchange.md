@@ -1,11 +1,11 @@
 # TC-operation-log-IT-020 请求/响应存证
 
-> 系统配置新增、编辑、删除后异步产生 system-config 三条留痕
-> 环境: admin `http://localhost:21423`(test profile) / app `http://localhost:8081`，两后端共库
+> 修改系统配置后异步产生 system-config:update 留痕
+> 环境: admin `http://localhost:21423`(test profile) / app `http://localhost:8081`
 > 执行时间: 2026-11-10　执行器: api-test-runner（change add-system-config）
-> 认证: admin 走 `POST /api/admin/auth/login`（fixture: admin / 8@y2eoRLyStM*UVU），JWT 记为 `$TOKEN`（MEMBER 账号 JWT 记为 `$MEMBER_TOKEN`）；app 端 `X-API-Key: $APP_API_KEY`（脱敏）。shell 中 `export TOKEN=... APP_API_KEY=...` 后下列 curl 可原样执行。
+> 认证: admin 走 `POST /api/admin/auth/login`（fixture: admin / 8@y2eoRLyStM*UVU），JWT 记为 `$TOKEN`；app 端 `X-API-Key: $APP_API_KEY`（脱敏）。shell 中 `export TOKEN=... APP_API_KEY=...` 后下列 curl 可原样执行。
 
-## step 1 登录
+## step 1 POST 登录取 token
 
 ```bash
 curl -s -i -X POST http://localhost:21423/api/admin/auth/login \
@@ -27,10 +27,10 @@ HTTP 200（Content-Type: application/json）
 }
 ```
 
-## step 2 基线：留痕前查询 system-config 日志
+## step 2 GET page 查 ios_llm_popup
 
 ```bash
-curl -s -i -X GET 'http://localhost:21423/api/admin/logs/page?username=admin&module=system-config&page=1&size=200' \
+curl -s -i -X GET 'http://localhost:21423/api/admin/system-configs/page?keyword=ios_llm_popup&page=1&size=20' \
   -H "Authorization: Bearer $TOKEN"
 ```
 
@@ -40,101 +40,50 @@ HTTP 200（Content-Type: application/json）
 {
  "content": [
   {
-   "id": "01a1c3d8-da06-723b-8f13-93b2fe1dae7f",
-   "username": "admin",
-   "module": "system-config",
-   "action": "delete",
-   "target": "01a1c3d8-d9dc-7c5c-931b-87ec201c61cf",
-   "createdAt": "2026-11-10T05:05:31.142087Z"
-  },
-  {
-   "id": "01a1c3d8-d9fd-7658-8308-9f2551e65a6e",
-   "username": "admin",
-   "module": "system-config",
-   "action": "delete",
-   "target": "01a1c3d8-d9d2-716d-8b78-12799c7e2de6",
-   "createdAt": "2026-11-10T05:05:31.133339Z"
-  },
-  {
-   "id": "01a1c3d8-d9de-75e3-b02c-99e6ffb990c6",
-   "username": "admin",
-   "module": "system-config",
-   "actio
-... <截断，原长 17304 字符> ...
-admin",
-   "module": "system-config",
-   "action": "create",
-   "target": null,
-   "createdAt": "2026-11-10T05:04:49.857692Z"
+   "id": "019794b6-b400-7000-8000-000000000031",
+   "key": "ios_llm_popup",
+   "name": "iOS LLM 弹窗开关",
+   "value": {
+    "enabled": true
+   },
+   "description": "控制 iOS 系统调用 LLM 时是否需要弹窗",
+   "createdAt": "2026-11-10T15:56:56.951563Z",
+   "updatedAt": "2026-11-10T16:00:15.45278Z"
   }
  ],
  "page": 1,
- "size": 200,
- "totalElements": 95,
+ "size": 20,
+ "totalElements": 1,
  "totalPages": 1
 }
 ```
 
-## step 3 POST 新增
+## step 3 PUT 编辑（值同初始）
 
 ```bash
-curl -s -i -X POST http://localhost:21423/api/admin/system-configs \
+curl -s -i -X PUT http://localhost:21423/api/admin/system-configs/019794b6-b400-7000-8000-000000000031 \
   -H "Authorization: Bearer $TOKEN" \
   -H 'Content-Type: application/json' \
-  -d '{"key": "log.k_37irru", "name": "留痕测试", "value": 1}'
-```
-
-HTTP 201（Content-Type: application/json）
-
-```json
-{
- "id": "01a1c3d8-dac8-7d78-a64c-f49e25b59d6e",
- "key": "log.k_37irru",
- "name": "留痕测试",
- "value": 1,
- "description": null,
- "createdAt": "2026-11-10T05:05:31.336796228Z",
- "updatedAt": "2026-11-10T05:05:31.336796228Z"
-}
-```
-
-## step 4 PUT 编辑
-
-```bash
-curl -s -i -X PUT http://localhost:21423/api/admin/system-configs/01a1c3d8-dac8-7d78-a64c-f49e25b59d6e \
-  -H "Authorization: Bearer $TOKEN" \
-  -H 'Content-Type: application/json' \
-  -d '{"name": "留痕测试-改", "value": 2}'
+  -d '{"name": "iOS LLM 弹窗开关", "value": {"enabled": true}, "description": "控制 iOS 系统调用 LLM 时是否需要弹窗"}'
 ```
 
 HTTP 200（Content-Type: application/json）
 
 ```json
 {
- "id": "01a1c3d8-dac8-7d78-a64c-f49e25b59d6e",
- "key": "log.k_37irru",
- "name": "留痕测试-改",
- "value": 2,
- "description": null,
- "createdAt": "2026-11-10T05:05:31.336796Z",
- "updatedAt": "2026-11-10T05:05:31.347361274Z"
+ "id": "019794b6-b400-7000-8000-000000000031",
+ "key": "ios_llm_popup",
+ "name": "iOS LLM 弹窗开关",
+ "value": {
+  "enabled": true
+ },
+ "description": "控制 iOS 系统调用 LLM 时是否需要弹窗",
+ "createdAt": "2026-11-10T15:56:56.951563Z",
+ "updatedAt": "2026-11-10T16:00:15.704108332Z"
 }
 ```
 
-## step 5 DELETE
-
-```bash
-curl -s -i -X DELETE http://localhost:21423/api/admin/system-configs/01a1c3d8-dac8-7d78-a64c-f49e25b59d6e \
-  -H "Authorization: Bearer $TOKEN"
-```
-
-HTTP 204（Content-Type: -）
-
-```json
-(empty body)
-```
-
-## step 6 轮询 logs/page 第 1 次
+## step 4 轮询 GET logs/page（第 1 次）
 
 ```bash
 curl -s -i -X GET 'http://localhost:21423/api/admin/logs/page?username=admin&module=system-config&page=1&size=20' \
@@ -147,37 +96,49 @@ HTTP 200（Content-Type: application/json）
 {
  "content": [
   {
-   "id": "01a1c3d8-dadd-7ca3-a71e-4b8125a72fd8",
-   "username": "admin",
-   "module": "system-config",
-   "action": "delete",
-   "target": "01a1c3d8-dac8-7d78-a64c-f49e25b59d6e",
-   "createdAt": "2026-11-10T05:05:31.357741Z"
-  },
-  {
-   "id": "01a1c3d8-dad5-7584-b8a3-0cee9b9817b1",
+   "id": "01a1c630-495b-720f-8746-81344e534b29",
    "username": "admin",
    "module": "system-config",
    "action": "update",
-   "target": "01a1c3d8-dac8-7d78-a64c-f49e25b59d6e",
-   "createdAt": "2026-11-10T05:05:31.349317Z"
+   "target": "019794b6-b400-7000-8000-000000000031",
+   "createdAt": "2026-11-10T16:00:15.707085Z"
   },
   {
-   "id": "01a1c3d8-daca-7f19-a654-dda5326cc57d",
+   "id": "01a1c630-485f-763d-836a-4775cca75d3e",
    "username": "admin",
    "module": "system-config",
-   "actio
-... <截断，原长 3720 字符> ...
-"admin",
+   "action": "update",
+   "target": "019794b6-b400-7000-8000-000000000031",
+   "createdAt": "2026-11-10T16:00:15.45532Z"
+  },
+  {
+   "id": "01a1c630-47cb-7135-bf3b-4efb7fd591f6",
+   "username": "admin",
    "module": "system-config",
-   "action": "create",
-   "target": null,
-   "createdAt": "2026-11-10T05:05:30.819832Z"
+   "action": "update",
+   "target": "019794b6-b400-7000-8000-000000000031",
+   "createdAt": "2026-11-10T16:00:15.30703Z"
+  },
+  {
+   "id": "01a1c630-4616-7eff-942b-882c17ed3b8a",
+   "username": "admin",
+   "module": "system-config",
+   "action": "update",
+   "target": "019794b6-b400-7000-8000-000000000031",
+   "createdAt": "2026-11-10T16:00:14.870889Z"
+  },
+  {
+   "id": "01a1c630-460a-7489-ac18-f1d60eb774b2",
+   "username": "admin",
+   "module": "system-config",
+   "action": "update",
+   "target": "019794b6-b400-7000-8000-000000000031",
+   "createdAt": "2026-11-10T16:00:14.84682Z"
   }
  ],
  "page": 1,
  "size": 20,
- "totalElements": 98,
- "totalPages": 5
+ "totalElements": 5,
+ "totalPages": 1
 }
 ```

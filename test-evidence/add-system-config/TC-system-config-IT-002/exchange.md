@@ -1,40 +1,36 @@
 # TC-system-config-IT-002 请求/响应存证
 
-> value 以 JSON 原值往返（对象）
-> 环境: admin `http://localhost:21423`(test profile) / app `http://localhost:8081`，两后端共库
+> GET /page 按 keyword 匹配 key 或名称（不区分大小写）
+> 环境: admin `http://localhost:21423`(test profile) / app `http://localhost:8081`
 > 执行时间: 2026-11-10　执行器: api-test-runner（change add-system-config）
-> 认证: admin 走 `POST /api/admin/auth/login`（fixture: admin / 8@y2eoRLyStM*UVU），JWT 记为 `$TOKEN`（MEMBER 账号 JWT 记为 `$MEMBER_TOKEN`）；app 端 `X-API-Key: $APP_API_KEY`（脱敏）。shell 中 `export TOKEN=... APP_API_KEY=...` 后下列 curl 可原样执行。
+> 认证: admin 走 `POST /api/admin/auth/login`（fixture: admin / 8@y2eoRLyStM*UVU），JWT 记为 `$TOKEN`；app 端 `X-API-Key: $APP_API_KEY`（脱敏）。shell 中 `export TOKEN=... APP_API_KEY=...` 后下列 curl 可原样执行。
 
-## step 1 POST 新增 home.notice_z8gxhf
+## step 1 POST 登录取 token
 
 ```bash
-curl -s -i -X POST http://localhost:21423/api/admin/system-configs \
-  -H "Authorization: Bearer $TOKEN" \
+curl -s -i -X POST http://localhost:21423/api/admin/auth/login \
   -H 'Content-Type: application/json' \
-  -d '{"key": "home.notice_z8gxhf", "name": "首页公告", "value": {"text": "放假通知", "show": true}}'
+  -d '{"username": "admin", "password": "8@y2eoRLyStM*UVU"}'
 ```
 
-HTTP 201（Content-Type: application/json）
+HTTP 200（Content-Type: application/json）
 
 ```json
 {
- "id": "01a1c3d8-d36d-7ee7-b2a2-8e2ea629ff4c",
- "key": "home.notice_z8gxhf",
- "name": "首页公告",
- "value": {
-  "text": "放假通知",
-  "show": true
- },
- "description": null,
- "createdAt": "2026-11-10T05:05:29.453881517Z",
- "updatedAt": "2026-11-10T05:05:29.453881517Z"
+ "token": "$TOKEN",
+ "manager": {
+  "id": "019794b6-b400-7000-8000-000000000001",
+  "username": "admin",
+  "nickname": "管理员",
+  "role": "ADMIN"
+ }
 }
 ```
 
-## step 2 GET 详情
+## step 2 GET page keyword=llm_popup
 
 ```bash
-curl -s -i -X GET http://localhost:21423/api/admin/system-configs/01a1c3d8-d36d-7ee7-b2a2-8e2ea629ff4c \
+curl -s -i -X GET 'http://localhost:21423/api/admin/system-configs/page?keyword=llm_popup&page=1&size=20' \
   -H "Authorization: Bearer $TOKEN"
 ```
 
@@ -42,28 +38,103 @@ HTTP 200（Content-Type: application/json）
 
 ```json
 {
- "id": "01a1c3d8-d36d-7ee7-b2a2-8e2ea629ff4c",
- "key": "home.notice_z8gxhf",
- "name": "首页公告",
- "value": {
-  "show": true,
-  "text": "放假通知"
- },
- "description": null,
- "createdAt": "2026-11-10T05:05:29.453882Z",
- "updatedAt": "2026-11-10T05:05:29.453882Z"
+ "content": [
+  {
+   "id": "019794b6-b400-7000-8000-000000000031",
+   "key": "ios_llm_popup",
+   "name": "iOS LLM 弹窗开关",
+   "value": {
+    "enabled": true
+   },
+   "description": "控制 iOS 系统调用 LLM 时是否需要弹窗",
+   "createdAt": "2026-11-10T15:56:56.951563Z",
+   "updatedAt": "2026-11-10T15:57:13.093455Z"
+  }
+ ],
+ "page": 1,
+ "size": 20,
+ "totalElements": 1,
+ "totalPages": 1
 }
 ```
 
-## step 3 收尾 DELETE
+## step 3 GET page keyword=LLM_POPUP
 
 ```bash
-curl -s -i -X DELETE http://localhost:21423/api/admin/system-configs/01a1c3d8-d36d-7ee7-b2a2-8e2ea629ff4c \
+curl -s -i -X GET 'http://localhost:21423/api/admin/system-configs/page?keyword=LLM_POPUP&page=1&size=20' \
   -H "Authorization: Bearer $TOKEN"
 ```
 
-HTTP 204（Content-Type: -）
+HTTP 200（Content-Type: application/json）
 
 ```json
-(empty body)
+{
+ "content": [
+  {
+   "id": "019794b6-b400-7000-8000-000000000031",
+   "key": "ios_llm_popup",
+   "name": "iOS LLM 弹窗开关",
+   "value": {
+    "enabled": true
+   },
+   "description": "控制 iOS 系统调用 LLM 时是否需要弹窗",
+   "createdAt": "2026-11-10T15:56:56.951563Z",
+   "updatedAt": "2026-11-10T15:57:13.093455Z"
+  }
+ ],
+ "page": 1,
+ "size": 20,
+ "totalElements": 1,
+ "totalPages": 1
+}
+```
+
+## step 4 GET page keyword=弹窗开关
+
+```bash
+curl -s -i -X GET 'http://localhost:21423/api/admin/system-configs/page?keyword=%E5%BC%B9%E7%AA%97%E5%BC%80%E5%85%B3&page=1&size=20' \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+HTTP 200（Content-Type: application/json）
+
+```json
+{
+ "content": [
+  {
+   "id": "019794b6-b400-7000-8000-000000000031",
+   "key": "ios_llm_popup",
+   "name": "iOS LLM 弹窗开关",
+   "value": {
+    "enabled": true
+   },
+   "description": "控制 iOS 系统调用 LLM 时是否需要弹窗",
+   "createdAt": "2026-11-10T15:56:56.951563Z",
+   "updatedAt": "2026-11-10T15:57:13.093455Z"
+  }
+ ],
+ "page": 1,
+ "size": 20,
+ "totalElements": 1,
+ "totalPages": 1
+}
+```
+
+## step 5 GET page keyword=zz_nomatch
+
+```bash
+curl -s -i -X GET 'http://localhost:21423/api/admin/system-configs/page?keyword=zz_nomatch&page=1&size=20' \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+HTTP 200（Content-Type: application/json）
+
+```json
+{
+ "content": [],
+ "page": 1,
+ "size": 20,
+ "totalElements": 0,
+ "totalPages": 0
+}
 ```

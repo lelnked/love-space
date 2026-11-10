@@ -326,7 +326,7 @@
 3. PUT /api/admin/system-configs/{C}，body `{"name":"iOS LLM 弹窗开关","value":{"enabled":true},"description":"控制 iOS 系统调用 LLM 时是否需要弹窗"}`
 4. 轮询 GET /api/admin/logs/page?username=admin&module=system-config&page=1&size=20（最多 20 次、间隔 100ms），直到 `update` 新记录出现
 **预期结果**: 步骤 3 返回 200；轮询在超时前命中，存在 `module=system-config`、`action=update`、`username=admin`、`target` 为 C（字符串形式）的记录
-**状态**: ⬜ 未测试
+**状态**: ✅ 通过
 **执行方式**: api-test-runner
 **执行存证**: `test-evidence/add-system-config/TC-operation-log-IT-020/`
-**最后更新**: -
+**最后更新**: 2026-11-10
