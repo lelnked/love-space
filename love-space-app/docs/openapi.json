@@ -72,6 +72,10 @@
     {
       "name": "Route",
       "description": "路线只读 API。\nGET /api/app/routes?cityName=&ambassadorId=（均可选） → 200 可见路线数组（sortOrder 升序）；\nGET /api/app/routes/{id} → 200 详情（含地点与大使信息与城市对象），城市记录已删除时 city 为 null，大使下线 → 404。"
+    },
+    {
+      "name": "SystemConfig",
+      "description": "App 端系统配置只读 API：按 key 读取运营在后台维护的配置值。"
     }
   ],
   "paths": {
@@ -1029,6 +1033,90 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/api/app/system-configs": {
+      "get": {
+        "tags": [
+          "SystemConfig"
+        ],
+        "summary": "按一组 key 批量查询配置；不存在的 key 不出现在结果中，结果按请求顺序排列",
+        "description": "按一组 key 批量查询配置；不存在的 key 不出现在结果中，结果按请求顺序排列。",
+        "operationId": "SystemConfig_list",
+        "parameters": [
+          {
+            "name": "keys",
+            "in": "query",
+            "required": true,
+            "description": "逗号分隔的 key 列表（必填，去空白、去重后 1~50 个，否则 400）",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SystemConfigItemResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/app/system-configs/{key}": {
+      "get": {
+        "tags": [
+          "SystemConfig"
+        ],
+        "summary": "按 key 查询单个配置；不存在返回 404",
+        "description": "按 key 查询单个配置；不存在返回 404。",
+        "operationId": "SystemConfig_get",
+        "parameters": [
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "description": "配置 key（精确匹配）",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SystemConfigItemResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
           }
         }
       }
@@ -2366,6 +2454,19 @@
           "content": {
             "nullable": true,
             "description": "模型输出的 JSON，失败为 null"
+          }
+        }
+      },
+      "SystemConfigItemResponse": {
+        "type": "object",
+        "description": "App 端系统配置出参。",
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "配置 key"
+          },
+          "value": {
+            "description": "配置值，JSON 原值（对象、数组、字符串、数字或布尔）"
           }
         }
       }

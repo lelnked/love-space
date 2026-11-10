@@ -57,3 +57,5 @@ databaseChangeLog:
       file: db/changelog/changes/028-create-ai-limit.sql
   - include:
       file: db/changelog/changes/029-add-ai-scene-thinking.sql
+  - include:
+      file: db/changelog/changes/030-create-system-config.sql

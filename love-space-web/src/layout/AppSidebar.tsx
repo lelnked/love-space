@@ -14,6 +14,7 @@ import {
   HorizontaLDots,
   ListIcon,
   PageIcon,
+  PlugInIcon,
   ShootingStarIcon,
   TaskIcon,
   TimeIcon,
@@ -113,6 +114,11 @@ export const navItems: NavItem[] = [
       { name: "生成记录", path: "/ai/generations" },
       { name: "限流配置", path: "/ai/limits" },
     ],
+  },
+  {
+    icon: <PlugInIcon />,
+    name: "系统配置",
+    path: "/system-configs",
   },
   {
     icon: <TimeIcon />,
