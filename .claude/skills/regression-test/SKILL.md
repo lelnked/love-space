@@ -59,7 +59,7 @@ node scripts/generate-traceability-matrix.js    # 无参 = 全局核对
 
 - 按域汇总，域内按端（IT / WEB / APP）分列：总数 / ✅ / ❌ / 未执行（含被跳过的端及原因），失败用例附原因与存证路径。
 - 矩阵核对结论。
-- 失败用例的处置建议：行为回归 → 开修复 change（`/opsx:propose fix-*`）；用例过期 → 也开 change 走 delta 更新用例，不手改。
+- 失败用例的处置建议：行为回归 → 开修复 change（`/openspec-propose fix-*`）；用例过期 → 也开 change 走 delta 更新用例，不手改。
 - HTML 报告（可选，用户要报告时生成）：
 
 ```bash

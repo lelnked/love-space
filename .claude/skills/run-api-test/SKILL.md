@@ -25,7 +25,7 @@ metadata:
 
 - change 模式：确认 `openspec/changes/<id>/test-cases.md` 存在且清单含 IT 用例；从 TC ID 的 domain 段定位涉及的 `tests/<domain>/it.md`。
 - module 模式：确认该域已在 `tests/modules.md` 注册且 `tests/<domain>/it.md` 存在。
-- 都不满足则报错并提示先走 `/opsx:propose`(test-cases artifact 会生成用例)。
+- 都不满足则报错并提示先走 `/openspec-propose`(test-cases artifact 会生成用例)。
 
 ### 2. 前置校验(缺一即停，逐条提示用户补充；不猜测、不擅自拉起服务)
 

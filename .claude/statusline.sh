@@ -24,7 +24,7 @@ suffix=""
 
 tasks="$active/tasks.md"
 if [ ! -f "$tasks" ]; then
-  echo "Change: $id$suffix | (artifacts 未齐 — /opsx:ff)"
+  echo "Change: $id$suffix | (artifacts 未齐 — /openspec-ff-change)"
   exit 0
 fi
 

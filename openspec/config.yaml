@@ -1,6 +1,8 @@
 schema: fullstack
 
 context: |
+  Language: 中文
+  All artifacts must be written in 中文.
   全栈项目 love-space（外层单 git 仓库，三个子项目）：
   - love-space-web —— 运营后台前端（React 19 + TypeScript + Vite 6 + Tailwind v4），端口 5173，
     base 路径 /love-space/，通过 VITE_ADMIN_API_BASE 调用 admin 后端。npm。

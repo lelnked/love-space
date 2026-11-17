@@ -1,5 +1,5 @@
 # 质量门禁（OpenSpec 版：love-space，npm + Maven Wrapper）
-# 分工：本门禁管「数字达标」（覆盖率/通过率/构建/安全）；/opsx:verify 管「代码符合 spec」；
+# 分工：本门禁管「数字达标」（覆盖率/通过率/构建/安全）；/openspec-verify-change 管「代码符合 spec」；
 # scripts/generate-traceability-matrix.js 管「追溯闭环」。三者不重叠，互不替代。
 # 命令均来自各子项目的真实 scripts/插件；无现成脚本的项标 TODO，不臆造。
 version: '1.0'

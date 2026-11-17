@@ -36,7 +36,7 @@ metadata:
 
 - change 模式：确认 `openspec/changes/<id>/test-cases.md` 存在且清单含 WEB 用例，按 TC ID 的 domain 段定位 `tests/<domain>/web.md`。
 - module 模式：确认 `tests/<domain>/web.md` 存在。
-- 不存在则报错并提示先走 `/opsx:propose`(test-cases artifact 会生成用例)。
+- 不存在则报错并提示先走 `/openspec-propose`(test-cases artifact 会生成用例)。
 
 ### 2. 探测并锁定前端实例(按 API base 选，不按端口号顺序)
 

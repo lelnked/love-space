@@ -1,6 +1,6 @@
 # OpenSpec Session Protocol（会话自动驱动）
 
-本文件由 `.claude/rules/` 自动注入每个会话，是 OpenSpec 工具链的**驱动器**：把 `/opsx:*` 命令、测试编排 skills、追溯矩阵串成自动流水线。用户表达意图，AI 自动推进各阶段并自行调用命令；用户只在**硬门禁**处确认。不要等用户逐条敲命令。
+本文件由 `.claude/rules/` 自动注入每个会话，是 OpenSpec 工具链的**驱动器**：把 `/openspec-*` skills、测试编排 skills、追溯矩阵串成自动流水线。用户表达意图，AI 自动推进各阶段并自行调用命令；用户只在**硬门禁**处确认。不要等用户逐条敲命令。
 
 ---
 
@@ -10,8 +10,8 @@
 
 | 状态栏 | 含义 | 动作 |
 |---|---|---|
-| `Change: <id> \| Next: <task>` | 有活跃变更，tasks 进行中 | 从该 task 续 `/opsx:apply` |
-| `Change: <id> \| (artifacts 未齐)` | propose 了但工件没出全 | `/opsx:ff` 补齐依赖图 |
+| `Change: <id> \| Next: <task>` | 有活跃变更，tasks 进行中 | 从该 task 续 `/openspec-apply-change` |
+| `Change: <id> \| (artifacts 未齐)` | propose 了但工件没出全 | `/openspec-ff-change` 补齐依赖图 |
 | `Change: <id> \| (tasks 全勾)` | 实现完，待交付验证 | 进 §3 交付验证链 |
 | `Change: (none active)` | 无活跃变更 | 用户说「继续」→ 问开什么；用户提需求 → 进 §2 |
 
@@ -23,9 +23,9 @@
 
 | 用户意图 | 自动动作 |
 |---|---|
-| 「做 XX / 改 XX / 修 XX bug」 | `/opsx:propose <kebab-case-change-id>`；需求模糊、接口复杂或需线框 → 先跑 `requirement-breakdown[-fullstack]` 产喂料再 propose |
-| proposal 经用户确认 | `/opsx:ff` 带出 delta specs → design → tasks ∥ test-cases（依赖图自动推进；design 阶段同步更新 `contracts/api-spec.json`；**test-cases 派发 subagent 执行其 instruction、与 tasks 生成并行**——上下文隔离，主会话只收回 change 内 `test-cases.md` 清单） |
-| 工件齐全 | `/opsx:apply` 按 tasks.md 逐项实现，UT 带 `@scenario` 注释；**任务间连续执行，不停下来 check-in** |
+| 「做 XX / 改 XX / 修 XX bug」 | `/openspec-propose <kebab-case-change-id>`；需求模糊、接口复杂或需线框 → 先跑 `requirement-breakdown[-fullstack]` 产喂料再 propose |
+| proposal 经用户确认 | `/openspec-ff-change` 带出 delta specs → design → tasks ∥ test-cases（依赖图自动推进；design 阶段同步更新 `contracts/api-spec.json`；**test-cases 派发 subagent 执行其 instruction、与 tasks 生成并行**——上下文隔离，主会话只收回 change 内 `test-cases.md` 清单） |
+| 工件齐全 | `/openspec-apply-change` 按 tasks.md 逐项实现，UT 带 `@scenario` 注释；**任务间连续执行，不停下来 check-in** |
 | tasks 全勾 | 自动进 §3 交付验证链 |
 
 ## §3 交付验证链（apply 完自动跑，不等用户催）
@@ -34,9 +34,9 @@
 2. `tests/modules.md` 已启用的端：`/run-web-test --change <id>` / `/run-app-test --change <id>`
 3. `node scripts/generate-traceability-matrix.js --change <id>`
 4. `.quality-gate.yml` 按端逐项：只跑 `paths` 命中改动文件的节（判定方式见该文件头注释），汇总里列出跳过的节
-5. `/opsx:verify`
+5. `/openspec-verify-change`
 6. 全绿 → **停，向用户要 archive 确认**（硬门禁）
-7. 确认后 `/opsx:archive` → 提示跑 `/regression-test --priority P0,P1`
+7. 确认后 `/openspec-archive-change` → 提示跑 `/regression-test --priority P0,P1`
 
 失败处理：测试红 → 修复重跑，同一问题循环超 3 轮仍红 → 停下来报告，让用户决策。
 
